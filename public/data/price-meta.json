@@ -1,12 +1,52 @@
 {
     "global": {
-        "min_price": 119,
-        "max_price": 250
+        "min_price": 14,
+        "max_price": 79
     },
     "categories": {
-        "15": {
-            "min_price": 119,
-            "max_price": 250
+        "29": {
+            "min_price": 14,
+            "max_price": 31
+        },
+        "33": {
+            "min_price": 24,
+            "max_price": 34
+        },
+        "37": {
+            "min_price": 16,
+            "max_price": 59
+        },
+        "41": {
+            "min_price": 19,
+            "max_price": 49
+        },
+        "48": {
+            "min_price": 79,
+            "max_price": 79
+        },
+        "52": {
+            "min_price": 22,
+            "max_price": 22
+        },
+        "56": {
+            "min_price": 17,
+            "max_price": 55
+        },
+        "67": {
+            "min_price": 35,
+            "max_price": 42
+        },
+        "73": {
+            "min_price": 38,
+            "max_price": 38
+        },
+        "77": {
+            "min_price": 24,
+            "max_price": 24
+        },
+        "87": {
+            "min_price": 55,
+            "max_price": 55
         }
     }
 }

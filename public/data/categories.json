@@ -1,13 +1,123 @@
 [
     {
-        "id": 15,
-        "name": "Uncategorized-1",
-        "slug": "uncategorized",
+        "id": 67,
+        "name": "Accessories",
+        "slug": "accessories",
         "description": "",
         "parent": 0,
-        "count": 9,
+        "count": 2,
         "image": null,
         "review_count": 0,
-        "permalink": "https://api.meidanm.com/product-category/uncategorized/"
+        "permalink": "https://meidanm.net/product-category/accessories/"
+    },
+    {
+        "id": 37,
+        "name": "Bags",
+        "slug": "bags",
+        "description": "",
+        "parent": 0,
+        "count": 2,
+        "image": null,
+        "review_count": 0,
+        "permalink": "https://meidanm.net/product-category/bags/"
+    },
+    {
+        "id": 41,
+        "name": "Clothing",
+        "slug": "clothing",
+        "description": "",
+        "parent": 0,
+        "count": 2,
+        "image": null,
+        "review_count": 0,
+        "permalink": "https://meidanm.net/product-category/clothing/"
+    },
+    {
+        "id": 33,
+        "name": "Drinkware",
+        "slug": "drinkware",
+        "description": "",
+        "parent": 0,
+        "count": 2,
+        "image": null,
+        "review_count": 0,
+        "permalink": "https://meidanm.net/product-category/drinkware/"
+    },
+    {
+        "id": 87,
+        "name": "Electronics",
+        "slug": "electronics",
+        "description": "",
+        "parent": 0,
+        "count": 1,
+        "image": null,
+        "review_count": 0,
+        "permalink": "https://meidanm.net/product-category/electronics/"
+    },
+    {
+        "id": 73,
+        "name": "Fitness",
+        "slug": "fitness",
+        "description": "",
+        "parent": 0,
+        "count": 1,
+        "image": null,
+        "review_count": 0,
+        "permalink": "https://meidanm.net/product-category/fitness/"
+    },
+    {
+        "id": 56,
+        "name": "Home",
+        "slug": "home",
+        "description": "",
+        "parent": 0,
+        "count": 4,
+        "image": null,
+        "review_count": 0,
+        "permalink": "https://meidanm.net/product-category/home/"
+    },
+    {
+        "id": 29,
+        "name": "Kitchen",
+        "slug": "kitchen",
+        "description": "",
+        "parent": 0,
+        "count": 3,
+        "image": null,
+        "review_count": 0,
+        "permalink": "https://meidanm.net/product-category/kitchen/"
+    },
+    {
+        "id": 52,
+        "name": "Office",
+        "slug": "office",
+        "description": "",
+        "parent": 0,
+        "count": 1,
+        "image": null,
+        "review_count": 0,
+        "permalink": "https://meidanm.net/product-category/office/"
+    },
+    {
+        "id": 48,
+        "name": "Shoes",
+        "slug": "shoes",
+        "description": "",
+        "parent": 0,
+        "count": 1,
+        "image": null,
+        "review_count": 0,
+        "permalink": "https://meidanm.net/product-category/shoes/"
+    },
+    {
+        "id": 77,
+        "name": "Sportswear",
+        "slug": "sportswear",
+        "description": "",
+        "parent": 0,
+        "count": 1,
+        "image": null,
+        "review_count": 0,
+        "permalink": "https://meidanm.net/product-category/sportswear/"
     }
 ]
