@@ -1,5 +1,53 @@
 {
     "hero_title": "Aura",
     "hero_description": "sample shop",
+    "sections": [
+        {
+            "id": "sec_we66zcbnnz",
+            "type": "category_grid",
+            "enabled": true,
+            "data": {
+                "title": "",
+                "category_ids": []
+            }
+        },
+        {
+            "id": "sec_60dl1oxqio",
+            "type": "testimonials",
+            "enabled": true,
+            "data": {
+                "title": "Recommendations !",
+                "items": [
+                    {
+                        "name": "John",
+                        "review_text": "I love this shop~!"
+                    },
+                    {
+                        "name": "Anna",
+                        "review_text": "I love this shop too!! &lt;3"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "sec_x2nbo8z7s1",
+            "type": "custom",
+            "enabled": true,
+            "data": {
+                "layout": "one_column",
+                "pretitle": "check",
+                "title": "Title Check",
+                "text": "Description text check",
+                "button_text": "Click BTN check",
+                "button_url": "#",
+                "bg_color": "#ffffff",
+                "text_color": "#111111",
+                "button_bg_color": "#000000",
+                "button_text_color": "#ffffff",
+                "bg_image": "https://meidanm.net/wp-content/uploads/2026/09/aura-hero.png",
+                "image": "https://meidanm.net/wp-content/uploads/2026/08/classic_cotton_t_shirt_soft_everyday_cotton_t_shirt_relaxed_unisex_fit_flat_lay.png"
+            }
+        }
+    ],
     "hero_image": "https://meidanm.net/wp-content/uploads/2026/09/aura-hero.png"
 }
