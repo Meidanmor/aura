@@ -47,6 +47,28 @@
                 "bg_image": "https://meidanm.net/wp-content/uploads/2026/09/aura-hero.png",
                 "image": "https://meidanm.net/wp-content/uploads/2026/08/classic_cotton_t_shirt_soft_everyday_cotton_t_shirt_relaxed_unisex_fit_flat_lay.png"
             }
+        },
+        {
+            "id": "sec_x72um3kaeo",
+            "type": "banner",
+            "enabled": true,
+            "data": {
+                "text": "The best",
+                "link_url": "#",
+                "link_text": "Best text ever",
+                "bg_color": "#000000",
+                "text_color": "#ffffff"
+            }
+        },
+        {
+            "id": "sec_ptpsaq1xm5",
+            "type": "newsletter_signup",
+            "enabled": true,
+            "data": {
+                "title": "Join Us",
+                "subtitle": "Subscribe to our newsletter and get a discount!",
+                "button_text": "Subscribe"
+            }
         }
     ],
     "hero_image": "https://meidanm.net/wp-content/uploads/2026/09/aura-hero.png"
