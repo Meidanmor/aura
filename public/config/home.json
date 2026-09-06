@@ -3,12 +3,70 @@
     "hero_description": "sample shop",
     "sections": [
         {
+            "id": "sec_h4edzpkw1p",
+            "type": "advantages",
+            "enabled": true,
+            "data": {
+                "items": [
+                    {
+                        "icon": "shipping",
+                        "title": "Fast Shipping",
+                        "text": "Enjoy fast shipping worldwide!!"
+                    },
+                    {
+                        "icon": "organic",
+                        "title": "Organic",
+                        "text": "Sofsd sfdjlkfsj sfdlkjlksd vdlkjvl FFF"
+                    },
+                    {
+                        "icon": "guarantee",
+                        "title": "Warranty!",
+                        "text": "Enjoy our 1 year warranty"
+                    },
+                    {
+                        "icon": "returns",
+                        "title": "Easy Returns!!",
+                        "text": "vfddsf svd sd vd vdvdvsdvd vfdvdvfd dvdff"
+                    },
+                    {
+                        "icon": "support",
+                        "title": "Customer Support!!",
+                        "text": "gbffd sfd d cdssdc sd s  sdf sdsd~ vfsdvsd  ~"
+                    },
+                    {
+                        "icon": "quality",
+                        "title": "Quality",
+                        "text": "Top Quality with no compatition!"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "sec_1d2jbvo8uz",
+            "type": "featured_products",
+            "enabled": true,
+            "data": {
+                "title": "Featured Products",
+                "product_ids": [
+                    375,
+                    345,
+                    339,
+                    337
+                ]
+            }
+        },
+        {
             "id": "sec_we66zcbnnz",
             "type": "category_grid",
             "enabled": true,
             "data": {
-                "title": "",
-                "category_ids": []
+                "title": "Categories",
+                "category_ids": [
+                    67,
+                    37,
+                    33,
+                    77
+                ]
             }
         },
         {
@@ -17,14 +75,17 @@
             "enabled": true,
             "data": {
                 "title": "Recommendations !",
+                "display_style": "grid",
                 "items": [
                     {
                         "name": "John",
-                        "review_text": "I love this shop~!"
+                        "review_text": "I love this shop~!",
+                        "rating": 5
                     },
                     {
                         "name": "Anna",
-                        "review_text": "I love this shop too!! &lt;3"
+                        "review_text": "I love this shop too!! &lt;3",
+                        "rating": 5
                     }
                 ]
             }
