@@ -60,6 +60,7 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
                     productsData: ssrContext.productsData || [],
                     categoriesData: ssrContext.categoriesData || [],
                     homeProductsData: ssrContext.homeProductsData || [],
+                    sectionsData: ssrContext.sectionsData || {},
                     cartArray: ssrContext.cartArray || null,
                     productsTotal: ssrContext.productsTotal || 0,
                     pagesTotal: ssrContext.pagesTotal || 1,

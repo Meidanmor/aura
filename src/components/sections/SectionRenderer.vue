@@ -1,8 +1,13 @@
 <template>
   <template v-for="section in enabledSections" :key="section.id">
-    <component :is="sectionComponents[section.type]" :data="section.data" />
+    <component
+        :is="sectionComponents[section.type]"
+        :data="section.data"
+        :section-id="section.id"
+    />
   </template>
 </template>
+
 
 <script setup>
 /**

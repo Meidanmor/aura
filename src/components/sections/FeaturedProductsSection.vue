@@ -1,5 +1,5 @@
 <template>
-  <section v-if="data.products?.length" class="featured-products">
+  <section v-if="products?.length" class="featured-products">
     <div class="container">
       <h2 v-if="data.title" class="q-mb-md" v-html="sanitizeSectionText(data.title)" />
 
@@ -27,33 +27,57 @@
 </template>
 
 <script setup>
-import { onMounted, onServerPrefetch } from 'vue'
+import { onMounted, onServerPrefetch, useSSRContext } from 'vue'
 import AppCarousel from '../app/AppCarousel.vue'
 import ProductCard from '../shop/ProductCard.vue'
 import { useCarousel } from 'src/composables/useCrousel.js'
+import { useSectionData } from 'src/composables/useSectionData.js'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
+import productsStore from 'src/stores/products'
 
-// Expects `data.products` to already be resolved to full product objects —
-// see src/utils/resolve-sections-data.js, called from Index.vue's
-// preFetch(), which turns this section's `product_ids` into real products
-// server-side via productsStore.getFeaturedProducts (the same call the
-// homepage's original hardcoded Featured Products block used).
+// `data` is this section's raw config exactly as saved by WP (product_ids,
+// title) — passed straight through from home.json via SectionRenderer with
+// no page-level resolution. Turning product_ids into full product objects
+// is this component's own job, so it behaves identically no matter which
+// page renders it.
 const props = defineProps({
   data: {
     type: Object,
     required: true
+  },
+  sectionId: {
+    type: String,
+    required: true
   }
 })
 
-const carousel = useCarousel(() => props.data.products || [])
+const { data: products, resolve } = useSectionData(props.sectionId, (ssrContext) =>
+    productsStore.getFeaturedProducts(props.data.product_ids || [], ssrContext)
+)
+
+const carousel = useCarousel(() => products.value || [])
 carousel.recompute()
 
-onMounted(() => {
-  carousel.markMounted()
-  carousel.recompute(true)
-})
+// Captured synchronously in setup(), per useSSRContext()'s contract — same
+// pattern used elsewhere in this app (e.g. Index.vue) — rather than called
+// from inside the async onServerPrefetch callback below.
+let ssrContext = null
+if (process.env.SERVER) {
+  ssrContext = useSSRContext()
+}
 
 onServerPrefetch(async () => {
+  await resolve(ssrContext)
   await carousel.recompute(true)
+})
+
+onMounted(async () => {
+  carousel.markMounted()
+  if (products.value === null) {
+    // No SSR run produced data for this section instance — client-only
+    // navigation, or this page load wasn't server-rendered. Resolve now.
+    await resolve(null)
+  }
+  carousel.recompute(true)
 })
 </script>

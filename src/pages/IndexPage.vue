@@ -213,7 +213,6 @@ import {useCarousel} from '/src/composables/useCrousel.js'
 import {useSeoMeta} from "src/composables/useSeo.js";
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
 import {resolveHeroImageSrc} from 'src/utils/resolve-hero-image.js';
-import { resolveSectionsData } from 'src/utils/resolve-sections-data.js'
 import { sanitizeHeroTitle } from 'src/utils/sanitizeHtml.js'
 
 const $q = useQuasar()
@@ -270,9 +269,6 @@ defineOptions({
     if (configData) {
       configData.hero_image = await resolveHeroImageSrc(configData.hero_image, "homepage-hero", getApiOrigin(ssrContext))
 
-      if (configData.sections?.length) {
-        configData.sections = await resolveSectionsData(configData.sections, getApiOrigin(ssrContext))
-      }
     }
 
     const featuredIds = configData?.featured_products || []
@@ -378,9 +374,6 @@ onMounted(async() => {
     if (freshConfig) {
       if(freshConfig?.hero_image){
         freshConfig.hero_image = await resolveHeroImageSrc(freshConfig.hero_image, 'homepage-hero');
-      }
-      if (freshConfig.sections?.length) {
-        freshConfig.sections = await resolveSectionsData(freshConfig.sections, getApiOrigin())
       }
       homeSettings.value = freshConfig
     }

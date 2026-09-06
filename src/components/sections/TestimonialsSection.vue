@@ -52,7 +52,8 @@ const props = defineProps({
   data: {
     type: Object,
     required: true
-  }
+  },
+  sectionId: { type: String, default: '' }
 })
 
 const isCarousel = computed(() => props.data.display_style === 'carousel')
