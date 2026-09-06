@@ -18,6 +18,9 @@ import NewsletterSection from './NewsletterSection.vue'
 import CategoryGridSection from './CategoryGridSection.vue'
 import TestimonialsSection from './TestimonialsSection.vue'
 import CustomSection from './CustomSection.vue'
+import FeaturedProductsSection from './FeaturedProductsSection.vue'
+import AdvantagesSection from './AdvantagesSection.vue'
+import CtaSection from './CtaSection.vue'
 
 const props = defineProps({
   sections: {
@@ -31,7 +34,10 @@ const sectionComponents = {
   newsletter_signup: NewsletterSection,
   category_grid: CategoryGridSection,
   testimonials: TestimonialsSection,
-  custom: CustomSection
+  custom: CustomSection,
+  featured_products: FeaturedProductsSection,
+  advantages: AdvantagesSection,
+  cta: CtaSection
 }
 
 const enabledSections = computed(() =>
