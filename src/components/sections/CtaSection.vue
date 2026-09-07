@@ -1,22 +1,22 @@
 <template>
-  <section v-if="data.title || data.image" class="cta-section">
+  <section v-if="props.data.title || props.data.image" class="cta-section">
     <div class="container">
       <div class="row items-center q-col-gutter-xl">
-        <div v-if="data.image" class="col-12 col-md-6">
-          <img :src="data.image" :alt="data.title || ''" class="cta-section__image" />
+        <div v-if="props.data.image" class="col-12 col-md-6">
+          <img :src="props.data.image" :alt="props.data.title || ''" class="cta-section__image" width="400" height="400" />
         </div>
 
-        <div class="col-12" :class="data.image ? 'col-md-6' : ''">
-          <div v-if="data.pretitle" class="cta-section__pretitle">{{ data.pretitle }}</div>
-          <h2 v-if="data.title" class="cta-section__title" v-html="sanitizeSectionText(data.title)" />
-          <div v-if="data.text" class="cta-section__text" v-html="sanitizeSectionText(data.text)" />
+        <div class="col-12" :class="props.data.image ? 'col-md-6' : ''">
+          <div v-if="props.data.pretitle" class="cta-section__pretitle">{{ props.data.pretitle }}</div>
+          <h2 v-if="props.data.title" class="cta-section__title" v-html="sanitizeSectionText(props.data.title)" />
+          <div v-if="props.data.text" class="cta-section__text" v-html="sanitizeSectionText(props.data.text)" />
           <q-btn
-              v-if="data.button_text && data.button_url"
-              :to="data.button_url"
-              :label="data.button_text"
-              color="primary"
+              v-if="props.data.button_text && props.data.button_url"
+              v-bind="buttonTarget"
+              :label="props.data.button_text"
+              text-color="black"
               unelevated
-              class="cta-section__button"
+              class="cta-section__button btn-styled"
           />
         </div>
       </div>
@@ -26,14 +26,22 @@
 
 <script setup>
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
+import {computed} from "vue";
 
-defineProps({
+const props = defineProps({
   data: {
     type: Object,
     required: true
   },
   sectionId: { type: String, default: '' }
 })
+const buttonTarget = computed(() => {
+  const url = props.data?.button_url || ''
+  return url.startsWith('/')
+      ? { to: url }
+      : { href: url, target: url.startsWith('#') ? undefined : '_blank', rel: 'noopener noreferrer' }
+})
+
 </script>
 
 <style scoped>
