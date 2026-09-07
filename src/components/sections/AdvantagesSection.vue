@@ -32,13 +32,13 @@
 
 <script setup>
 import { computed } from 'vue'
-import { matLocalShipping, matEco, matVerified, matAssignmentReturn, matSupportAgent, matWorkspacePremium } from '@quasar/extras/material-icons'
+import { matLocalShipping, matVerified, matAssignmentReturn, matSupportAgent, matWorkspacePremium } from '@quasar/extras/material-icons'
 
 // Keys must match Shop_Settings_Builder::ADVANTAGE_ICONS on the WP side.
 // "custom" is handled separately above (renders the uploaded image instead).
 const iconMap = {
   shipping: matLocalShipping,
-  organic: matEco,
+  organic: 'matEco',
   guarantee: matVerified,
   returns: matAssignmentReturn,
   support: matSupportAgent,
