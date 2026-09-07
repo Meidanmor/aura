@@ -63,30 +63,6 @@
         </div>
       </div>
     </section>
-    <!-- Featured Products Slider -->
-    <section ref="productSection" class="featured-products">
-      <div class="container">
-        <h2 class="q-mb-md">Featured Products</h2>
-        <AppCarousel
-            v-model="productsCarousel.slide.value"
-            :carousel-key="productsCarousel.carouselKey.value"
-            :show-controls="productsCarousel.showControls.value"
-            :total="productsCarousel.total.value"
-            :on-keydown="productsCarousel.onKeydown"
-        >
-          <q-carousel-slide
-              v-for="(group, index) in productsCarousel.slideChunks.value"
-              :key="index" :name="index"
-          >
-            <div class="row q-col-gutter-md">
-              <div v-for="item in group" :key="item.id" class="col-12 col-sm-6 col-md-4">
-                <ProductCard :product="item" />
-              </div>
-            </div>
-          </q-carousel-slide>
-        </AppCarousel>
-      </div>
-    </section>
 
     <!-- CTA Section -->
     <section class="cta-section">
@@ -185,17 +161,6 @@
       </div>
     </section>
 
-
-    <!-- Newsletter Signup Section -->
-    <section class="newsletter-section">
-      <div class="container text-center">
-        <h2 class="q-mb-md">Join the List</h2>
-        <p class="text-body1 q-mb-lg">Get first access to new arrivals and 15% off your first order.</p>
-        <q-input filled v-model="email" label="Your email address" class="subscribe-email-input q-mb-md" />
-        <q-btn class="q-plr-lg" size="lg" label="Subscribe" color="secondary" text-color="primary" @click="subscribeNewsletter" />
-      </div>
-    </section>
-
   </div>
 </template>
 
@@ -204,9 +169,8 @@ import { ref, onMounted, watch, computed, useSSRContext, onServerPrefetch } from
 import { useQuasar } from 'quasar'
 import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import productsStore from 'src/stores/products'
-import { matStar, matWarning, matCheckCircle } from '@quasar/extras/material-icons'
+import { matStar } from '@quasar/extras/material-icons'
 import { loadPageConfig } from 'src/utils/config-loader'
-import ProductCard from '../components/shop/ProductCard.vue'
 import AppCarousel from '../components/app/AppCarousel.vue'
 import SectionRenderer from '../components/sections/SectionRenderer.vue'
 import {useCarousel} from '/src/composables/useCrousel.js'
@@ -313,23 +277,7 @@ if (process.env.SERVER) {
 const sanitizedHeroTitle = computed(() => sanitizeHeroTitle(homeSettings.value?.hero_title))
 // ----------------- Setup -----------------
 
-const productSection = ref(null)
 const ctaBtn = ref(null)
-const email = ref('')
-
-// Helper: chunk array
-const productsCarousel = useCarousel(() => {
-  if (staticFeaturedProducts.value?.length) {
-    return staticFeaturedProducts.value // plain array, no Promise
-  }
-  // Only this fallback path is genuinely async
-  return (async () => {
-    if (!productsStore.products.value.length) {
-      await productsStore.preFetchProducts({ api: true, per_page: 6, dryRun: false })
-    }
-    return productsStore.products.value.slice(0, 6)
-  })()
-})
 
 // ----------------- Testimonials & Instagram -----------------
 //const avatarSVG =
@@ -345,21 +293,10 @@ const testimonials = ref([
 const testimonialsCarousel = useCarousel( () => testimonials.value )
 
 
-// ----------------- Helpers -----------------
-const subscribeNewsletter = () => {
-  if (email.value) {
-    $q.notify({ type: 'positive', message: 'Subscribed successfully!', icon: matWarning })
-    email.value = ''
-  } else {
-    $q.notify({ type: 'negative', message: 'Please enter a valid email.', icon: matCheckCircle })
-  }
-}
 
-productsCarousel.recompute()
 testimonialsCarousel.recompute()
 
 onServerPrefetch(async () => {
-  await productsCarousel.recompute(true)
   await testimonialsCarousel.recompute(true)
 })
 
@@ -378,9 +315,7 @@ onMounted(async() => {
       homeSettings.value = freshConfig
     }
   }
-  productsCarousel.markMounted()
   testimonialsCarousel.markMounted()
-  productsCarousel.recompute(true)    // forceRemount now safely diverges from SSR output
   testimonialsCarousel.recompute(true)
 
 })
@@ -388,9 +323,7 @@ onMounted(async() => {
 const stopProductsWatch = watch(
     [() => productsStore.products.value, () => $q.screen.name, () => homeSettings.value],
     () => {
-      productsCarousel.markMounted()
       testimonialsCarousel.markMounted()
-      productsCarousel.recompute(true)    // forceRemount now safely diverges from SSR output
       testimonialsCarousel.recompute(true)
     }
 )

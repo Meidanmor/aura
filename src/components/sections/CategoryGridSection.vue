@@ -4,7 +4,7 @@
       <h2 v-if="data.title" class="q-mb-lg text-center" v-html="sanitizeSectionText(data.title)" />
       <div class="row q-col-gutter-md">
         <div v-for="cat in categories" :key="cat.id" class="col-6 col-md-3">
-          <q-btn flat no-caps :to="`/products?category=${cat.slug}`" class="category-grid-card">
+          <q-btn flat no-caps :to="`/product-category/${cat.slug}`" class="category-grid-card">
             <img v-if="cat.image" :src="cat.image" :alt="cat.name" loading="lazy" />
             <span>{{ cat.name }}</span>
           </q-btn>

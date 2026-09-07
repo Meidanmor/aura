@@ -27,7 +27,9 @@
 </template>
 
 <script setup>
-import { onMounted, onServerPrefetch, useSSRContext } from 'vue'
+import { onMounted, onServerPrefetch, useSSRContext, watch } from 'vue'
+import {onBeforeRouteLeave} from "vue-router";
+import {useQuasar} from "quasar";
 import AppCarousel from '../app/AppCarousel.vue'
 import ProductCard from '../shop/ProductCard.vue'
 import { useCarousel } from 'src/composables/useCrousel.js'
@@ -35,11 +37,7 @@ import { useSectionData } from 'src/composables/useSectionData.js'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
 import productsStore from 'src/stores/products'
 
-// `data` is this section's raw config exactly as saved by WP (product_ids,
-// title) — passed straight through from home.json via SectionRenderer with
-// no page-level resolution. Turning product_ids into full product objects
-// is this component's own job, so it behaves identically no matter which
-// page renders it.
+const $q = useQuasar();
 const props = defineProps({
   data: {
     type: Object,
@@ -51,16 +49,31 @@ const props = defineProps({
   }
 })
 
-const { data: products, resolve } = useSectionData(props.sectionId, (ssrContext) =>
-    productsStore.getFeaturedProducts(props.data.product_ids || [], ssrContext)
-)
+// Mirrors Index.vue's resolveFeaturedProducts: try the admin-configured
+// product_ids first, and fall back to the latest 6 products if there are
+// no ids configured, or if resolving the configured ids came back empty
+// (e.g. stale ids no longer in the catalog).
+async function resolveFeaturedProducts(ssrContext) {
+  const ids = props.data.product_ids || []
+
+  let items = ids.length
+      ? await productsStore.getFeaturedProducts(ids, ssrContext)
+      : []
+
+  if (!items?.length) {
+    items = await productsStore
+        .preFetchProducts({ api: true, per_page: 6, dryRun: true, ssrContext })
+        .then((r) => r.products)
+  }
+
+  return items
+}
+
+const { data: products, resolve } = useSectionData(props.sectionId, resolveFeaturedProducts)
 
 const carousel = useCarousel(() => products.value || [])
 carousel.recompute()
 
-// Captured synchronously in setup(), per useSSRContext()'s contract — same
-// pattern used elsewhere in this app (e.g. Index.vue) — rather than called
-// from inside the async onServerPrefetch callback below.
 let ssrContext = null
 if (process.env.SERVER) {
   ssrContext = useSSRContext()
@@ -74,10 +87,19 @@ onServerPrefetch(async () => {
 onMounted(async () => {
   carousel.markMounted()
   if (products.value === null) {
-    // No SSR run produced data for this section instance — client-only
-    // navigation, or this page load wasn't server-rendered. Resolve now.
     await resolve(null)
   }
   carousel.recompute(true)
 })
+const stopProductsWatch = watch(
+    [() => products.value, () => $q.screen.name],
+    () => {
+      carousel.markMounted()
+      carousel.recompute(true)    // forceRemount now safely diverges from SSR output
+    }
+)
+onBeforeRouteLeave(() => {
+  stopProductsWatch()
+})
+
 </script>
