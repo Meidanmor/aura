@@ -5,7 +5,7 @@
         <q-icon
             v-for="n in 5"
             :key="n"
-            name="star"
+            :name="matStar"
             :color="n <= testimonial.rating ? 'amber' : 'grey-4'"
             size="18px"
         />
@@ -19,6 +19,8 @@
 </template>
 
 <script setup>
+import { matStar } from '@quasar/extras/material-icons'
+
 defineProps({
   testimonial: {
     type: Object,
