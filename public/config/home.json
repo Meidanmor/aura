@@ -130,7 +130,20 @@
                 "subtitle": "Subscribe to our newsletter and get a discount!",
                 "button_text": "Subscribe"
             }
+        },
+        {
+            "id": "sec_gdymjvvxvx",
+            "type": "cta",
+            "enabled": true,
+            "data": {
+                "pretitle": "Our Philosophy",
+                "title": "Simple Pieces, Thoughtfully Made.",
+                "text": "Our journey began with a simple idea: clothing should be comfortable, durable, and made without compromise. Every piece is designed with quality materials that only get better with wear.",
+                "button_text": "Explore our products",
+                "button_url": "https://aura-phi-woad.vercel.app/products",
+                "image": "https://meidanm.net/wp-content/uploads/2026/09/cta-img.webp"
+            }
         }
     ],
-    "hero_image": "https://meidanm.net/wp-content/uploads/2026/09/aura-hero.png"
+    "hero_image": "https://meidanm.net/wp-content/uploads/2026/09/aura-hero.webp"
 }
