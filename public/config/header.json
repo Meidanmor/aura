@@ -2,8 +2,8 @@
     "announcement": {
         "enabled": true,
         "text": "MY SHOP",
-        "bg_color": "#000000",
-        "text_color": "#ffffff"
+        "bg_color": "",
+        "text_color": ""
     },
     "settings": {
         "sticky": true,

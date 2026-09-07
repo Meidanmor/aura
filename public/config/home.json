@@ -7,34 +7,42 @@
             "type": "advantages",
             "enabled": true,
             "data": {
+                "icon_color": "#ff0000",
+                "text_color": "#7e3e3e",
                 "items": [
                     {
-                        "icon": "shipping",
+                        "icon": "custom",
                         "title": "Fast Shipping",
-                        "text": "Enjoy fast shipping worldwide!!"
+                        "text": "Enjoy fast shipping worldwide!!",
+                        "custom_icon": "https://meidanm.net/wp-content/uploads/2026/08/Aura-logo.svg"
                     },
                     {
                         "icon": "organic",
+                        "custom_icon_id": 0,
                         "title": "Organic",
                         "text": "Sofsd sfdjlkfsj sfdlkjlksd vdlkjvl FFF"
                     },
                     {
                         "icon": "guarantee",
+                        "custom_icon_id": 0,
                         "title": "Warranty!",
                         "text": "Enjoy our 1 year warranty"
                     },
                     {
                         "icon": "returns",
+                        "custom_icon_id": 0,
                         "title": "Easy Returns!!",
                         "text": "vfddsf svd sd vd vdvdvsdvd vfdvdvfd dvdff"
                     },
                     {
                         "icon": "support",
+                        "custom_icon_id": 0,
                         "title": "Customer Support!!",
                         "text": "gbffd sfd d cdssdc sd s  sdf sdsd~ vfsdvsd  ~"
                     },
                     {
                         "icon": "quality",
+                        "custom_icon_id": 0,
                         "title": "Quality",
                         "text": "Top Quality with no compatition!"
                     }
