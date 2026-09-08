@@ -12,6 +12,66 @@
                 "text_color": ""
             },
             "location": "before_breadcrumbs"
+        },
+        {
+            "id": "sec_643ng7d00c",
+            "type": "advantages",
+            "enabled": true,
+            "data": {
+                "icon_color": "",
+                "text_color": "",
+                "items": []
+            },
+            "location": "after_breadcrumbs"
+        },
+        {
+            "id": "sec_yb6n4omdfp",
+            "type": "banner",
+            "enabled": true,
+            "data": {
+                "text": "SALE",
+                "link_url": "",
+                "link_text": "",
+                "bg_color": "",
+                "text_color": ""
+            },
+            "location": "before_filters"
+        },
+        {
+            "id": "sec_e6brjov3yu",
+            "type": "cta",
+            "enabled": true,
+            "data": {
+                "pretitle": "Click Here",
+                "title": "Just kidding",
+                "text": "BIE!",
+                "button_text": "CHECK",
+                "button_url": "#",
+                "image_id": 0
+            },
+            "location": "before_products_grid"
+        },
+        {
+            "id": "sec_khbushj2nd",
+            "type": "testimonials",
+            "enabled": true,
+            "data": {
+                "title": "",
+                "display_style": "grid",
+                "items": []
+            },
+            "location": "after_products_grid"
+        },
+        {
+            "id": "sec_m46oxleiu2",
+            "type": "newsletter_signup",
+            "enabled": true,
+            "data": {
+                "title": "Sign Up!",
+                "subtitle": "",
+                "button_text": "Subscribe"
+            },
+            "location": "after_pagination"
         }
     ]
 }
