@@ -7,8 +7,8 @@
             "type": "advantages",
             "enabled": true,
             "data": {
-                "icon_color": "#ff0000",
-                "text_color": "#7e3e3e",
+                "icon_color": "",
+                "text_color": "",
                 "items": [
                     {
                         "icon": "custom",
@@ -83,16 +83,31 @@
             "enabled": true,
             "data": {
                 "title": "Recommendations !",
-                "display_style": "grid",
+                "display_style": "carousel",
                 "items": [
                     {
-                        "name": "John",
-                        "review_text": "I love this shop~!",
+                        "name": "Alice Johnson",
+                        "review_text": "The merino sweater is the softest thing I own \u2014 perfect for layering.",
                         "rating": 5
                     },
                     {
-                        "name": "Anna",
-                        "review_text": "I love this shop too!! &lt;3",
+                        "name": "Mark Thompson",
+                        "review_text": "Love the quality of the tote bag, sturdy enough for daily use.",
+                        "rating": 5
+                    },
+                    {
+                        "name": "Sophie Lee",
+                        "review_text": "Fast shipping and the sizing guide was spot on.",
+                        "rating": 5
+                    },
+                    {
+                        "name": "John Doe",
+                        "review_text": "Amazing quality!",
+                        "rating": 5
+                    },
+                    {
+                        "name": "Jane Smith",
+                        "review_text": "Will buy again.",
                         "rating": 5
                     }
                 ]
