@@ -6,6 +6,7 @@ import { scroll } from 'quasar'
 import { fetchSeoForPath, useSeoMeta } from 'src/composables/useSeo'
 import productsStore from 'src/stores/products'
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
+import {loadPageConfig} from "src/utils/config-loader.js";
 
 const { setVerticalScrollPosition } = scroll
 
@@ -39,6 +40,9 @@ export const sortOptions = [
  */
 export function createArchivePreFetch(mode) {
     return async function preFetch({ ssrContext, currentRoute, redirect }) {
+
+        const isPreview = currentRoute.query.preview === 'true'
+        const configData = await loadPageConfig('shop', isPreview, getApiOrigin(ssrContext))
 
         const categories = await productsStore.prefetchCategories(ssrContext)
 
@@ -97,6 +101,8 @@ export function createArchivePreFetch(mode) {
             ssrContext.productsTotal = result.total
             ssrContext.pagesTotal = result.totalPages
             ssrContext.seoData = seo
+            ssrContext.pageConfig = configData
+
             if (mode === 'category') ssrContext.selectedCategoryData = currentCat
         } else {
             window.__PRODUCTS_DATA__ = result.products
@@ -105,6 +111,7 @@ export function createArchivePreFetch(mode) {
             window.__CATEGORIES_DATA__ = categories
             window.__PRICE_META__ = priceMeta
             window.__SEO_DATA__ = seo
+            window.__PAGE_CONFIG__ = configData;
             if (mode === 'category') window.__SELECTED_CATEGORY_DATA__ = currentCat
         }
 
@@ -137,12 +144,19 @@ export function useProductArchive(mode) {
     const priceRange          = ref({ min: 0, max: 1000 })
     const priceChanged        = ref(0)
     const pendingPriceRange   = ref(null)
+    const shopSettings = ref(
+        process.env.CLIENT && window.__PAGE_CONFIG__
+            ? window.__PAGE_CONFIG__
+            : null
+    )
 
     useSeoMeta()
 
     if (process.env.SERVER) {
         const ssr = useSSRContext()
         if (ssr) {
+            shopSettings.value = ssr?.pageConfig || null
+
             productsStore.categories.value = ssr.categoriesData || []
 
             if (mode === 'category') {
@@ -172,12 +186,17 @@ export function useProductArchive(mode) {
         router, route
     )
 
+
     const isHydrated = ref(
         process.env.CLIENT && (productsStore.initialized.value === true || !!(window.__PRODUCTS_DATA__?.length))
     )
 
     if (process.env.CLIENT) {
 
+
+        if (window.__PAGE_CONFIG__ && Object.keys(window.__PAGE_CONFIG__).length) {
+            shopSettings.value = window.__PAGE_CONFIG__
+        }
         const hasSSRProducts = Array.isArray(window.__PRODUCTS_DATA__) && window.__PRODUCTS_DATA__.length
         const currentCatFromWindow = mode === 'category'
             ? (window.__CATEGORIES_DATA__ || []).find(c => c.slug === route.params.slug) || null
@@ -332,6 +351,18 @@ export function useProductArchive(mode) {
     onMounted(async () => {
         isHydrated.value = true
 
+
+        if (window.__PAGE_CONFIG__ && Object.keys(window.__PAGE_CONFIG__).length) {
+            shopSettings.value = window.__PAGE_CONFIG__
+        } else {
+            const isPreview = route.query.preview === 'true'
+            // Use it directly
+            const freshConfig = await loadPageConfig('shop', isPreview)
+            if (freshConfig) {
+                shopSettings.value = freshConfig
+            }
+        }
+
         if (mode === 'category' && window.__SELECTED_CATEGORY_DATA__) {
             selectedCategoryOBJ.value = window.__SELECTED_CATEGORY_DATA__
             selectedCategory.value = [window.__SELECTED_CATEGORY_DATA__.id]
@@ -378,6 +409,6 @@ export function useProductArchive(mode) {
         search, selectedCategory, selectedCategoryOBJ, currentPage, sortBy, filtersOpen,
         priceMin, priceMax, priceRange, isHydrated,
         categoryOptions, paginatedProducts, totalPages, totalProducts,
-        sortOptions, onPriceChange, scrollToTop, productsStore,
+        sortOptions, onPriceChange, scrollToTop, productsStore, shopSettings
     }
 }

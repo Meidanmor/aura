@@ -26,10 +26,16 @@ h1,
 .products-inner {
   flex: 100%;
 }
+.products-wrap :deep(.dynamic-sections) {
+    width: 100%;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
 .filters-wrap {
   width: 25%;
   row-gap: 25px;
   flex-direction: column;
+    flex-wrap: nowrap;
   position: sticky;
   top: 70px;
   height: 70vh;

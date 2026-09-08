@@ -5,8 +5,9 @@
       <div class="row q-col-gutter-md">
         <div v-for="cat in categories" :key="cat.id" class="col-6 col-md-3">
           <q-btn flat no-caps :to="`/product-category/${cat.slug}`" class="category-grid-card">
+            <div class="absolute-full bg-black" style="opacity: 0.2; z-index: 1"></div>
             <img v-if="cat.image" :src="cat.image" :alt="cat.name" loading="lazy" />
-            <span>{{ cat.name }}</span>
+            <span class="category-name text-h6 absolute">{{ cat.name }}</span>
           </q-btn>
         </div>
       </div>
@@ -88,14 +89,23 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
+  padding: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 100%;
+}
+.category-grid-card .category-name {
+  transition: 0.3s ease
+}
+
+.category-grid-card:hover .category-name {
+  transform: scale(1.1);
 }
 
 .category-grid-card img {
   width: 100%;
   aspect-ratio: 1 / 1;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: inherit;
 }
 </style>

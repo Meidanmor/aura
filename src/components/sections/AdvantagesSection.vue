@@ -1,7 +1,7 @@
 <template>
   <section v-if="data.items?.length" class="advantages-section" :style="cssVars">
     <div class="container">
-      <div class="row q-col-gutter-md">
+      <div class="row justify-center">
 
         <div
             v-for="(item, index) in data.items"
@@ -67,6 +67,12 @@ const cssVars = computed(() => ({
   padding: 24px 16px;
 }
 
+.advantage-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px
+}
+
 .advantage-card__icon {
   margin-bottom: 12px;
   color: var(--advantage-icon-color);
@@ -91,6 +97,21 @@ const cssVars = computed(() => ({
 @media(min-width: 768px){
   .advantage-card {
     text-align: center;
+  }
+}
+@media(max-width: 767px) {
+  .advantage-card {
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--advantage-text-color);
+    width: 100%;
+  }
+}
+@media(min-width: 768px) {
+  .advantage-card {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: calc(100% / 3);
   }
 }
 </style>

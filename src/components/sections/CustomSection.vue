@@ -83,8 +83,6 @@ const buttonStyle = computed(() => ({
 <style scoped>
 .custom-section {
   position: relative;
-  padding: 64px 0;
-  overflow: hidden;
 }
 
 .custom-section__bg {

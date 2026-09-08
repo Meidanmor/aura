@@ -87,6 +87,12 @@ a {
     text-decoration: none;
     color: var(--q-secondary);
 }
+*:focus-visible {
+    outline: 1px solid;
+}
+span.q-focus-helper{
+    display: none;
+}
 .text-text {
     color: var(--q-text);
 }

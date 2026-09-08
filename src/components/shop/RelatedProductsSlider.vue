@@ -71,10 +71,6 @@ const updatePerSlide = () => {
   else perSlide.value = 4
 }
 updatePerSlide()
-watch(() => $q.screen.name, () => {
-  updatePerSlide()
-  carousel.recompute(false)
-})
 
 const colClass = computed(() => {
   if ($q.screen.lt.sm) return 'col-6'
@@ -85,6 +81,12 @@ const colClass = computed(() => {
 // useCarousel drives chunking based on its own internal breakpoints (1/2/3 per slide)
 const carousel = useCarousel(async () => products.value, {
   chunkSizes: { xs: 2, sm: 3, md: 4 }
+})
+
+watch(() => $q.screen.name, () => {
+  updatePerSlide()
+  carousel.markMounted()
+  carousel.recompute(false)
 })
 
 const fetchRelatedProducts = async () => {
@@ -113,7 +115,8 @@ const fetchRelatedProducts = async () => {
   }
 
   products.value = related
-  await carousel.recompute(true)
+  carousel.markMounted()
+  carousel.recompute(true)
 }
 
 onMounted(fetchRelatedProducts)

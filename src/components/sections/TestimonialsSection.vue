@@ -42,12 +42,15 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onServerPrefetch } from 'vue'
+import {computed, onMounted, onServerPrefetch, watch} from 'vue'
 import AppCarousel from '../app/AppCarousel.vue'
+import {useQuasar} from "quasar";
 import TestimonialCard from './TestimonialCard.vue'
 import { useCarousel } from 'src/composables/useCrousel.js'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
+import {onBeforeRouteLeave} from "vue-router";
 
+const $q = useQuasar()
 const props = defineProps({
   data: {
     type: Object,
@@ -68,8 +71,18 @@ onMounted(() => {
   carousel.markMounted()
   carousel.recompute(true) // forceRemount, same as the homepage's other carousels
 })
-
 onServerPrefetch(async () => {
   await carousel.recompute(true)
 })
+const stopTestimonialsWatch = watch(
+    [() => props.data.items, () => $q.screen.name],
+    () => {
+      carousel.markMounted()
+      carousel.recompute(true)    // forceRemount now safely diverges from SSR output
+    }
+)
+onBeforeRouteLeave(() => {
+  stopTestimonialsWatch()
+})
+
 </script>

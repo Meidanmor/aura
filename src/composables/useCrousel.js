@@ -22,12 +22,34 @@ export function useCarousel(getItems, { chunkSizes = defaultChunkSizes } = {}) {
   const recompute = (forceRemount = false) => {
     const result = getItems()
 
-    const finish = (items) => {
+    /*const finish = (items) => {
       const chunkSize = clientMounted.value
           ? ($q.screen.lt.sm ? chunkSizes.xs : $q.screen.lt.md ? chunkSizes.sm : chunkSizes.md)
           : chunkSizes.md
       if (forceRemount) carouselKey.value++
       slideChunks.value = getChunks(items, chunkSize)
+    }*/
+    const finish = (items) => {
+      const chunkSize = clientMounted.value
+          ? ($q.screen.lt.sm
+              ? chunkSizes.xs
+              : $q.screen.lt.md
+                  ? chunkSizes.sm
+                  : chunkSizes.md)
+          : chunkSizes.md
+
+      const chunks = getChunks(items, chunkSize)
+
+      slideChunks.value = chunks
+
+      slide.value = Math.min(
+          slide.value,
+          Math.max(0, chunks.length - 1)
+      )
+
+      if (forceRemount) {
+        carouselKey.value++
+      }
     }
 
     if (result && typeof result.then === 'function') {

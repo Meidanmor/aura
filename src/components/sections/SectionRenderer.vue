@@ -1,6 +1,7 @@
 <template>
   <template v-for="section in enabledSections" :key="section.id">
     <component
+        :class="section.location === 'before_products_grid' || section.location === 'after_products_grid' ? 'dynamic-sections' : ''"
         :is="sectionComponents[section.type]"
         :data="section.data"
         :section-id="section.id"
@@ -31,7 +32,9 @@ const props = defineProps({
   sections: {
     type: Array,
     default: () => []
-  }
+  },
+  location: { type: String, default: null } // null = render everything, in array order (home page behavior)
+
 })
 
 const sectionComponents = {
@@ -46,8 +49,10 @@ const sectionComponents = {
 }
 
 const enabledSections = computed(() =>
-    (props.sections || []).filter(
-        (section) => section?.enabled && sectionComponents[section?.type]
-    )
+    (props.sections || [])
+        .filter(s => s?.enabled && sectionComponents[s?.type])
+        .filter(s => props.location == null || s.location === props.location)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 )
+
 </script>

@@ -35,6 +35,8 @@ safelist: {
         // --- Header & Shadow Fixes ---
         'q-header--hidden',
         'q-layout__shadow',
+        'q-focus-helper',
+        'q-focusable',
         /^absolute/,
         'fullscreen',
         'fixed-full',
@@ -112,7 +114,7 @@ safelist: {
         'q-transition--slide-up',
     ],
     deep: [
-        /^q-scrollarea/, /q-btn/, /q-icon/, /q-ripple/, /q-scrollarea/, /q-layout__shadow/, /q-drawer/, /q-list/, /^q-carousel/, /q-spinner/, /q-menu/, /q-select/, /q-img/, /q-field/, /q-input/, /q-textarea/, /q-option-group/, /q-radio/, /q-checkbox/, /^q-range/, /^q-slider/, /^q-tabs/
+        /q-focus-helper/,/^q-scrollarea/, /q-btn/, /q-icon/, /q-ripple/, /q-scrollarea/, /q-layout__shadow/, /q-drawer/, /q-list/, /^q-carousel/, /q-spinner/, /q-menu/, /q-select/, /q-img/, /q-field/, /q-input/, /q-textarea/, /q-option-group/, /q-radio/, /q-checkbox/, /^q-range/, /^q-slider/, /^q-tabs/
     ],
     greedy: [ /^q-scrollarea/, /q-transition/, /rotate/, /^q-radio/, /^q-range/]
 },

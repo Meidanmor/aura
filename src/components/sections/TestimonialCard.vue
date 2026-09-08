@@ -18,6 +18,7 @@
                 itemtype="https://schema.org/Person"
             >
               <span itemprop="name">{{ testimonial.name }}</span>
+
             </h3>
 
             <!-- Rating -->

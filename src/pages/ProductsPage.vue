@@ -1,16 +1,20 @@
 <template>
   <div class="main-wrapper-div">
     <div class="container">
+      <SectionRenderer :sections="shopSettings?.sections" location="before_breadcrumbs"/>
       <q-breadcrumbs>
           <q-breadcrumbs-el label="Home" to="/" />
           <q-breadcrumbs-el label="Products" />
         </q-breadcrumbs>
+      <SectionRenderer :sections="shopSettings?.sections" location="after_breadcrumbs"/>
 
 
       <h1>Products</h1>
       <div class="archive-layout flex no-wrap">
 
         <div class="filters-wrap flex" :class="{ 'shown': filtersOpen }" @pointerdown.stop >
+          <SectionRenderer :sections="shopSettings?.sections" location="before_filters"/>
+
           <q-scroll-area class="fit">
 
           <div class="sticky filters-drawer-header flex justify-between q-mb-md">
@@ -53,6 +57,7 @@
 
         </div>
         <div class="products-wrap">
+
           <div v-if="paginatedProducts.length" class="flex justify-between q-mb-md total-products">
             <div v-if="totalProducts" class="text-subtitle1 q-mb-sm">
               Found {{ totalProducts || 0 }} product{{ totalProducts === 1 ? '' : 's' }}
@@ -66,7 +71,11 @@
               @toggle-filters="filtersOpen = !filtersOpen"
           />
 
+          <SectionRenderer :sections="shopSettings?.sections" location="before_products_grid"/>
+
           <ProductResultsGrid :loading="productsStore.productsLoading.value" :products="paginatedProducts"/>
+
+          <SectionRenderer :sections="shopSettings?.sections" location="after_products_grid"/>
 
           <!-- Pagination -->
           <ArchivePagination
@@ -74,8 +83,11 @@
               :totalPages="totalPages"
               @page-change="scrollToTop"
           />
+
         </div>
       </div>
+      <SectionRenderer :sections="shopSettings?.sections" location="after_pagination"/>
+
     </div>
   </div>
 </template>
@@ -87,15 +99,19 @@ import PriceFilterCard from '../components/shop/PriceFilterCard.vue'
 import ProductResultsGrid from '../components/shop/ProductResultsGrid.vue';
 import ArchivePagination from '../components/shop/ArchivePagination.vue';
 import SortBar from '../components/shop/SortBar.vue';
+import SectionRenderer from '../components/sections/SectionRenderer.vue'
 
-defineOptions({ preFetch: createArchivePreFetch('shop') })
+defineOptions({preFetch: createArchivePreFetch('shop')})
 
 const {
   search, selectedCategory, currentPage, sortBy, filtersOpen,
   priceMin, priceMax, priceRange, isHydrated,
   categoryOptions, paginatedProducts, totalPages, totalProducts,
-  sortOptions, onPriceChange, scrollToTop, productsStore,
+  sortOptions, onPriceChange, scrollToTop, productsStore, shopSettings
 } = useProductArchive('shop')
+
+
+
 </script>
 
 <style scoped>
