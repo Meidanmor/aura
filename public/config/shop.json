@@ -1,0 +1,17 @@
+{
+    "sections": [
+        {
+            "id": "sec_p5k16gu0jf",
+            "type": "banner",
+            "enabled": true,
+            "data": {
+                "text": "Hi",
+                "link_url": "#",
+                "link_text": "Bie",
+                "bg_color": "",
+                "text_color": ""
+            },
+            "location": "before_breadcrumbs"
+        }
+    ]
+}
