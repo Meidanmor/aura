@@ -6,7 +6,7 @@
             "id": "sec_h4edzpkw1p",
             "type": "advantages",
             "enabled": true,
-            "section_bg_color": "",
+            "section_bg_color": "global:primary",
             "data": {
                 "icon_color": "",
                 "text_color": "",
