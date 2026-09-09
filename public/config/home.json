@@ -6,6 +6,7 @@
             "id": "sec_h4edzpkw1p",
             "type": "advantages",
             "enabled": true,
+            "section_bg_color": "",
             "data": {
                 "icon_color": "",
                 "text_color": "",
@@ -53,6 +54,7 @@
             "id": "sec_1d2jbvo8uz",
             "type": "featured_products",
             "enabled": true,
+            "section_bg_color": "",
             "data": {
                 "title": "Featured Products",
                 "product_ids": [
@@ -67,6 +69,7 @@
             "id": "sec_we66zcbnnz",
             "type": "category_grid",
             "enabled": true,
+            "section_bg_color": "",
             "data": {
                 "title": "Categories",
                 "category_ids": [
@@ -81,6 +84,7 @@
             "id": "sec_60dl1oxqio",
             "type": "testimonials",
             "enabled": true,
+            "section_bg_color": "",
             "data": {
                 "title": "Recommendations !",
                 "display_style": "carousel",
@@ -117,6 +121,7 @@
             "id": "sec_x2nbo8z7s1",
             "type": "custom",
             "enabled": true,
+            "section_bg_color": "",
             "data": {
                 "layout": "one_column",
                 "pretitle": "check",
@@ -136,6 +141,7 @@
             "id": "sec_x72um3kaeo",
             "type": "banner",
             "enabled": true,
+            "section_bg_color": "",
             "data": {
                 "text": "The best",
                 "link_url": "#",
@@ -148,6 +154,7 @@
             "id": "sec_ptpsaq1xm5",
             "type": "newsletter_signup",
             "enabled": true,
+            "section_bg_color": "",
             "data": {
                 "title": "Join Us",
                 "subtitle": "Subscribe to our newsletter and get a discount!",
@@ -158,6 +165,7 @@
             "id": "sec_gdymjvvxvx",
             "type": "cta",
             "enabled": true,
+            "section_bg_color": "",
             "data": {
                 "pretitle": "Our Philosophy",
                 "title": "Simple Pieces, Thoughtfully Made.",

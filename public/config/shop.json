@@ -4,6 +4,7 @@
             "id": "sec_p5k16gu0jf",
             "type": "banner",
             "enabled": true,
+            "section_bg_color": "global:secondary",
             "data": {
                 "text": "Hi",
                 "link_url": "#",
@@ -17,10 +18,18 @@
             "id": "sec_643ng7d00c",
             "type": "advantages",
             "enabled": true,
+            "section_bg_color": "global:accent",
             "data": {
                 "icon_color": "",
                 "text_color": "",
-                "items": []
+                "items": [
+                    {
+                        "icon": "shipping",
+                        "custom_icon_id": 0,
+                        "title": "Hi",
+                        "text": "Yes!"
+                    }
+                ]
             },
             "location": "after_breadcrumbs"
         },
@@ -28,6 +37,7 @@
             "id": "sec_yb6n4omdfp",
             "type": "banner",
             "enabled": true,
+            "section_bg_color": "",
             "data": {
                 "text": "SALE",
                 "link_url": "",
@@ -41,6 +51,7 @@
             "id": "sec_e6brjov3yu",
             "type": "cta",
             "enabled": true,
+            "section_bg_color": "",
             "data": {
                 "pretitle": "Click Here",
                 "title": "Just kidding",
@@ -55,10 +66,17 @@
             "id": "sec_khbushj2nd",
             "type": "testimonials",
             "enabled": true,
+            "section_bg_color": "global:primary",
             "data": {
                 "title": "",
                 "display_style": "grid",
-                "items": []
+                "items": [
+                    {
+                        "name": "Great",
+                        "review_text": "Way",
+                        "rating": 5
+                    }
+                ]
             },
             "location": "after_products_grid"
         },
@@ -66,6 +84,7 @@
             "id": "sec_m46oxleiu2",
             "type": "newsletter_signup",
             "enabled": true,
+            "section_bg_color": "",
             "data": {
                 "title": "Sign Up!",
                 "subtitle": "",
