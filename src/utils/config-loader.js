@@ -15,6 +15,7 @@ function getTrustedAdminOrigin() {
   try {
     return new URL(raw).origin
   } catch (err) {
+    console.warn(err)
     return null
   }
 }
