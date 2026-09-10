@@ -155,13 +155,7 @@ onMounted(async() => {
       homeSettings.value = freshConfig
     }
   }
-  unsubscribeLiveConfig = subscribeToLiveConfig('home', async (data) => {
-    if (data?.hero_image) {
-      data.hero_image = await resolveHeroImageSrc(data.hero_image, 'homepage-hero')
-    }
-    homeSettings.value = data
-  })
-
+  unsubscribeLiveConfig = subscribeToLiveConfig('home', (data) => { homeSettings.value = data })
 })
 
 onUnmounted(() => {

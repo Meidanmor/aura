@@ -467,10 +467,7 @@ onMounted(async () => {
   // Live Preview (Shop Builder admin iframe) — no-op everywhere else,
   // since subscribeToLiveConfig() checks for ?qwoo_editor=1 internally.
   liveConfigUnsubscribers.push(
-      subscribeToLiveConfig('branding', async (data) => {
-        if (data?.logo) data.logo = await resolveHeroImageSrc(data.logo, 'branding')
-        brandSettings.value = data
-      }),
+      subscribeToLiveConfig('branding', (data) => { brandSettings.value = data }),
       subscribeToLiveConfig('header', (data) => { headerSettings.value = data }),
       subscribeToLiveConfig('footer', (data) => { footerSettings.value = data })
   )
