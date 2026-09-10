@@ -39,10 +39,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, useSSRContext } from 'vue'
+import { ref, onMounted, onUnmounted, computed, useSSRContext } from 'vue'
 import { useRoute } from 'vue-router'
 import productsStore from 'src/stores/products'
-import { loadPageConfig } from 'src/utils/config-loader'
+import { loadPageConfig, subscribeToLiveConfig } from 'src/utils/config-loader'
 import SectionRenderer from '../components/sections/SectionRenderer.vue'
 import {useSeoMeta} from "src/composables/useSeo.js";
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
@@ -64,6 +64,7 @@ if (process.env.CLIENT && window.__HOME_PRODUCTS_DATA__) {
 }
 
 const route = useRoute();
+let unsubscribeLiveConfig = () => {}
 
 defineOptions({
   async preFetch({ssrContext, currentRoute}) {
@@ -154,7 +155,17 @@ onMounted(async() => {
       homeSettings.value = freshConfig
     }
   }
+  unsubscribeLiveConfig = subscribeToLiveConfig('home', async (data) => {
+    if (data?.hero_image) {
+      data.hero_image = await resolveHeroImageSrc(data.hero_image, 'homepage-hero')
+    }
+    homeSettings.value = data
+  })
 
+})
+
+onUnmounted(() => {
+  unsubscribeLiveConfig()
 })
 
 </script>

@@ -87,7 +87,8 @@
 
 <script setup>
 import {ref, computed, watch, onMounted, onUnmounted, useSSRContext} from 'vue'
-import { loadPageConfig } from 'src/utils/config-loader'
+import { loadPageConfig, subscribeToLiveConfig } from 'src/utils/config-loader'
+import { resolveHeroImageSrc } from 'src/utils/resolve-hero-image'
 import { useQuasar } from 'quasar'
 import cart from 'src/stores/cart'
 import wishlist from 'src/stores/wishlist'
@@ -123,7 +124,6 @@ defineOptions({
   async preFetch ({ ssrContext, currentRoute }) {
 
     const siteURL = getApiOrigin(ssrContext) || '';
-    const { resolveHeroImageSrc } = await import('src/utils/resolve-hero-image')
 
     // Fire both requests at the same time
     const isPreview = currentRoute.query.preview === 'true'
@@ -148,7 +148,7 @@ defineOptions({
     }
   }
 })
-
+let liveConfigUnsubscribers = []
 const brandSettings = ref(
     process.env.CLIENT && window.__BRAND_CONFIG__
         ? window.__BRAND_CONFIG__
@@ -464,6 +464,17 @@ onMounted(async () => {
     if (freshFooterConfig) footerSettings.value = freshFooterConfig
   }
 
+  // Live Preview (Shop Builder admin iframe) — no-op everywhere else,
+  // since subscribeToLiveConfig() checks for ?qwoo_editor=1 internally.
+  liveConfigUnsubscribers.push(
+      subscribeToLiveConfig('branding', async (data) => {
+        if (data?.logo) data.logo = await resolveHeroImageSrc(data.logo, 'branding')
+        brandSettings.value = data
+      }),
+      subscribeToLiveConfig('header', (data) => { headerSettings.value = data }),
+      subscribeToLiveConfig('footer', (data) => { footerSettings.value = data })
+  )
+
   if (!('serviceWorker' in navigator)) return
   const warm = () => {
     navigator.serviceWorker.ready.then(registration => {
@@ -565,6 +576,8 @@ onUnmounted(() => {
   window.removeEventListener('pointerup', handlePointerUp)
   window.removeEventListener('pointercancel', handlePointerCancel)
 
+  liveConfigUnsubscribers.forEach(fn => fn())
+  liveConfigUnsubscribers = []
 })
 watch(() => cart.state.drawerOpen, val => {
   if(val === true) {

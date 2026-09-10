@@ -227,7 +227,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, useSSRContext, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, useSSRContext, watch } from 'vue'
 import { useRoute, onBeforeRouteUpdate } from 'vue-router'
 import { fetchProductById } from 'src/api/woocommerce.js'
 import cart from 'src/stores/cart.js'
@@ -251,12 +251,13 @@ import {useCarousel} from '/src/composables/useCrousel.js'
 import {useSeoMeta} from "src/composables/useSeo.js";
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
 import SectionRenderer from "components/sections/SectionRenderer.vue";
-import {loadPageConfig} from "src/utils/config-loader.js";
+import {loadPageConfig, subscribeToLiveConfig} from "src/utils/config-loader.js";
 
 
 const $q = useQuasar()
 const route = useRoute()
 const product = ref(null)
+let unsubscribeLiveConfig = () => {}
 const quantity = ref(1)
 const productSettings = ref(
     process.env.CLIENT && window.__PAGE_CONFIG__
@@ -656,6 +657,13 @@ onMounted(async() => {
       productSettings.value = freshConfig
     }
   }
+  unsubscribeLiveConfig = subscribeToLiveConfig('product', (data) => {
+    productSettings.value = data
+  })
+})
+
+onUnmounted(() => {
+  unsubscribeLiveConfig()
 })
 
 onBeforeRouteUpdate(async (to) => {
