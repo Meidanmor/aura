@@ -4,6 +4,17 @@ import { randomBytes } from 'crypto'
 
 const WP_BACKEND_URL = process.env.WP_BACKEND_URL || ''
 
+// The only origin ever allowed to embed this site in an iframe: the WP
+// backend itself. Derived once from server config, never trusted from the
+// request — a client-supplied admin_origin query param is only ever used
+// to CHECK AGAINST this, never to set the policy directly.
+let WP_BACKEND_ORIGIN = ''
+try {
+    WP_BACKEND_ORIGIN = WP_BACKEND_URL ? new URL(WP_BACKEND_URL).origin : ''
+} catch (err) {
+    console.warn('[render] WP_BACKEND_URL is not a valid URL — live-preview framing stays disabled:', WP_BACKEND_URL)
+}
+
 const isIgnoredRequest = (url) => {
     return (
         url.startsWith('/.well-known') ||
@@ -20,6 +31,19 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
         const nonce = randomBytes(16).toString('base64')
         res.setHeader('Content-Type', 'text/html')
 
+        // Shop Builder's Live Preview panel embeds this site in an iframe
+        // from wp-admin — cross-origin framing, which the default policy
+        // below blocks as clickjacking protection. Only relax it for a
+        // request that is BOTH flagged as the editor (?qwoo_editor=1) AND
+        // whose declared admin_origin matches our configured WP backend's
+        // origin exactly. Every other request keeps the strict default.
+        const isEditorRequest =
+            req.query?.qwoo_editor === '1' &&
+            !!WP_BACKEND_ORIGIN &&
+            req.query?.admin_origin === WP_BACKEND_ORIGIN
+
+        const frameAncestors = isEditorRequest ? `'self' ${WP_BACKEND_ORIGIN}` : "'self'"
+
         res.setHeader(
             'Content-Security-Policy',
             "default-src 'self'; " +
@@ -29,12 +53,17 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
             `connect-src 'self' ${WP_BACKEND_URL ? WP_BACKEND_URL : ''} https://api.stripe.com https://hcaptcha.com https://*.hcaptcha.com ws://localhost:* wss://localhost:*;` +
             "font-src 'self' https://fonts.gstatic.com; " +
             "frame-src https://accounts.google.com https://js.stripe.com https://hooks.stripe.com https://hcaptcha.com https://*.hcaptcha.com; " +
-            `frame-ancestors 'self' ${WP_BACKEND_URL ? WP_BACKEND_URL : ''};`
+            `frame-ancestors ${frameAncestors};`
         )
 
-        // Clickjacking protection (defense-in-depth alongside frame-ancestors above,
-        // for older browsers that don't support CSP frame-ancestors)
-        res.setHeader('X-Frame-Options', 'SAMEORIGIN')
+        // X-Frame-Options can't express "allow this one other origin" (only
+        // DENY / SAMEORIGIN), so it's omitted for a validated editor request
+        // and left as SAMEORIGIN for everything else. Modern browsers prefer
+        // CSP frame-ancestors over this anyway, but older ones don't, so it
+        // must not contradict the CSP set above.
+        if (!isEditorRequest) {
+            res.setHeader('X-Frame-Options', 'SAMEORIGIN')
+        }
 
         // Prevent MIME-sniffing of responses
         res.setHeader('X-Content-Type-Options', 'nosniff')
