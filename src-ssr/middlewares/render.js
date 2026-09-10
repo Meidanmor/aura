@@ -12,7 +12,7 @@ let WP_BACKEND_ORIGIN = ''
 try {
     WP_BACKEND_ORIGIN = WP_BACKEND_URL ? new URL(WP_BACKEND_URL).origin : ''
 } catch (err) {
-    console.warn('[render] WP_BACKEND_URL is not a valid URL — live-preview framing stays disabled:', WP_BACKEND_URL)
+    console.warn('[render] WP_BACKEND_URL is not a valid URL — live-preview framing stays disabled:', WP_BACKEND_URL + err)
 }
 
 const isIgnoredRequest = (url) => {
