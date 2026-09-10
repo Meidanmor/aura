@@ -44,20 +44,17 @@ export default defineRouter(function (/* { store, ssrContext } */) {
 
   // --- Start Preview Lock Logic ---
   Router.beforeEach((to, from, next) => {
-    const isPreview =
-        to.query.preview === 'true' ||
-        from.query.preview === 'true';
+    // Check if the URL has ?preview=true
+    const isPreview = to.query.preview === 'true' || from.query.preview === 'true';
 
-    const isEditor =
-        to.query.qwoo_editor === '1' ||
-        from.query.qwoo_editor === '1';
-
-    if (isPreview || isEditor) {
+    if (isPreview) {
+      // Allow the initial load (when there is no 'from' name or path is just root)
       if (!from.name && from.fullPath === '/') {
         return next();
       }
 
-      console.warn('Navigation blocked: Iframe is in Preview/Editor Mode');
+      // Block all other manual clicks/navigation inside the iframe
+      console.warn('Navigation blocked: Iframe is in Preview Mode');
       return next(false);
     }
 
