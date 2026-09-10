@@ -1,0 +1,18 @@
+{
+    "sections": [
+        {
+            "id": "sec_t5s2jkie64",
+            "type": "banner",
+            "enabled": true,
+            "section_bg_color": "global:primary",
+            "data": {
+                "text": "hi",
+                "link_url": "#",
+                "link_text": "hi",
+                "bg_color": "",
+                "text_color": ""
+            },
+            "location": "before_breadcrumbs"
+        }
+    ]
+}
