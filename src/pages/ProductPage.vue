@@ -1,13 +1,20 @@
 <template>
   <div class="container" v-if="product">
+    <SectionRenderer :sections="productSettings?.sections" location="before_breadcrumbs"/>
+
     <div class="q-pa-md">
-    <q-breadcrumbs>
+      <q-breadcrumbs>
           <q-breadcrumbs-el label="Home" to="/" />
           <q-breadcrumbs-el :to="`/product-category/${product?.categories[0]?.slug}`"><span v-html="safeCategoryName"></span></q-breadcrumbs-el>
           <q-breadcrumbs-el :label="product?.name" />
-    </q-breadcrumbs>
+      </q-breadcrumbs>
     </div>
+
+    <SectionRenderer :sections="productSettings?.sections" location="after_breadcrumbs"/>
+
     <div class="q-pa-md row q-col-gutter-lg">
+      <SectionRenderer :sections="productSettings?.sections" location="before_product_images"/>
+
       <!-- Product Images -->
       <div class="col-12 col-md-6">
         <div v-if="product?.images?.length > 1">
@@ -62,6 +69,8 @@
           />
         </div>
       </div>
+
+      <SectionRenderer :sections="productSettings?.sections" location="after_product_images"/>
 
       <!-- Product Details -->
       <div class="col-12 col-md-6">
@@ -141,7 +150,10 @@
             <span v-if="Number(product.add_to_cart?.maximum) === 1">The is only 1 left in stock!</span>
             <span v-else>The are only {{product.add_to_cart?.maximum}} left in stock!</span>
           </div>
-        <!-- Quantity Selector -->
+
+          <SectionRenderer :sections="productSettings?.sections" location="before_add_to_cart_form"/>
+
+          <!-- Quantity Selector -->
         <div class="row items-center q-mb-md">
           <q-btn aria-label="Decrease quantity" flat round :icon="matRemove" @click="decreaseQty" />
           <q-input
@@ -183,6 +195,8 @@
           </q-tooltip>
         </q-btn>
 
+          <SectionRenderer :sections="productSettings?.sections" location="after_add_to_cart_form"/>
+
         </div>
 
         <div v-else> Out of stock </div>
@@ -191,15 +205,19 @@
         <q-btn class="text-black q-pa-none text-caption q-mt-sm" flat :loading="wishlist.isLoading(product.id)" v-if="wishlist.state.items && Object.values(wishlist.state.items).find(obj => selectedVariation ? selectedVariation.id : product.id === obj.id)" @click="addToWishlist" color="accent" label="Remove from wishlist" :icon="matFavorite" />
         <q-btn class="text-black q-pa-none text-caption q-mt-sm" flat :loading="wishlist.isLoading(product.id)" v-else @click="addToWishlist" color="accent" label="Add to wishlist" :icon="matFavoriteBorder" />
         </div>
+        <SectionRenderer :sections="productSettings?.sections" location="after_product_summary"/>
+
       </div>
     </div>
 
-    <!-- Lightbox -->
+    <SectionRenderer :sections="productSettings?.sections" location="before_related_products "/>
     <RelatedProductsSlider
       :productId="product.id"
       :categoryId="product.categories[0]?.id"
       :maxVisible="4"
     />
+    <SectionRenderer :sections="productSettings?.sections" location="after_related_products"/>
+
   </div>
 
   <div v-else-if="product === null" class="q-pa-md flex items-center justify-center">
@@ -232,12 +250,19 @@ import AppCarousel from '../components/app/AppCarousel.vue'
 import {useCarousel} from '/src/composables/useCrousel.js'
 import {useSeoMeta} from "src/composables/useSeo.js";
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
+import SectionRenderer from "components/sections/SectionRenderer.vue";
+import {loadPageConfig} from "src/utils/config-loader.js";
 
 
 const $q = useQuasar()
 const route = useRoute()
 const product = ref(null)
 const quantity = ref(1)
+const productSettings = ref(
+    process.env.CLIENT && window.__PAGE_CONFIG__
+        ? window.__PAGE_CONFIG__
+        : null
+)
 const getSlugFromPermalink = (permalink) => {
   const match = permalink.match(/product\/([^/]+)\/?$/)
   return match ? match[1] : ''
@@ -249,6 +274,8 @@ if (process.env.SERVER) {
   if (ssrContext?.productData) {
     product.value = ssrContext.productData
   }
+  productSettings.value = ssrContext?.pageConfig || null
+
 }
 if (process.env.CLIENT) {
   if (window.__PRODUCT_DATA__ && window.__PRODUCT_DATA__.id) {
@@ -256,6 +283,9 @@ if (process.env.CLIENT) {
     if(ssrProductSlug === route.params.slug) {
       product.value = window.__PRODUCT_DATA__
     }
+  }
+  if (window.__PAGE_CONFIG__ && Object.keys(window.__PAGE_CONFIG__).length) {
+    productSettings.value = window.__PAGE_CONFIG__
   }
 }
 
@@ -271,9 +301,14 @@ imagesCarousel.recompute()
 // Inside your Page or Layout
 defineOptions({
   async preFetch ({ ssrContext, currentRoute }) {
-    const seo = await fetchSeoForPath(currentRoute.path, getApiOrigin(ssrContext))
-    const productData = await productsStore.fetchSingleProduct(currentRoute.params.slug, ssrContext)
 
+    const isPreview = currentRoute.query.preview === 'true'
+
+    const [seo, configData, productData] = await Promise.all([
+      fetchSeoForPath(currentRoute.path, getApiOrigin(ssrContext)),
+      loadPageConfig('product', isPreview, getApiOrigin(ssrContext)), // The helper we'll create
+      productsStore.fetchSingleProduct(currentRoute.params.slug, ssrContext)
+    ])
     if (ssrContext) {
 
       // ✅ Normalize categories on SSR
@@ -285,14 +320,19 @@ defineOptions({
       // Initialize the state object if it doesn't exist
       ssrContext.seoData = seo
       ssrContext.productData = productData
+      ssrContext.pageConfig = configData
     } else {
-      window.__PRODUCT_DATA__ = seo
+      window.__PRODUCT_DATA__ = productData
       window.__SEO_DATA__ = seo
+      window.__PAGE_CONFIG__ = configData;
+
     }
   }
 })
 
+
 useSeoMeta()
+
 
 function getOptionsWithDisabled(attribute) {
   // Get all original options for this attribute
@@ -595,23 +635,27 @@ const safeVariationPrice = useSanitizedPrice(() => selectedVariation.value?.pric
 const safeCategoryName = useSanitizedText(() => product.value?.categories?.[0]?.name)
 
 onMounted(async() => {
-  if (process.env.CLIENT) {
-    // If no SSR data → fetch
-    if (!product.value || !product.value.id) {
-      await fetchProduct(route.params.slug)
-      await enhanceProduct();
-      await imagesCarousel.recompute(true)
+  if (!product.value || !product.value.id) {
+    await fetchProduct(route.params.slug)
+    await enhanceProduct();
+    await imagesCarousel.recompute(true)
 
-    } else {
-      enhanceProduct();
-      imagesCarousel.recompute(true)
+  } else {
+    enhanceProduct();
+    imagesCarousel.recompute(true)
 
-    }
   }
 
-  /*if (process.env.CLIENT) {
-    await fetchWishlistData()
-  }*/
+  if (window.__PAGE_CONFIG__ && Object.keys(window.__PAGE_CONFIG__).length) {
+    productSettings.value = window.__PAGE_CONFIG__
+  } else {
+    const isPreview = route.query.preview === 'true'
+    // Use it directly
+    const freshConfig = await loadPageConfig('product', isPreview)
+    if (freshConfig) {
+      productSettings.value = freshConfig
+    }
+  }
 })
 
 onBeforeRouteUpdate(async (to) => {

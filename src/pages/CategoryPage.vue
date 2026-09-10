@@ -1,16 +1,22 @@
 <template>
   <div class="main-wrapper-div">
     <div class="container">
+      <SectionRenderer :sections="shopSettings?.sections" location="before_breadcrumbs"/>
+
       <q-breadcrumbs>
         <q-breadcrumbs-el label="Home" to="/" />
         <q-breadcrumbs-el label="Products" to="/products" />
         <q-breadcrumbs-el><span v-html="safeCategoryName"></span></q-breadcrumbs-el>
       </q-breadcrumbs>
 
+      <SectionRenderer :sections="shopSettings?.sections" location="after_breadcrumbs"/>
+
       <h1 v-html="safeCategoryName || 'Products'"></h1>
 
       <div class="archive-layout flex no-wrap">
         <div class="filters-wrap flex" :class="{ 'shown': filtersOpen }" @pointerdown.stop >
+          <SectionRenderer :sections="shopSettings?.sections" location="before_filters"/>
+
           <q-scroll-area class="fit">
 
             <div class="sticky filters-drawer-header flex justify-between q-mb-md">
@@ -46,7 +52,11 @@
               @toggle-filters="filtersOpen = !filtersOpen"
           />
 
+          <SectionRenderer :sections="shopSettings?.sections" location="before_products_grid"/>
+
           <ProductResultsGrid :loading="productsStore.productsLoading.value" :products="paginatedProducts" />
+
+          <SectionRenderer :sections="shopSettings?.sections" location="after_products_grid"/>
 
           <ArchivePagination
               v-model="currentPage"
@@ -56,6 +66,9 @@
 
         </div>
       </div>
+
+      <SectionRenderer :sections="shopSettings?.sections" location="after_pagination"/>
+
     </div>
   </div>
 </template>
@@ -68,6 +81,7 @@ import ProductResultsGrid from '../components/shop/ProductResultsGrid.vue';
 import ArchivePagination from '../components/shop/ArchivePagination.vue';
 import SortBar from '../components/shop/SortBar.vue';
 import { useSanitizedText } from 'src/composables/useSanitizedHtml'
+import SectionRenderer from "components/sections/SectionRenderer.vue";
 
 defineOptions({ preFetch: createArchivePreFetch('category') })
 
@@ -75,7 +89,7 @@ const {
   search, selectedCategoryOBJ, currentPage, sortBy, filtersOpen,
   priceMin, priceMax, priceRange,
   paginatedProducts, totalPages, totalProducts,
-  sortOptions, onPriceChange, scrollToTop, productsStore,
+  sortOptions, onPriceChange, scrollToTop, productsStore, shopSettings
 } = useProductArchive('category')
 
 const safeCategoryName = useSanitizedText(() => selectedCategoryOBJ.value?.name)

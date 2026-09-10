@@ -29,7 +29,7 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
             `connect-src 'self' ${WP_BACKEND_URL ? WP_BACKEND_URL : ''} https://api.stripe.com https://hcaptcha.com https://*.hcaptcha.com ws://localhost:* wss://localhost:*;` +
             "font-src 'self' https://fonts.gstatic.com; " +
             "frame-src https://accounts.google.com https://js.stripe.com https://hooks.stripe.com https://hcaptcha.com https://*.hcaptcha.com; " +
-            "frame-ancestors 'self';"
+            `frame-ancestors 'self' ${WP_BACKEND_URL ? WP_BACKEND_URL : ''};`
         )
 
         // Clickjacking protection (defense-in-depth alongside frame-ancestors above,

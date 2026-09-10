@@ -42,7 +42,7 @@ export function createArchivePreFetch(mode) {
     return async function preFetch({ ssrContext, currentRoute, redirect }) {
 
         const isPreview = currentRoute.query.preview === 'true'
-        const configData = await loadPageConfig('shop', isPreview, getApiOrigin(ssrContext))
+        const configData = await loadPageConfig((mode === 'category' ? 'category' : 'shop'), isPreview, getApiOrigin(ssrContext))
 
         const categories = await productsStore.prefetchCategories(ssrContext)
 
@@ -357,7 +357,7 @@ export function useProductArchive(mode) {
         } else {
             const isPreview = route.query.preview === 'true'
             // Use it directly
-            const freshConfig = await loadPageConfig('shop', isPreview)
+            const freshConfig = await loadPageConfig((mode === 'category' ? 'category' : 'shop'), isPreview)
             if (freshConfig) {
                 shopSettings.value = freshConfig
             }
