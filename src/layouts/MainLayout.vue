@@ -86,7 +86,7 @@
 </template>
 
 <script setup>
-import {ref, computed, watch, onMounted, onUnmounted, useSSRContext} from 'vue'
+import {ref, computed, watch, onMounted, onUnmounted, useSSRContext, provide, onBeforeUnmount} from 'vue'
 import { loadPageConfig } from 'src/utils/config-loader'
 import { useQuasar } from 'quasar'
 import cart from 'src/stores/cart'
@@ -148,7 +148,43 @@ defineOptions({
     }
   }
 })
+const isQwooEditor = computed(() => route.query.qwoo_editor === '1')
 
+const qwooEditorState = ref({
+  tab: null,
+  values: {}
+})
+
+function handleQwooEditorMessage(event) {
+  if (!isQwooEditor.value) return
+
+  // Only accept messages from the parent iframe container.
+  if (event.source !== window.parent) return
+
+  if (!event.data || event.data.type !== 'QWOO_EDITOR_STATE') {
+    return
+  }
+
+  qwooEditorState.value = event.data.state || {
+    tab: null,
+    values: {}
+  }
+}
+
+function notifyQwooEditorReady() {
+  if (!isQwooEditor.value || !window.parent || window.parent === window) {
+    return
+  }
+
+  window.parent.postMessage({
+    type: 'QWOO_EDITOR_READY'
+  }, '*')
+}
+
+provide('qwooEditor', {
+  isEditor: isQwooEditor,
+  state: qwooEditorState
+})
 const brandSettings = ref(
     process.env.CLIENT && window.__BRAND_CONFIG__
         ? window.__BRAND_CONFIG__
@@ -464,6 +500,13 @@ onMounted(async () => {
     if (freshFooterConfig) footerSettings.value = freshFooterConfig
   }
 
+  if (isQwooEditor.value) {
+    window.addEventListener('message', handleQwooEditorMessage)
+
+    // Tell the WP admin that the iframe is ready to receive state.
+    notifyQwooEditorReady()
+  }
+
   if (!('serviceWorker' in navigator)) return
   const warm = () => {
     navigator.serviceWorker.ready.then(registration => {
@@ -566,6 +609,11 @@ onUnmounted(() => {
   window.removeEventListener('pointercancel', handlePointerCancel)
 
 })
+
+onBeforeUnmount(() => {
+  window.removeEventListener('message', handleQwooEditorMessage)
+})
+
 watch(() => cart.state.drawerOpen, val => {
   if(val === true) {
     cartDrawer.value = val;
