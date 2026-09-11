@@ -1,5 +1,5 @@
 <template>
-  <section v-if="props.data.title || props.data.image" class="cta-section">
+  <section :style="cssVars" v-if="props.data.title || props.data.image" class="cta-section">
     <div class="container">
       <div class="row items-center q-col-gutter-xl">
         <div v-if="props.data.image" class="col-12 col-md-6">
@@ -33,8 +33,30 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  sectionId: { type: String, default: '' }
+  sectionId: { type: String, default: '' },
+  sectionBg: { type: String, default: '' }
 })
+
+const resolveSectionBg = (bg) => {
+  if (!bg) return ''
+  const map = {
+    'global:primary': 'var(--q-primary)',
+    'global:secondary': 'var(--q-secondary)',
+    'global:accent': 'var(--q-accent)',
+    'global:text': 'var(--q-text)'
+  }
+  return map[bg] || bg
+}
+
+const cssVars = computed(() => {
+  const vars = {}
+  const resolvedBg = resolveSectionBg(props.sectionBg)
+  if (resolvedBg) {
+    vars['--section-bg'] = resolvedBg
+  }
+  return vars
+})
+
 const buttonTarget = computed(() => {
   const url = props.data?.button_url || ''
   return url.startsWith('/')

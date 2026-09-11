@@ -212,6 +212,7 @@ header svg {
 }
 body section {
     padding: 120px 16px;
+    background-color: var(--section-bg, transparent);
 }
 
 .offline-item {

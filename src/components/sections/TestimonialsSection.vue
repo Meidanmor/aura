@@ -1,5 +1,5 @@
 <template>
-  <section v-if="data.items?.length" class="testimonials-section">
+  <section :style="cssVars" v-if="data.items?.length" class="testimonials-section">
     <div class="container">
       <h2 v-if="data.title" class="q-mb-lg text-center" v-html="sanitizeSectionText(data.title)" />
 
@@ -56,7 +56,28 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  sectionId: { type: String, default: '' }
+  sectionId: { type: String, default: '' },
+  sectionBg: { type: String, default: '' }
+})
+
+const resolveSectionBg = (bg) => {
+  if (!bg) return ''
+  const map = {
+    'global:primary': 'var(--q-primary)',
+    'global:secondary': 'var(--q-secondary)',
+    'global:accent': 'var(--q-accent)',
+    'global:text': 'var(--q-text)'
+  }
+  return map[bg] || bg
+}
+
+const cssVars = computed(() => {
+  const vars = {}
+  const resolvedBg = resolveSectionBg(props.sectionBg)
+  if (resolvedBg) {
+    vars['--section-bg'] = resolvedBg
+  }
+  return vars
 })
 
 const isCarousel = computed(() => props.data.display_style === 'carousel')

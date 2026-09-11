@@ -1,4 +1,4 @@
-.hero-section-sec{--text:#1e1e1e;--muted:#6f6f6f;--card-shadow:0 12px 40px rgba(16,16,16,0.08);position:relative;inset:0;background: var(--q-primary);}
+.hero-section-sec{--text:#1e1e1e;--muted:#6f6f6f;--card-shadow:0 12px 40px rgba(16,16,16,0.08);position:relative;inset:0;}
 .hero-section{padding:0 20px;position:relative;overflow:hidden;z-index:1;width:100%}
 .hero-content h1{overflow-wrap:anywhere;margin-top:0;margin-bottom:12px;display:block}
 .hero-content .text-h6{max-width:450px;margin-bottom:24px;color: var(--q-text);font-weight:400}
@@ -10,14 +10,6 @@
   0% {background-position: 0% 50%;}
   50% {background-position: 100% 50%;}
   100% {background-position: 0% 50%;}
-}
-
-section.advantages {
-  background: #FBF9F8;
-}
-section.featured-products {
-    min-height: 664px;
-  background: #FBF9F8;
 }
 
 div.q-img__loading > svg{
@@ -34,9 +26,9 @@ div.q-img__loading > svg{
   visibility: hidden;
 }
 
-.newsletter-section {
+/*.newsletter-section {
   content-visibility: auto;
-}
+}*/
 
 /* HOMEPAGE DEFFERED CSS */
 .cta-section {
@@ -44,7 +36,6 @@ div.q-img__loading > svg{
   overflow: hidden;
   min-height: 400px;
   /*padding: 0;*/
-  background: #e9e9e9;
 }
 .cta-section .container {
   height: 100%;
@@ -90,7 +81,6 @@ div.q-img__loading > svg{
     left: 0;
     width: 100%;
     height: 100%;
-    background: #ffffff;
     opacity: 0.4;
     z-index: 1;
   }
@@ -144,7 +134,6 @@ div.q-img__loading > svg{
 
 .newsletter-section .container {
   max-width: 896px;
-  background: #e7e2d4;
   border-radius: 28px;
   padding: 70px 16px;
 }

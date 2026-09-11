@@ -2,7 +2,7 @@
   <section
       class="custom-section"
       :class="isTwoColumn ? 'custom-section--two-col' : 'custom-section--one-col'"
-      :style="sectionStyle"
+      :style="cssVars"
   >
     <div
         v-if="data.bg_image"
@@ -54,6 +54,14 @@ const props = defineProps({
   data: {
     type: Object,
     required: true
+  },
+  sectionId: {
+    type: String,
+    default: ''
+  },
+  sectionBg: {
+    type: String,
+    default: ''
   }
 })
 
@@ -69,10 +77,28 @@ const buttonTarget = computed(() => {
       : { href: url, target: url.startsWith('#') ? undefined : '_blank', rel: 'noopener noreferrer' }
 })
 
-const sectionStyle = computed(() => ({
-  backgroundColor: props.data.bg_color || undefined,
-  color: props.data.text_color || undefined
-}))
+const resolveSectionBg = (bg) => {
+  if (!bg) return ''
+  const map = {
+    'global:primary': 'var(--q-primary)',
+    'global:secondary': 'var(--q-secondary)',
+    'global:accent': 'var(--q-accent)',
+    'global:text': 'var(--q-text)'
+  }
+  return map[bg] || bg
+}
+
+const cssVars = computed(() => {
+  const vars = {}
+  const resolvedBg = resolveSectionBg(props.sectionBg)
+  if (resolvedBg) {
+    vars['--section-bg'] = resolvedBg
+  }
+  if(props.data?.text_color){
+    vars['color'] = props.data.text_color
+  }
+  return vars
+})
 
 const buttonStyle = computed(() => ({
   backgroundColor: props.data.button_bg_color || undefined,

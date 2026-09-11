@@ -1,5 +1,5 @@
 <template>
-  <section v-if="categories?.length" class="category-grid-section">
+  <section :style="cssVars" v-if="categories?.length" class="category-grid-section">
     <div class="container">
       <h2 v-if="data.title" class="q-mb-lg text-center" v-html="sanitizeSectionText(data.title)" />
       <div class="row q-col-gutter-md">
@@ -24,7 +24,7 @@
 // Uses the WC Store API directly since there isn't an id-scoped categories
 // store yet — if you add one later (mirroring productsStore), swap the
 // fetch below for it, the same way getFeaturedProducts is used for products.
-import { onMounted, onServerPrefetch, useSSRContext } from 'vue'
+import {computed, onMounted, onServerPrefetch, useSSRContext} from 'vue'
 import { useSectionData } from 'src/composables/useSectionData.js'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
 import { getApiOrigin } from 'src/utils/server/get-api-origin.js'
@@ -37,7 +37,32 @@ const props = defineProps({
   sectionId: {
     type: String,
     required: true
+  },
+  sectionBg: {
+    type: String,
+    required: true,
+    default: ''
   }
+})
+
+const resolveSectionBg = (bg) => {
+  if (!bg) return ''
+  const map = {
+    'global:primary': 'var(--q-primary)',
+    'global:secondary': 'var(--q-secondary)',
+    'global:accent': 'var(--q-accent)',
+    'global:text': 'var(--q-text)'
+  }
+  return map[bg] || bg
+}
+
+const cssVars = computed(() => {
+  const vars = {}
+  const resolvedBg = resolveSectionBg(props.sectionBg)
+  if (resolvedBg) {
+    vars['--section-bg'] = resolvedBg
+  }
+  return vars
 })
 
 async function fetchCategories(ids, ssrContext) {

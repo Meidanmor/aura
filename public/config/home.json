@@ -54,7 +54,7 @@
             "id": "sec_1d2jbvo8uz",
             "type": "featured_products",
             "enabled": true,
-            "section_bg_color": "",
+            "section_bg_color": "#959595",
             "data": {
                 "title": "Featured Products",
                 "product_ids": [
@@ -69,7 +69,7 @@
             "id": "sec_we66zcbnnz",
             "type": "category_grid",
             "enabled": true,
-            "section_bg_color": "",
+            "section_bg_color": "red",
             "data": {
                 "title": "Categories",
                 "category_ids": [
@@ -84,7 +84,7 @@
             "id": "sec_60dl1oxqio",
             "type": "testimonials",
             "enabled": true,
-            "section_bg_color": "",
+            "section_bg_color": "green",
             "data": {
                 "title": "Recommendations !",
                 "display_style": "carousel",
@@ -121,7 +121,7 @@
             "id": "sec_x2nbo8z7s1",
             "type": "custom",
             "enabled": true,
-            "section_bg_color": "",
+            "section_bg_color": "yellow",
             "data": {
                 "layout": "one_column",
                 "pretitle": "check",
@@ -141,7 +141,7 @@
             "id": "sec_x72um3kaeo",
             "type": "banner",
             "enabled": true,
-            "section_bg_color": "",
+            "section_bg_color": "black",
             "data": {
                 "text": "The best",
                 "link_url": "#",
@@ -154,7 +154,7 @@
             "id": "sec_ptpsaq1xm5",
             "type": "newsletter_signup",
             "enabled": true,
-            "section_bg_color": "",
+            "section_bg_color": "orange",
             "data": {
                 "title": "Join Us",
                 "subtitle": "Subscribe to our newsletter and get a discount!",
@@ -165,7 +165,7 @@
             "id": "sec_gdymjvvxvx",
             "type": "cta",
             "enabled": true,
-            "section_bg_color": "",
+            "section_bg_color": "brown",
             "data": {
                 "pretitle": "Our Philosophy",
                 "title": "Simple Pieces, Thoughtfully Made.",

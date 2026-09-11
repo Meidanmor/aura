@@ -5,6 +5,7 @@
         :is="sectionComponents[section.type]"
         :data="section.data"
         :section-id="section.id"
+        :section-bg="section?.section_bg_color"
     />
   </template>
 </template>

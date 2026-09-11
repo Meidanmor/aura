@@ -1,6 +1,10 @@
 <template>
-  <section v-if="data.items?.length" class="advantages-section" :style="cssVars">
-    <div class="container">
+  <section
+      v-if="data.items?.length"
+      class="advantages-section"
+      :style="cssVars"
+  >
+  <div class="container">
       <div class="row justify-center">
 
         <div
@@ -32,8 +36,6 @@
 import { computed } from 'vue'
 import { matLocalShipping, matSpa, matVerified, matAssignmentReturn, matSupportAgent, matWorkspacePremium } from '@quasar/extras/material-icons'
 
-// Keys must match Shop_Settings_Builder::ADVANTAGE_ICONS on the WP side.
-// "custom" is handled separately above (renders the uploaded image instead).
 const iconMap = {
   shipping: matLocalShipping,
   organic: matSpa,
@@ -44,29 +46,38 @@ const iconMap = {
 }
 
 const props = defineProps({
-  data: {
-    type: Object,
-    required: true
-  },
-  sectionId: {
-    type: String,
-    default: ''
-  }
+  data: { type: Object, required: true },
+  sectionId: { type: String, default: '' },
+  sectionBg: { type: String, default: '' }
 })
 
-// Section-wide colors (not per-card), applied via CSS custom properties so
-// the scoped stylesheet below stays the single source of truth for layout.
-const cssVars = computed(() => ({
-  '--advantage-icon-color': props.data.icon_color || 'var(--q-secondary)',
-  '--advantage-text-color': props.data.text_color || 'var(--q-secondary)'
-}))
+// Maps the CMS's "global:xyz" tokens to actual CSS var references.
+// Anything else (e.g. a raw hex from the admin) is passed through as-is.
+const resolveSectionBg = (bg) => {
+  if (!bg) return ''
+  const map = {
+    'global:primary': 'var(--q-primary)',
+    'global:secondary': 'var(--q-secondary)',
+    'global:accent': 'var(--q-accent)',
+    'global:text': 'var(--q-text)'
+  }
+  return map[bg] || bg
+}
+
+const cssVars = computed(() => {
+  const vars = {
+    '--advantage-icon-color': props.data.icon_color || 'var(--q-secondary)',
+    '--advantage-text-color': props.data.text_color || 'var(--q-secondary)'
+  }
+  const resolvedBg = resolveSectionBg(props.sectionBg)
+  if (resolvedBg) {
+    vars['--section-bg'] = resolvedBg
+  }
+  return vars
+})
 </script>
 
 <style scoped>
-.advantage-card {
-  padding: 24px 16px;
-}
-
 .advantage-card {
   display: flex;
   flex-direction: column;
