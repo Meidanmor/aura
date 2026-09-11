@@ -1,14 +1,15 @@
 // src/composables/useProductArchive.js
-import { ref, computed, onMounted, watch, useSSRContext, nextTick } from 'vue'
+import {ref, computed, onMounted, watch, useSSRContext, nextTick, onUnmounted} from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useFilterSync, parseQueryFilters } from 'src/composables/useFilterSync'
 import { scroll } from 'quasar'
 import { fetchSeoForPath, useSeoMeta } from 'src/composables/useSeo'
 import productsStore from 'src/stores/products'
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
-import {loadPageConfig} from "src/utils/config-loader.js";
+import {loadPageConfig, subscribeToLiveConfig} from "src/utils/config-loader.js";
 
 const { setVerticalScrollPosition } = scroll
+let unsubscribeLiveConfig = () => {}
 
 export function getSortParams(sort) {
     switch (sort) {
@@ -363,6 +364,11 @@ export function useProductArchive(mode) {
             }
         }
 
+        unsubscribeLiveConfig = subscribeToLiveConfig((mode === 'category' ? 'category' : 'shop'), (data) => {
+            shopSettings.value = data
+        })
+
+
         if (mode === 'category' && window.__SELECTED_CATEGORY_DATA__) {
             selectedCategoryOBJ.value = window.__SELECTED_CATEGORY_DATA__
             selectedCategory.value = [window.__SELECTED_CATEGORY_DATA__.id]
@@ -404,6 +410,11 @@ export function useProductArchive(mode) {
         await nextTick()
         isInitialising.value = false
     })
+
+    onUnmounted(() => {
+        unsubscribeLiveConfig()
+    })
+
 
     return {
         search, selectedCategory, selectedCategoryOBJ, currentPage, sortBy, filtersOpen,
