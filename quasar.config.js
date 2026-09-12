@@ -10,6 +10,7 @@ import { dirname, resolve } from 'node:path'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const appConfigPath = resolve(__dirname, 'public/config/pwa.json')
+const appBrandingPath = resolve(__dirname, 'public/config/branding.json')
 
 function loadAppConfig() {
   if (!existsSync(appConfigPath)) {
@@ -24,8 +25,22 @@ function loadAppConfig() {
   }
 }
 
+function loadAppBranding() {
+  if (!existsSync(appBrandingPath)) {
+    return {}
+  }
+
+  try {
+    return JSON.parse(readFileSync(appBrandingPath, 'utf-8'))
+  } catch (e) {
+    console.warn('Could not parse app-config.json:', e.message)
+    return {}
+  }
+
+}
 export default defineConfig((ctx) => {
   const appConfig = loadAppConfig()
+  const appBranding = loadAppBranding()
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
      preFetch: true,
@@ -239,15 +254,17 @@ devServer: {
     framework: {
       config: {
         brand: {
-          primary: '#FFFFFF',
-          secondary: '#005DAC',
-          accent: '#005DAC',
-          dark: '#1d1d1d',
-          'dark-page': '#121212',
-          positive: '#21BA45',
-          negative: '#C10015',
-          info: '#c9c5c0',
-          warning: '#F2C037'
+          primary: appBranding.primary || '#FFFFFF',
+          bg: appBranding.bg || '#FFFFFF',
+          'text': appBranding.text || '#414752',
+          secondary: appBranding.secondary || '#005DAC',
+          accent: appBranding.accent || '#005DAC',
+          dark: appBranding.dark || '#1d1d1d',
+          'dark-page': appBranding.darkPage || '#121212',
+          positive: appBranding.positive || '#21BA45',
+          negative: appBranding.negative || '#C10015',
+          info: appBranding.info || '#c9c5c0',
+          warning: appBranding.warning || '#F2C037'
         },
         loadingBar: {
           color: 'secondary',

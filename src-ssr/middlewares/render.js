@@ -1,6 +1,8 @@
 // ssr-src/middlewares/render.js
 import { defineSsrMiddleware } from '#q-app/wrappers'
 import { randomBytes } from 'crypto'
+import branding from '../../public/config/branding.json' // adjust path as needed
+
 
 const WP_BACKEND_URL = process.env.WP_BACKEND_URL || ''
 
@@ -29,6 +31,16 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
             return res.status(404).end()
         }
         const nonce = randomBytes(16).toString('base64')
+
+        const colors = branding.global_colors || {};
+        const brandDevFixStyle = process.env.DEV ? `
+  <style data-branding-dev-fix>
+    :root {
+      ${Object.entries(colors).map(([key, value]) => `--q-${key}: ${value} !important;`).join('\n      ')}
+    }
+  </style>
+` : '';
+
         res.setHeader('Content-Type', 'text/html')
 
         // Shop Builder's Live Preview panel embeds this site in an iframe
@@ -139,6 +151,7 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
               animation: none !important;
             }
           </style>
+          ${brandDevFixStyle}
         `
 
                 const bodyBottom = Object.entries(states)

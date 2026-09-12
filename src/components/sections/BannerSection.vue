@@ -1,7 +1,7 @@
 <template>
   <section
       class="banner-section"
-      :style="{ backgroundColor: data.bg_color || undefined, color: data.text_color || undefined }"
+      :style="cssVars"
   >
     <div class="container banner-section__inner">
       <p class="banner-section__text" v-html="sanitizeSectionText(data.text)" />
@@ -24,6 +24,14 @@ const props = defineProps({
   data: {
     type: Object,
     required: true
+  },
+  sectionId: {
+    type: String,
+    default: ''
+  },
+  sectionBg: {
+    type: String,
+    default: ''
   }
 })
 
@@ -32,6 +40,30 @@ const linkTarget = computed(() => {
   return url.startsWith('/')
       ? { to: url }
       : { href: url, target: '_blank', rel: 'noopener noreferrer' }
+})
+
+
+const resolveSectionBg = (bg) => {
+  if (!bg) return ''
+  const map = {
+    'global:primary': 'var(--q-primary)',
+    'global:secondary': 'var(--q-secondary)',
+    'global:accent': 'var(--q-accent)',
+    'global:text': 'var(--q-text)'
+  }
+  return map[bg] || bg
+}
+
+const cssVars = computed(() => {
+  const vars = {}
+  const resolvedBg = resolveSectionBg(props.sectionBg)
+  if (resolvedBg) {
+    vars['--section-bg'] = resolvedBg
+  }
+  if(props.data.text_color){
+    vars['color'] = props.data.text_color
+  }
+  return vars
 })
 </script>
 

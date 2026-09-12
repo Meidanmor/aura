@@ -53,8 +53,7 @@
   /* Darker primary gradient */
   /*--primary: #c3af87;
   --primary-dark: #a99774;*/
-    --primary-gradient: linear-gradient(135deg, #345646 77%, #FEF9EA);
-    --q-accent: #005DAC;
+/*    --q-accent: #005DAC;
     --q-secondary: #005DAC;
     --q-primary: #FFFFFF;
     --q-text: #414752;
