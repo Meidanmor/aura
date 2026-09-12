@@ -254,17 +254,17 @@ devServer: {
     framework: {
       config: {
         brand: {
-          primary: appBranding.primary || '#FFFFFF',
-          bg: appBranding.bg || '#FFFFFF',
-          'text': appBranding.text || '#414752',
-          secondary: appBranding.secondary || '#005DAC',
-          accent: appBranding.accent || '#005DAC',
-          dark: appBranding.dark || '#1d1d1d',
-          'dark-page': appBranding.darkPage || '#121212',
-          positive: appBranding.positive || '#21BA45',
-          negative: appBranding.negative || '#C10015',
-          info: appBranding.info || '#c9c5c0',
-          warning: appBranding.warning || '#F2C037'
+          primary: appBranding.global_colors.primary || '#FFFFFF',
+          bg: appBranding.global_colors.bg || '#FFFFFF',
+          'text': appBranding.global_colors.text || '#414752',
+          secondary: appBranding.global_colors.secondary || '#005DAC',
+          accent: appBranding.global_colors.accent || '#005DAC',
+          dark: appBranding.global_colors.dark || '#1d1d1d',
+          'dark-page': appBranding.global_colors.darkPage || '#121212',
+          positive: appBranding.global_colors.positive || '#21BA45',
+          negative: appBranding.global_colors.negative || '#C10015',
+          info: appBranding.global_colors.info || '#c9c5c0',
+          warning: appBranding.global_colors.warning || '#F2C037'
         },
         loadingBar: {
           color: 'secondary',
