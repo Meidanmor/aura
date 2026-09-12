@@ -6,7 +6,7 @@
             "id": "sec_h4edzpkw1p",
             "type": "advantages",
             "enabled": true,
-            "section_bg_color": "",
+            "section_bg_color": "#d23232",
             "data": {
                 "icon_color": "",
                 "text_color": "",
@@ -54,7 +54,7 @@
             "id": "sec_1d2jbvo8uz",
             "type": "featured_products",
             "enabled": true,
-            "section_bg_color": "",
+            "section_bg_color": "global:accent",
             "data": {
                 "title": "Featured Products",
                 "product_ids": [
@@ -69,7 +69,7 @@
             "id": "sec_we66zcbnnz",
             "type": "category_grid",
             "enabled": true,
-            "section_bg_color": "",
+            "section_bg_color": "global:secondary",
             "data": {
                 "title": "Categories",
                 "category_ids": [
@@ -84,7 +84,7 @@
             "id": "sec_60dl1oxqio",
             "type": "testimonials",
             "enabled": true,
-            "section_bg_color": "",
+            "section_bg_color": "#815a5a",
             "data": {
                 "title": "Recommendations !",
                 "display_style": "carousel",
@@ -121,7 +121,7 @@
             "id": "sec_x2nbo8z7s1",
             "type": "custom",
             "enabled": true,
-            "section_bg_color": "",
+            "section_bg_color": "#985757",
             "data": {
                 "layout": "one_column",
                 "pretitle": "check",
@@ -165,7 +165,7 @@
             "id": "sec_gdymjvvxvx",
             "type": "cta",
             "enabled": true,
-            "section_bg_color": "",
+            "section_bg_color": "#d78989",
             "data": {
                 "pretitle": "Our Philosophy",
                 "title": "Simple Pieces, Thoughtfully Made.",
