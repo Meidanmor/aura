@@ -1,8 +1,8 @@
 {
     "global_colors": {
-        "primary": "#555e68",
-        "secondary": "#cdc4cf",
-        "accent": "#FF4081",
+        "primary": "#ffffff",
+        "secondary": "#005dac",
+        "accent": "#005dac",
         "text": "#111111"
     },
     "logo": "https://meidanm.net/wp-content/uploads/2026/08/Aura-logo.svg",
