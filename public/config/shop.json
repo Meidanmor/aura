@@ -3,6 +3,7 @@
         {
             "id": "sec_p5k16gu0jf",
             "type": "banner",
+            "kind": "section",
             "enabled": false,
             "section_bg_color": "global:secondary",
             "data": {
@@ -17,6 +18,7 @@
         {
             "id": "sec_643ng7d00c",
             "type": "advantages",
+            "kind": "section",
             "enabled": false,
             "section_bg_color": "global:accent",
             "data": {
@@ -36,6 +38,7 @@
         {
             "id": "sec_yb6n4omdfp",
             "type": "banner",
+            "kind": "section",
             "enabled": false,
             "section_bg_color": "",
             "data": {
@@ -50,6 +53,7 @@
         {
             "id": "sec_e6brjov3yu",
             "type": "cta",
+            "kind": "section",
             "enabled": false,
             "section_bg_color": "",
             "data": {
@@ -65,6 +69,7 @@
         {
             "id": "sec_khbushj2nd",
             "type": "testimonials",
+            "kind": "section",
             "enabled": false,
             "section_bg_color": "global:primary",
             "data": {
@@ -83,6 +88,7 @@
         {
             "id": "sec_m46oxleiu2",
             "type": "newsletter_signup",
+            "kind": "section",
             "enabled": true,
             "section_bg_color": "#f5f5f4",
             "data": {

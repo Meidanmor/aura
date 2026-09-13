@@ -5,6 +5,7 @@
         {
             "id": "sec_h4edzpkw1p",
             "type": "advantages",
+            "kind": "section",
             "enabled": true,
             "section_bg_color": "",
             "data": {
@@ -53,6 +54,7 @@
         {
             "id": "sec_1d2jbvo8uz",
             "type": "featured_products",
+            "kind": "section",
             "enabled": true,
             "section_bg_color": "",
             "data": {
@@ -68,6 +70,7 @@
         {
             "id": "sec_we66zcbnnz",
             "type": "category_grid",
+            "kind": "section",
             "enabled": true,
             "section_bg_color": "",
             "data": {
@@ -83,6 +86,7 @@
         {
             "id": "sec_60dl1oxqio",
             "type": "testimonials",
+            "kind": "section",
             "enabled": true,
             "section_bg_color": "#f9f9f9",
             "data": {
@@ -120,6 +124,7 @@
         {
             "id": "sec_x2nbo8z7s1",
             "type": "custom",
+            "kind": "section",
             "enabled": true,
             "section_bg_color": "global:secondary",
             "data": {
@@ -140,6 +145,7 @@
         {
             "id": "sec_x72um3kaeo",
             "type": "banner",
+            "kind": "section",
             "enabled": true,
             "section_bg_color": "global:secondary",
             "data": {
@@ -153,6 +159,7 @@
         {
             "id": "sec_ptpsaq1xm5",
             "type": "newsletter_signup",
+            "kind": "section",
             "enabled": true,
             "section_bg_color": "",
             "data": {
@@ -164,6 +171,7 @@
         {
             "id": "sec_gdymjvvxvx",
             "type": "cta",
+            "kind": "section",
             "enabled": true,
             "section_bg_color": "#f9f9f9",
             "data": {
