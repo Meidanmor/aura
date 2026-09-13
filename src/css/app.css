@@ -595,6 +595,9 @@ header.sticky {
     position: sticky;
     top: 0;
 }
+header:not(.sticky) {
+    position: relative;
+}
 .q-drawer .cart-details.sticky {
     position: sticky;
     bottom: 0;
