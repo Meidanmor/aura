@@ -1,7 +1,10 @@
 <template>
   <template v-for="section in enabledSections" :key="section.id">
     <component
-        :class="section.location === 'before_products_grid' || section.location === 'after_products_grid' ? 'dynamic-sections' : ''"
+        :class="[
+          section.location === 'before_products_grid' || section.location === 'after_products_grid' ? 'dynamic-sections' : '',
+          section.kind === 'block' ? 'sb-block' : 'sb-section'
+        ]"
         :is="sectionComponents[section.type]"
         :data="section.data"
         :section-id="section.id"
@@ -10,15 +13,7 @@
   </template>
 </template>
 
-
 <script setup>
-/**
- * Renders the CMS-configurable "Homepage Sections" from the Shop Builder
- * plugin (home.json -> sections[]). Add a new entry to `sectionComponents`
- * whenever a new section `type` is added on the WP side (SECTION_SCHEMA in
- * class-shop-settings.php) — unknown types are silently skipped rather than
- * throwing, since the WP admin already only lets whitelisted types through.
- */
 import { computed } from 'vue'
 import BannerSection from './BannerSection.vue'
 import NewsletterSection from './NewsletterSection.vue'
@@ -28,14 +23,13 @@ import CustomSection from './CustomSection.vue'
 import FeaturedProductsSection from './FeaturedProductsSection.vue'
 import AdvantagesSection from './AdvantagesSection.vue'
 import CtaSection from './CtaSection.vue'
+import TextBlock from './TextBlock.vue'
+import ImageBlock from './ImageBlock.vue'
+import SpacerBlock from './SpacerBlock.vue'
 
 const props = defineProps({
-  sections: {
-    type: Array,
-    default: () => []
-  },
-  location: { type: String, default: null } // null = render everything, in array order (home page behavior)
-
+  sections: { type: Array, default: () => [] },
+  location: { type: String, default: null }
 })
 
 const sectionComponents = {
@@ -46,7 +40,10 @@ const sectionComponents = {
   custom: CustomSection,
   featured_products: FeaturedProductsSection,
   advantages: AdvantagesSection,
-  cta: CtaSection
+  cta: CtaSection,
+  text_block: TextBlock,
+  image_block: ImageBlock,
+  spacer: SpacerBlock
 }
 
 const enabledSections = computed(() =>
@@ -55,5 +52,4 @@ const enabledSections = computed(() =>
         .filter(s => props.location == null || s.location === props.location)
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 )
-
 </script>
