@@ -118,7 +118,22 @@ import {
   matWifi,
   matSignalWifiOff,
   matError } from '@quasar/extras/material-icons'
+import { setCssVar } from 'quasar'
 
+function applyGlobalColors(colors) {
+  if (!colors) return
+  if (colors.primary)   setCssVar('primary', colors.primary)
+  if (colors.secondary) setCssVar('secondary', colors.secondary)
+  if (colors.accent)    setCssVar('accent', colors.accent)
+  if (colors.bg)        setCssVar('bg', colors.bg)
+  if (colors.dark)      setCssVar('dark', colors.dark)
+  if (colors.darkPage)  setCssVar('dark-page', colors.darkPage)
+  if (colors.positive)  setCssVar('positive', colors.positive)
+  if (colors.negative)  setCssVar('negative', colors.negative)
+  if (colors.info)      setCssVar('info', colors.info)
+  if (colors.warning)   setCssVar('warning', colors.warning)
+  if (colors.text)      setCssVar('text', colors.text)
+}
 // Inside your Page or Layout
 defineOptions({
   async preFetch ({ ssrContext, currentRoute }) {
@@ -467,7 +482,10 @@ onMounted(async () => {
   // Live Preview (Shop Builder admin iframe) — no-op everywhere else,
   // since subscribeToLiveConfig() checks for ?qwoo_editor=1 internally.
   liveConfigUnsubscribers.push(
-      subscribeToLiveConfig('branding', (data) => { brandSettings.value = data }),
+      subscribeToLiveConfig('branding', (data) => {
+        brandSettings.value = data
+        applyGlobalColors(data?.global_colors)
+      }),
       subscribeToLiveConfig('header', (data) => { headerSettings.value = data }),
       subscribeToLiveConfig('footer', (data) => { footerSettings.value = data })
   )
