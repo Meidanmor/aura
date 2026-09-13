@@ -13,10 +13,12 @@
     <SectionRenderer :sections="productSettings?.sections" location="after_breadcrumbs"/>
 
     <div class="q-pa-md row q-col-gutter-lg">
-      <SectionRenderer :sections="productSettings?.sections" location="before_product_images"/>
 
       <!-- Product Images -->
       <div class="col-12 col-md-6">
+
+        <SectionRenderer :sections="productSettings?.sections" location="before_product_images"/>
+
         <div v-if="product?.images?.length > 1">
             <AppCarousel
                 v-model="imagesCarousel.slide.value"
@@ -68,9 +70,11 @@
   @click="onImageClick(0)"
           />
         </div>
+
+        <SectionRenderer :sections="productSettings?.sections" location="after_product_images"/>
+
       </div>
 
-      <SectionRenderer :sections="productSettings?.sections" location="after_product_images"/>
 
       <!-- Product Details -->
       <div class="col-12 col-md-6">
