@@ -2,6 +2,7 @@
   <div>
     <section class="hero-section-sec">
       <img
+          v-if="homeSettings?.hero_image"
           fetchpriority="high"
           loading="eager"
           decoding="sync"
