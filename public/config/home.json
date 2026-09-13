@@ -6,7 +6,7 @@
             "id": "sec_h4edzpkw1p",
             "type": "advantages",
             "enabled": true,
-            "section_bg_color": "#d23232",
+            "section_bg_color": "",
             "data": {
                 "icon_color": "",
                 "text_color": "",
@@ -54,7 +54,7 @@
             "id": "sec_1d2jbvo8uz",
             "type": "featured_products",
             "enabled": true,
-            "section_bg_color": "global:accent",
+            "section_bg_color": "",
             "data": {
                 "title": "Featured Products",
                 "product_ids": [
@@ -69,7 +69,7 @@
             "id": "sec_we66zcbnnz",
             "type": "category_grid",
             "enabled": true,
-            "section_bg_color": "global:secondary",
+            "section_bg_color": "",
             "data": {
                 "title": "Categories",
                 "category_ids": [
@@ -84,7 +84,7 @@
             "id": "sec_60dl1oxqio",
             "type": "testimonials",
             "enabled": true,
-            "section_bg_color": "#815a5a",
+            "section_bg_color": "#f9f9f9",
             "data": {
                 "title": "Recommendations !",
                 "display_style": "carousel",
@@ -121,33 +121,33 @@
             "id": "sec_x2nbo8z7s1",
             "type": "custom",
             "enabled": true,
-            "section_bg_color": "#985757",
+            "section_bg_color": "global:secondary",
             "data": {
                 "layout": "one_column",
+                "bg_image_id": 0,
                 "pretitle": "check",
                 "title": "Title Check",
                 "text": "Description text check",
+                "image_id": 0,
                 "button_text": "Click BTN check",
                 "button_url": "#",
                 "bg_color": "#ffffff",
                 "text_color": "#111111",
                 "button_bg_color": "#000000",
-                "button_text_color": "#ffffff",
-                "bg_image": "https://meidanm.net/wp-content/uploads/2026/09/aura-hero.png",
-                "image": "https://meidanm.net/wp-content/uploads/2026/08/classic_cotton_t_shirt_soft_everyday_cotton_t_shirt_relaxed_unisex_fit_flat_lay.png"
+                "button_text_color": "#ffffff"
             }
         },
         {
             "id": "sec_x72um3kaeo",
             "type": "banner",
             "enabled": true,
-            "section_bg_color": "",
+            "section_bg_color": "global:secondary",
             "data": {
                 "text": "The best",
                 "link_url": "#",
                 "link_text": "Best text ever",
-                "bg_color": "#000000",
-                "text_color": "#ffffff"
+                "bg_color": "",
+                "text_color": "#000000"
             }
         },
         {
@@ -165,7 +165,7 @@
             "id": "sec_gdymjvvxvx",
             "type": "cta",
             "enabled": true,
-            "section_bg_color": "#d78989",
+            "section_bg_color": "#f9f9f9",
             "data": {
                 "pretitle": "Our Philosophy",
                 "title": "Simple Pieces, Thoughtfully Made.",
@@ -176,5 +176,9 @@
             }
         }
     ],
+    "hero_btn": {
+        "text": "Browse Products",
+        "url": "/products"
+    },
     "hero_image": "https://meidanm.net/wp-content/uploads/2026/09/aura-hero.webp"
 }

@@ -3,7 +3,7 @@
         {
             "id": "sec_p5k16gu0jf",
             "type": "banner",
-            "enabled": true,
+            "enabled": false,
             "section_bg_color": "global:secondary",
             "data": {
                 "text": "Hi",
@@ -17,7 +17,7 @@
         {
             "id": "sec_643ng7d00c",
             "type": "advantages",
-            "enabled": true,
+            "enabled": false,
             "section_bg_color": "global:accent",
             "data": {
                 "icon_color": "",
@@ -36,7 +36,7 @@
         {
             "id": "sec_yb6n4omdfp",
             "type": "banner",
-            "enabled": true,
+            "enabled": false,
             "section_bg_color": "",
             "data": {
                 "text": "SALE",
@@ -50,7 +50,7 @@
         {
             "id": "sec_e6brjov3yu",
             "type": "cta",
-            "enabled": true,
+            "enabled": false,
             "section_bg_color": "",
             "data": {
                 "pretitle": "Click Here",
@@ -65,7 +65,7 @@
         {
             "id": "sec_khbushj2nd",
             "type": "testimonials",
-            "enabled": true,
+            "enabled": false,
             "section_bg_color": "global:primary",
             "data": {
                 "title": "",
@@ -84,7 +84,7 @@
             "id": "sec_m46oxleiu2",
             "type": "newsletter_signup",
             "enabled": true,
-            "section_bg_color": "",
+            "section_bg_color": "#f5f5f4",
             "data": {
                 "title": "Sign Up!",
                 "subtitle": "",

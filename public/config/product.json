@@ -3,7 +3,7 @@
         {
             "id": "sec_t5s2jkie64",
             "type": "banner",
-            "enabled": true,
+            "enabled": false,
             "section_bg_color": "global:primary",
             "data": {
                 "text": "hi",
@@ -13,6 +13,27 @@
                 "text_color": ""
             },
             "location": "before_breadcrumbs"
+        },
+        {
+            "id": "sec_9rncddj49w",
+            "type": "custom",
+            "enabled": false,
+            "section_bg_color": "",
+            "data": {
+                "layout": "one_column",
+                "bg_image_id": 0,
+                "pretitle": "Best Seller!",
+                "title": "",
+                "text": "",
+                "image_id": 0,
+                "button_text": "",
+                "button_url": "",
+                "bg_color": "",
+                "text_color": "",
+                "button_bg_color": "",
+                "button_text_color": ""
+            },
+            "location": "after_add_to_cart_form"
         }
     ]
 }
