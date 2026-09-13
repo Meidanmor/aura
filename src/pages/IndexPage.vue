@@ -16,16 +16,17 @@
       <div class="hero-section container hero-margin row">
 
         <div class="hero-content col-12 col-md-6 q-mb-lg">
-          <h1 class="stable-text" v-html="sanitizedHeroTitle"></h1>
-          <p class="text-h6">{{homeSettings?.hero_description}}</p>
+          <h1 v-if="sanitizedHeroTitle" class="stable-text" v-html="sanitizedHeroTitle"></h1>
+          <p v-if="homeSettings?.hero_description" class="text-h6">{{homeSettings?.hero_description}}</p>
 
           <q-btn
+              v-if="homeSettings?.hero_btn?.text && homeSettings.hero_btn?.url"
               title="Go to products page"
-              label="Browse Products"
+              :label="homeSettings.hero_btn.text"
               color="secondary"
               text-color="primary"
               class="btn-big"
-              to="/products"
+              :to="homeSettings.hero_btn.url"
           />
 
         </div>
