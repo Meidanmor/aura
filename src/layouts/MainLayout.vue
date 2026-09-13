@@ -8,6 +8,7 @@
         @toggle-cart="toggleCart()"
         @toggle-wishlist="toggleWishlistDrawer"
         :app-logo="brandSettings?.logo"
+        :sticky-header="headerSettings?.settings?.sticky"
     />
     <!-- Mobile Navigation Drawer -->
     <q-drawer

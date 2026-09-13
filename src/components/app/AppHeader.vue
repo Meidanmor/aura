@@ -1,5 +1,5 @@
 <template>
-  <q-header class="sticky" style="padding: 5px 0; background-color: var(--q-bg)">
+  <q-header :class="!stickyHeader ? '' : 'sticky'" style="padding: 5px 0; background-color: var(--q-bg)">
     <div class="container">
       <q-toolbar class="flex justify-between q-pa-sm">
         <div class="flex nav-items-el">
@@ -52,6 +52,11 @@ defineProps({
   appLogo: {
     type: String,
     default: '',
+    required: true
+  },
+  stickyHeader: {
+    type: Boolean,
+    default: true,
     required: true
   }
 })
