@@ -83,6 +83,21 @@
                             }
                         ]
                     }
+                },
+                {
+                    "id": "blk_loo126r4m6",
+                    "type": "featured_products",
+                    "enabled": true,
+                    "data": {
+                        "product_ids": [
+                            375,
+                            345,
+                            337,
+                            364,
+                            340,
+                            343
+                        ]
+                    }
                 }
             ]
         }
