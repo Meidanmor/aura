@@ -4,184 +4,87 @@
     "sections": [
         {
             "id": "sec_h4edzpkw1p",
-            "type": "advantages",
-            "kind": "section",
             "enabled": true,
-            "section_bg_color": "",
-            "data": {
-                "icon_color": "",
-                "text_color": "",
-                "items": [
-                    {
-                        "icon": "custom",
-                        "title": "Fast Shipping",
-                        "text": "Enjoy fast shipping worldwide!!",
-                        "custom_icon": "https://meidanm.net/wp-content/uploads/2026/08/Aura-logo.svg"
-                    },
-                    {
-                        "icon": "organic",
-                        "custom_icon_id": 0,
-                        "title": "Organic",
-                        "text": "Sofsd sfdjlkfsj sfdlkjlksd vdlkjvl FFF"
-                    },
-                    {
-                        "icon": "guarantee",
-                        "custom_icon_id": 0,
-                        "title": "Warranty!",
-                        "text": "Enjoy our 1 year warranty"
-                    },
-                    {
-                        "icon": "returns",
-                        "custom_icon_id": 0,
-                        "title": "Easy Returns!!",
-                        "text": "vfddsf svd sd vd vdvdvsdvd vfdvdvfd dvdff"
-                    },
-                    {
-                        "icon": "support",
-                        "custom_icon_id": 0,
-                        "title": "Customer Support!!",
-                        "text": "gbffd sfd d cdssdc sd s  sdf sdsd~ vfsdvsd  ~"
-                    },
-                    {
-                        "icon": "quality",
-                        "custom_icon_id": 0,
-                        "title": "Quality",
-                        "text": "Top Quality with no compatition!"
+            "style": {
+                "padding": {
+                    "mode": "medium",
+                    "custom": {
+                        "top": "",
+                        "right": "",
+                        "bottom": "",
+                        "left": ""
                     }
-                ]
-            }
-        },
-        {
-            "id": "sec_1d2jbvo8uz",
-            "type": "featured_products",
-            "kind": "section",
-            "enabled": true,
-            "section_bg_color": "",
-            "data": {
-                "title": "Featured Products",
-                "product_ids": [
-                    375,
-                    345,
-                    339,
-                    337
-                ]
-            }
-        },
-        {
-            "id": "sec_we66zcbnnz",
-            "type": "category_grid",
-            "kind": "section",
-            "enabled": true,
-            "section_bg_color": "",
-            "data": {
-                "title": "Categories",
-                "category_ids": [
-                    67,
-                    37,
-                    33,
-                    77
-                ]
-            }
-        },
-        {
-            "id": "sec_60dl1oxqio",
-            "type": "testimonials",
-            "kind": "section",
-            "enabled": true,
-            "section_bg_color": "#f9f9f9",
-            "data": {
-                "title": "Recommendations !",
-                "display_style": "carousel",
-                "items": [
-                    {
-                        "name": "Alice Johnson",
-                        "review_text": "The merino sweater is the softest thing I own \u2014 perfect for layering.",
-                        "rating": 5
-                    },
-                    {
-                        "name": "Mark Thompson",
-                        "review_text": "Love the quality of the tote bag, sturdy enough for daily use.",
-                        "rating": 5
-                    },
-                    {
-                        "name": "Sophie Lee",
-                        "review_text": "Fast shipping and the sizing guide was spot on.",
-                        "rating": 5
-                    },
-                    {
-                        "name": "John Doe",
-                        "review_text": "Amazing quality!",
-                        "rating": 5
-                    },
-                    {
-                        "name": "Jane Smith",
-                        "review_text": "Will buy again.",
-                        "rating": 5
+                },
+                "background": {
+                    "type": "color",
+                    "color": "#e40c0c"
+                },
+                "width": {
+                    "mode": "full"
+                },
+                "min_height": ""
+            },
+            "blocks": [
+                {
+                    "id": "blk_o6sz87h15l",
+                    "type": "heading",
+                    "enabled": true,
+                    "data": {
+                        "title": "Check",
+                        "subtitle": "Check Subtitle",
+                        "tag": "h2",
+                        "alignment": "center",
+                        "color": ""
                     }
-                ]
-            }
-        },
-        {
-            "id": "sec_x2nbo8z7s1",
-            "type": "custom",
-            "kind": "section",
-            "enabled": true,
-            "section_bg_color": "global:secondary",
-            "data": {
-                "layout": "one_column",
-                "bg_image_id": 0,
-                "pretitle": "check",
-                "title": "Title Check",
-                "text": "Description text check",
-                "image_id": 0,
-                "button_text": "Click BTN check",
-                "button_url": "#",
-                "bg_color": "#ffffff",
-                "text_color": "#111111",
-                "button_bg_color": "#000000",
-                "button_text_color": "#ffffff"
-            }
-        },
-        {
-            "id": "sec_x72um3kaeo",
-            "type": "banner",
-            "kind": "section",
-            "enabled": true,
-            "section_bg_color": "global:secondary",
-            "data": {
-                "text": "The best",
-                "link_url": "#",
-                "link_text": "Best text ever",
-                "bg_color": "",
-                "text_color": "#000000"
-            }
-        },
-        {
-            "id": "sec_ptpsaq1xm5",
-            "type": "newsletter_signup",
-            "kind": "section",
-            "enabled": true,
-            "section_bg_color": "",
-            "data": {
-                "title": "Join Us",
-                "subtitle": "Subscribe to our newsletter and get a discount!",
-                "button_text": "Subscribe"
-            }
-        },
-        {
-            "id": "sec_gdymjvvxvx",
-            "type": "cta",
-            "kind": "section",
-            "enabled": true,
-            "section_bg_color": "#f9f9f9",
-            "data": {
-                "pretitle": "Our Philosophy",
-                "title": "Simple Pieces, Thoughtfully Made.",
-                "text": "Our journey began with a simple idea: clothing should be comfortable, durable, and made without compromise. Every piece is designed with quality materials that only get better with wear.",
-                "button_text": "Explore our products",
-                "button_url": "/products",
-                "image": "https://meidanm.net/wp-content/uploads/2026/09/cta-img.webp"
-            }
+                },
+                {
+                    "id": "blk_jYAtHUeg0V",
+                    "type": "advantages",
+                    "enabled": true,
+                    "data": {
+                        "icon_color": "",
+                        "text_color": "",
+                        "items": [
+                            {
+                                "icon": "custom",
+                                "title": "Fast Shipping",
+                                "text": "Enjoy fast shipping worldwide!!",
+                                "custom_icon": "https://meidanm.net/wp-content/uploads/2026/08/Aura-logo.svg"
+                            },
+                            {
+                                "icon": "organic",
+                                "custom_icon_id": 0,
+                                "title": "Organic",
+                                "text": "Sofsd sfdjlkfsj sfdlkjlksd vdlkjvl FFF"
+                            },
+                            {
+                                "icon": "guarantee",
+                                "custom_icon_id": 0,
+                                "title": "Warranty!",
+                                "text": "Enjoy our 1 year warranty"
+                            },
+                            {
+                                "icon": "returns",
+                                "custom_icon_id": 0,
+                                "title": "Easy Returns!!",
+                                "text": "vfddsf svd sd vd vdvdvsdvd vfdvdvfd dvdff"
+                            },
+                            {
+                                "icon": "support",
+                                "custom_icon_id": 0,
+                                "title": "Customer Support!!",
+                                "text": "gbffd sfd d cdssdc sd s  sdf sdsd~ vfsdvsd  ~"
+                            },
+                            {
+                                "icon": "quality",
+                                "custom_icon_id": 0,
+                                "title": "Quality",
+                                "text": "Top Quality with no compatition!"
+                            }
+                        ]
+                    }
+                }
+            ]
         }
     ],
     "hero_btn": {

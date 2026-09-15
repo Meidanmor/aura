@@ -2,101 +2,95 @@
     "sections": [
         {
             "id": "sec_p5k16gu0jf",
-            "type": "banner",
-            "kind": "section",
             "enabled": false,
-            "section_bg_color": "global:secondary",
-            "data": {
-                "text": "Hi",
-                "link_url": "#",
-                "link_text": "Bie",
-                "bg_color": "",
-                "text_color": ""
+            "style": {
+                "padding": {
+                    "mode": "medium",
+                    "custom": {
+                        "top": "",
+                        "right": "",
+                        "bottom": "",
+                        "left": ""
+                    }
+                },
+                "background": {
+                    "type": "color",
+                    "color": "global:secondary"
+                },
+                "width": {
+                    "mode": "contained"
+                },
+                "min_height": ""
             },
+            "blocks": [
+                {
+                    "id": "blk_JUSiPiubfS",
+                    "type": "text_block",
+                    "enabled": true,
+                    "data": {
+                        "text": "Hi",
+                        "alignment": "left",
+                        "text_color": ""
+                    }
+                },
+                {
+                    "id": "blk_iH18m5sF9X",
+                    "type": "button",
+                    "enabled": true,
+                    "data": {
+                        "text": "Bie",
+                        "url": "#",
+                        "style": "primary",
+                        "alignment": "left",
+                        "bg_color": "",
+                        "text_color": ""
+                    }
+                }
+            ],
             "location": "before_breadcrumbs"
         },
         {
             "id": "sec_643ng7d00c",
-            "type": "advantages",
-            "kind": "section",
             "enabled": false,
-            "section_bg_color": "global:accent",
-            "data": {
-                "icon_color": "",
-                "text_color": "",
-                "items": [
-                    {
-                        "icon": "shipping",
-                        "custom_icon_id": 0,
-                        "title": "Hi",
-                        "text": "Yes!"
+            "style": {
+                "padding": {
+                    "mode": "medium",
+                    "custom": {
+                        "top": "",
+                        "right": "",
+                        "bottom": "",
+                        "left": ""
                     }
-                ]
+                },
+                "background": {
+                    "type": "color",
+                    "color": "global:accent"
+                },
+                "width": {
+                    "mode": "contained"
+                },
+                "min_height": ""
             },
+            "blocks": [
+                {
+                    "id": "blk_smxa0vJCc0",
+                    "type": "advantages",
+                    "enabled": true,
+                    "data": {
+                        "icon_color": "",
+                        "text_color": "",
+                        "items": [
+                            {
+                                "icon": "shipping",
+                                "custom_icon_id": 0,
+                                "title": "Hi",
+                                "text": "Yes!"
+                            }
+                        ]
+                    }
+                }
+            ],
             "location": "after_breadcrumbs"
-        },
-        {
-            "id": "sec_yb6n4omdfp",
-            "type": "banner",
-            "kind": "section",
-            "enabled": false,
-            "section_bg_color": "",
-            "data": {
-                "text": "SALE",
-                "link_url": "",
-                "link_text": "",
-                "bg_color": "",
-                "text_color": ""
-            },
-            "location": "before_filters"
-        },
-        {
-            "id": "sec_e6brjov3yu",
-            "type": "cta",
-            "kind": "section",
-            "enabled": false,
-            "section_bg_color": "",
-            "data": {
-                "pretitle": "Click Here",
-                "title": "Just kidding",
-                "text": "BIE!",
-                "button_text": "CHECK",
-                "button_url": "#",
-                "image_id": 0
-            },
-            "location": "before_products_grid"
-        },
-        {
-            "id": "sec_khbushj2nd",
-            "type": "testimonials",
-            "kind": "section",
-            "enabled": false,
-            "section_bg_color": "global:primary",
-            "data": {
-                "title": "",
-                "display_style": "grid",
-                "items": [
-                    {
-                        "name": "Great",
-                        "review_text": "Way",
-                        "rating": 5
-                    }
-                ]
-            },
-            "location": "after_products_grid"
-        },
-        {
-            "id": "sec_m46oxleiu2",
-            "type": "newsletter_signup",
-            "kind": "section",
-            "enabled": true,
-            "section_bg_color": "#f5f5f4",
-            "data": {
-                "title": "Sign Up!",
-                "subtitle": "",
-                "button_text": "Subscribe"
-            },
-            "location": "after_pagination"
         }
     ]
 }
