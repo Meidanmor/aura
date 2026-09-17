@@ -7,12 +7,12 @@
             "enabled": true,
             "style": {
                 "padding": {
-                    "mode": "custom",
+                    "mode": "medium",
                     "custom": {
-                        "top": "20",
-                        "right": "20",
-                        "bottom": "20",
-                        "left": "150"
+                        "top": "",
+                        "right": "",
+                        "bottom": "",
+                        "left": ""
                     },
                     "custom_mobile": {
                         "top": "",
@@ -146,22 +146,6 @@
                             87,
                             67
                         ]
-                    }
-                },
-                {
-                    "id": "blk_foslkvgnzr",
-                    "type": "text_block",
-                    "enabled": true,
-                    "style": {
-                        "padding_top": "40",
-                        "padding_top_mobile": "",
-                        "padding_bottom": "",
-                        "padding_bottom_mobile": ""
-                    },
-                    "data": {
-                        "text": "Hi there",
-                        "alignment": "left",
-                        "text_color": "#a33333"
                     }
                 },
                 {
@@ -313,6 +297,25 @@
                         ],
                         "submit_text": "Submit",
                         "success_message": "Thanks!"
+                    }
+                },
+                {
+                    "id": "blk_tqeec090rd",
+                    "type": "heading",
+                    "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
+                    "data": {
+                        "title": "",
+                        "subtitle": "",
+                        "tag": "h2",
+                        "alignment": "left",
+                        "color": "",
+                        "subtitle_color": ""
                     }
                 }
             ]
