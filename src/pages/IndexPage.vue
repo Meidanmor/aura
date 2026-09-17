@@ -36,7 +36,6 @@
     <!-- CMS-configurable Homepage Sections (Shop Builder plugin) — renders
          below the hero, in the order configured in wp-admin. -->
     <SectionRenderer :sections="homeSettings?.sections" />
-
   </div>
 </template>
 

@@ -1,10 +1,9 @@
 <template>
-  <section
-      v-if="data.items?.length"
-      class="advantages-section"
-      :style="cssVars"
+  <div
+       v-if="data.items?.length"
+       class="container advantages-section"
+       :style="cssVars"
   >
-  <div class="container">
       <div class="row justify-center">
 
         <div
@@ -29,7 +28,6 @@
           </div>
         </div>
       </div>
-  </section>
 </template>
 
 <script setup>
@@ -48,30 +46,13 @@ const iconMap = {
 const props = defineProps({
   data: { type: Object, required: true },
   sectionId: { type: String, default: '' },
-  sectionBg: { type: String, default: '' }
 })
 
-// Maps the CMS's "global:xyz" tokens to actual CSS var references.
-// Anything else (e.g. a raw hex from the admin) is passed through as-is.
-const resolveSectionBg = (bg) => {
-  if (!bg) return ''
-  const map = {
-    'global:primary': 'var(--q-primary)',
-    'global:secondary': 'var(--q-secondary)',
-    'global:accent': 'var(--q-accent)',
-    'global:text': 'var(--q-text)'
-  }
-  return map[bg] || bg
-}
 
 const cssVars = computed(() => {
   const vars = {
     '--advantage-icon-color': props.data.icon_color || 'var(--q-secondary)',
     '--advantage-text-color': props.data.text_color || 'var(--q-secondary)'
-  }
-  const resolvedBg = resolveSectionBg(props.sectionBg)
-  if (resolvedBg) {
-    vars['--section-bg'] = resolvedBg
   }
   return vars
 })

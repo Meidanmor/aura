@@ -1,5 +1,5 @@
 <template>
-  <section :style="cssVars" v-if="products?.length" class="featured-products">
+  <div v-if="products?.length" class="featured-products">
     <div class="container">
       <h2 v-if="data.title" class="q-mb-md" v-html="sanitizeSectionText(data.title)" />
 
@@ -23,11 +23,11 @@
         </q-carousel-slide>
       </AppCarousel>
     </div>
-  </section>
+  </div>
 </template>
 
 <script setup>
-import {computed, onMounted, onServerPrefetch, useSSRContext, watch} from 'vue'
+import {onMounted, onServerPrefetch, useSSRContext, watch} from 'vue'
 import {onBeforeRouteLeave} from "vue-router";
 import {useQuasar} from "quasar";
 import AppCarousel from '../app/AppCarousel.vue'
@@ -47,28 +47,6 @@ const props = defineProps({
     type: String,
     required: true
   },
-  sectionBg: { type: String, default: '' }
-
-})
-
-const resolveSectionBg = (bg) => {
-  if (!bg) return ''
-  const map = {
-    'global:primary': 'var(--q-primary)',
-    'global:secondary': 'var(--q-secondary)',
-    'global:accent': 'var(--q-accent)',
-    'global:text': 'var(--q-text)'
-  }
-  return map[bg] || bg
-}
-
-const cssVars = computed(() => {
-  const vars = {}
-  const resolvedBg = resolveSectionBg(props.sectionBg)
-  if (resolvedBg) {
-    vars['--section-bg'] = resolvedBg
-  }
-  return vars
 })
 
 // Mirrors Index.vue's resolveFeaturedProducts: try the admin-configured
