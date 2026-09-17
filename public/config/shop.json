@@ -11,6 +11,12 @@
                         "right": "",
                         "bottom": "",
                         "left": ""
+                    },
+                    "custom_mobile": {
+                        "top": "",
+                        "right": "",
+                        "bottom": "",
+                        "left": ""
                     }
                 },
                 "background": {
@@ -20,13 +26,20 @@
                 "width": {
                     "mode": "contained"
                 },
-                "min_height": ""
+                "min_height": "",
+                "min_height_mobile": ""
             },
             "blocks": [
                 {
                     "id": "blk_JUSiPiubfS",
                     "type": "text_block",
                     "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
                     "data": {
                         "text": "Hi",
                         "alignment": "left",
@@ -37,6 +50,12 @@
                     "id": "blk_iH18m5sF9X",
                     "type": "button",
                     "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
                     "data": {
                         "text": "Bie",
                         "url": "#",
@@ -60,6 +79,12 @@
                         "right": "",
                         "bottom": "",
                         "left": ""
+                    },
+                    "custom_mobile": {
+                        "top": "",
+                        "right": "",
+                        "bottom": "",
+                        "left": ""
                     }
                 },
                 "background": {
@@ -69,13 +94,20 @@
                 "width": {
                     "mode": "contained"
                 },
-                "min_height": ""
+                "min_height": "",
+                "min_height_mobile": ""
             },
             "blocks": [
                 {
                     "id": "blk_smxa0vJCc0",
                     "type": "advantages",
                     "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
                     "data": {
                         "icon_color": "",
                         "text_color": "",

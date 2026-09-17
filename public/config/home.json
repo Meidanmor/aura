@@ -13,6 +13,12 @@
                         "right": "20",
                         "bottom": "20",
                         "left": "150"
+                    },
+                    "custom_mobile": {
+                        "top": "",
+                        "right": "",
+                        "bottom": "",
+                        "left": ""
                     }
                 },
                 "background": {
@@ -22,25 +28,39 @@
                 "width": {
                     "mode": "full"
                 },
-                "min_height": "400"
+                "min_height": "400",
+                "min_height_mobile": ""
             },
             "blocks": [
                 {
                     "id": "blk_o6sz87h15l",
                     "type": "heading",
                     "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": "40"
+                    },
                     "data": {
                         "title": "Check",
                         "subtitle": "Check Subtitle",
                         "tag": "h2",
                         "alignment": "center",
-                        "color": ""
+                        "color": "",
+                        "subtitle_color": ""
                     }
                 },
                 {
                     "id": "blk_jYAtHUeg0V",
                     "type": "advantages",
                     "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": "40"
+                    },
                     "data": {
                         "icon_color": "",
                         "text_color": "",
@@ -88,6 +108,12 @@
                     "id": "blk_loo126r4m6",
                     "type": "featured_products",
                     "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
                     "data": {
                         "product_ids": [
                             375,
@@ -96,13 +122,24 @@
                             364,
                             340,
                             343
-                        ]
+                        ],
+                        "items_per_view": {
+                            "desktop": 3,
+                            "tablet": 2,
+                            "mobile": 1
+                        }
                     }
                 },
                 {
                     "id": "blk_st0ui3e65s",
                     "type": "category_grid",
                     "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
                     "data": {
                         "category_ids": [
                             37,
@@ -115,6 +152,12 @@
                     "id": "blk_foslkvgnzr",
                     "type": "text_block",
                     "enabled": true,
+                    "style": {
+                        "padding_top": "40",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
                     "data": {
                         "text": "Hi there",
                         "alignment": "left",
@@ -125,6 +168,12 @@
                     "id": "blk_1581er80l2",
                     "type": "image_block",
                     "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
                     "data": {
                         "layout": "row",
                         "images": [
@@ -150,6 +199,12 @@
                     "id": "blk_h665r02vkv",
                     "type": "spacer",
                     "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
                     "data": {
                         "height": "medium"
                     }
@@ -158,8 +213,19 @@
                     "id": "blk_vwr2cyler8",
                     "type": "testimonials",
                     "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
                     "data": {
                         "display_style": "carousel",
+                        "items_per_view": {
+                            "desktop": 3,
+                            "tablet": 2,
+                            "mobile": 1
+                        },
                         "items": [
                             {
                                 "name": "Chech",
@@ -183,6 +249,12 @@
                     "id": "blk_5i13odloum",
                     "type": "form",
                     "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
                     "data": {
                         "form_type": "contact",
                         "recipient_email": "meidanmuzrafi@gmail.com",
@@ -195,6 +267,12 @@
                     "id": "blk_7wgw5u0qkf",
                     "type": "form",
                     "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
                     "data": {
                         "form_type": "newsletter",
                         "recipient_email": "",
@@ -207,6 +285,12 @@
                     "id": "blk_gbuod5ycfi",
                     "type": "form",
                     "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
                     "data": {
                         "form_type": "custom",
                         "recipient_email": "meidanmuzrafi@gmail.com",

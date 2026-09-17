@@ -11,6 +11,12 @@
                         "right": "",
                         "bottom": "",
                         "left": ""
+                    },
+                    "custom_mobile": {
+                        "top": "",
+                        "right": "",
+                        "bottom": "",
+                        "left": ""
                     }
                 },
                 "background": {
@@ -20,13 +26,20 @@
                 "width": {
                     "mode": "contained"
                 },
-                "min_height": ""
+                "min_height": "",
+                "min_height_mobile": ""
             },
             "blocks": [
                 {
                     "id": "blk_NDQV9erbrN",
                     "type": "text_block",
                     "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
                     "data": {
                         "text": "hi",
                         "alignment": "left",
@@ -37,6 +50,12 @@
                     "id": "blk_2xmgWprdf2",
                     "type": "button",
                     "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
                     "data": {
                         "text": "hi",
                         "url": "#",
