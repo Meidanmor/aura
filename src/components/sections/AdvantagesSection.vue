@@ -45,7 +45,7 @@ const iconMap = {
 
 const props = defineProps({
   data: { type: Object, required: true },
-  sectionId: { type: String, default: '' },
+  blockId: { type: String, default: '' },
 })
 
 

@@ -5,8 +5,7 @@
 <script setup>
 defineProps({
   data: { type: Object, required: true },
-  sectionId: { type: String, required: true },
-  sectionBg: { type: String, default: '' }
+  blockId: { type: String, required: true },
 })
 </script>
 

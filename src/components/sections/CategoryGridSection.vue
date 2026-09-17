@@ -1,6 +1,5 @@
 <template>
-  <section :style="cssVars" v-if="categories?.length" class="category-grid-section">
-    <div class="container">
+    <div :style="cssVars" v-if="categories?.length" class="container category-grid-section">
       <h2 v-if="data.title" class="q-mb-lg text-center" v-html="sanitizeSectionText(data.title)" />
       <div class="row q-col-gutter-md">
         <div v-for="cat in categories" :key="cat.id" class="col-6 col-md-3">
@@ -12,7 +11,6 @@
         </div>
       </div>
     </div>
-  </section>
 </template>
 
 <script setup>
@@ -34,34 +32,14 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  sectionId: {
+  blockId: {
     type: String,
     required: true
-  },
-  sectionBg: {
-    type: String,
-    required: true,
-    default: ''
   }
 })
 
-const resolveSectionBg = (bg) => {
-  if (!bg) return ''
-  const map = {
-    'global:primary': 'var(--q-primary)',
-    'global:secondary': 'var(--q-secondary)',
-    'global:accent': 'var(--q-accent)',
-    'global:text': 'var(--q-text)'
-  }
-  return map[bg] || bg
-}
-
 const cssVars = computed(() => {
   const vars = {}
-  const resolvedBg = resolveSectionBg(props.sectionBg)
-  if (resolvedBg) {
-    vars['--section-bg'] = resolvedBg
-  }
   return vars
 })
 

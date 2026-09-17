@@ -10,8 +10,7 @@ import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
 
 const props = defineProps({
   data: { type: Object, required: true },
-  sectionId: { type: String, required: true },
-  sectionBg: { type: String, default: '' }
+  blockId: { type: String, required: true },
 })
 
 const resolveGlobalColor = (color) => {

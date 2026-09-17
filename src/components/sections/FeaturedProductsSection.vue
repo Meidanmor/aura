@@ -43,7 +43,7 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  sectionId: {
+  blockId: {
     type: String,
     required: true
   },
@@ -69,7 +69,7 @@ async function resolveFeaturedProducts(ssrContext) {
   return items
 }
 
-const { data: products, resolve } = useSectionData(props.sectionId, resolveFeaturedProducts)
+const { data: products, resolve } = useSectionData(props.blockId, resolveFeaturedProducts)
 
 const carousel = useCarousel(() => products.value || [])
 carousel.recompute()

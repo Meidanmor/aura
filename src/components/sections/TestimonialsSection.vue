@@ -1,6 +1,5 @@
 <template>
-  <section :style="cssVars" v-if="data.items?.length" class="testimonials-section">
-    <div class="container">
+    <div :style="cssVars" v-if="data.items?.length" class="container testimonials-section">
       <h2 v-if="data.title" class="q-mb-lg text-center" v-html="sanitizeSectionText(data.title)" />
 
       <AppCarousel
@@ -38,7 +37,6 @@
         </div>
       </div>
     </div>
-  </section>
 </template>
 
 <script setup>
@@ -56,27 +54,12 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  sectionId: { type: String, default: '' },
-  sectionBg: { type: String, default: '' }
+  blockId: { type: String, default: '' },
 })
 
-const resolveSectionBg = (bg) => {
-  if (!bg) return ''
-  const map = {
-    'global:primary': 'var(--q-primary)',
-    'global:secondary': 'var(--q-secondary)',
-    'global:accent': 'var(--q-accent)',
-    'global:text': 'var(--q-text)'
-  }
-  return map[bg] || bg
-}
 
 const cssVars = computed(() => {
   const vars = {}
-  const resolvedBg = resolveSectionBg(props.sectionBg)
-  if (resolvedBg) {
-    vars['--section-bg'] = resolvedBg
-  }
   return vars
 })
 

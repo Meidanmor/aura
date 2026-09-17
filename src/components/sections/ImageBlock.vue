@@ -17,8 +17,7 @@ import { computed } from 'vue'
 
 const props = defineProps({
   data: { type: Object, required: true },
-  sectionId: { type: String, required: true },
-  sectionBg: { type: String, default: '' }
+  blockId: { type: String, required: true },
 })
 
 const images = computed(() => props.data.images || [])
@@ -26,7 +25,7 @@ const images = computed(() => props.data.images || [])
 
 <style scoped>
 .image-block { display: flex; gap: 16px; }
-.image-block--row { flex-wrap: wrap; align-items: center; justify-content: center; }
+.image-block--row { /*flex-wrap: wrap;*/ align-items: center; justify-content: center; }
 .image-block--stacked { flex-direction: column; align-items: center; }
 .image-block--grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
 .image-block__item img { max-width: 100%; display: block; }
