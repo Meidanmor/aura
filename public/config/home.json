@@ -7,12 +7,12 @@
             "enabled": true,
             "style": {
                 "padding": {
-                    "mode": "medium",
+                    "mode": "custom",
                     "custom": {
-                        "top": "",
-                        "right": "",
-                        "bottom": "",
-                        "left": ""
+                        "top": "20",
+                        "right": "20",
+                        "bottom": "20",
+                        "left": "150"
                     }
                 },
                 "background": {
@@ -22,7 +22,7 @@
                 "width": {
                     "mode": "full"
                 },
-                "min_height": ""
+                "min_height": "400"
             },
             "blocks": [
                 {
