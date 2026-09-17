@@ -98,6 +98,138 @@
                             343
                         ]
                     }
+                },
+                {
+                    "id": "blk_st0ui3e65s",
+                    "type": "category_grid",
+                    "enabled": true,
+                    "data": {
+                        "category_ids": [
+                            37,
+                            87,
+                            67
+                        ]
+                    }
+                },
+                {
+                    "id": "blk_foslkvgnzr",
+                    "type": "text_block",
+                    "enabled": true,
+                    "data": {
+                        "text": "Hi there",
+                        "alignment": "left",
+                        "text_color": "#a33333"
+                    }
+                },
+                {
+                    "id": "blk_1581er80l2",
+                    "type": "image_block",
+                    "enabled": true,
+                    "data": {
+                        "layout": "row",
+                        "images": [
+                            {
+                                "link_url": "",
+                                "alt": "",
+                                "image": "https://meidanm.net/wp-content/uploads/2026/08/classic_cotton_t_shirt_soft_everyday_cotton_t_shirt_relaxed_unisex_fit_flat_lay.png"
+                            },
+                            {
+                                "link_url": "",
+                                "alt": "",
+                                "image": "https://meidanm.net/wp-content/uploads/2026/08/canvas_backpack_lightweight_canvas_backpack_with_a_spacious_main_compartment.png"
+                            },
+                            {
+                                "link_url": "",
+                                "alt": "",
+                                "image": "https://meidanm.net/wp-content/uploads/2026/08/running_cap_lightweight_breathable_running_cap_athletic_style_studio_lighting.png"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "blk_h665r02vkv",
+                    "type": "spacer",
+                    "enabled": true,
+                    "data": {
+                        "height": "medium"
+                    }
+                },
+                {
+                    "id": "blk_vwr2cyler8",
+                    "type": "testimonials",
+                    "enabled": true,
+                    "data": {
+                        "display_style": "carousel",
+                        "items": [
+                            {
+                                "name": "Chech",
+                                "review_text": "Goossd!",
+                                "rating": 5
+                            },
+                            {
+                                "name": "dbdf",
+                                "review_text": "bfdvbdf",
+                                "rating": 5
+                            },
+                            {
+                                "name": "dsgdfv",
+                                "review_text": "vbdvsvsdv",
+                                "rating": 5
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "blk_5i13odloum",
+                    "type": "form",
+                    "enabled": true,
+                    "data": {
+                        "form_type": "contact",
+                        "recipient_email": "meidanmuzrafi@gmail.com",
+                        "fields": [],
+                        "submit_text": "Submit",
+                        "success_message": "Thanks!"
+                    }
+                },
+                {
+                    "id": "blk_7wgw5u0qkf",
+                    "type": "form",
+                    "enabled": true,
+                    "data": {
+                        "form_type": "newsletter",
+                        "recipient_email": "",
+                        "fields": [],
+                        "submit_text": "Submit",
+                        "success_message": "Thanks!"
+                    }
+                },
+                {
+                    "id": "blk_gbuod5ycfi",
+                    "type": "form",
+                    "enabled": true,
+                    "data": {
+                        "form_type": "custom",
+                        "recipient_email": "meidanmuzrafi@gmail.com",
+                        "fields": [
+                            {
+                                "label": "Name",
+                                "field_type": "text",
+                                "required": true
+                            },
+                            {
+                                "label": "email",
+                                "field_type": "email",
+                                "required": true
+                            },
+                            {
+                                "label": "Accept!",
+                                "field_type": "checkbox",
+                                "required": true
+                            }
+                        ],
+                        "submit_text": "Submit",
+                        "success_message": "Thanks!"
+                    }
                 }
             ]
         }
