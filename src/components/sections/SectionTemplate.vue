@@ -1,12 +1,12 @@
 <template>
   <section
-      :class="sectionClasses"
-      :style="sectionStyleVars"
+      :class="blockClasses"
+      :style="blockStyleVars"
       :section-id="data.id"
   >
     <component
-        v-for="block in data.blocks" :key="block.id"
-        :is="sectionComponents[block.type]"
+        v-for="block in enabledBlocks" :key="block.id"
+        :is="blockComponents[block.type]"
         :data="block.data"
         :block-id="block.id"
     />
@@ -26,12 +26,13 @@ import ImageBlock from './ImageBlock.vue'
 import SpacerBlock from './SpacerBlock.vue'
 import HeadingBlock from '../blocks/HeadingBlock.vue'
 import { useSectionStyle } from 'src/composables/useSectionStyle.js'
+import {computed} from "vue";
 
 const props = defineProps({ data: { type: Object, required: true } })
 
-const { sectionClasses, sectionStyleVars } = useSectionStyle(() => props.data.style)
+const { blockClasses, blockStyleVars } = useSectionStyle(() => props.data.style)
 
-const sectionComponents = {
+const blockComponents = {
   banner: BannerSection,
   newsletter_signup: NewsletterSection,
   category_grid: CategoryGridSection,
@@ -44,4 +45,10 @@ const sectionComponents = {
   spacer: SpacerBlock,
   heading: HeadingBlock
 }
+const enabledBlocks = computed(() =>
+    (props.data.blocks || []).filter(
+        (block) => block?.enabled && blockComponents[block?.type]
+    )
+)
+
 </script>

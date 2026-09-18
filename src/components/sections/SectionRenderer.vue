@@ -1,6 +1,7 @@
 <template>
   <template v-for="section in props.sections" :key="section.id">
     <component
+        v-if="section?.enabled"
       :is="sectionTemplate"
       :data="section"
       />
