@@ -232,11 +232,19 @@ body section {
     var(--section-padding-bottom, 0) var(--section-padding-left, 0);
 }
 
+.sb-block {
+    padding: var(--block-padding-top, 0) var(--block-padding-right, 0)
+    var(--block-padding-bottom, 0) var(--block-padding-left, 0);
+}
 @media (max-width: 767px) {
     .sb-section--padding-small  { padding: 24px 16px; }
     .sb-section--padding-medium { padding: 48px 16px; }
     .sb-section--padding-large  { padding: 80px 16px; }
 
+    .sb-block {
+        padding: var(--block-padding-top-mobile, 0) var(--block-padding-right-mobile, 0)
+        var(--block-padding-bottom-mobile, 0) var(--block-padding-left-mobile, 0);
+    }
 }
 
 .offline-item {
