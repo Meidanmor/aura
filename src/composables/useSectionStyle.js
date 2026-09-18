@@ -10,12 +10,14 @@ const toCssLength = (v) => {
     return /^-?\d+(\.\d+)?$/.test(String(v).trim()) ? `${v}px` : v
 }
 
-export function useSectionStyle(style) {
+export function useSectionStyle(getStyle) {
+    const style = computed(() => getStyle() || {})
+
     const paddingMode = computed(() =>
-        PADDING_MODES.has(style?.padding?.mode) ? style.padding.mode : 'medium'
+        PADDING_MODES.has(style.value?.padding?.mode) ? style.value.padding.mode : 'medium'
     )
     const widthMode = computed(() =>
-        WIDTH_MODES.has(style?.width?.mode) ? style.width.mode : 'full'
+        WIDTH_MODES.has(style.value?.width?.mode) ? style.value.width.mode : 'full'
     )
 
     const sectionClasses = computed(() => ({
@@ -26,27 +28,27 @@ export function useSectionStyle(style) {
 
     const sectionStyleVars = computed(() => {
         const vars = {}
-
-        const bg = style?.background
+        const s = style.value
+        const bg = s?.background
         if (bg?.type === 'color') {
             const resolved = resolveGlobalColor(bg.color)
             if (resolved) vars['--section-bg'] = resolved
         }
-        // room to grow: else if (bg?.type === 'image') { vars['--section-bg-image'] = ... }
-
-        if (style?.min_height) {
-            const h = toCssLength(style.min_height)
-            if (h) vars['--section-min-height'] = h
-        }
+        const h = toCssLength(s?.min_height)
+        if (h) vars['--section-min-height'] = h
+        const hm = toCssLength(s?.min_height_mobile)
+        if (hm) vars['--section-min-height-mobile'] = hm
 
         if (paddingMode.value === 'custom') {
-            const c = style.padding.custom || {}
+            const c = s.padding.custom || {}
+            const cm = s.padding.custom_mobile || {}
             ;['top', 'right', 'bottom', 'left'].forEach((side) => {
                 const len = toCssLength(c[side])
                 if (len) vars[`--section-padding-${side}`] = len
+                const lenM = toCssLength(cm[side])
+                if (lenM) vars[`--section-padding-${side}-mobile`] = lenM
             })
         }
-
         return vars
     })
 

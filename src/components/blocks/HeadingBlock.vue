@@ -14,11 +14,10 @@
 
 <script setup>
 
-const props = defineProps({
+defineProps({
   data: {
     type: Object,
     required: true
   },
 })
-const data = props.data
 </script>

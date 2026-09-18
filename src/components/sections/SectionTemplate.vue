@@ -29,7 +29,7 @@ import { useSectionStyle } from 'src/composables/useSectionStyle.js'
 
 const props = defineProps({ data: { type: Object, required: true } })
 
-const { sectionClasses, sectionStyleVars } = useSectionStyle(props.data.style)
+const { sectionClasses, sectionStyleVars } = useSectionStyle(() => props.data.style)
 
 const sectionComponents = {
   banner: BannerSection,
