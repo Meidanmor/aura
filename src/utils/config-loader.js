@@ -43,6 +43,8 @@ export function subscribeToLiveConfig(page, callback) {
     if (!data || data.source !== 'qwoo-admin' || data.type !== 'state') return
 
     const pageData = data.payload ? data.payload[page] : undefined
+    console.log(pageData)
+
     if (pageData !== undefined) callback(pageData)
   }
 

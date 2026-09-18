@@ -71,7 +71,15 @@ async function resolveFeaturedProducts(ssrContext) {
 
 const { data: products, resolve } = useSectionData(props.blockId, resolveFeaturedProducts)
 
-const carousel = useCarousel(() => products.value || [])
+
+const perView = props.data.items_per_view || {}
+const carousel = useCarousel(() => products.value || [], {
+  chunkSizes: {
+    xs: perView.mobile || 1,
+    sm: perView.tablet || 2,
+    md: perView.desktop || 3
+  }
+})
 carousel.recompute()
 
 let ssrContext = null

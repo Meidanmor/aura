@@ -124,9 +124,9 @@
                             343
                         ],
                         "items_per_view": {
-                            "desktop": 3,
+                            "desktop": 4,
                             "tablet": 2,
-                            "mobile": 1
+                            "mobile": 2
                         }
                     }
                 },
