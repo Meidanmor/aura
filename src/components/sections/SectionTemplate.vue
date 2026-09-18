@@ -4,12 +4,18 @@
       :style="sectionStyleVars"
       :section-id="data.id"
   >
-    <component
+    <div
         v-for="block in enabledBlocks" :key="block.id"
+        class="sb-block"
+        :style="blockStyleVarsById[block.id]"
+    >
+
+    <component
         :is="blockComponents[block.type]"
         :data="block.data"
         :block-id="block.id"
     />
+    </div>
   </section>
 </template>
 
@@ -50,5 +56,31 @@ const enabledBlocks = computed(() =>
         (block) => block?.enabled && blockComponents[block?.type]
     )
 )
+
+const toCssLength = (v) => {
+  if (v === '' || v == null) return null
+  return /^-?\d+(\.\d+)?$/.test(String(v).trim()) ? `${v}px` : v
+}
+
+const blockStyleVarsById = computed(() => {
+  const map = {}
+  for (const block of props.data.blocks) {
+    const style = block.style || {}
+    const vars = {}
+    const fields = {
+      '--block-padding-top': style.padding_top,
+      '--block-padding-top-mobile': style.padding_top_mobile,
+      '--block-padding-bottom': style.padding_bottom,
+      '--block-padding-bottom-mobile': style.padding_bottom_mobile
+    }
+    for (const [key, raw] of Object.entries(fields)) {
+      const v = toCssLength(raw)
+      if (v) vars[key] = v
+    }
+    map[block.id] = vars
+  }
+  return map
+})
+
 
 </script>
