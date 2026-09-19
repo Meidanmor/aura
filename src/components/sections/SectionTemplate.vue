@@ -68,10 +68,10 @@ const blockStyleVarsById = computed(() => {
     const style = block.style || {}
     const vars = {}
     const fields = {
-      '--block-padding-top': style.padding_top,
-      '--block-padding-top-mobile': style.padding_top_mobile,
-      '--block-padding-bottom': style.padding_bottom,
-      '--block-padding-bottom-mobile': style.padding_bottom_mobile
+      '--sb-pt': style.padding_top,
+      '--sb-pt-m': style.padding_top_mobile ? style.padding_top_mobile : style.padding_top,
+      '--sb-pb': style.padding_bottom,
+      '--sb-pb-m': style.padding_bottom_mobile ? style.padding_bottom_mobile : style.padding_bottom
     }
     for (const [key, raw] of Object.entries(fields)) {
       const v = toCssLength(raw)
