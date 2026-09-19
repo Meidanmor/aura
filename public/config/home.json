@@ -123,7 +123,7 @@
                     "style": {
                         "padding_top": "",
                         "padding_top_mobile": "",
-                        "padding_bottom": "",
+                        "padding_bottom": "40",
                         "padding_bottom_mobile": ""
                     },
                     "data": {
@@ -133,6 +133,33 @@
                         "alignment": "center",
                         "color": "",
                         "subtitle_color": ""
+                    }
+                },
+                {
+                    "id": "blk_x6vl9cp1hf",
+                    "type": "featured_products",
+                    "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
+                    "data": {
+                        "product_ids": [
+                            375,
+                            377,
+                            369,
+                            362,
+                            363,
+                            361,
+                            355
+                        ],
+                        "items_per_view": {
+                            "desktop": 3,
+                            "tablet": 2,
+                            "mobile": 1
+                        }
                     }
                 }
             ]
@@ -157,7 +184,8 @@
                     }
                 },
                 "background": {
-                    "type": "none"
+                    "type": "color",
+                    "color": "#e9e9e9"
                 },
                 "width": {
                     "mode": "contained"
@@ -225,7 +253,7 @@
                     "style": {
                         "padding_top": "",
                         "padding_top_mobile": "",
-                        "padding_bottom": "",
+                        "padding_bottom": "40",
                         "padding_bottom_mobile": ""
                     },
                     "data": {
@@ -235,6 +263,52 @@
                         "alignment": "center",
                         "color": "",
                         "subtitle_color": ""
+                    }
+                },
+                {
+                    "id": "blk_rg2of0ycpm",
+                    "type": "testimonials",
+                    "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
+                    "data": {
+                        "display_style": "carousel",
+                        "items_per_view": {
+                            "desktop": 3,
+                            "tablet": 2,
+                            "mobile": 1
+                        },
+                        "items": [
+                            {
+                                "name": "Alice Johnson",
+                                "review_text": "The merino sweater is the softest thing I own \u2014 perfect for layering.",
+                                "rating": 5
+                            },
+                            {
+                                "name": "Mark Thompson",
+                                "review_text": "Love the quality of the tote bag, sturdy enough for daily use.",
+                                "rating": 5
+                            },
+                            {
+                                "name": "Sophie Lee",
+                                "review_text": "Fast shipping and the sizing guide was spot on.",
+                                "rating": 5
+                            },
+                            {
+                                "name": "John Doe",
+                                "review_text": "Amazing quality!",
+                                "rating": 5
+                            },
+                            {
+                                "name": "Jane Smith",
+                                "review_text": "Will buy again.",
+                                "rating": 5
+                            }
+                        ]
                     }
                 }
             ]
