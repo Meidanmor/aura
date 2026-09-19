@@ -92,6 +92,9 @@ a {
 span.q-focus-helper{
     display: none;
 }
+.gap {
+    gap: 20px;
+}
 .text-text {
     color: var(--q-text);
 }

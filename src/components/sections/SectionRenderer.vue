@@ -1,5 +1,5 @@
 <template>
-  <template v-for="section in props.sections" :key="section.id">
+  <template v-for="section in enabledSections" :key="section.id">
     <component
         v-if="section?.enabled"
       :is="sectionTemplate"
@@ -10,6 +10,7 @@
 
 <script setup>
 import SectionTemplate from './SectionTemplate.vue'
+import {computed} from "vue";
 
 const props = defineProps({
   sections: { type: Array, default: () => [] },
@@ -17,5 +18,12 @@ const props = defineProps({
 })
 
 const sectionTemplate = SectionTemplate
+
+const enabledSections = computed(() =>
+    (props.sections || [])
+        .filter(s => s?.enabled)
+        .filter(s => props.location == null || s.location === props.location)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+)
 
 </script>

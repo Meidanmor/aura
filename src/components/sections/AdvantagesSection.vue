@@ -4,7 +4,7 @@
        class="container advantages-section"
        :style="cssVars"
   >
-      <div class="row justify-center">
+      <div class="row justify-center gap">
 
         <div
             v-for="(item, index) in data.items"
