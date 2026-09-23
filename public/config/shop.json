@@ -1,11 +1,11 @@
 {
     "sections": [
         {
-            "id": "sec_p5k16gu0jf",
-            "enabled": false,
+            "id": "sec_81ujb3en6z",
+            "enabled": true,
             "style": {
                 "padding": {
-                    "mode": "medium",
+                    "mode": "custom",
                     "custom": {
                         "top": "",
                         "right": "",
@@ -20,8 +20,7 @@
                     }
                 },
                 "background": {
-                    "type": "color",
-                    "color": "global:secondary"
+                    "type": "none"
                 },
                 "width": {
                     "mode": "contained"
@@ -31,8 +30,8 @@
             },
             "blocks": [
                 {
-                    "id": "blk_JUSiPiubfS",
-                    "type": "text_block",
+                    "id": "blk_iuwobong1p",
+                    "type": "heading",
                     "enabled": true,
                     "style": {
                         "padding_top": "",
@@ -41,13 +40,16 @@
                         "padding_bottom_mobile": ""
                     },
                     "data": {
-                        "text": "Hi",
+                        "title": "ch",
+                        "subtitle": "",
+                        "tag": "h2",
                         "alignment": "left",
-                        "text_color": ""
+                        "color": "",
+                        "subtitle_color": ""
                     }
                 },
                 {
-                    "id": "blk_iH18m5sF9X",
+                    "id": "blk_1sikz6zgvy",
                     "type": "button",
                     "enabled": true,
                     "style": {
@@ -57,7 +59,7 @@
                         "padding_bottom_mobile": ""
                     },
                     "data": {
-                        "text": "Bie",
+                        "text": "check",
                         "url": "#",
                         "style": "primary",
                         "alignment": "left",
@@ -67,62 +69,6 @@
                 }
             ],
             "location": "before_breadcrumbs"
-        },
-        {
-            "id": "sec_643ng7d00c",
-            "enabled": false,
-            "style": {
-                "padding": {
-                    "mode": "medium",
-                    "custom": {
-                        "top": "",
-                        "right": "",
-                        "bottom": "",
-                        "left": ""
-                    },
-                    "custom_mobile": {
-                        "top": "",
-                        "right": "",
-                        "bottom": "",
-                        "left": ""
-                    }
-                },
-                "background": {
-                    "type": "color",
-                    "color": "global:accent"
-                },
-                "width": {
-                    "mode": "contained"
-                },
-                "min_height": "",
-                "min_height_mobile": ""
-            },
-            "blocks": [
-                {
-                    "id": "blk_smxa0vJCc0",
-                    "type": "advantages",
-                    "enabled": true,
-                    "style": {
-                        "padding_top": "",
-                        "padding_top_mobile": "",
-                        "padding_bottom": "",
-                        "padding_bottom_mobile": ""
-                    },
-                    "data": {
-                        "icon_color": "",
-                        "text_color": "",
-                        "items": [
-                            {
-                                "icon": "shipping",
-                                "custom_icon_id": 0,
-                                "title": "Hi",
-                                "text": "Yes!"
-                            }
-                        ]
-                    }
-                }
-            ],
-            "location": "after_breadcrumbs"
         }
     ]
 }
