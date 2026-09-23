@@ -349,7 +349,7 @@ devServer: {
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}', 'data/categories.json', 'data/price-meta.json', 'config/*'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
       },
       workboxMode: 'InjectManifest', // 'GenerateSW' or 'InjectManifest'
       injectManifest: {

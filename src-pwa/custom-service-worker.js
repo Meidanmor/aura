@@ -78,6 +78,17 @@ registerRoute(
   })
 );
 
+registerRoute(
+    ({ url }) => url.pathname.startsWith('/config/') && url.pathname.endsWith('.json'),
+    new NetworkFirst({
+        cacheName: 'page-config-v1',
+        networkTimeoutSeconds: 3,
+        plugins: [
+            new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 })
+        ]
+    })
+)
+
 // ─── Background warm-up: client tells SW to cache products.json ───────────────
 // Called from your app after first meaningful paint
 self.addEventListener('message', async (event) => {
