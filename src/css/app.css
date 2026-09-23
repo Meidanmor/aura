@@ -399,6 +399,11 @@ i.q-icon.on-left.notranslate.material-icons {
 
 .q-carousel__slide > .row {
     padding: 5px;
+    gap: 10px;
+}
+
+.q-carousel__slide > .row .slide-container {
+    width: calc(100% / var(--slides))
 }
 .q-carousel__slide {
     padding: 0;

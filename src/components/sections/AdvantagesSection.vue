@@ -103,7 +103,7 @@ const cssVars = computed(() => {
     justify-content: center;
     align-items: center;
     text-align: center;
-    width: calc(100% / 3);
+    width: calc(100% / 3 - 40px / 3);
   }
 }
 </style>

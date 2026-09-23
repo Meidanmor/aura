@@ -10,7 +10,8 @@ export function useCarousel(getItems, { chunkSizes = defaultChunkSizes } = {}) {
   const slide = ref(0)
   const carouselKey = ref(0)
   const slideChunks = ref([])
-  const clientMounted = ref(false) // flips true only in real onMounted — safe post-hydration signal
+  const clientMounted = ref(false)
+  const activeChunkSize = ref(chunkSizes.md) // 1. Add a ref to track the active size
 
   const getChunks = (array, size) => {
     if (!Array.isArray(array) || !array.length) return []
@@ -22,13 +23,6 @@ export function useCarousel(getItems, { chunkSizes = defaultChunkSizes } = {}) {
   const recompute = (forceRemount = false) => {
     const result = getItems()
 
-    /*const finish = (items) => {
-      const chunkSize = clientMounted.value
-          ? ($q.screen.lt.sm ? chunkSizes.xs : $q.screen.lt.md ? chunkSizes.sm : chunkSizes.md)
-          : chunkSizes.md
-      if (forceRemount) carouselKey.value++
-      slideChunks.value = getChunks(items, chunkSize)
-    }*/
     const finish = (items) => {
       const chunkSize = clientMounted.value
           ? ($q.screen.lt.sm
@@ -38,8 +32,9 @@ export function useCarousel(getItems, { chunkSizes = defaultChunkSizes } = {}) {
                   : chunkSizes.md)
           : chunkSizes.md
 
-      const chunks = getChunks(items, chunkSize)
+      activeChunkSize.value = chunkSize // 2. Store the calculated size
 
+      const chunks = getChunks(items, chunkSize)
       slideChunks.value = chunks
 
       slide.value = Math.min(
@@ -53,17 +48,18 @@ export function useCarousel(getItems, { chunkSizes = defaultChunkSizes } = {}) {
     }
 
     if (result && typeof result.then === 'function') {
-      return result.then(finish) // genuinely async path, unchanged behavior
+      return result.then(finish)
     }
 
-    finish(result) // synchronous path — slideChunks is set immediately, same tick
+    finish(result)
     return Promise.resolve()
   }
-  const markMounted = () => { clientMounted.value = true }
 
+  const markMounted = () => { clientMounted.value = true }
   const showControls = computed(() => slideChunks.value.length > 1)
   const total = computed(() => slideChunks.value.length)
   const { onKeydown } = useCarouselKeyboard(slide, total)
 
-  return { slide, carouselKey, slideChunks, showControls, total, onKeydown, recompute, markMounted }
+  // 3. Return activeChunkSize to the template
+  return { slide, carouselKey, slideChunks, activeChunkSize, showControls, total, onKeydown, recompute, markMounted }
 }

@@ -1,5 +1,5 @@
 <template>
-  <div v-if="products?.length" class="featured-products">
+  <div v-if="products?.length" :style="cssVars" class="featured-products">
     <div class="container">
       <h2 v-if="data.title" class="q-mb-md" v-html="sanitizeSectionText(data.title)" />
 
@@ -15,8 +15,10 @@
             :key="index"
             :name="index"
         >
-          <div class="row q-col-gutter-md">
-            <div v-for="item in group" :key="item.id" class="col-12 col-sm-6 col-md-4">
+          <div class="row full-width no-wrap">
+            <div v-for="item in group" :key="item.id"
+                 class="slide-container"
+            >
               <ProductCard :product="item" />
             </div>
           </div>
@@ -27,7 +29,7 @@
 </template>
 
 <script setup>
-import {onMounted, onServerPrefetch, useSSRContext, watch} from 'vue'
+import {computed, onMounted, onServerPrefetch, useSSRContext, watch} from 'vue'
 import {onBeforeRouteLeave} from "vue-router";
 import {useQuasar} from "quasar";
 import AppCarousel from '../app/AppCarousel.vue'
@@ -81,6 +83,12 @@ const carousel = useCarousel(() => products.value || [], {
   }
 })
 carousel.recompute()
+
+const cssVars = computed(() => {
+  const vars = {}
+  vars['--slides'] = carousel.activeChunkSize.value
+  return vars
+})
 
 let ssrContext = null
 if (process.env.SERVER) {

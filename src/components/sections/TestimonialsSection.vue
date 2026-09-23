@@ -15,15 +15,16 @@
             :key="slideIndex"
             :name="slideIndex"
         >
-          <div class="row q-col-gutter-md">
+          <div class="row full-width no-wrap">
             <div
-                class="col-12 col-md-4"
+                class="slide-container"
                 v-for="(testimonial, index) in group"
                 :key="index"
             >
               <TestimonialCard :testimonial="testimonial" />
             </div>
           </div>
+
         </q-carousel-slide>
       </AppCarousel>
 
@@ -58,11 +59,6 @@ const props = defineProps({
 })
 
 
-const cssVars = computed(() => {
-  const vars = {}
-  return vars
-})
-
 const isCarousel = computed(() => props.data.display_style === 'carousel')
 
 // Always call the composable (never conditionally — same rule as any other
@@ -71,6 +67,12 @@ const isCarousel = computed(() => props.data.display_style === 'carousel')
 const carousel = useCarousel(() => props.data.items || [])
 carousel.recompute()
 
+
+const cssVars = computed(() => {
+  const vars = {}
+  vars['--slides'] = carousel.activeChunkSize.value
+  return vars
+})
 onMounted(() => {
   carousel.markMounted()
   carousel.recompute(true) // forceRemount, same as the homepage's other carousels

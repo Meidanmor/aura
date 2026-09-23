@@ -1,9 +1,5 @@
 <template>
   <q-card flat bordered class="testimonial-card">
-    <q-card-section>
-      <div
-          class="col-12 col-md-4"
-      >
         <div class="q-card q-pa-md">
           <article
               itemscope
@@ -46,8 +42,6 @@
             </p>
           </article>
         </div>
-      </div>
-    </q-card-section>
   </q-card>
 </template>
 
