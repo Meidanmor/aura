@@ -101,6 +101,10 @@ span.q-focus-helper{
 .bg-secondary {
     background-color: var(--q-secondary);
 }
+body .q-btn {
+    color: var(--btn-txt-color, inherit);
+    background: var(--btn-bg-color, transparent);
+}
 .btn-big {
     padding: 10px 30px;
 }

@@ -31,6 +31,7 @@ import TextBlock from './TextBlock.vue'
 import ImageBlock from './ImageBlock.vue'
 import SpacerBlock from './SpacerBlock.vue'
 import HeadingBlock from '../blocks/HeadingBlock.vue'
+import ButtonBlock from '../blocks/ButtonBlock.vue'
 import { useSectionStyle } from 'src/composables/useSectionStyle.js'
 import {computed} from "vue";
 
@@ -49,7 +50,8 @@ const blockComponents = {
   text_block: TextBlock,
   image_block: ImageBlock,
   spacer: SpacerBlock,
-  heading: HeadingBlock
+  heading: HeadingBlock,
+  button: ButtonBlock
 }
 const enabledBlocks = computed(() =>
     (props.data.blocks || []).filter(
