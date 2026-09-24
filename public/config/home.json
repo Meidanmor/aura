@@ -329,6 +329,63 @@
                             }
                         ]
                     }
+                },
+                {
+                    "id": "blk_kqxtmxr8qt",
+                    "type": "form",
+                    "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
+                    "data": {
+                        "form_type": "newsletter",
+                        "recipient_email": "",
+                        "fields": [],
+                        "submit_text": "Submit",
+                        "success_message": "Thanks!"
+                    }
+                },
+                {
+                    "id": "blk_8jfqorvxx6",
+                    "type": "form",
+                    "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
+                    "data": {
+                        "form_type": "custom",
+                        "recipient_email": "",
+                        "fields": [
+                            {
+                                "label": "Email",
+                                "field_type": "email",
+                                "required": false
+                            },
+                            {
+                                "label": "Name",
+                                "field_type": "text",
+                                "required": false
+                            },
+                            {
+                                "label": "Your Notes",
+                                "field_type": "textarea",
+                                "required": false
+                            },
+                            {
+                                "label": "Accept",
+                                "field_type": "checkbox",
+                                "required": true
+                            }
+                        ],
+                        "submit_text": "Submit",
+                        "success_message": "Thanks!"
+                    }
                 }
             ]
         }
