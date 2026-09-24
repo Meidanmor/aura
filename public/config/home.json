@@ -84,6 +84,25 @@
                             }
                         ]
                     }
+                },
+                {
+                    "id": "blk_zgpxj8nn89",
+                    "type": "button",
+                    "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
+                    "data": {
+                        "text": "Check",
+                        "url": "#",
+                        "style": "primary",
+                        "alignment": "left",
+                        "bg_color": "#ec5151",
+                        "text_color": "#181616"
+                    }
                 }
             ]
         },
