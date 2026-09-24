@@ -32,6 +32,7 @@ import ImageBlock from './ImageBlock.vue'
 import SpacerBlock from './SpacerBlock.vue'
 import HeadingBlock from '../blocks/HeadingBlock.vue'
 import ButtonBlock from '../blocks/ButtonBlock.vue'
+import FormBlock from '../blocks/FormBlock.vue'
 import { useSectionStyle } from 'src/composables/useSectionStyle.js'
 import {computed} from "vue";
 
@@ -51,7 +52,8 @@ const blockComponents = {
   image_block: ImageBlock,
   spacer: SpacerBlock,
   heading: HeadingBlock,
-  button: ButtonBlock
+  button: ButtonBlock,
+  form: FormBlock
 }
 const enabledBlocks = computed(() =>
     (props.data.blocks || []).filter(
