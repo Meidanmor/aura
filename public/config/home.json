@@ -29,7 +29,14 @@
                     "mode": "full"
                 },
                 "min_height": "",
-                "min_height_mobile": ""
+                "min_height_mobile": "",
+                "nesting": {
+                    "flex_direction": "row",
+                    "flex_wrap": "nowrap",
+                    "justify_content": "flex-start",
+                    "align_items": "flex-start",
+                    "align_content": "flex-end"
+                }
             },
             "blocks": [
                 {
@@ -59,7 +66,14 @@
                             "mode": "contained"
                         },
                         "min_height": "",
-                        "min_height_mobile": ""
+                        "min_height_mobile": "",
+                        "nesting": {
+                            "flex_direction": "null",
+                            "flex_wrap": "null",
+                            "justify_content": "null",
+                            "align_items": "null",
+                            "align_content": "null"
+                        }
                     },
                     "blocks": [
                         {
@@ -163,7 +177,14 @@
                             "mode": "contained"
                         },
                         "min_height": "",
-                        "min_height_mobile": ""
+                        "min_height_mobile": "",
+                        "nesting": {
+                            "flex_direction": "null",
+                            "flex_wrap": "null",
+                            "justify_content": "null",
+                            "align_items": "null",
+                            "align_content": "null"
+                        }
                     },
                     "blocks": [
                         {
@@ -217,7 +238,14 @@
                     "mode": "contained"
                 },
                 "min_height": "",
-                "min_height_mobile": ""
+                "min_height_mobile": "",
+                "nesting": {
+                    "flex_direction": "null",
+                    "flex_wrap": "null",
+                    "justify_content": "null",
+                    "align_items": "null",
+                    "align_content": "null"
+                }
             },
             "blocks": [
                 {
@@ -237,6 +265,22 @@
                         "alignment": "center",
                         "color": "",
                         "subtitle_color": ""
+                    }
+                },
+                {
+                    "id": "blk_xdmg9088yj",
+                    "type": "text_block",
+                    "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
+                    "data": {
+                        "text": "explore our products and enjoy the best quality",
+                        "alignment": "center",
+                        "text_color": ""
                     }
                 },
                 {
@@ -295,7 +339,14 @@
                     "mode": "full"
                 },
                 "min_height": "",
-                "min_height_mobile": ""
+                "min_height_mobile": "",
+                "nesting": {
+                    "flex_direction": "null",
+                    "flex_wrap": "null",
+                    "justify_content": "null",
+                    "align_items": "null",
+                    "align_content": "null"
+                }
             },
             "blocks": [
                 {
@@ -366,7 +417,14 @@
                     "mode": "contained"
                 },
                 "min_height": "",
-                "min_height_mobile": ""
+                "min_height_mobile": "",
+                "nesting": {
+                    "flex_direction": "null",
+                    "flex_wrap": "null",
+                    "justify_content": "null",
+                    "align_items": "null",
+                    "align_content": "null"
+                }
             },
             "blocks": [
                 {
@@ -474,12 +532,12 @@
                             {
                                 "label": "Name",
                                 "field_type": "text",
-                                "required": true
+                                "required": false
                             },
                             {
                                 "label": "Your Notes",
                                 "field_type": "textarea",
-                                "required": true
+                                "required": false
                             },
                             {
                                 "label": "Accept",

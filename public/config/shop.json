@@ -26,7 +26,14 @@
                     "mode": "contained"
                 },
                 "min_height": "",
-                "min_height_mobile": ""
+                "min_height_mobile": "",
+                "nesting": {
+                    "flex_direction": "null",
+                    "flex_wrap": "null",
+                    "justify_content": "null",
+                    "align_items": "null",
+                    "align_content": "null"
+                }
             },
             "blocks": [
                 {
