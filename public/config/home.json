@@ -33,9 +33,9 @@
                 "nesting": {
                     "flex_direction": "row",
                     "flex_wrap": "nowrap",
-                    "justify_content": "flex-start",
-                    "align_items": "flex-start",
-                    "align_content": "flex-end"
+                    "justify_content": "space-between",
+                    "align_items": "stretch",
+                    "align_content": "space-between"
                 }
             },
             "blocks": [
@@ -341,53 +341,149 @@
                 "min_height": "",
                 "min_height_mobile": "",
                 "nesting": {
-                    "flex_direction": "null",
-                    "flex_wrap": "null",
-                    "justify_content": "null",
-                    "align_items": "null",
+                    "flex_direction": "row",
+                    "flex_wrap": "nowrap",
+                    "justify_content": "center",
+                    "align_items": "center",
                     "align_content": "null"
                 }
             },
             "blocks": [
                 {
-                    "id": "blk_fvizwc20lk",
-                    "type": "image_block",
+                    "id": "blk_b23gt1jgow",
+                    "type": "section",
                     "enabled": true,
                     "style": {
-                        "padding_top": "",
-                        "padding_top_mobile": "",
-                        "padding_bottom": "",
-                        "padding_bottom_mobile": ""
-                    },
-                    "data": {
-                        "layout": "row",
-                        "images": [
-                            {
-                                "link_url": "",
-                                "alt": "",
-                                "image": "https://meidanm.net/wp-content/uploads/2026/09/cta-img.webp"
+                        "padding": {
+                            "mode": "medium",
+                            "custom": {
+                                "top": "",
+                                "right": "",
+                                "bottom": "",
+                                "left": ""
+                            },
+                            "custom_mobile": {
+                                "top": "",
+                                "right": "",
+                                "bottom": "",
+                                "left": ""
                             }
-                        ]
-                    }
+                        },
+                        "background": {
+                            "type": "none"
+                        },
+                        "width": {
+                            "mode": "custom",
+                            "custom_px": 500
+                        },
+                        "min_height": "",
+                        "min_height_mobile": "",
+                        "nesting": {
+                            "flex_direction": null,
+                            "flex_wrap": null,
+                            "justify_content": null,
+                            "align_items": null,
+                            "align_content": null
+                        }
+                    },
+                    "blocks": [
+                        {
+                            "id": "blk_fvizwc20lk",
+                            "type": "image_block",
+                            "enabled": true,
+                            "style": {
+                                "padding_top": "",
+                                "padding_top_mobile": "",
+                                "padding_bottom": "",
+                                "padding_bottom_mobile": ""
+                            },
+                            "data": {
+                                "layout": "row",
+                                "images": [
+                                    {
+                                        "link_url": "",
+                                        "alt": "",
+                                        "image": "https://meidanm.net/wp-content/uploads/2026/09/cta-img.webp"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
                 },
                 {
-                    "id": "blk_m9j7kws27f",
-                    "type": "category_grid",
+                    "id": "blk_3xwqb7vjge",
+                    "type": "section",
                     "enabled": true,
                     "style": {
-                        "padding_top": "",
-                        "padding_top_mobile": "",
-                        "padding_bottom": "",
-                        "padding_bottom_mobile": ""
+                        "padding": {
+                            "mode": "medium",
+                            "custom": {
+                                "top": "",
+                                "right": "",
+                                "bottom": "",
+                                "left": ""
+                            },
+                            "custom_mobile": {
+                                "top": "",
+                                "right": "",
+                                "bottom": "",
+                                "left": ""
+                            }
+                        },
+                        "background": {
+                            "type": "none"
+                        },
+                        "width": {
+                            "mode": "custom",
+                            "custom_px": 500
+                        },
+                        "min_height": "",
+                        "min_height_mobile": "",
+                        "nesting": {
+                            "flex_direction": null,
+                            "flex_wrap": null,
+                            "justify_content": null,
+                            "align_items": null,
+                            "align_content": null
+                        }
                     },
-                    "data": {
-                        "category_ids": [
-                            37,
-                            41,
-                            33,
-                            67
-                        ]
-                    }
+                    "blocks": [
+                        {
+                            "id": "blk_m9j7kws27f",
+                            "type": "category_grid",
+                            "enabled": true,
+                            "style": {
+                                "padding_top": "",
+                                "padding_top_mobile": "",
+                                "padding_bottom": "",
+                                "padding_bottom_mobile": ""
+                            },
+                            "data": {
+                                "category_ids": [
+                                    37,
+                                    41,
+                                    33,
+                                    67
+                                ]
+                            }
+                        },
+                        {
+                            "id": "blk_ccgloyh2m1",
+                            "type": "text_block",
+                            "enabled": true,
+                            "style": {
+                                "padding_top": "",
+                                "padding_top_mobile": "",
+                                "padding_bottom": "",
+                                "padding_bottom_mobile": ""
+                            },
+                            "data": {
+                                "text": "xdvxv vdxv dvzv",
+                                "alignment": "left",
+                                "text_color": ""
+                            }
+                        }
+                    ]
                 }
             ]
         },
