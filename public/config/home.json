@@ -33,76 +33,161 @@
             },
             "blocks": [
                 {
-                    "id": "blk_jYAtHUeg0V",
-                    "type": "advantages",
+                    "id": "blk_7uahmh7i7j",
+                    "type": "section",
                     "enabled": true,
                     "style": {
-                        "padding_top": "",
-                        "padding_top_mobile": "",
-                        "padding_bottom": "",
-                        "padding_bottom_mobile": ""
-                    },
-                    "data": {
-                        "icon_color": "",
-                        "text_color": "",
-                        "items": [
-                            {
-                                "icon": "custom",
-                                "title": "Fast Shipping",
-                                "text": "Enjoy fast shipping worldwide!!",
-                                "custom_icon": "https://meidanm.net/wp-content/uploads/2026/08/Aura-logo.svg"
+                        "padding": {
+                            "mode": "medium",
+                            "custom": {
+                                "top": "",
+                                "right": "",
+                                "bottom": "",
+                                "left": ""
                             },
-                            {
-                                "icon": "organic",
-                                "custom_icon_id": 0,
-                                "title": "Organic",
-                                "text": "Sofsd sfdjlkfsj sfdlkjlksd vdlkjvl FFF"
-                            },
-                            {
-                                "icon": "guarantee",
-                                "custom_icon_id": 0,
-                                "title": "Warranty!",
-                                "text": "Enjoy our 1 year warranty"
-                            },
-                            {
-                                "icon": "returns",
-                                "custom_icon_id": 0,
-                                "title": "Easy Returns!!",
-                                "text": "vfddsf svd sd vd vdvdvsdvd vfdvdvfd dvdff"
-                            },
-                            {
-                                "icon": "support",
-                                "custom_icon_id": 0,
-                                "title": "Customer Support!!",
-                                "text": "gbffd sfd d cdssdc sd s  sdf sdsd~ vfsdvsd  ~"
-                            },
-                            {
-                                "icon": "quality",
-                                "custom_icon_id": 0,
-                                "title": "Quality",
-                                "text": "Top Quality with no compatition!"
+                            "custom_mobile": {
+                                "top": "",
+                                "right": "",
+                                "bottom": "",
+                                "left": ""
                             }
-                        ]
-                    }
+                        },
+                        "background": {
+                            "type": "none"
+                        },
+                        "width": {
+                            "mode": "contained"
+                        },
+                        "min_height": "",
+                        "min_height_mobile": ""
+                    },
+                    "blocks": [
+                        {
+                            "id": "blk_jYAtHUeg0V",
+                            "type": "advantages",
+                            "enabled": true,
+                            "style": {
+                                "padding_top": "",
+                                "padding_top_mobile": "",
+                                "padding_bottom": "",
+                                "padding_bottom_mobile": ""
+                            },
+                            "data": {
+                                "icon_color": "",
+                                "text_color": "",
+                                "items": [
+                                    {
+                                        "icon": "custom",
+                                        "title": "Fast Shipping",
+                                        "text": "Enjoy fast shipping worldwide!!",
+                                        "custom_icon": "https://meidanm.net/wp-content/uploads/2026/08/Aura-logo.svg"
+                                    },
+                                    {
+                                        "icon": "organic",
+                                        "custom_icon_id": 0,
+                                        "title": "Organic",
+                                        "text": "Sofsd sfdjlkfsj sfdlkjlksd vdlkjvl FFF"
+                                    },
+                                    {
+                                        "icon": "guarantee",
+                                        "custom_icon_id": 0,
+                                        "title": "Warranty!",
+                                        "text": "Enjoy our 1 year warranty"
+                                    },
+                                    {
+                                        "icon": "returns",
+                                        "custom_icon_id": 0,
+                                        "title": "Easy Returns!!",
+                                        "text": "vfddsf svd sd vd vdvdvsdvd vfdvdvfd dvdff"
+                                    },
+                                    {
+                                        "icon": "support",
+                                        "custom_icon_id": 0,
+                                        "title": "Customer Support!!",
+                                        "text": "gbffd sfd d cdssdc sd s  sdf sdsd~ vfsdvsd  ~"
+                                    },
+                                    {
+                                        "icon": "quality",
+                                        "custom_icon_id": 0,
+                                        "title": "Quality",
+                                        "text": "Top Quality with no compatition!"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "blk_zgpxj8nn89",
+                            "type": "button",
+                            "enabled": true,
+                            "style": {
+                                "padding_top": "",
+                                "padding_top_mobile": "",
+                                "padding_bottom": "",
+                                "padding_bottom_mobile": ""
+                            },
+                            "data": {
+                                "text": "Check",
+                                "url": "#",
+                                "style": "primary",
+                                "alignment": "left",
+                                "bg_color": "#ec5151",
+                                "text_color": "#181616"
+                            }
+                        }
+                    ]
                 },
                 {
-                    "id": "blk_zgpxj8nn89",
-                    "type": "button",
+                    "id": "blk_2m45npvbmf",
+                    "type": "section",
                     "enabled": true,
                     "style": {
-                        "padding_top": "",
-                        "padding_top_mobile": "",
-                        "padding_bottom": "",
-                        "padding_bottom_mobile": ""
+                        "padding": {
+                            "mode": "medium",
+                            "custom": {
+                                "top": "",
+                                "right": "",
+                                "bottom": "",
+                                "left": ""
+                            },
+                            "custom_mobile": {
+                                "top": "",
+                                "right": "",
+                                "bottom": "",
+                                "left": ""
+                            }
+                        },
+                        "background": {
+                            "type": "none"
+                        },
+                        "width": {
+                            "mode": "contained"
+                        },
+                        "min_height": "",
+                        "min_height_mobile": ""
                     },
-                    "data": {
-                        "text": "Check",
-                        "url": "#",
-                        "style": "primary",
-                        "alignment": "left",
-                        "bg_color": "#ec5151",
-                        "text_color": "#181616"
-                    }
+                    "blocks": [
+                        {
+                            "id": "blk_s1ekzo8ftd",
+                            "type": "image_block",
+                            "enabled": true,
+                            "style": {
+                                "padding_top": "",
+                                "padding_top_mobile": "",
+                                "padding_bottom": "",
+                                "padding_bottom_mobile": ""
+                            },
+                            "data": {
+                                "layout": "row",
+                                "images": [
+                                    {
+                                        "link_url": "",
+                                        "alt": "",
+                                        "image": "https://meidanm.net/wp-content/uploads/2026/09/aura-hero.webp"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
                 }
             ]
         },
