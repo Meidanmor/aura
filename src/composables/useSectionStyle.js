@@ -11,6 +11,7 @@ const PADDING_MODE_MAP = {
 }
 const WIDTH_MODES = new Set(['full', 'contained'])
 
+
 // Accepts "40", "40px", "2rem" etc. Bare numbers get "px" appended.
 const toCssLength = (v) => {
     if (v === '' || v == null) return null
@@ -33,7 +34,22 @@ export function useSectionStyle(getStyle, isInnerSec=false) {
         'sb-section': true,
         [`sb-p${paddingMode.value}`]: true,
         [`sb-section--width-${widthMode.value}`]: true,
-        ['sb-inner-sec']: isInnerSec
+        ['sb-inner-sec']: isInnerSec,
+
+        ['justify-center']: style.value?.nesting?.justify_content === 'center' ? true : false,
+        ['justify-end']: style.value?.nesting?.justify_content === 'flex-end' ? true : false,
+        ['justify-start']: style.value?.nesting?.justify_content === 'flex-start' ? true : false,
+        ['justify-around']: style.value?.nesting?.justify_content === 'space-around' ? true : false,
+        ['justify-between']: style.value?.nesting?.justify_content === 'space-between' ? true : false,
+        ['justify-evenly']: style.value?.nesting?.justify_content === 'space-evenly' ? true : false,
+
+        ['flex']: style.value?.nesting?.flex_direction !== 'null' ? true : false,
+        ['column']: (style.value?.nesting?.flex_direction === 'column' || style.value?.nesting?.flex_direction === 'column-reverse') ? true : false,
+        ['wrap']: style.value?.nesting?.flex_wrap === 'wrap' ? true : false,
+        ['no-wrap']: style.value?.nesting?.flex_wrap === 'nowrap' ? true : false,
+        ['items-center']: style.value?.nesting?.align_items === 'center' ? true : false,
+        ['items-start']: style.value?.nesting?.align_items === 'flex-start' ? true : false,
+        ['items-end']: style.value?.nesting?.align_items === 'flex-end' ? true : false,
     }))
 
     const sectionStyleVars = computed(() => {
