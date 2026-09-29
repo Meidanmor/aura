@@ -318,6 +318,25 @@
                             }
                         ]
                     }
+                },
+                {
+                    "id": "blk_m9j7kws27f",
+                    "type": "category_grid",
+                    "enabled": true,
+                    "style": {
+                        "padding_top": "",
+                        "padding_top_mobile": "",
+                        "padding_bottom": "",
+                        "padding_bottom_mobile": ""
+                    },
+                    "data": {
+                        "category_ids": [
+                            37,
+                            41,
+                            33,
+                            67
+                        ]
+                    }
                 }
             ]
         },
