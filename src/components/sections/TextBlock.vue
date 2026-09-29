@@ -1,6 +1,6 @@
 <template>
-  <div v-if="data.text" :style="cssVars" class="text-block" :class="`text-block--${data.alignment || 'left'}`">
-    <p v-html="sanitizeSectionText(data.text)" />
+  <div v-if="data.data.text" :style="cssVars" class="text-block" :class="`text-block--${data.data.alignment || 'left'}`">
+    <p v-html="sanitizeSectionText(data.data.text)" />
   </div>
 </template>
 
@@ -25,7 +25,7 @@ const resolveGlobalColor = (color) => {
 }
 
 const cssVars = computed(() => {
-  const color = resolveGlobalColor(data.text_color)
+  const color = resolveGlobalColor(data.data.text_color)
   return color ? { '--text-block-color': color } : {}
 })
 

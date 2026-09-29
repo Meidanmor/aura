@@ -17,7 +17,7 @@ const toCssLength = (v) => {
     return /^-?\d+(\.\d+)?$/.test(String(v).trim()) ? `${v}px` : v
 }
 
-export function useSectionStyle(getStyle) {
+export function useSectionStyle(getStyle, isInnerSec=false) {
     const style = computed(() => getStyle() || {})
 
     const paddingMode = computed(() => {
@@ -32,7 +32,8 @@ export function useSectionStyle(getStyle) {
     const sectionClasses = computed(() => ({
         'sb-section': true,
         [`sb-p${paddingMode.value}`]: true,
-        [`sb-section--width-${widthMode.value}`]: true
+        [`sb-section--width-${widthMode.value}`]: true,
+        ['sb-inner-sec']: isInnerSec
     }))
 
     const sectionStyleVars = computed(() => {

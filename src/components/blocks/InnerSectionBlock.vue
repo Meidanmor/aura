@@ -39,7 +39,7 @@ import {computed} from "vue";
 
 const props = defineProps({ data: { type: Object, required: true } })
 
-const { sectionClasses, sectionStyleVars } = useSectionStyle(() => props.data.style)
+let { sectionClasses, sectionStyleVars } = useSectionStyle(() => props.data.style, true)
 
 const blockComponents = {
   banner: BannerSection,

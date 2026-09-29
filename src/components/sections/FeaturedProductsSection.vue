@@ -1,8 +1,5 @@
 <template>
   <div v-if="products?.length" :style="cssVars" class="featured-products">
-    <div class="container">
-      <h2 v-if="data.title" class="q-mb-md" v-html="sanitizeSectionText(data.title)" />
-
       <AppCarousel
           v-model="carousel.slide.value"
           :carousel-key="carousel.carouselKey.value"
@@ -24,7 +21,6 @@
           </div>
         </q-carousel-slide>
       </AppCarousel>
-    </div>
   </div>
 </template>
 
@@ -36,7 +32,6 @@ import AppCarousel from '../app/AppCarousel.vue'
 import ProductCard from '../shop/ProductCard.vue'
 import { useCarousel } from 'src/composables/useCrousel.js'
 import { useSectionData } from 'src/composables/useSectionData.js'
-import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
 import productsStore from 'src/stores/products'
 
 const $q = useQuasar();
@@ -56,7 +51,7 @@ const props = defineProps({
 // no ids configured, or if resolving the configured ids came back empty
 // (e.g. stale ids no longer in the catalog).
 async function resolveFeaturedProducts(ssrContext) {
-  const ids = props.data.product_ids || []
+  const ids = props.data.data.product_ids || []
 
   let items = ids.length
       ? await productsStore.getFeaturedProducts(ids, ssrContext)
@@ -74,7 +69,7 @@ async function resolveFeaturedProducts(ssrContext) {
 const { data: products, resolve } = useSectionData(props.blockId, resolveFeaturedProducts)
 
 
-const perView = props.data.items_per_view || {}
+const perView = props.data.data.items_per_view || {}
 const carousel = useCarousel(() => products.value || [], {
   chunkSizes: {
     xs: perView.mobile || 1,

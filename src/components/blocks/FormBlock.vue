@@ -27,8 +27,8 @@ const submitForm = async(ref) => {
 
 <template>
   <q-form class="flex" @submit.prevent="submitForm" @validation-error="onValidationError">
-    <div v-if="props.data.form_type === 'custom'">
-      <div class="inputs-wrap" v-for="(field, index) in props.data.fields" :key="index">
+    <div v-if="props.data.data.form_type === 'custom'">
+      <div class="inputs-wrap" v-for="(field, index) in props.data.data.fields" :key="index">
         <div v-if="field.field_type === 'checkbox'">
           <q-field
               borderless
@@ -49,10 +49,10 @@ const submitForm = async(ref) => {
         </div>
       </div>
     </div>
-    <div v-else-if="props.data.form_type === 'newsletter'">
+    <div v-else-if="props.data.data.form_type === 'newsletter'">
       <q-input label="First Name *" filled class="q-mb-sm" :rules="[val => !!val || 'First Name is required']"/>
     </div>
-    <div v-if="props.data.form_type === 'custom'">
+    <div v-if="props.data.data.form_type === 'custom'">
       <q-input label="First Name *" filled class="q-mb-sm" :rules="[val => !!val || 'First Name is required']"/>
     </div>
 
