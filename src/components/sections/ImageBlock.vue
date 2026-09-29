@@ -28,5 +28,6 @@ const images = computed(() => props.data.data.images || [])
 .image-block--row { /*flex-wrap: wrap;*/ align-items: center; justify-content: center; }
 .image-block--stacked { flex-direction: column; align-items: center; }
 .image-block--grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
-.image-block__item img { max-width: 100%; display: block; }
+.image-block__item { width: 100%}
+.image-block__item img { max-width: 100%; display: block; margin: 0 auto }
 </style>

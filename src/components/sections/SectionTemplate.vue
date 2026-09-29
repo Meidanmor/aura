@@ -7,6 +7,7 @@
     <div
         v-for="block in enabledBlocks" :key="block.id"
         class="sb-block"
+        :class="blockStyleClassesById[block.id]"
         :style="blockStyleVarsById[block.id]"
     >
 
@@ -34,7 +35,7 @@ import HeadingBlock from '../blocks/HeadingBlock.vue'
 import ButtonBlock from '../blocks/ButtonBlock.vue'
 import FormBlock from '../blocks/FormBlock.vue'
 import InnerSectionBlock from '../blocks/InnerSectionBlock.vue'
-import { useSectionStyle } from 'src/composables/useSectionStyle.js'
+import { useSectionStyle, buildSectionClasses, buildSectionStyleVars } from 'src/composables/useSectionStyle.js'
 import {computed} from "vue";
 
 const props = defineProps({ data: { type: Object, required: true } })
@@ -68,16 +69,30 @@ const toCssLength = (v) => {
   return /^-?\d+(\.\d+)?$/.test(String(v).trim()) ? `${v}px` : v
 }
 
+const blockStyleClassesById = computed(() => {
+  const map = {}
+  for (const block of props.data.blocks || []) {
+    // only inner sections need the section-like wrapper classes
+    map[block.id] = block.type === 'section'
+        ? buildSectionClasses(block.style, true)
+        : {}
+  }
+  return map
+})
+
 const blockStyleVarsById = computed(() => {
   const map = {}
-  for (const block of props.data.blocks) {
+  for (const block of props.data.blocks || []) {
     const style = block.style || {}
-    const vars = {}
+    const vars = block.type === 'section' ? buildSectionStyleVars(style) : {}
+
+    // your existing per-block padding/width vars
     const fields = {
       '--sb-pt': style.padding_top,
-      '--sb-pt-m': style.padding_top_mobile ? style.padding_top_mobile : style.padding_top,
+      '--sb-pt-m': style.padding_top_mobile || style.padding_top,
       '--sb-pb': style.padding_bottom,
-      '--sb-pb-m': style.padding_bottom_mobile ? style.padding_bottom_mobile : style.padding_bottom
+      '--sb-pb-m': style.padding_bottom_mobile || style.padding_bottom,
+      '--section-width': style.width?.mode === 'custom' ? style.width.custom_px : '',
     }
     for (const [key, raw] of Object.entries(fields)) {
       const v = toCssLength(raw)
@@ -87,6 +102,5 @@ const blockStyleVarsById = computed(() => {
   }
   return map
 })
-
 
 </script>

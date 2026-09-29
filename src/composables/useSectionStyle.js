@@ -9,7 +9,7 @@ const PADDING_MODE_MAP = {
     large: 'l',
     custom: 'c',
 }
-const WIDTH_MODES = new Set(['full', 'contained'])
+const WIDTH_MODES = new Set(['full', 'contained', 'custom'])
 
 
 // Accepts "40", "40px", "2rem" etc. Bare numbers get "px" appended.
@@ -18,76 +18,64 @@ const toCssLength = (v) => {
     return /^-?\d+(\.\d+)?$/.test(String(v).trim()) ? `${v}px` : v
 }
 
-export function useSectionStyle(getStyle, isInnerSec=false) {
-    const style = computed(() => getStyle() || {})
+// useSectionStyle.js
+export function buildSectionClasses(style = {}, isInnerSec = false) {
+    const mode = style?.padding?.mode
+    const paddingMode = PADDING_MODES.has(mode) ? PADDING_MODE_MAP[mode] : 'm'
+    const widthMode = WIDTH_MODES.has(style?.width?.mode) ? style.width.mode : 'full'
+    const n = style?.nesting || {}
 
-    const paddingMode = computed(() => {
-        const mode = style.value?.padding?.mode
-
-        return PADDING_MODES.has(mode) ? PADDING_MODE_MAP[mode] : 'm'
-    })
-    const widthMode = computed(() =>
-        WIDTH_MODES.has(style.value?.width?.mode) ? style.value.width.mode : 'full'
-    )
-
-    const sectionClasses = computed(() => ({
+    return {
         'sb-section': true,
-        [`sb-p${paddingMode.value}`]: true,
-        [`sb-section--width-${widthMode.value}`]: true,
-        ['sb-inner-sec']: isInnerSec,
+        [`sb-p${paddingMode}`]: true,
+        [`sb-section--width-${widthMode}`]: true,
+        'sb-inner-sec': isInnerSec,
 
-        ['justify-center']: style.value?.nesting?.justify_content === 'center' ? true : false,
-        ['justify-end']: style.value?.nesting?.justify_content === 'flex-end' ? true : false,
-        ['justify-start']: style.value?.nesting?.justify_content === 'flex-start' ? true : false,
-        ['justify-around']: style.value?.nesting?.justify_content === 'space-around' ? true : false,
-        ['justify-between']: style.value?.nesting?.justify_content === 'space-between' ? true : false,
-        ['justify-evenly']: style.value?.nesting?.justify_content === 'space-evenly' ? true : false,
+        'justify-center': n.justify_content === 'center',
+        'justify-end': n.justify_content === 'flex-end',
+        'justify-start': n.justify_content === 'flex-start',
+        'justify-around': n.justify_content === 'space-around',
+        'justify-between': n.justify_content === 'space-between',
+        'justify-evenly': n.justify_content === 'space-evenly',
 
-        ['flex']: style.value?.nesting?.flex_direction !== 'null' ? true : false,
-        ['column']: (style.value?.nesting?.flex_direction === 'column' || style.value?.nesting?.flex_direction === 'column-reverse') ? true : false,
-        ['wrap']: style.value?.nesting?.flex_wrap === 'wrap' ? true : false,
-        ['no-wrap']: style.value?.nesting?.flex_wrap === 'nowrap' ? true : false,
-        ['items-center']: style.value?.nesting?.align_items === 'center' ? true : false,
-        ['items-start']: style.value?.nesting?.align_items === 'flex-start' ? true : false,
-        ['items-end']: style.value?.nesting?.align_items === 'flex-end' ? true : false,
-    }))
+        flex: !!n.flex_direction && n.flex_direction !== 'null',
+        column: n.flex_direction === 'column' || n.flex_direction === 'column-reverse',
+        wrap: n.flex_wrap === 'wrap',
+        'no-wrap': n.flex_wrap === 'nowrap',
+        'items-center': n.align_items === 'center',
+        'items-start': n.align_items === 'flex-start',
+        'items-end': n.align_items === 'flex-end',
+    }
+}
 
-    const sectionStyleVars = computed(() => {
-        const vars = {}
-        const s = style.value
-        const bg = s?.background
-        if (bg?.type === 'color') {
-            const resolved = resolveGlobalColor(bg.color)
-            if (resolved) vars['--section-bg'] = resolved
+export function buildSectionStyleVars(style = {}) {
+    const vars = {}
+    const bg = style?.background
+    if (bg?.type === 'color') {
+        const resolved = resolveGlobalColor(bg.color)
+        if (resolved) vars['--section-bg'] = resolved
+    }
+    const h = toCssLength(style?.min_height)
+    if (h) vars['--section-min-height'] = h
+    const hm = toCssLength(style?.min_height_mobile)
+    if (hm) vars['--section-min-height-mobile'] = hm
+
+    if (PADDING_MODES.has(style?.padding?.mode) && style.padding.mode === 'custom') {
+        const c = style.padding.custom || {}
+        const cm = style.padding.custom_mobile || {}
+        const sides = { top: 't', right: 'r', bottom: 'b', left: 'l' }
+        for (const [side, key] of Object.entries(sides)) {
+            const len = toCssLength(c[side])
+            if (len) vars[`--sb-p${key}`] = len
+            const lenM = toCssLength(cm[side])
+            if (lenM) vars[`--sb-p${key}-m`] = lenM
         }
-        const h = toCssLength(s?.min_height)
-        if (h) vars['--section-min-height'] = h
-        const hm = toCssLength(s?.min_height_mobile)
-        if (hm) vars['--section-min-height-mobile'] = hm
+    }
+    return vars
+}
 
-        if (paddingMode.value === 'c') {
-            const c = s.padding.custom || {}
-            const cm = s.padding.custom_mobile || {}
-            ;['top', 'right', 'bottom', 'left'].forEach((side) => {
-                let sideVal = '';
-                if(side === 'top'){
-                    sideVal = 't'
-                } else if(side === 'right'){
-                    sideVal = 'r'
-                } else if(side === 'bottom'){
-                    sideVal = 'b'
-                } else if(side === 'left'){
-                    sideVal = 'l'
-                }
-
-                const len = toCssLength(c[side])
-                if (len) vars[`--sb-p${sideVal}`] = len
-                const lenM = toCssLength(cm[side])
-                if (lenM) vars[`--sb-p${sideVal}-m`] = lenM
-            })
-        }
-        return vars
-    })
-
+export function useSectionStyle(getStyle, isInnerSec = false) {
+    const sectionClasses = computed(() => buildSectionClasses(getStyle() || {}, isInnerSec))
+    const sectionStyleVars = computed(() => buildSectionStyleVars(getStyle() || {}))
     return { sectionClasses, sectionStyleVars }
 }
