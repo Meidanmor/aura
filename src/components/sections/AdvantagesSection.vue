@@ -1,13 +1,13 @@
 <template>
   <div
-       v-if="data.items?.length"
+       v-if="blockData.items?.length"
        class="container advantages-section"
        :style="cssVars"
   >
       <div class="row justify-center gap">
 
         <div
-            v-for="(item, index) in data.items"
+            v-for="(item, index) in blockData.items"
             :key="index"
             class="advantage-card col-12 col-sm-6 col-md-4">
             <img
@@ -48,11 +48,12 @@ const props = defineProps({
   blockId: { type: String, default: '' },
 })
 
+const blockData = props.data.data
 
 const cssVars = computed(() => {
   const vars = {
-    '--advantage-icon-color': props.data.icon_color || 'var(--q-secondary)',
-    '--advantage-text-color': props.data.text_color || 'var(--q-secondary)'
+    '--advantage-icon-color': blockData.icon_color || 'var(--q-secondary)',
+    '--advantage-text-color': blockData.text_color || 'var(--q-secondary)'
   }
   return vars
 })

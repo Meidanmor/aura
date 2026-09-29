@@ -1,5 +1,5 @@
 <template>
-    <div :style="cssVars" v-if="data.items?.length" class="container testimonials-section">
+    <div :style="cssVars" v-if="props.data.data.items?.length" class="container testimonials-section">
       <h2 v-if="data.title" class="q-mb-lg text-center" v-html="sanitizeSectionText(data.title)" />
 
       <AppCarousel
@@ -31,7 +31,7 @@
       <div v-else class="row q-col-gutter-md">
         <div
             class="col-12 col-md-4"
-            v-for="(testimonial, index) in data.items"
+            v-for="(testimonial, index) in props.data.data.items"
             :key="index"
         >
           <TestimonialCard :testimonial="testimonial" />
@@ -59,12 +59,12 @@ const props = defineProps({
 })
 
 
-const isCarousel = computed(() => props.data.display_style === 'carousel')
+const isCarousel = computed(() => props.data.data.display_style === 'carousel')
 
 // Always call the composable (never conditionally — same rule as any other
 // Vue hook) even though its output is only used when isCarousel is true;
 // the cost of chunking an unused array is negligible.
-const carousel = useCarousel(() => props.data.items || [])
+const carousel = useCarousel(() => props.data.data.items || [])
 carousel.recompute()
 
 
@@ -81,7 +81,7 @@ onServerPrefetch(async () => {
   await carousel.recompute(true)
 })
 const stopTestimonialsWatch = watch(
-    [() => props.data.items, () => $q.screen.name],
+    [() => props.data.data.items, () => $q.screen.name],
     () => {
       carousel.markMounted()
       carousel.recompute(true)    // forceRemount now safely diverges from SSR output

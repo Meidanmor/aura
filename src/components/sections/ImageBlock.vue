@@ -1,5 +1,5 @@
 <template>
-  <div v-if="images.length" class="image-block" :class="`image-block--${data.layout || 'row'}`">
+  <div v-if="images.length" class="image-block" :class="`image-block--${props.data.data.layout || 'row'}`">
     <component
         :is="img.link_url ? 'a' : 'span'"
         v-for="(img, idx) in images"
@@ -20,7 +20,7 @@ const props = defineProps({
   blockId: { type: String, required: true },
 })
 
-const images = computed(() => props.data.images || [])
+const images = computed(() => props.data.data.images || [])
 </script>
 
 <style scoped>

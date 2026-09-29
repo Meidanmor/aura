@@ -4,10 +4,10 @@
       :style="cssVars"
   >
     <div class="container banner-section__inner">
-      <p class="banner-section__text" v-html="sanitizeSectionText(data.text)" />
+      <p class="banner-section__text" v-html="sanitizeSectionText(data.data.text)" />
       <q-btn
-          v-if="data.link_text && data.link_url"
-          :label="data.link_text"
+          v-if="data.data.link_text && data.data.link_url"
+          :label="data.data.link_text"
           v-bind="linkTarget"
           flat
           class="banner-section__link"
@@ -36,7 +36,7 @@ const props = defineProps({
 })
 
 const linkTarget = computed(() => {
-  const url = props.data.link_url || ''
+  const url = props.data.data.link_url || ''
   return url.startsWith('/')
       ? { to: url }
       : { href: url, target: '_blank', rel: 'noopener noreferrer' }

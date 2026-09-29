@@ -1,5 +1,5 @@
 <template>
-  <section
+  <div
       :class="sectionClasses"
       :style="sectionStyleVars"
       :section-id="data.id"
@@ -10,26 +10,26 @@
         :style="blockStyleVarsById[block.id]"
     >
 
-    <component
-        :is="blockComponents[block.type]"
-        :data="block"
-        :block-id="block.id"
-    />
+      <component
+          :is="blockComponents[block.type]"
+          :data="block"
+          :block-id="block.id"
+      />
     </div>
-  </section>
+  </div>
 </template>
 
 <script setup>
-import BannerSection from './BannerSection.vue'
-import NewsletterSection from './NewsletterSection.vue'
-import CategoryGridSection from './CategoryGridSection.vue'
-import TestimonialsSection from './TestimonialsSection.vue'
-import FeaturedProductsSection from './FeaturedProductsSection.vue'
-import AdvantagesSection from './AdvantagesSection.vue'
-import CtaSection from './CtaSection.vue'
-import TextBlock from './TextBlock.vue'
-import ImageBlock from './ImageBlock.vue'
-import SpacerBlock from './SpacerBlock.vue'
+import BannerSection from '../sections/BannerSection.vue'
+import NewsletterSection from '../sections/NewsletterSection.vue'
+import CategoryGridSection from '../sections/CategoryGridSection.vue'
+import TestimonialsSection from '../sections/TestimonialsSection.vue'
+import FeaturedProductsSection from '../sections/FeaturedProductsSection.vue'
+import AdvantagesSection from '../sections/AdvantagesSection.vue'
+import CtaSection from '../sections/CtaSection.vue'
+import TextBlock from '../sections/TextBlock.vue'
+import ImageBlock from '../sections/ImageBlock.vue'
+import SpacerBlock from '../sections/SpacerBlock.vue'
 import HeadingBlock from '../blocks/HeadingBlock.vue'
 import ButtonBlock from '../blocks/ButtonBlock.vue'
 import FormBlock from '../blocks/FormBlock.vue'

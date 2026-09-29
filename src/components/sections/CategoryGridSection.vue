@@ -1,6 +1,6 @@
 <template>
     <div :style="cssVars" v-if="categories?.length" class="container category-grid-section">
-      <h2 v-if="data.title" class="q-mb-lg text-center" v-html="sanitizeSectionText(data.title)" />
+      <h2 v-if="props.data.data.title" class="q-mb-lg text-center" v-html="sanitizeSectionText(props.data.data.title)" />
       <div class="row q-col-gutter-md">
         <div v-for="cat in categories" :key="cat.id" class="col-6 col-md-3">
           <q-btn flat no-caps :to="`/product-category/${cat.slug}`" class="category-grid-card">
@@ -67,7 +67,7 @@ async function fetchCategories(ids, ssrContext) {
 }
 
 const { data: categories, resolve } = useSectionData(props.sectionId, (ssrContext) =>
-    fetchCategories(props.data.category_ids || [], ssrContext)
+    fetchCategories(props.data.data.category_ids || [], ssrContext)
 )
 
 let ssrContext = null
