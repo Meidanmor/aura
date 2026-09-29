@@ -57,7 +57,7 @@ safelist: {
 
         // --- Utility Fixes ---
         'fit', 'scroll', 'no-scroll', 'hide-scrollbar',
-        'row', 'column', 'flex', 'items-center', 'justify-center', 'no-wrap',
+        'row', 'column', 'flex', 'items-center', /^justify-/, 'no-wrap',
         /^q-scrollarea/,
         /q-item/,           // Protects q-item, q-item-section, q-item-label
         /q-list/,

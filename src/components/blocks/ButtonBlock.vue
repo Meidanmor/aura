@@ -29,6 +29,9 @@ const cssVars = computed(() => {
 </script>
 
 <template>
+  <div
+      :class="`btn-block flex justify-${props.data.alignment === 'left' ? 'start' : props.data.alignment === 'right' ? 'end' : props.data.alignment}`"
+  >
   <q-btn
       outline
       :style="cssVars"
@@ -37,7 +40,7 @@ const cssVars = computed(() => {
       :label="props.data.text"
       unelevated
   />
-
+  </div>
 </template>
 
 <style scoped>

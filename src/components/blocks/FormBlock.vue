@@ -1,4 +1,5 @@
 <script setup>
+
 const props = defineProps({
   data: {
     required: true,
@@ -29,10 +30,22 @@ const submitForm = async(ref) => {
     <div v-if="props.data.form_type === 'custom'">
       <div class="inputs-wrap" v-for="(field, index) in props.data.fields" :key="index">
         <div v-if="field.field_type === 'checkbox'">
-          <q-checkbox :label="field.label" required></q-checkbox>
+          <q-field
+              borderless
+              :model-value="false"
+              :rules="[val => (val === true && index === index) || `You must accept ${field.label}`]"
+          >
+            <template v-slot:control>
+              <q-checkbox
+                  :v-model="false"
+                  :label="field.label"
+              />
+            </template>
+          </q-field>
+
         </div>
         <div v-else>
-          <q-input :type="field.field_type" :label="field.label" filled class="q-mb-sm" :rules="field.required ? [val => !!val || 'First Name is required'] : ''"/>
+          <q-input :type="field.field_type" :label="field.label" filled class="q-mb-sm" :rules="field.required ? [val => !!val || `${field.label} is required`] : ''"/>
         </div>
       </div>
     </div>
