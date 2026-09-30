@@ -59,6 +59,14 @@ import SpacerBlock from './SpacerBlock.vue'
 import HeadingBlock from '../blocks/HeadingBlock.vue'
 import ButtonBlock from '../blocks/ButtonBlock.vue'
 import FormBlock from '../blocks/FormBlock.vue'
+import VideoBlock from '../blocks/VideoBlock.vue'
+import IconListBlock from '../blocks/IconListBlock.vue'
+import FaqBlock from '../blocks/FaqBlock.vue'
+import TabsBlock from '../blocks/TabsBlock.vue'
+import CountdownBlock from '../blocks/CountdownBlock.vue'
+import ProductGridBlock from '../blocks/ProductGridBlock.vue'
+import CarouselBlock from '../blocks/CarouselBlock.vue'
+import SocialLinksBlock from '../blocks/SocialLinksBlock.vue'
 import { buildContainerStyle, buildBlockWrapperStyle } from 'src/composables/useSectionStyle.js'
 
 defineOptions({ name: 'SectionTemplate' })
@@ -82,6 +90,14 @@ const blockComponents = {
   category_grid: CategoryGridSection,
   testimonials: TestimonialsSection,
   advantages: AdvantagesSection,
+  video: VideoBlock,
+  icon_list: IconListBlock,
+  faq: FaqBlock,
+  tabs: TabsBlock,
+  countdown: CountdownBlock,
+  product_grid: ProductGridBlock,
+  carousel: CarouselBlock,
+  social_links: SocialLinksBlock,
 }
 
 const container = computed(() => buildContainerStyle(props.data.style || {}))

@@ -274,7 +274,11 @@ devServer: {
       },
       cssAddon: false,
 
-      // iconSet: 'material-icons', // Quasar icon set
+      // SVG version of Quasar's own icon set: the icons Quasar components use
+      // internally (field error icon, select dropdown arrow, checkbox tick,
+      // expansion chevrons, ...) become inline SVGs, so no icon font is needed
+      // — the app imports its other icons manually from @quasar/extras.
+      iconSet: 'svg-material-icons',
       // lang: 'en-US', // Quasar language pack
 
       // For special cases outside of where the auto-import strategy can have an impact

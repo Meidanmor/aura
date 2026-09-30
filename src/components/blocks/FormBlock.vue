@@ -62,7 +62,6 @@
               v-else-if="field.field_type === 'select'"
               v-model="values[field.key]"
               :options="optionValues(field)"
-              :dropdown-icon="matArrowDropDown"
               :label="labelFor(field)"
               v-bind="inputStyleProps"
               :rules="field.required ? [(v) => !!v || `“${field.label}” is required.`] : []"
@@ -116,7 +115,7 @@
 
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
-import { matArrowDropDown, matCheckCircle } from '@quasar/extras/material-icons'
+import { matCheckCircle } from '@quasar/extras/material-icons'
 import { useHoneypot } from 'src/composables/useHoneypot.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToFlex } from 'src/composables/useSectionStyle.js'
@@ -290,6 +289,13 @@ const cssVars = computed(() => {
   const vars = {}
   setResponsiveVar(vars, '--fb-maxw', d.value.max_width, toCssLength)
   setResponsiveVar(vars, '--fb-btn-align', d.value.button_align, alignToFlex)
+  // Quasar paints focused fields, checked radios/checkboxes and the default
+  // submit button with --q-primary. Overriding it inside this form only lets
+  // the admin pick a readable accent even when the site's primary color is a
+  // background tone (e.g. #fafafa).
+  // Forms saved before this option existed fall back to Secondary.
+  const accent = resolveGlobalColor('accent_color' in d.value ? d.value.accent_color : 'global:secondary')
+  if (accent) vars['--q-primary'] = accent
   return vars
 })
 </script>

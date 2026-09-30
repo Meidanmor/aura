@@ -90,6 +90,11 @@ safelist: {
         'q-item__section',
         'q-item__label',
         'q-virtual-scroll__content', // Selects often use virtual scroll
+        /^q-virtual-scroll/,         // …and its padding/size helpers (Form block dropdowns)
+
+        // --- Shop Builder blocks ---
+        'q-gutter-x-sm',  // spacing between inline radios/checkboxes (Form block option groups)
+        'q-panel',        // slide wrapper inside q-carousel (Carousel block hero slides)
 
         // --- States ---
         'q-manual-focusable',

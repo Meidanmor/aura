@@ -100,6 +100,90 @@ async function getByIds(ids = [], ssrContext = null) {
   return ids.map(id => masterMap.get(Number(id))).filter(Boolean)
 }
 
+/**
+ * Products for a Shop Builder query (Product Grid / Carousel blocks).
+ * `q` is the block data: query_type, category_ids, tag_ids, product_ids,
+ * limit, hide_out_of_stock. Uses the Store API; falls back to
+ * products.json (filtered as closely as it can) when the API is down.
+ */
+async function queryProducts(q = {}, ssrContext = null) {
+  const type = q.query_type || 'newest'
+  const limit = Math.max(1, Math.min(24, Number(q.limit) || 8))
+
+  if (type === 'manual') {
+    return getFeaturedProducts(q.product_ids || [], ssrContext)
+  }
+
+  const query = new URLSearchParams()
+  query.append('per_page', limit)
+  switch (type) {
+    case 'on_sale': query.append('on_sale', 'true'); break
+    case 'featured': query.append('featured', 'true'); break
+    case 'best_selling': query.append('orderby', 'popularity'); query.append('order', 'desc'); break
+    case 'top_rated': query.append('orderby', 'rating'); query.append('order', 'desc'); break
+    case 'category': query.append('category', (q.category_ids || []).join(',')); break
+    case 'tag': query.append('tag', (q.tag_ids || []).join(',')); break
+    default: query.append('orderby', 'date'); query.append('order', 'desc')
+  }
+  if (q.hide_out_of_stock) query.append('stock_status[]', 'instock')
+  if ((type === 'category' && !q.category_ids?.length) || (type === 'tag' && !q.tag_ids?.length)) return []
+
+  try {
+    const res = await fetch(`${storeApiBase(ssrContext)}/products?${query.toString()}`)
+    if (!res.ok) throw new Error(`API error: ${res.status}`)
+    return (await res.json()) || []
+  } catch (err) {
+    console.warn('[products store] queryProducts failed, using products.json', err)
+    try {
+      let all
+      if (import.meta.env.DEV && import.meta.env.SSR) {
+        const { readFile } = await import('fs/promises')
+        const { resolve } = await import('path')
+        all = JSON.parse(await readFile(resolve(process.cwd(), 'public', 'data', 'products.json'), 'utf-8'))
+      } else {
+        all = await (await fetch(`${getApiOrigin(ssrContext)}/data/products.json`)).json()
+      }
+      if (type === 'on_sale') all = all.filter((p) => p.on_sale)
+      if (type === 'category') {
+        const ids = (q.category_ids || []).map(String)
+        all = all.filter((p) => p.categories?.some((c) => ids.includes(String(c.id))))
+      }
+      if (type === 'tag') {
+        const ids = (q.tag_ids || []).map(String)
+        all = all.filter((p) => p.tags?.some((t) => ids.includes(String(t.id))))
+      }
+      if (q.hide_out_of_stock) all = all.filter((p) => p.is_in_stock !== false)
+      return all.slice(0, limit)
+    } catch {
+      return []
+    }
+  }
+}
+
+/**
+ * Product categories for Shop Builder blocks: the given ids (in that order),
+ * or — with no ids — every top-level category that has products.
+ */
+async function queryCategories(ids = [], ssrContext = null) {
+  const query = ids.length ? `?include=${ids.join(',')}&per_page=100` : '?per_page=100'
+  try {
+    const res = await fetch(`${storeApiBase(ssrContext)}/products/categories${query}`)
+    if (!res.ok) throw new Error(`API error: ${res.status}`)
+    const json = await res.json()
+    let list = Array.isArray(json) ? json : []
+    if (ids.length) {
+      const byId = new Map(list.map((c) => [c.id, c]))
+      list = ids.map((id) => byId.get(Number(id))).filter(Boolean)
+    } else {
+      list = list.filter((c) => !c.parent && c.count > 0)
+    }
+    return list.map((c) => ({ id: c.id, name: c.name, slug: c.slug, image: c.image?.src || '', count: c.count }))
+  } catch (err) {
+    console.error('[products store] queryCategories failed', err)
+    return []
+  }
+}
+
 // --- core fetchers ---
 // ctx.ssrContext carries the per-request context when this runs inside a
 // preFetch hook. Leave it undefined/null for client-triggered calls.
@@ -400,6 +484,8 @@ export default {
   getByIds,
   fetchSingleProduct,
   getFeaturedProducts,
+  queryProducts,
+  queryCategories,
   totalProducts,
   totalPages
 }
