@@ -4,10 +4,11 @@
       :style="sectionStyleVars"
       :section-id="data.id"
   >
+    <div :class="innerSectionClasses">
     <div
         v-for="block in enabledBlocks" :key="block.id"
         class="sb-block"
-        :class="blockStyleClassesById[block.id]"
+        :class="block.type !== 'section' ? blockStyleClassesById[block.id] : ''"
         :style="blockStyleVarsById[block.id]"
     >
 
@@ -16,6 +17,7 @@
         :data="block"
         :block-id="block.id"
     />
+    </div>
     </div>
   </section>
 </template>
@@ -40,7 +42,7 @@ import {computed} from "vue";
 
 const props = defineProps({ data: { type: Object, required: true } })
 
-const { sectionClasses, sectionStyleVars } = useSectionStyle(() => props.data.style)
+const { sectionClasses, sectionStyleVars, innerSectionClasses } = useSectionStyle(() => props.data.style)
 
 const blockComponents = {
   banner: BannerSection,

@@ -21,16 +21,20 @@ const toCssLength = (v) => {
 // useSectionStyle.js
 export function buildSectionClasses(style = {}, isInnerSec = false) {
     const mode = style?.padding?.mode
-    const paddingMode = PADDING_MODES.has(mode) ? PADDING_MODE_MAP[mode] : 'm'
-    const widthMode = WIDTH_MODES.has(style?.width?.mode) ? style.width.mode : 'full'
-    const n = style?.nesting || {}
+    const paddingMode = PADDING_MODES.has(mode) ? PADDING_MODE_MAP[mode] : 'n'
 
     return {
         'sb-section': true,
         [`sb-p${paddingMode}`]: true,
-        [`sb-section--width-${widthMode}`]: true,
         'sb-inner-sec': isInnerSec,
+    }
+}
+export function buildInnerSectionClasses(style = {}) {
+    const widthMode = WIDTH_MODES.has(style?.width?.mode) ? style.width.mode : 'full'
+    const n = style?.nesting || {}
 
+    return {
+        [`sb-section--width-${widthMode}`]: true,
         'justify-center': n.justify_content === 'center',
         'justify-end': n.justify_content === 'flex-end',
         'justify-start': n.justify_content === 'flex-start',
@@ -76,6 +80,8 @@ export function buildSectionStyleVars(style = {}) {
 
 export function useSectionStyle(getStyle, isInnerSec = false) {
     const sectionClasses = computed(() => buildSectionClasses(getStyle() || {}, isInnerSec))
+    const innerSectionClasses = computed(() => buildInnerSectionClasses(getStyle() || {}))
     const sectionStyleVars = computed(() => buildSectionStyleVars(getStyle() || {}))
-    return { sectionClasses, sectionStyleVars }
+
+    return { sectionClasses, sectionStyleVars, innerSectionClasses }
 }

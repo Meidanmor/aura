@@ -230,7 +230,7 @@ body section {
 .sb-section--width-contained { max-width: 1200px; margin-inline: auto; }
 .sb-section--width-full { width: 100%; }
 .sb-section--width-custom {width: var(--section-width, 100%);}
-.sb-block.sb-section.sb-pm.sb-section--width-custom.sb-inner-sec {
+.sb-block.sb-section.sb-section--width-custom.sb-inner-sec {
     width: var(--section-width, 100%);
     flex: auto;
 }

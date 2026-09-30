@@ -214,7 +214,7 @@
       </div>
     </div>
 
-    <SectionRenderer :sections="productSettings?.sections" location="before_related_products "/>
+    <SectionRenderer :sections="productSettings?.sections" location="before_related_products"/>
     <RelatedProductsSlider
       :productId="product.id"
       :categoryId="product.categories[0]?.id"

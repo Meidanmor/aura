@@ -1,6 +1,6 @@
 <template>
   <div
-      :class="sectionClasses"
+      :class="[sectionClasses, innerSectionClasses]"
       :style="sectionStyleVars"
       :section-id="data.id"
   >
@@ -39,7 +39,7 @@ import {computed} from "vue";
 
 const props = defineProps({ data: { type: Object, required: true } })
 
-let { sectionClasses, sectionStyleVars } = useSectionStyle(() => props.data.style, true)
+let { sectionClasses, sectionStyleVars, innerSectionClasses } = useSectionStyle(() => props.data.style, true)
 
 const blockComponents = {
   banner: BannerSection,
