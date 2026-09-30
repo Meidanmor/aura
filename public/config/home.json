@@ -863,15 +863,15 @@
                     "mobile": "center"
                 },
                 "align_items": {
-                    "desktop": "center",
-                    "tablet": "center",
-                    "mobile": "center"
+                    "desktop": "flex-start",
+                    "tablet": "flex-start",
+                    "mobile": "flex-start"
                 },
                 "align_content": "normal",
                 "gap": {
-                    "desktop": "",
-                    "tablet": "",
-                    "mobile": ""
+                    "desktop": "20",
+                    "tablet": "20",
+                    "mobile": "20"
                 },
                 "padding_preset": "medium",
                 "padding": {
@@ -1230,8 +1230,8 @@
                     },
                     "blocks": [
                         {
-                            "id": "blk_m9j7kws27f",
-                            "type": "category_grid",
+                            "id": "blk_51DStamYYz",
+                            "type": "heading",
                             "enabled": true,
                             "style": {
                                 "margin_top": {
@@ -1240,9 +1240,9 @@
                                     "mobile": ""
                                 },
                                 "margin_bottom": {
-                                    "desktop": "",
-                                    "tablet": "",
-                                    "mobile": ""
+                                    "desktop": "34",
+                                    "tablet": "34",
+                                    "mobile": "34"
                                 },
                                 "width": {
                                     "desktop": "",
@@ -1262,12 +1262,27 @@
                                 "anchor_id": ""
                             },
                             "data": {
-                                "category_ids": [
-                                    37,
-                                    41,
-                                    33,
-                                    67
-                                ]
+                                "title": "cgvfd erd dfv erfvvfsdv",
+                                "subtitle": "",
+                                "tag": "h2",
+                                "alignment": {
+                                    "desktop": "left",
+                                    "tablet": "left",
+                                    "mobile": "left"
+                                },
+                                "title_color": "",
+                                "subtitle_color": "",
+                                "font_size": {
+                                    "desktop": "",
+                                    "tablet": "",
+                                    "mobile": ""
+                                },
+                                "font_weight": "",
+                                "subtitle_size": {
+                                    "desktop": "",
+                                    "tablet": "",
+                                    "mobile": ""
+                                }
                             }
                         },
                         {
@@ -1303,7 +1318,7 @@
                                 "anchor_id": ""
                             },
                             "data": {
-                                "text": "xdvxv vdxv dvzv",
+                                "text": "<p>xdvxv vdxv dvzv</p>\n<p>uyjdgh</p>\n<p>fhjmhdj bfhfgdh bgdgd fhnhv\u00a0 11</p>",
                                 "alignment": {
                                     "desktop": "left",
                                     "tablet": "left",
@@ -1316,10 +1331,58 @@
                                     "mobile": ""
                                 },
                                 "line_height": {
+                                    "desktop": "1",
+                                    "tablet": "1",
+                                    "mobile": "1"
+                                }
+                            }
+                        },
+                        {
+                            "id": "blk_dTRDvKZuoG",
+                            "type": "button",
+                            "enabled": true,
+                            "style": {
+                                "margin_top": {
                                     "desktop": "",
                                     "tablet": "",
                                     "mobile": ""
-                                }
+                                },
+                                "margin_bottom": {
+                                    "desktop": "",
+                                    "tablet": "",
+                                    "mobile": ""
+                                },
+                                "width": {
+                                    "desktop": "",
+                                    "tablet": "",
+                                    "mobile": ""
+                                },
+                                "max_width": {
+                                    "desktop": "",
+                                    "tablet": "",
+                                    "mobile": ""
+                                },
+                                "hide_on": {
+                                    "desktop": false,
+                                    "tablet": false,
+                                    "mobile": false
+                                },
+                                "anchor_id": ""
+                            },
+                            "data": {
+                                "text": "FDFF FVFDV",
+                                "url": "/PRODUCTS",
+                                "new_tab": false,
+                                "alignment": {
+                                    "desktop": "left",
+                                    "tablet": "left",
+                                    "mobile": "left"
+                                },
+                                "style": "link",
+                                "size": "lg",
+                                "border_radius": "",
+                                "bg_color": "global:text",
+                                "text_color": "global:secondary"
                             }
                         }
                     ]
