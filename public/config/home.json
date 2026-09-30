@@ -24,7 +24,7 @@
                 "direction": {
                     "desktop": "row",
                     "tablet": "row",
-                    "mobile": "row"
+                    "mobile": "column"
                 },
                 "wrap": {
                     "desktop": "nowrap",
@@ -531,44 +531,6 @@
                             }
                         }
                     ]
-                },
-                {
-                    "id": "blk_zA9URILIc1",
-                    "type": "category_grid",
-                    "enabled": true,
-                    "style": {
-                        "margin_top": {
-                            "desktop": "",
-                            "tablet": "",
-                            "mobile": ""
-                        },
-                        "margin_bottom": {
-                            "desktop": "",
-                            "tablet": "",
-                            "mobile": ""
-                        },
-                        "width": {
-                            "desktop": "",
-                            "tablet": "",
-                            "mobile": ""
-                        },
-                        "max_width": {
-                            "desktop": "",
-                            "tablet": "",
-                            "mobile": ""
-                        },
-                        "hide_on": {
-                            "desktop": false,
-                            "tablet": false,
-                            "mobile": false
-                        },
-                        "anchor_id": ""
-                    },
-                    "data": {
-                        "category_ids": [
-                            33
-                        ]
-                    }
                 }
             ]
         },
