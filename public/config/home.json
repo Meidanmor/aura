@@ -812,7 +812,7 @@
                 "direction": {
                     "desktop": "row",
                     "tablet": "row",
-                    "mobile": "row"
+                    "mobile": "column-reverse"
                 },
                 "wrap": {
                     "desktop": "nowrap",
