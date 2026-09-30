@@ -11,8 +11,8 @@
             :key="index"
             class="advantage-card col-12 col-sm-6 col-md-4">
             <img
-                v-if="item.icon === 'custom' && item.custom_icon"
-                :src="item.custom_icon"
+                v-if="item.icon === 'custom' && customIconUrl(item)"
+                :src="customIconUrl(item)"
                 :alt="item.title || ''"
                 class="advantage-card__icon advantage-card__icon--custom"
                 loading="lazy"
@@ -32,6 +32,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { matLocalShipping, matSpa, matVerified, matAssignmentReturn, matSupportAgent, matWorkspacePremium } from '@quasar/extras/material-icons'
 
 const iconMap = {
@@ -48,15 +49,16 @@ const props = defineProps({
   blockId: { type: String, default: '' },
 })
 
-const blockData = props.data.data
+// Computed (not a one-time read) so live-preview edits stay reactive.
+const blockData = computed(() => props.data.data || {})
 
-const cssVars = computed(() => {
-  const vars = {
-    '--advantage-icon-color': blockData.icon_color || 'var(--q-secondary)',
-    '--advantage-text-color': blockData.text_color || 'var(--q-secondary)'
-  }
-  return vars
-})
+// Custom icons are { url, width, height } (schema v3); older JSON had a plain URL.
+const customIconUrl = (item) => (typeof item.custom_icon === 'string' ? item.custom_icon : item.custom_icon?.url) || ''
+
+const cssVars = computed(() => ({
+  '--advantage-icon-color': resolveGlobalColor(blockData.value.icon_color) || 'var(--q-secondary)',
+  '--advantage-text-color': resolveGlobalColor(blockData.value.text_color) || 'var(--q-secondary)'
+}))
 </script>
 
 <style scoped>

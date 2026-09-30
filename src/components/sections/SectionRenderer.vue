@@ -1,29 +1,27 @@
 <template>
-  <template v-for="section in enabledSections" :key="section.id">
-    <component
-        v-if="section?.enabled"
-      :is="sectionTemplate"
+  <SectionTemplate
+      v-for="section in visibleSections"
+      :key="section.id"
       :data="section"
-      />
-  </template>
+      :page="page"
+  />
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import SectionTemplate from './SectionTemplate.vue'
-import {computed} from "vue";
 
 const props = defineProps({
   sections: { type: Array, default: () => [] },
-  location: { type: String, default: null }
+  // Only render sections pinned to this hook slot (shop/category/product pages).
+  location: { type: String, default: null },
+  // Page slug these sections belong to (home/shop/category/product).
+  page: { type: String, default: 'home' },
 })
 
-const sectionTemplate = SectionTemplate
-
-const enabledSections = computed(() =>
+const visibleSections = computed(() =>
     (props.sections || [])
-        .filter(s => s?.enabled)
-        .filter(s => props.location == null || s.location === props.location)
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        .filter((s) => s && s.enabled !== false)
+        .filter((s) => props.location == null || s.location === props.location)
 )
-
 </script>

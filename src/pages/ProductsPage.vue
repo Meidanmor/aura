@@ -1,19 +1,19 @@
 <template>
   <div class="main-wrapper-div">
     <div class="container">
-      <SectionRenderer :sections="shopSettings?.sections" location="before_breadcrumbs"/>
+      <SectionRenderer :sections="shopSettings?.sections" page="shop" location="before_breadcrumbs"/>
       <q-breadcrumbs>
           <q-breadcrumbs-el label="Home" to="/" />
           <q-breadcrumbs-el label="Products" />
         </q-breadcrumbs>
-      <SectionRenderer :sections="shopSettings?.sections" location="after_breadcrumbs"/>
+      <SectionRenderer :sections="shopSettings?.sections" page="shop" location="after_breadcrumbs"/>
 
 
       <h1>Products</h1>
       <div class="archive-layout flex no-wrap">
 
         <div class="filters-wrap flex" :class="{ 'shown': filtersOpen }" @pointerdown.stop >
-          <SectionRenderer :sections="shopSettings?.sections" location="before_filters"/>
+          <SectionRenderer :sections="shopSettings?.sections" page="shop" location="before_filters"/>
 
           <q-scroll-area class="fit">
 
@@ -71,11 +71,11 @@
               @toggle-filters="filtersOpen = !filtersOpen"
           />
 
-          <SectionRenderer :sections="shopSettings?.sections" location="before_products_grid"/>
+          <SectionRenderer :sections="shopSettings?.sections" page="shop" location="before_products_grid"/>
 
           <ProductResultsGrid :loading="productsStore.productsLoading.value" :products="paginatedProducts"/>
 
-          <SectionRenderer :sections="shopSettings?.sections" location="after_products_grid"/>
+          <SectionRenderer :sections="shopSettings?.sections" page="shop" location="after_products_grid"/>
 
           <!-- Pagination -->
           <ArchivePagination
@@ -86,7 +86,7 @@
 
         </div>
       </div>
-      <SectionRenderer :sections="shopSettings?.sections" location="after_pagination"/>
+      <SectionRenderer :sections="shopSettings?.sections" page="shop" location="after_pagination"/>
 
     </div>
   </div>

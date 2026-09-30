@@ -1,108 +1,116 @@
 <template>
-  <section
-      :class="sectionClasses"
-      :style="sectionStyleVars"
-      :section-id="data.id"
+  <component
+      :is="nested ? 'div' : 'section'"
+      :id="nested ? undefined : container.anchorId"
+      class="sb-container"
+      :class="[nested ? 'sb-nested' : 'sb-section', container.outerClasses]"
+      :style="outerStyle"
+      :data-section-id="data.id"
   >
-    <div :class="innerSectionClasses">
     <div
-        v-for="block in enabledBlocks" :key="block.id"
-        class="sb-block"
-        :class="block.type !== 'section' ? blockStyleClassesById[block.id] : ''"
-        :style="blockStyleVarsById[block.id]"
+        class="sb-inner"
+        :class="[innerWidthClass, container.innerClasses]"
+        :style="innerStyle"
     >
-
-    <component
-        :is="blockComponents[block.type]"
-        :data="block"
-        :block-id="block.id"
-    />
+      <div
+          v-for="block in enabledBlocks"
+          :key="block.id"
+          :id="wrappers[block.id].anchorId"
+          class="sb-block"
+          :class="wrappers[block.id].classes"
+          :style="wrappers[block.id].vars"
+      >
+        <SectionTemplate
+            v-if="block.type === 'section'"
+            :data="block"
+            :page="page"
+            nested
+        />
+        <component
+            :is="blockComponents[block.type]"
+            v-else
+            :data="block"
+            :block-id="block.id"
+            :page="page"
+        />
+      </div>
     </div>
-    </div>
-  </section>
+  </component>
 </template>
 
 <script setup>
-import BannerSection from './BannerSection.vue'
-import NewsletterSection from './NewsletterSection.vue'
+/**
+ * Renders one Shop Builder container — a top-level section (`<section>`)
+ * or, recursively, a nested `section` block (`<div>`, `nested` prop).
+ * Container styling comes from buildContainerStyle(); each child block is
+ * wrapped in a `.sb-block` carrying its spacing/width/visibility (see
+ * buildBlockWrapperStyle() and the .sb-* rules in src/css/app.css).
+ *
+ * To add a block type: register its component in `blockComponents`.
+ */
+import { computed } from 'vue'
 import CategoryGridSection from './CategoryGridSection.vue'
 import TestimonialsSection from './TestimonialsSection.vue'
 import FeaturedProductsSection from './FeaturedProductsSection.vue'
 import AdvantagesSection from './AdvantagesSection.vue'
-import CtaSection from './CtaSection.vue'
 import TextBlock from './TextBlock.vue'
 import ImageBlock from './ImageBlock.vue'
 import SpacerBlock from './SpacerBlock.vue'
 import HeadingBlock from '../blocks/HeadingBlock.vue'
 import ButtonBlock from '../blocks/ButtonBlock.vue'
 import FormBlock from '../blocks/FormBlock.vue'
-import InnerSectionBlock from '../blocks/InnerSectionBlock.vue'
-import { useSectionStyle, buildSectionClasses, buildSectionStyleVars } from 'src/composables/useSectionStyle.js'
-import {computed} from "vue";
+import { buildContainerStyle, buildBlockWrapperStyle } from 'src/composables/useSectionStyle.js'
 
-const props = defineProps({ data: { type: Object, required: true } })
+defineOptions({ name: 'SectionTemplate' })
 
-const { sectionClasses, sectionStyleVars, innerSectionClasses } = useSectionStyle(() => props.data.style)
+const props = defineProps({
+  data: { type: Object, required: true },
+  nested: { type: Boolean, default: false },
+  // Page slug the section belongs to (home/shop/category/product) — used by
+  // blocks that talk to the backend (form submissions).
+  page: { type: String, default: 'home' },
+})
 
 const blockComponents = {
-  banner: BannerSection,
-  newsletter_signup: NewsletterSection,
-  category_grid: CategoryGridSection,
-  testimonials: TestimonialsSection,
-  featured_products: FeaturedProductsSection,
-  advantages: AdvantagesSection,
-  cta: CtaSection,
+  heading: HeadingBlock,
   text_block: TextBlock,
   image_block: ImageBlock,
-  spacer: SpacerBlock,
-  heading: HeadingBlock,
   button: ButtonBlock,
+  spacer: SpacerBlock,
   form: FormBlock,
-  section: InnerSectionBlock
+  featured_products: FeaturedProductsSection,
+  category_grid: CategoryGridSection,
+  testimonials: TestimonialsSection,
+  advantages: AdvantagesSection,
 }
+
+const container = computed(() => buildContainerStyle(props.data.style || {}))
+
+// A top-level section carries its own margins; a nested one gets them
+// from its .sb-block wrapper in the parent instead.
+const outerStyle = computed(() => props.nested
+    ? container.value.outerVars
+    : { ...container.value.outerVars, ...container.value.marginVars })
+
+// Content width applies to a top-level section's inner box (so its
+// background stays full-bleed). A nested section's width is applied to its
+// wrapper in the parent instead (buildBlockWrapperStyle()).
+const innerWidthClass = computed(() => props.nested ? '' : `sb-inner--${container.value.widthMode}`)
+const innerStyle = computed(() => props.nested
+    ? container.value.innerVars
+    : { ...container.value.innerVars, ...container.value.widthVars })
+
 const enabledBlocks = computed(() =>
-    (props.data.blocks || []).filter(
-        (block) => block?.enabled && blockComponents[block?.type]
+    (props.data.blocks || []).filter((block) =>
+        block?.enabled !== false && (block.type === 'section' || blockComponents[block?.type])
     )
 )
 
-const toCssLength = (v) => {
-  if (v === '' || v == null) return null
-  return /^-?\d+(\.\d+)?$/.test(String(v).trim()) ? `${v}px` : v
-}
-
-const blockStyleClassesById = computed(() => {
+const wrappers = computed(() => {
   const map = {}
-  for (const block of props.data.blocks || []) {
-    // only inner sections need the section-like wrapper classes
-    map[block.id] = block.type === 'section'
-        ? buildSectionClasses(block.style, true)
-        : {}
+  for (const block of enabledBlocks.value) {
+    map[block.id] = buildBlockWrapperStyle(block)
   }
   return map
 })
-
-const blockStyleVarsById = computed(() => {
-  const map = {}
-  for (const block of props.data.blocks || []) {
-    const style = block.style || {}
-    const vars = block.type === 'section' ? buildSectionStyleVars(style) : {}
-
-    // your existing per-block padding/width vars
-    const fields = {
-      '--sb-pt': style.padding_top,
-      '--sb-pt-m': style.padding_top_mobile || style.padding_top,
-      '--sb-pb': style.padding_bottom,
-      '--sb-pb-m': style.padding_bottom_mobile || style.padding_bottom,
-      '--section-width': style.width?.mode === 'custom' ? style.width.custom_px : '',
-    }
-    for (const [key, raw] of Object.entries(fields)) {
-      const v = toCssLength(raw)
-      if (v) vars[key] = v
-    }
-    map[block.id] = vars
-  }
-  return map
-})
-
 </script>

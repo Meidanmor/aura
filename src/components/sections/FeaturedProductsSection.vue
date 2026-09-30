@@ -109,8 +109,17 @@ const stopProductsWatch = watch(
       carousel.recompute(true)    // forceRemount now safely diverges from SSR output
     }
 )
+// Live preview: re-resolve when the admin changes the picked products.
+const stopIdsWatch = watch(
+    () => (props.data.data.product_ids || []).join(','),
+    async (next, prev) => {
+      if (next !== prev) await resolve(null)
+    }
+)
+
 onBeforeRouteLeave(() => {
   stopProductsWatch()
+  stopIdsWatch()
 })
 
 </script>

@@ -221,49 +221,175 @@ body section {
     background-color: var(--section-bg, transparent);
 }
 
-.sb-section {
+/* =====================================================================
+   Shop Builder sections & blocks (schema v3)
+   Breakpoints: desktop >= 1024px, tablet 768–1023px, mobile <= 767px.
+   Responsive values arrive as --name / --name-t / --name-m (see
+   src/composables/useSectionStyle.js). Every container/inner/block
+   resets its own variables so nested ones never inherit a parent's.
+   ===================================================================== */
+
+.sb-container {
+    --sb-pt: initial; --sb-pr: initial; --sb-pb: initial; --sb-pl: initial;
+    --sb-pt-t: initial; --sb-pr-t: initial; --sb-pb-t: initial; --sb-pl-t: initial;
+    --sb-pt-m: initial; --sb-pr-m: initial; --sb-pb-m: initial; --sb-pl-m: initial;
+    --sb-minh: initial; --sb-minh-t: initial; --sb-minh-m: initial;
+    --sb-bg: initial; --sb-bg-img: initial;
+    --sb-bg-size: initial; --sb-bg-size-t: initial; --sb-bg-size-m: initial;
+    --sb-bg-pos: initial; --sb-bg-pos-t: initial; --sb-bg-pos-m: initial;
+    --sb-overlay: initial; --sb-overlay-o: initial;
+    --sb-color: initial; --sb-radius: initial;
+
     position: relative;
-    background: var(--section-bg, transparent);
-    min-height: var(--section-min-height, auto);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    background-color: var(--sb-bg, transparent);
+    background-image: var(--sb-bg-img, none);
+    background-size: var(--sb-bg-size, cover);
+    background-position: var(--sb-bg-pos, center center);
+    background-repeat: no-repeat;
+    min-height: var(--sb-minh, auto);
+    color: var(--sb-color, inherit);
+    border-radius: var(--sb-radius, 0);
 }
 
-.sb-section--width-contained { max-width: 1200px; margin-inline: auto; }
-.sb-section--width-full { width: 100%; }
-.sb-section--width-custom {width: var(--section-width, 100%);}
-.sb-block.sb-section.sb-section--width-custom.sb-inner-sec {
-    width: var(--section-width, 100%);
-    flex: auto;
+.sb-section {
+    margin-top: var(--sbb-mt, 0);
+    margin-bottom: var(--sbb-mb, 0);
 }
-.sb-section.sb-pm.sb-inner-sec {
+
+.sb-has-radius { overflow: hidden; }
+
+.sb-pad-none   { padding: 0; }
+.sb-pad-small  { padding: 90px 16px; }
+.sb-pad-medium { padding: 120px 16px; }
+.sb-pad-large  { padding: 150px 16px; }
+.sb-pad-custom { padding: var(--sb-pt, 0) var(--sb-pr, 0) var(--sb-pb, 0) var(--sb-pl, 0); }
+
+.sb-has-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--sb-overlay, #000);
+    opacity: var(--sb-overlay-o, .5);
+    border-radius: inherit;
+    pointer-events: none;
+}
+.sb-has-overlay > .sb-inner { position: relative; z-index: 1; }
+
+.sb-inner {
+    --sb-dir: initial; --sb-dir-t: initial; --sb-dir-m: initial;
+    --sb-wrap: initial; --sb-wrap-t: initial; --sb-wrap-m: initial;
+    --sb-jc: initial; --sb-jc-t: initial; --sb-jc-m: initial;
+    --sb-ai: initial; --sb-ai-t: initial; --sb-ai-m: initial;
+    --sb-ac: initial;
+    --sb-gap: initial; --sb-gap-t: initial; --sb-gap-m: initial;
+
+    display: flex;
+    flex: 1 1 auto;
     width: 100%;
+    box-sizing: border-box;
+    margin-inline: auto;
+    flex-direction: var(--sb-dir, column);
+    flex-wrap: var(--sb-wrap, nowrap);
+    justify-content: var(--sb-jc, flex-start);
+    align-items: var(--sb-ai, stretch);
+    align-content: var(--sb-ac, normal);
+    gap: var(--sb-gap, 0);
 }
-.sb-pn  { padding: 0; }
-.sb-ps  { padding: 90px 16px; }
-.sb-pm  { padding: 120px 16px; }
-.sb-pl  { padding: 150px 16px; }
-.sb-pc {
-    padding: var(--sb-pt, 0) var(--sb-pr, 0)
-    var(--sb-pb, 0) var(--sb-pl, 0);
-}
+.sb-inner--contained { max-width: 1200px; }
+.sb-inner--custom { max-width: var(--sbb-w, 100%); }
 
 .sb-block {
-    padding: var(--sb-pt, 0) var(--sb-pr, 0)
-    var(--sb-pb, 0) var(--sb-pl, 0);
-}
-@media (max-width: 767px) {
-    .sb-ps  { padding: 24px 16px; }
-    .sb-pm { padding: 48px 16px; }
-    .sb-pl  { padding: 80px 16px; }
-    .sb-pc {
-        padding: var(--sb-pt-m, 0) var(--sb-pr-m, 0)
-        var(--sb-pb-m, 0) var(--sb-pl-m, 0);
-    }
+    --sbb-mt: initial; --sbb-mt-t: initial; --sbb-mt-m: initial;
+    --sbb-mb: initial; --sbb-mb-t: initial; --sbb-mb-m: initial;
+    --sbb-w: initial; --sbb-w-t: initial; --sbb-w-m: initial;
+    --sbb-maxw: initial; --sbb-maxw-t: initial; --sbb-maxw-m: initial;
 
-    .sb-block {
-        padding: var(--sb-pt-m, 0) var(--sb-pr-m, 0)
-        var(--sb-pb-m, 0) var(--sb-pl-m, 0);
-    }
+    min-width: 0;
+    box-sizing: border-box;
+    margin-top: var(--sbb-mt, 0);
+    margin-bottom: var(--sbb-mb, 0);
 }
+/* A set width is the preferred size; it may still shrink (and never
+   overflows its container) when a non-wrapping row runs out of room. */
+.sb-block.sb-has-w { width: var(--sbb-w, auto); flex: 0 1 auto; max-width: 100%; }
+.sb-block.sb-has-maxw { max-width: var(--sbb-maxw, none); }
+.sb-block--section.sb-has-maxw { width: 100%; margin-inline: auto; }
+.sb-block--section > .sb-container { height: 100%; }
+
+@media (min-width: 1024px) {
+    .sb-hide-d { display: none !important; }
+    .sb-bg-fixed { background-attachment: fixed; }
+    .sb-row-d > .sb-block:not(.sb-has-w) { flex: 1 1 0; }
+}
+
+@media (max-width: 1023px) {
+    .sb-pad-small  { padding: 60px 16px; }
+    .sb-pad-medium { padding: 80px 16px; }
+    .sb-pad-large  { padding: 110px 16px; }
+    .sb-pad-custom { padding: var(--sb-pt-t, 0) var(--sb-pr-t, 0) var(--sb-pb-t, 0) var(--sb-pl-t, 0); }
+    .sb-container {
+        min-height: var(--sb-minh-t, auto);
+        background-size: var(--sb-bg-size-t, cover);
+        background-position: var(--sb-bg-pos-t, center center);
+    }
+    .sb-inner {
+        flex-direction: var(--sb-dir-t, column);
+        flex-wrap: var(--sb-wrap-t, nowrap);
+        justify-content: var(--sb-jc-t, flex-start);
+        align-items: var(--sb-ai-t, stretch);
+        gap: var(--sb-gap-t, 0);
+    }
+    .sb-inner--custom { max-width: var(--sbb-w-t, 100%); }
+    .sb-section,
+    .sb-block {
+        margin-top: var(--sbb-mt-t, 0);
+        margin-bottom: var(--sbb-mb-t, 0);
+    }
+    .sb-block.sb-has-w { width: var(--sbb-w-t, auto); }
+    .sb-block.sb-has-maxw { max-width: var(--sbb-maxw-t, none); }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .sb-hide-t { display: none !important; }
+    .sb-row-t > .sb-block:not(.sb-has-w) { flex: 1 1 0; }
+}
+
+@media (max-width: 767px) {
+    .sb-hide-m { display: none !important; }
+    .sb-row-m > .sb-block:not(.sb-has-w) { flex: 1 1 0; }
+    .sb-pad-small  { padding: 24px 16px; }
+    .sb-pad-medium { padding: 48px 16px; }
+    .sb-pad-large  { padding: 80px 16px; }
+    .sb-pad-custom { padding: var(--sb-pt-m, 0) var(--sb-pr-m, 0) var(--sb-pb-m, 0) var(--sb-pl-m, 0); }
+    .sb-container {
+        min-height: var(--sb-minh-m, auto);
+        background-size: var(--sb-bg-size-m, cover);
+        background-position: var(--sb-bg-pos-m, center center);
+    }
+    .sb-inner {
+        flex-direction: var(--sb-dir-m, column);
+        flex-wrap: var(--sb-wrap-m, nowrap);
+        justify-content: var(--sb-jc-m, flex-start);
+        align-items: var(--sb-ai-m, stretch);
+        gap: var(--sb-gap-m, 0);
+    }
+    .sb-inner--custom { max-width: var(--sbb-w-m, 100%); }
+    .sb-section,
+    .sb-block {
+        margin-top: var(--sbb-mt-m, 0);
+        margin-bottom: var(--sbb-mb-m, 0);
+    }
+    .sb-block.sb-has-w { width: var(--sbb-w-m, auto); }
+    .sb-block.sb-has-maxw { max-width: var(--sbb-maxw-m, none); }
+}
+
+/* Shared responsive helper for blocks: --sb-align / -t / -m → text-align */
+.sb-text-align { text-align: var(--sb-align, left); }
+@media (max-width: 1023px) { .sb-text-align { text-align: var(--sb-align-t, left); } }
+@media (max-width: 767px) { .sb-text-align { text-align: var(--sb-align-m, left); } }
 
 .offline-item {
   position: relative;

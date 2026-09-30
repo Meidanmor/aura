@@ -76,10 +76,38 @@ const plainTextFilter = new FilterXSS({
 })
 
 const heroTitleFilter = new FilterXSS({
-    whiteList: { br: [], strong: [], em: [], b: [], i: [], span: [] },
+    whiteList: { br: [], strong: [], em: [], b: [], i: [], u: [], span: [] },
     stripIgnoreTag: true,
     stripIgnoreTagBody: ['script', 'style']
 })
+
+// For the Shop Builder Text block: paragraphs, lists, headings and links.
+// Unlike descriptionFilter, links keep the target the admin chose (internal
+// "/path" and "#anchor" links stay in the same tab).
+const builderTextFilter = new FilterXSS({
+    whiteList: {
+        p: [], br: [], strong: [], em: [], b: [], i: [], u: [], s: [], del: [], span: [],
+        ul: [], ol: [], li: [], blockquote: [], hr: [],
+        h2: [], h3: [], h4: [], h5: [], h6: [],
+        a: ['href', 'target', 'rel', 'title']
+    },
+    stripIgnoreTag: true,
+    stripIgnoreTagBody: ['script', 'style'],
+    onTag(tag, html, options) {
+        if (options.isClosing || tag !== 'a') return
+        const hrefMatch = html.match(/href\s*=\s*"([^"]*)"/i)
+        const href = hrefMatch ? hrefMatch[1] : ''
+        if (!isSafeUrl(href, ['http', 'https', 'mailto', 'tel'])) return '<a>'
+        const newTab = /target\s*=\s*"_blank"/i.test(html)
+        return newTab
+            ? `<a href="${xss.escapeAttrValue(href)}" target="_blank" rel="noopener noreferrer">`
+            : `<a href="${xss.escapeAttrValue(href)}">`
+    }
+})
+
+export function sanitizeBuilderHtml(html) {
+    return builderTextFilter.process(html || '')
+}
 
 export function sanitizeDescription(html) {
     return descriptionFilter.process(html || '')

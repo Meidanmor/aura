@@ -22,7 +22,7 @@
 // Uses the WC Store API directly since there isn't an id-scoped categories
 // store yet — if you add one later (mirroring productsStore), swap the
 // fetch below for it, the same way getFeaturedProducts is used for products.
-import {computed, onMounted, onServerPrefetch, useSSRContext} from 'vue'
+import {computed, onMounted, onServerPrefetch, useSSRContext, watch} from 'vue'
 import { useSectionData } from 'src/composables/useSectionData.js'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
 import { getApiOrigin } from 'src/utils/server/get-api-origin.js'
@@ -66,7 +66,7 @@ async function fetchCategories(ids, ssrContext) {
   }
 }
 
-const { data: categories, resolve } = useSectionData(props.sectionId, (ssrContext) =>
+const { data: categories, resolve } = useSectionData(props.blockId, (ssrContext) =>
     fetchCategories(props.data.data.category_ids || [], ssrContext)
 )
 
@@ -84,6 +84,14 @@ onMounted(async () => {
     await resolve(null)
   }
 })
+
+// Live preview: re-resolve when the admin changes the picked categories.
+watch(
+    () => (props.data.data.category_ids || []).join(','),
+    async (next, prev) => {
+      if (next !== prev) await resolve(null)
+    }
+)
 </script>
 
 <style scoped>
