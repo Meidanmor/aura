@@ -29,11 +29,11 @@
                 "min_height": "",
                 "min_height_mobile": "",
                 "nesting": {
-                    "flex_direction": "null",
-                    "flex_wrap": "null",
-                    "justify_content": "null",
-                    "align_items": "null",
-                    "align_content": "null"
+                    "flex_direction": "",
+                    "flex_wrap": "",
+                    "justify_content": "",
+                    "align_items": "",
+                    "align_content": ""
                 }
             },
             "blocks": [

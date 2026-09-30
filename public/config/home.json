@@ -45,7 +45,7 @@
                     "enabled": true,
                     "style": {
                         "padding": {
-                            "mode": "medium",
+                            "mode": "none",
                             "custom": {
                                 "top": "",
                                 "right": "",
@@ -68,11 +68,11 @@
                         "min_height": "",
                         "min_height_mobile": "",
                         "nesting": {
-                            "flex_direction": "null",
-                            "flex_wrap": "null",
-                            "justify_content": "null",
-                            "align_items": "null",
-                            "align_content": "null"
+                            "flex_direction": "",
+                            "flex_wrap": "",
+                            "justify_content": "",
+                            "align_items": "",
+                            "align_content": ""
                         }
                     },
                     "blocks": [
@@ -156,7 +156,7 @@
                     "enabled": true,
                     "style": {
                         "padding": {
-                            "mode": "medium",
+                            "mode": "none",
                             "custom": {
                                 "top": "",
                                 "right": "",
@@ -179,11 +179,11 @@
                         "min_height": "",
                         "min_height_mobile": "",
                         "nesting": {
-                            "flex_direction": "null",
-                            "flex_wrap": "null",
-                            "justify_content": "null",
-                            "align_items": "null",
-                            "align_content": "null"
+                            "flex_direction": "",
+                            "flex_wrap": "",
+                            "justify_content": "",
+                            "align_items": "",
+                            "align_content": ""
                         }
                     },
                     "blocks": [
@@ -240,11 +240,11 @@
                 "min_height": "",
                 "min_height_mobile": "",
                 "nesting": {
-                    "flex_direction": "null",
-                    "flex_wrap": "null",
-                    "justify_content": "null",
-                    "align_items": "null",
-                    "align_content": "null"
+                    "flex_direction": "",
+                    "flex_wrap": "",
+                    "justify_content": "",
+                    "align_items": "",
+                    "align_content": ""
                 }
             },
             "blocks": [
@@ -345,7 +345,7 @@
                     "flex_wrap": "nowrap",
                     "justify_content": "center",
                     "align_items": "center",
-                    "align_content": "null"
+                    "align_content": ""
                 }
             },
             "blocks": [
@@ -379,11 +379,11 @@
                         "min_height": "",
                         "min_height_mobile": "",
                         "nesting": {
-                            "flex_direction": "null",
-                            "flex_wrap": "null",
-                            "justify_content": "null",
-                            "align_items": "null",
-                            "align_content": "null"
+                            "flex_direction": "",
+                            "flex_wrap": "",
+                            "justify_content": "",
+                            "align_items": "",
+                            "align_content": ""
                         }
                     },
                     "blocks": [
@@ -440,11 +440,11 @@
                         "min_height": "",
                         "min_height_mobile": "",
                         "nesting": {
-                            "flex_direction": "null",
-                            "flex_wrap": "null",
-                            "justify_content": "null",
-                            "align_items": "null",
-                            "align_content": "null"
+                            "flex_direction": "",
+                            "flex_wrap": "",
+                            "justify_content": "",
+                            "align_items": "",
+                            "align_content": ""
                         }
                     },
                     "blocks": [
@@ -515,11 +515,11 @@
                 "min_height": "",
                 "min_height_mobile": "",
                 "nesting": {
-                    "flex_direction": "null",
-                    "flex_wrap": "null",
-                    "justify_content": "null",
-                    "align_items": "null",
-                    "align_content": "null"
+                    "flex_direction": "",
+                    "flex_wrap": "",
+                    "justify_content": "",
+                    "align_items": "",
+                    "align_content": ""
                 }
             },
             "blocks": [
