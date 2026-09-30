@@ -480,7 +480,7 @@
                                             "width": 1280,
                                             "height": 720
                                         },
-                                        "alt": "",
+                                        "alt": "gjhh",
                                         "caption": "",
                                         "link_url": "",
                                         "new_tab": false
@@ -504,7 +504,7 @@
                                 "image_width": {
                                     "desktop": "300",
                                     "tablet": "300",
-                                    "mobile": "300"
+                                    "mobile": "400"
                                 },
                                 "image_max_width": {
                                     "desktop": "100%",
@@ -514,7 +514,7 @@
                                 "image_height": {
                                     "desktop": "240",
                                     "tablet": "240",
-                                    "mobile": "240"
+                                    "mobile": "489"
                                 },
                                 "aspect_ratio": {
                                     "desktop": "auto",
