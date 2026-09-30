@@ -1410,9 +1410,9 @@
                     "mobile": "nowrap"
                 },
                 "justify": {
-                    "desktop": "flex-start",
-                    "tablet": "flex-start",
-                    "mobile": "flex-start"
+                    "desktop": "center",
+                    "tablet": "center",
+                    "mobile": "center"
                 },
                 "align_items": {
                     "desktop": "stretch",
@@ -1569,7 +1569,7 @@
                         ],
                         "submit_text": "Submit",
                         "success_message": "Thanks! We got your message.",
-                        "field_style": "outlined",
+                        "field_style": "standard",
                         "layout": {
                             "desktop": "stacked",
                             "tablet": "stacked",
@@ -1577,14 +1577,14 @@
                         },
                         "button_style": "primary",
                         "button_align": {
-                            "desktop": "left",
-                            "tablet": "left",
-                            "mobile": "left"
+                            "desktop": "stretch",
+                            "tablet": "stretch",
+                            "mobile": "stretch"
                         },
                         "max_width": {
-                            "desktop": "",
-                            "tablet": "",
-                            "mobile": ""
+                            "desktop": "560",
+                            "tablet": "560",
+                            "mobile": "560"
                         },
                         "accent_color": "global:secondary",
                         "button_bg_color": "",
