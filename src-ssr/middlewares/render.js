@@ -64,7 +64,13 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
             "img-src 'self' data: https:; " +
             `connect-src 'self' ${WP_BACKEND_URL ? WP_BACKEND_URL : ''} https://api.stripe.com https://hcaptcha.com https://*.hcaptcha.com ws://localhost:* wss://localhost:*;` +
             "font-src 'self' https://fonts.gstatic.com; " +
-            "frame-src https://accounts.google.com https://js.stripe.com https://hooks.stripe.com https://hcaptcha.com https://*.hcaptcha.com; " +
+            // Video block: uploaded videos are served from the WP backend,
+            // "video file URL" sources may be any https host (passive media,
+            // same trust level as img-src).
+            `media-src 'self' ${WP_BACKEND_URL ? WP_BACKEND_URL : ''} https:; ` +
+            // Video block embeds: only the two exact player hosts it builds
+            // URLs for (privacy-enhanced YouTube + Vimeo), nothing broader.
+            "frame-src https://accounts.google.com https://js.stripe.com https://hooks.stripe.com https://hcaptcha.com https://*.hcaptcha.com https://www.youtube-nocookie.com https://player.vimeo.com; " +
             `frame-ancestors ${frameAncestors};`
         )
 

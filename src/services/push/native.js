@@ -1,6 +1,6 @@
 // native
 import { Platform } from 'quasar'
-import { urlBase64ToUint8Array, getDeviceId, saveSubscription, syncCartToken } from 'src/services/push/shared.js'
+import { urlBase64ToUint8Array, getDeviceId, saveSubscription, queueCartTokenSync } from 'src/services/push/shared.js'
 let PushNotifications = null
 let App = null
 
@@ -227,9 +227,9 @@ function setupCartTracking() {
     // Fallback for web-view visibility (covers browser tabs / minimized windows)
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
-            syncSubscriptionCartToken('hidden')
+            queueCartTokenSync('hidden')
         } else {
-            syncSubscriptionCartToken('active')
+            queueCartTokenSync('active')
         }
     })
 }
@@ -242,37 +242,13 @@ async function setupNativeAppStateTracking() {
 
         App.addListener('appStateChange', ({ isActive }) => {
             //console.log(`📱 App state changed, isActive: ${isActive}`)
-            syncSubscriptionCartToken(isActive ? 'active' : 'hidden')
+            queueCartTokenSync(isActive ? 'active' : 'hidden')
         })
     } catch (e) {
         console.warn('Capacitor App plugin not available:', e)
     }
 }
 
-let fetching = false
-let lastSyncAt = 0
-const MIN_SYNC_INTERVAL_MS = 3000 // don't sync more than once per 3s regardless of which event fired
-
-async function syncSubscriptionCartToken(status = 'hidden') {
-    if (fetching) return
-    if (Date.now() - lastSyncAt < MIN_SYNC_INTERVAL_MS) return
-
-    const deviceId = getDeviceId()
-    const cartToken = localStorage.getItem('wc_cart_token')
-
-    if (!deviceId) return
-    if (status === 'hidden' && !cartToken) return
-
-    fetching = true
-    lastSyncAt = Date.now()
-    try {
-        await syncCartToken(deviceId, cartToken, status)
-    } catch (err) {
-        console.error('❌ Failed to sync cart token:', err)
-    } finally {
-        fetching = false
-    }
-}
 
 /**
  * Init push + cart tracking

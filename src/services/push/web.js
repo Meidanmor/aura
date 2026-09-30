@@ -1,5 +1,5 @@
 // web
-import { urlBase64ToUint8Array, getDeviceId, saveSubscription, syncCartToken } from 'src/services/push/shared.js'
+import { urlBase64ToUint8Array, getDeviceId, saveSubscription, queueCartTokenSync } from 'src/services/push/shared.js'
 // your VAPID public key for web push
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_APP_PUBLIC_KEY
 
@@ -48,41 +48,20 @@ export async function initNativePush() {
 function setupCartTracking() {
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
-            syncSubscriptionCartToken('hidden')
+            queueCartTokenSync('hidden')
         } else {
-            syncSubscriptionCartToken('active')
+            queueCartTokenSync('active')
         }
     })
 
     // Belt-and-suspenders for mobile PWAs where visibilitychange can be flaky
-    window.addEventListener('focus', () => syncSubscriptionCartToken('active'))
-    window.addEventListener('pageshow', () => syncSubscriptionCartToken('active'))
+    window.addEventListener('focus', () => queueCartTokenSync('active'))
+    window.addEventListener('pageshow', () => queueCartTokenSync('active'))
+    // iOS Safari doesn't always fire visibilitychange when a PWA is closed.
+    // Duplicate events are free — queueCartTokenSync() only sends changes.
+    window.addEventListener('pagehide', () => queueCartTokenSync('hidden'))
 }
 
-let fetching = false
-let lastSyncAt = 0
-const MIN_SYNC_INTERVAL_MS = 3000 // don't sync more than once per 3s regardless of which event fired
-
-async function syncSubscriptionCartToken(status = 'hidden') {
-    if (fetching) return
-    if (Date.now() - lastSyncAt < MIN_SYNC_INTERVAL_MS) return
-
-    const deviceId = getDeviceId()
-    const cartToken = localStorage.getItem('wc_cart_token')
-
-    if (!deviceId) return
-    if (status === 'hidden' && !cartToken) return
-
-    fetching = true
-    lastSyncAt = Date.now()
-    try {
-        await syncCartToken(deviceId, cartToken, status)
-    } catch (err) {
-        console.error('❌ Failed to sync cart token:', err)
-    } finally {
-        fetching = false
-    }
-}
 
 /**
  * Init push + cart tracking
