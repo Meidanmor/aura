@@ -1383,6 +1383,215 @@
                     }
                 }
             ]
+        },
+        {
+            "id": "sec_TH8A0g9K9s",
+            "enabled": true,
+            "style": {
+                "width_mode": "contained",
+                "width": {
+                    "desktop": "",
+                    "tablet": "",
+                    "mobile": ""
+                },
+                "min_height": {
+                    "desktop": "",
+                    "tablet": "",
+                    "mobile": ""
+                },
+                "direction": {
+                    "desktop": "column",
+                    "tablet": "column",
+                    "mobile": "column"
+                },
+                "wrap": {
+                    "desktop": "nowrap",
+                    "tablet": "nowrap",
+                    "mobile": "nowrap"
+                },
+                "justify": {
+                    "desktop": "flex-start",
+                    "tablet": "flex-start",
+                    "mobile": "flex-start"
+                },
+                "align_items": {
+                    "desktop": "stretch",
+                    "tablet": "stretch",
+                    "mobile": "stretch"
+                },
+                "align_content": "normal",
+                "gap": {
+                    "desktop": "",
+                    "tablet": "",
+                    "mobile": ""
+                },
+                "padding_preset": "medium",
+                "padding": {
+                    "desktop": {
+                        "top": "",
+                        "right": "",
+                        "bottom": "",
+                        "left": ""
+                    },
+                    "tablet": {
+                        "top": "",
+                        "right": "",
+                        "bottom": "",
+                        "left": ""
+                    },
+                    "mobile": {
+                        "top": "",
+                        "right": "",
+                        "bottom": "",
+                        "left": ""
+                    }
+                },
+                "margin_top": {
+                    "desktop": "",
+                    "tablet": "",
+                    "mobile": ""
+                },
+                "margin_bottom": {
+                    "desktop": "",
+                    "tablet": "",
+                    "mobile": ""
+                },
+                "bg_type": "none",
+                "bg_color": "",
+                "bg_gradient_color1": "",
+                "bg_gradient_color2": "",
+                "bg_gradient_angle": 180,
+                "bg_image": null,
+                "bg_image_size": {
+                    "desktop": "cover",
+                    "tablet": "cover",
+                    "mobile": "cover"
+                },
+                "bg_image_position": {
+                    "desktop": "center center",
+                    "tablet": "center center",
+                    "mobile": "center center"
+                },
+                "bg_fixed": false,
+                "bg_overlay_color": "",
+                "bg_overlay_opacity": 50,
+                "text_color": "",
+                "border_radius": "",
+                "hide_on": {
+                    "desktop": false,
+                    "tablet": false,
+                    "mobile": false
+                },
+                "anchor_id": ""
+            },
+            "blocks": [
+                {
+                    "id": "blk_OavAgUe8f5",
+                    "type": "form",
+                    "enabled": true,
+                    "style": {
+                        "margin_top": {
+                            "desktop": "",
+                            "tablet": "",
+                            "mobile": ""
+                        },
+                        "margin_bottom": {
+                            "desktop": "",
+                            "tablet": "",
+                            "mobile": ""
+                        },
+                        "width": {
+                            "desktop": "",
+                            "tablet": "",
+                            "mobile": ""
+                        },
+                        "max_width": {
+                            "desktop": "",
+                            "tablet": "",
+                            "mobile": ""
+                        },
+                        "hide_on": {
+                            "desktop": false,
+                            "tablet": false,
+                            "mobile": false
+                        },
+                        "anchor_id": ""
+                    },
+                    "data": {
+                        "form_type": "custom",
+                        "collect_name": false,
+                        "fields": [
+                            {
+                                "key": "full_name",
+                                "label": "Full name",
+                                "field_type": "text",
+                                "placeholder": "",
+                                "options": "",
+                                "required": true,
+                                "width": "half"
+                            },
+                            {
+                                "key": "email",
+                                "label": "Email",
+                                "field_type": "email",
+                                "placeholder": "",
+                                "options": "",
+                                "required": true,
+                                "width": "half"
+                            },
+                            {
+                                "key": "phone",
+                                "label": "Phone",
+                                "field_type": "tel",
+                                "placeholder": "",
+                                "options": "",
+                                "required": true,
+                                "width": "half"
+                            },
+                            {
+                                "key": "notes",
+                                "label": "Notes",
+                                "field_type": "textarea",
+                                "placeholder": "",
+                                "options": "",
+                                "required": false,
+                                "width": "half"
+                            },
+                            {
+                                "key": "agree_to_the_terms_of_use",
+                                "label": "Agree to the terms of use",
+                                "field_type": "checkbox",
+                                "placeholder": "",
+                                "options": "",
+                                "required": true,
+                                "width": "full"
+                            }
+                        ],
+                        "submit_text": "Submit",
+                        "success_message": "Thanks! We got your message.",
+                        "field_style": "outlined",
+                        "layout": {
+                            "desktop": "stacked",
+                            "tablet": "stacked",
+                            "mobile": "stacked"
+                        },
+                        "button_style": "primary",
+                        "button_align": {
+                            "desktop": "left",
+                            "tablet": "left",
+                            "mobile": "left"
+                        },
+                        "max_width": {
+                            "desktop": "",
+                            "tablet": "",
+                            "mobile": ""
+                        },
+                        "accent_color": "global:secondary",
+                        "button_bg_color": "",
+                        "button_text_color": ""
+                    }
+                }
+            ]
         }
     ],
     "hero_image": "https://meidanm.net/wp-content/uploads/2026/09/aura-hero.webp"
