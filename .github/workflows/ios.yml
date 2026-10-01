@@ -72,8 +72,10 @@ jobs:
                        key=lambda k: [int(p) for p in k.rsplit("iOS-", 1)[1].split("-")])
           for runtime in reversed(ios):
               phones = [d for d in devs[runtime] if d["name"].startswith("iPhone")]
+              # Prefer a notched / Dynamic Island model (safe areas) over the SE.
+              phones.sort(key=lambda d: ("SE" in d["name"], d["name"]))
               if phones:
-                  print(phones[-1]["udid"]); print(phones[-1]["name"], runtime, file=sys.stderr); break
+                  print(phones[0]["udid"]); print(phones[0]["name"], runtime, file=sys.stderr); break
           ')
           test -n "$UDID"
           echo "UDID=$UDID" >> "$GITHUB_ENV"
@@ -152,16 +154,28 @@ jobs:
           if ls "$LOGS"/*.ips >/dev/null 2>&1; then
             echo "::error::Crash report(s) found: $(ls "$LOGS"/*.ips)"; fail=1
           fi
-          # Proof the web app booted and talked to the API, on both launches:
-          # the bridge loaded the page, JS hid the splash (MainLayout), and
-          # requests went out through CapacitorHttp (src/boot/native-api.js).
+          # Proof the web app booted, on both launches: the bridge loaded the
+          # page and JS hid the splash (MainLayout's hydration).
           for f in "$LOGS"/app-console.log "$LOGS"/app-console-relaunch.log; do
-            for want in 'Loading app at' 'To Native -> +SplashScreen hide' 'To Native -> +CapacitorHttp request'; do
+            for want in 'Loading app at' 'To Native -> +SplashScreen hide'; do
               if ! grep -qE "$want" "$f"; then
                 echo "::error::$(basename "$f"): expected a line matching '$want'."; fail=1
               fi
             done
           done
+          # ...and reached the API: CapacitorHttp (src/boot/native-api.js) makes
+          # the requests from the App process itself — the WebView's own loads
+          # run in a separate networking process — so successful responses
+          # logged by App's CFNetwork are the live storefront answering.
+          ok=$(grep -acE 'App\[[0-9]+:[0-9a-f]+\] \[com.apple.CFNetwork.*received response, status [23][0-9]{2}' "$LOGS/simulator-system.log" || true)
+          bad=$(grep -acE 'App\[[0-9]+:[0-9a-f]+\] \[com.apple.CFNetwork.*received response, status [45][0-9]{2}' "$LOGS/simulator-system.log" || true)
+          echo "Native HTTP responses: $ok OK, $bad 4xx/5xx"
+          if [ "$ok" -eq 0 ]; then
+            echo "::error::No successful native HTTP response — the app never reached $APP_API_ORIGIN."; fail=1
+          fi
+          if [ "$bad" -gt 0 ]; then
+            echo "::warning::$bad native HTTP request(s) got a 4xx/5xx response (see ios-logs/simulator-system.log)."
+          fi
           # JS errors surfaced by the Capacitor bridge, and failed page loads.
           if grep -nE '⚡️ +\[error\]|ERROR MESSAGE:|Uncaught|Unhandled|APP_API_ORIGIN is not set|WebView failed|Error loading page' "$LOGS"/app-console*.log; then
             echo "::error::Errors in the app console (see above)."; fail=1

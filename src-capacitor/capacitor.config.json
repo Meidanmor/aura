@@ -8,6 +8,9 @@
   "android": {
     "adjustMarginsForEdgeToEdge": "force"
   },
+  "ios": {
+    "contentInset": "always"
+  },
   "plugins": {
     "CapacitorHttp": {
       "enabled": true
