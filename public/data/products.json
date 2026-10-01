@@ -149,11 +149,11 @@
         "sku": "CLK-018",
         "short_description": "<p>Minimal wall clock with a silent movement and clean dial.</p>",
         "description": "<p>Minimal wall clock with a silent movement and clean dial.</p>",
-        "on_sale": false,
+        "on_sale": true,
         "prices": {
-            "price": "4800",
+            "price": "4000",
             "regular_price": "4800",
-            "sale_price": "4800",
+            "sale_price": "4000",
             "price_range": null,
             "currency_code": "USD",
             "currency_symbol": "$",
@@ -163,7 +163,7 @@
             "currency_prefix": "",
             "currency_suffix": " $"
         },
-        "price_html": "<span class=\"woocommerce-Price-amount amount\">48.00&nbsp;<span class=\"woocommerce-Price-currencySymbol\">&#036;</span></span>",
+        "price_html": "<del aria-hidden=\"true\"><span class=\"woocommerce-Price-amount amount\">48.00&nbsp;<span class=\"woocommerce-Price-currencySymbol\">&#036;</span></span></del> <span class=\"screen-reader-text\">Original price was: 48.00&nbsp;&#036;.</span><ins aria-hidden=\"true\"><span class=\"woocommerce-Price-amount amount\">40.00&nbsp;<span class=\"woocommerce-Price-currencySymbol\">&#036;</span></span></ins><span class=\"screen-reader-text\">Current price is: 40.00&nbsp;&#036;.</span>",
         "average_rating": "0",
         "review_count": 0,
         "images": [
