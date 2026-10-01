@@ -62,17 +62,45 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
             `script-src 'self' 'nonce-${nonce}' https://accounts.google.com https://js.stripe.com https://hcaptcha.com https://*.hcaptcha.com; ` +
             "style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; " +
             "img-src 'self' data: https:; " +
-            `connect-src 'self' ${WP_BACKEND_URL ? WP_BACKEND_URL : ''} https://api.stripe.com https://hcaptcha.com https://*.hcaptcha.com ws://localhost:* wss://localhost:*;` +
+            // The dev server's hot-reload websocket only exists locally.
+            `connect-src 'self' ${WP_BACKEND_URL ? WP_BACKEND_URL : ''} https://api.stripe.com https://hcaptcha.com https://*.hcaptcha.com${process.env.DEV ? ' ws://localhost:* wss://localhost:*' : ''}; ` +
             "font-src 'self' https://fonts.gstatic.com; " +
-            // Video block: uploaded videos are served from the WP backend,
-            // "video file URL" sources may be any https host (passive media,
-            // same trust level as img-src).
-            `media-src 'self' ${WP_BACKEND_URL ? WP_BACKEND_URL : ''} https:; ` +
-            // Video block embeds: only the two exact player hosts it builds
-            // URLs for (privacy-enhanced YouTube + Vimeo), nothing broader.
+            // Videos (Video block + video backgrounds) are uploads served by
+            // the WP backend or files on this site — the plugin only accepts
+            // "video file URL"s on those hosts. YouTube/Vimeo play in iframes.
+            `media-src 'self' ${WP_BACKEND_URL ? WP_BACKEND_URL : ''}; ` +
+            // Video embeds: only the two exact player hosts the frontend
+            // builds URLs for (privacy-enhanced YouTube + Vimeo).
             "frame-src https://accounts.google.com https://js.stripe.com https://hooks.stripe.com https://hcaptcha.com https://*.hcaptcha.com https://www.youtube-nocookie.com https://player.vimeo.com; " +
+            // No plugins (<object>/<embed>), no <base> hijacking, and forms
+            // may only submit to this site (the app posts via fetch; Google
+            // sign-in and Stripe use redirects / their own iframes).
+            "object-src 'none'; " +
+            "base-uri 'self'; " +
+            "form-action 'self'; " +
             `frame-ancestors ${frameAncestors};`
         )
+
+        // Full URL to same-origin, only the origin to other sites, nothing
+        // when going https -> http (the browsers' default, made explicit).
+        res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+
+        // Browser features the store never uses. `payment` (Stripe Express
+        // Checkout / Apple & Google Pay), `fullscreen` and `autoplay` (video
+        // embeds) are deliberately NOT restricted.
+        res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), usb=(), browsing-topics=()')
+
+        // Pages that open this site in a popup can't keep a handle on it
+        // (blocks cross-window scripting tricks); popups this site opens
+        // itself (payment / sign-in windows) keep working.
+        res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups')
+
+        // HTTPS only from now on (production; Vercel and Hostinger both
+        // serve TLS). No includeSubDomains/preload — those affect other
+        // subdomains of the same domain and are hard to undo.
+        if (!process.env.DEV) {
+            res.setHeader('Strict-Transport-Security', 'max-age=31536000')
+        }
 
         // X-Frame-Options can't express "allow this one other origin" (only
         // DENY / SAMEORIGIN), so it's omitted for a validated editor request

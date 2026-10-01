@@ -50,6 +50,7 @@
 import { computed, ref, watch } from 'vue'
 import { matPlayArrow } from '@quasar/extras/material-icons'
 import { setResponsiveVar, toCssLength, alignToFlex } from 'src/composables/useSectionStyle.js'
+import { youtubeId, vimeoId, youtubeThumbnail } from 'src/utils/video-embed.js'
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -59,15 +60,6 @@ const props = defineProps({
 const d = computed(() => props.data.data || {})
 const source = computed(() => d.value.source || 'youtube')
 
-function youtubeId(url) {
-  const m = String(url || '').match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/))([\w-]{11})/)
-  return m ? m[1] : ''
-}
-function vimeoId(url) {
-  const m = String(url || '').match(/vimeo\.com\/(?:video\/)?(\d+)/)
-  return m ? m[1] : ''
-}
-
 const embedId = computed(() => {
   if (source.value === 'youtube') return youtubeId(d.value.url)
   if (source.value === 'vimeo') return vimeoId(d.value.url)
@@ -76,11 +68,13 @@ const embedId = computed(() => {
 
 const posterSrc = computed(() => d.value.poster?.url || '')
 const coverSrc = computed(() => posterSrc.value
-    || (source.value === 'youtube' && embedId.value ? `https://i.ytimg.com/vi/${embedId.value}/hqdefault.jpg` : ''))
+    || (source.value === 'youtube' ? youtubeThumbnail(embedId.value) : ''))
 
 const fileSrc = computed(() => {
   if (source.value === 'file') return d.value.video_file?.url || ''
-  if (source.value === 'url') return /^https?:\/\//i.test(d.value.url || '') ? d.value.url : ''
+  // A file on this site or the WP backend (the plugin enforces that; the
+  // CSP media-src would block anything else anyway).
+  if (source.value === 'url') return /^(https?:\/\/|\/(?!\/))/i.test(d.value.url || '') ? d.value.url : ''
   return ''
 })
 

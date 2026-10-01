@@ -3,34 +3,49 @@ import { JSON_UPDATED_EVENT } from 'src/services/sw-updates'
 const EDITOR_FLAG_PARAM = 'qwoo_editor'
 const EDITOR_ORIGIN_PARAM = 'admin_origin'
 
-export function isEditorMode() {
-  // postMessage/window only exist client-side — SSR never treats a request
-  // as editor mode, it just renders the normal preview/published content.
-  if (import.meta.env.SSR) return false
-  return new URLSearchParams(window.location.search).get(EDITOR_FLAG_PARAM) === '1'
-}
+// The only origin allowed to drive the Live Preview: the WordPress backend
+// (wp-admin), baked in at build time from WP_BACKEND_URL (quasar.config.js
+// build.env). The admin_origin URL param is only ever CHECKED against it —
+// trusting the param itself would let any site open the storefront (e.g.
+// in a popup) and push its own content into the page.
+const TRUSTED_ADMIN_ORIGIN = (() => {
+  try {
+    return process.env.WP_BACKEND_ORIGIN ? new URL(process.env.WP_BACKEND_ORIGIN).origin : ''
+  } catch {
+    return ''
+  }
+})()
 
 function getTrustedAdminOrigin() {
-  if (import.meta.env.SSR) return null
+  if (import.meta.env.SSR || !TRUSTED_ADMIN_ORIGIN) return null
   const raw = new URLSearchParams(window.location.search).get(EDITOR_ORIGIN_PARAM)
-  if (!raw) return null
   try {
-    return new URL(raw).origin
-  } catch (err) {
-    console.warn(err)
+    return raw && new URL(raw).origin === TRUSTED_ADMIN_ORIGIN ? TRUSTED_ADMIN_ORIGIN : null
+  } catch {
     return null
   }
 }
 
 /**
+ * True only inside the Shop Builder's Live Preview iframe: flagged with
+ * ?qwoo_editor=1, actually framed, and the declared admin origin is our
+ * WordPress backend. SSR never treats a request as editor mode — it renders
+ * the published content, which the client then replaces with the draft.
+ */
+export function isEditorMode() {
+  if (import.meta.env.SSR) return false
+  if (new URLSearchParams(window.location.search).get(EDITOR_FLAG_PARAM) !== '1') return false
+  if (window.parent === window) return false
+  return getTrustedAdminOrigin() !== null
+}
+
+/**
  * Calls `callback` with the fresh published config when a new service worker
  * brings a changed /config/{page}.json (see src/services/sw-updates.js), so
- * a page already on screen updates without a reload. No-op on the server and
- * in ?preview=true mode (that data comes from the WP preview endpoint).
+ * a page already on screen updates without a reload. No-op on the server.
  */
 export function onPublishedConfigUpdate(page, callback) {
   if (import.meta.env.SSR) return () => {}
-  if (new URLSearchParams(window.location.search).get('preview') === 'true') return () => {}
 
   const handler = async (event) => {
     if (!event.detail?.pages?.includes(page)) return
@@ -57,18 +72,16 @@ export function subscribeToLiveConfig(page, callback, options = {}) {
 
   const trustedOrigin = getTrustedAdminOrigin()
   if (!trustedOrigin) {
-    console.warn('[loadPageConfig] qwoo_editor=1 present but admin_origin missing/invalid — live sync disabled.')
     return () => {}
   }
 
   const handler = (event) => {
-    if (event.origin !== trustedOrigin) return
+    // Only the wp-admin page that frames us — checked by origin AND window.
+    if (event.origin !== trustedOrigin || event.source !== window.parent) return
     const data = event.data
     if (!data || data.source !== 'qwoo-admin' || data.type !== 'state') return
 
     const pageData = data.payload ? data.payload[page] : undefined
-    console.log(pageData)
-
     if (pageData !== undefined) callback(pageData)
   }
 
@@ -81,13 +94,19 @@ export function subscribeToLiveConfig(page, callback, options = {}) {
   return () => window.removeEventListener('message', handler)
 }
 
-export async function loadPageConfig(page, isPreview, origin='') {
+/**
+ * Loads a page's published config (/config/{page}.json).
+ * `_isPreview` is ignored: the WP preview endpoint it used to select was
+ * removed (it exposed unpublished drafts) — the Live Preview gets drafts via
+ * subscribeToLiveConfig() instead. Kept so existing callers stay valid.
+ */
+export async function loadPageConfig(page, _isPreview, origin='') {
   const API_BASE = origin
 
   // Editor mode, client-side: skip the fetch entirely. The calling
   // component is expected to also call subscribeToLiveConfig(page, ...) to
   // get data via postMessage instead. SSR still falls through to the
-  // normal preview fetch below (postMessage doesn't exist server-side), so
+  // normal published fetch below (postMessage doesn't exist server-side), so
   // the iframe has real content on first paint before the client bridge
   // takes over.
   if (!import.meta.env.SSR && isEditorMode()) {
@@ -97,16 +116,7 @@ export async function loadPageConfig(page, isPreview, origin='') {
   // --- SERVER SIDE LOGIC ---
 if (import.meta.env.SSR) {
   try {
-    // 1. If Preview, fetch from WordPress API
-    if (isPreview) {
-      const url = `${API_BASE}/wp-json/shop-builder/v1/preview/${page}`;
-
-      const response = await fetch(url, { cache: 'no-store' });
-      if (response.ok) return await response.json();
-      throw new Error(`WP API responded with ${response.status}`);
-    }
-
-    // 2. If NOT Preview — use filesystem in dev, HTTP fetch in production
+    // Filesystem in dev, HTTP fetch in production
     if (import.meta.env.DEV) {
       const { readFile } = await import('fs/promises')
       const { resolve } = await import('path')
@@ -131,9 +141,7 @@ if (import.meta.env.SSR) {
 // --- CLIENT SIDE LOGIC ---
   else {
     try {
-      const url = isPreview
-        ? `${API_BASE}/wp-json/shop-builder/v1/preview/${page}`
-        : `/config/${page}.json`;
+      const url = `/config/${page}.json`;
 
       const response = await fetch(url, {
         cache: 'no-store'

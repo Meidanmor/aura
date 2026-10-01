@@ -1,4 +1,5 @@
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
+import { youtubeId, vimeoId, youtubeThumbnail, backgroundEmbedUrl } from 'src/utils/video-embed.js'
 
 /**
  * Turns Shop Builder (schema v3) style objects into CSS classes + custom
@@ -118,14 +119,23 @@ export function buildBackground(style = {}) {
     setResponsiveVar(vars, '--sb-bg-size', s.bg_image_size)
     setResponsiveVar(vars, '--sb-bg-pos', s.bg_image_position)
   } else if (bgType === 'video') {
-    const src = s.bg_video?.url || s.bg_video_url || ''
-    const poster = s.bg_video_poster?.url || ''
+    // Upload (a <video> file) or a YouTube / Vimeo embed.
+    const kind = s.bg_video_source === 'youtube' || s.bg_video_source === 'vimeo' ? s.bg_video_source : 'file'
+    let src = ''
+    let embedId = ''
+    if (kind === 'file') src = s.bg_video?.url || ''
+    else {
+      embedId = kind === 'youtube' ? youtubeId(s.bg_video_link) : vimeoId(s.bg_video_link)
+      src = backgroundEmbedUrl(kind, embedId)
+    }
+    // Poster (also the CSS background): the chosen image, else YouTube's thumbnail.
+    const poster = s.bg_video_poster?.url || (kind === 'youtube' ? youtubeThumbnail(embedId) : '')
     if (poster) {
       hasImage = true
       vars['--sb-bg-img'] = cssUrl(poster)
     }
     if (src || poster) setResponsiveVar(vars, '--sb-bg-pos', s.bg_image_position)
-    if (src) video = { src, poster, mobile: !s.bg_video_mobile_poster }
+    if (src) video = { kind, src, poster, mobile: !s.bg_video_mobile_poster }
   }
 
   const hasOverlay = (bgType === 'image' || bgType === 'video') && !!s.bg_overlay_color

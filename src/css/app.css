@@ -283,6 +283,16 @@ body section {
     border-radius: inherit;
     pointer-events: none;
 }
+/* YouTube / Vimeo: the iframe is sized to cover the box by SectionBgVideo.vue */
+.sb-bg-video--embed { overflow: hidden; }
+.sb-bg-video--embed iframe {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 0;
+    pointer-events: none;
+}
 .sb-has-overlay::before {
     content: '';
     position: absolute;

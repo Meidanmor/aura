@@ -125,7 +125,16 @@ export function initSwUpdates(router) {
       alreadyRetried = sessionStorage.getItem('qwoo:chunk-reload') === to.fullPath
       sessionStorage.setItem('qwoo:chunk-reload', to.fullPath)
     } catch { /* storage unavailable */ }
-    if (!alreadyRetried) window.location.assign(to.fullPath)
+    if (alreadyRetried) return
+    // Only ever reload to a page on this site (a path like "//other.site"
+    // would otherwise be read as another host).
+    let target
+    try {
+      target = new URL(to.fullPath, window.location.origin)
+    } catch {
+      return
+    }
+    if (target.origin === window.location.origin) window.location.assign(target.href)
   })
   router.afterEach(() => {
     try { sessionStorage.removeItem('qwoo:chunk-reload') } catch { /* storage unavailable */ }

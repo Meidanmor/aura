@@ -46,8 +46,9 @@ export default defineRouter(function (/* { store, ssrContext } */) {
 
   // --- Start Preview Lock Logic ---
   Router.beforeEach((to, from, next) => {
-    // Check if the URL has ?preview=true
-    const isPreview = to.query.preview === 'true' || from.query.preview === 'true';
+    // Shop Builder's Live Preview iframe (?qwoo_editor=1) shows one page;
+    // clicking around inside it would drop the editor params.
+    const isPreview = to.query.qwoo_editor === '1' || from.query.qwoo_editor === '1';
 
     if (isPreview) {
       // Allow the initial load (when there is no 'from' name or path is just root)

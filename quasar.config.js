@@ -104,7 +104,14 @@ export default defineConfig((ctx) => {
 
       // publicPath: '/',
        //analyze: true,
-      // env: {},
+      // Values the CLIENT bundle may read via process.env.* (never secrets).
+      env: {
+        // Origin of the WordPress backend (wp-admin). The Live Preview
+        // bridge only accepts messages from this origin (config-loader.js).
+        WP_BACKEND_ORIGIN: (() => {
+          try { return process.env.WP_BACKEND_URL ? new URL(process.env.WP_BACKEND_URL).origin : '' } catch { return '' }
+        })(),
+      },
       // rawDefine: {}
       // ignorePublicFolder: true,
       // minify: false,
@@ -352,8 +359,17 @@ devServer: {
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+      // Quasar precaches the whole client build by default. Images are left
+      // out: every visitor would otherwise download every hero/section/icon
+      // image when the service worker installs, and the list grows with each
+      // image the Shop Builder pushes. They're cached at runtime instead,
+      // when actually viewed (the image route in custom-service-worker.js).
+      // JS/CSS/fonts, the offline page and the published JSON stay precached.
+      extendInjectManifestOptions (cfg) {
+        cfg.globIgnores = [
+          ...(cfg.globIgnores || []),
+          '**/*.{png,jpg,jpeg,webp,avif,gif,svg,ico,mp4,webm}',
+        ]
       },
       workboxMode: 'InjectManifest', // 'GenerateSW' or 'InjectManifest'
       injectManifest: {
