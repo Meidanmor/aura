@@ -27,14 +27,12 @@
 <script setup>
 import {computed, onMounted, onServerPrefetch, useSSRContext, watch} from 'vue'
 import {onBeforeRouteLeave} from "vue-router";
-import {useQuasar} from "quasar";
 import AppCarousel from '../app/AppCarousel.vue'
 import ProductCard from '../shop/ProductCard.vue'
 import { useCarousel } from 'src/composables/useCrousel.js'
 import { useSectionData } from 'src/composables/useSectionData.js'
 import productsStore from 'src/stores/products'
 
-const $q = useQuasar();
 const props = defineProps({
   data: {
     type: Object,
@@ -69,14 +67,9 @@ async function resolveFeaturedProducts(ssrContext) {
 const { data: products, resolve } = useSectionData(props.blockId, resolveFeaturedProducts)
 
 
-const perView = props.data.data.items_per_view || {}
-const carousel = useCarousel(() => products.value || [], {
-  chunkSizes: {
-    xs: perView.mobile || 1,
-    sm: perView.tablet || 2,
-    md: perView.desktop || 3
-  }
-})
+// A getter, so a changed "Products Per Slide" (Live Preview) is re-read.
+const perView = () => props.data.data.items_per_view || {}
+const carousel = useCarousel(() => products.value || [], { perView })
 carousel.recompute()
 
 const cssVars = computed(() => {
@@ -103,7 +96,7 @@ onMounted(async () => {
   carousel.recompute(true)
 })
 const stopProductsWatch = watch(
-    [() => products.value, () => $q.screen.name],
+    [() => products.value, () => carousel.device.value, () => JSON.stringify(perView())],
     () => {
       carousel.markMounted()
       carousel.recompute(true)    // forceRemount now safely diverges from SSR output

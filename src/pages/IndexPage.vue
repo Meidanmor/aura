@@ -156,7 +156,13 @@ onMounted(async() => {
       homeSettings.value = freshConfig
     }
   }
-  unsubscribeLiveConfig = subscribeToLiveConfig('home', (data) => { homeSettings.value = data })
+  unsubscribeLiveConfig = subscribeToLiveConfig('home', (data) => { homeSettings.value = data }, {
+    // Published update (new deploy): resolve the hero image like preFetch does.
+    onPublished: async (data) => {
+      if (data?.hero_image) data.hero_image = await resolveHeroImageSrc(data.hero_image, 'homepage-hero')
+      homeSettings.value = data
+    }
+  })
 })
 
 onUnmounted(() => {

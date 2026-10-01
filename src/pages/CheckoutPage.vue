@@ -221,13 +221,15 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, watch, onMounted, useSSRContext, toRaw } from 'vue';
+import { ref, computed, reactive, watch, onMounted, onUnmounted, useSSRContext, toRaw } from 'vue';
 import cart from 'src/stores/cart';
 import { useRouter, onBeforeRouteLeave } from 'vue-router';
 import { useQuasar } from 'quasar';
 import {fetchWithToken, setLoggedIn} from 'src/composables/useApiFetch.js';
 import GoogleLoginButton from '../components/account/GoogleLoginButton.vue';
-import { loadPageConfig } from 'src/utils/config-loader'
+import { loadPageConfig, subscribeToLiveConfig } from 'src/utils/config-loader'
+
+let unsubscribeConfigUpdates = () => {}
 import {matError, matKeyboardArrowDown} from '@quasar/extras/material-icons'
 import {formatCurrency} from 'src/utils/formatters.js'
 import { getWasLoggedIn } from 'src/composables/useApiFetch.js'
@@ -677,10 +679,12 @@ onMounted(async () => {
     pageConfig.value = window.__PAGE_CONFIG__
   }
 
+  unsubscribeConfigUpdates = subscribeToLiveConfig('checkout', (data) => { pageConfig.value = data })
 });
 onBeforeRouteLeave(() => {
   resetStripe()
 })
+onUnmounted(() => unsubscribeConfigUpdates())
 </script>
 
 <style scoped>

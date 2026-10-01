@@ -68,6 +68,89 @@ const ALIGN_TO_FLEX = { left: 'flex-start', center: 'center', right: 'flex-end',
 export const alignToFlex = (v) => ALIGN_TO_FLEX[v] || null
 
 /* ------------------------------------------------------------------ */
+/* Backgrounds & padding (shared by containers and blocks)             */
+/* ------------------------------------------------------------------ */
+
+const cssUrl = (url) => `url("${String(url).replace(/"/g, '%22')}")`
+
+/** Writes --sb-pt/-pr/-pb/-pl (+ -t / -m) for a responsive `sides` value. */
+function setSidesVars(vars, value) {
+  const r = asResponsive(value)
+  let any = false
+  for (const device of DEVICES) {
+    const sides = r[device] || {}
+    for (const [side, key] of [['top', 'pt'], ['right', 'pr'], ['bottom', 'pb'], ['left', 'pl']]) {
+      const len = toCssLength(sides[side])
+      if (len) {
+        vars[`--sb-${key}${SUFFIX[device]}`] = len
+        any = true
+      }
+    }
+  }
+  return any
+}
+
+/**
+ * Background of a container or block (BACKGROUND_FIELDS in the plugin).
+ * Returns CSS vars + classes for the element, and `video` ({ src, poster,
+ * mobile }) when a video background should be rendered (SectionBgVideo).
+ * A video's poster doubles as the CSS background image, so it shows while
+ * the video loads and wherever the video isn't played.
+ */
+export function buildBackground(style = {}) {
+  const s = style || {}
+  const vars = {}
+  const bgType = s.bg_type || 'none'
+  let video = null
+  let hasImage = false
+
+  if (bgType === 'color') {
+    const c = resolveGlobalColor(s.bg_color)
+    if (c) vars['--sb-bg'] = c
+  } else if (bgType === 'gradient') {
+    const c1 = resolveGlobalColor(s.bg_gradient_color1) || 'transparent'
+    const c2 = resolveGlobalColor(s.bg_gradient_color2) || 'transparent'
+    const angle = Number.isFinite(Number(s.bg_gradient_angle)) ? Number(s.bg_gradient_angle) : 180
+    vars['--sb-bg-img'] = `linear-gradient(${angle}deg, ${c1}, ${c2})`
+  } else if (bgType === 'image' && s.bg_image?.url) {
+    hasImage = true
+    vars['--sb-bg-img'] = cssUrl(s.bg_image.url)
+    setResponsiveVar(vars, '--sb-bg-size', s.bg_image_size)
+    setResponsiveVar(vars, '--sb-bg-pos', s.bg_image_position)
+  } else if (bgType === 'video') {
+    const src = s.bg_video?.url || s.bg_video_url || ''
+    const poster = s.bg_video_poster?.url || ''
+    if (poster) {
+      hasImage = true
+      vars['--sb-bg-img'] = cssUrl(poster)
+    }
+    if (src || poster) setResponsiveVar(vars, '--sb-bg-pos', s.bg_image_position)
+    if (src) video = { src, poster, mobile: !s.bg_video_mobile_poster }
+  }
+
+  const hasOverlay = (bgType === 'image' || bgType === 'video') && !!s.bg_overlay_color
+  if (hasOverlay) {
+    vars['--sb-overlay'] = resolveGlobalColor(s.bg_overlay_color)
+    const o = Number(s.bg_overlay_opacity)
+    vars['--sb-overlay-o'] = String(Number.isFinite(o) ? Math.min(100, Math.max(0, o)) / 100 : 0.5)
+  }
+
+  return {
+    vars,
+    classes: {
+      'sb-has-bg-img': hasImage,
+      'sb-bg-fixed': bgType === 'image' && hasImage && !!s.bg_fixed,
+      'sb-has-overlay': hasOverlay,
+      'sb-has-bg-video': !!video,
+    },
+    video,
+    hasOverlay,
+    // Anything painted at all (decides whether a block gets the box styles)
+    painted: Object.keys(vars).length > 0 || !!video,
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* Containers (top-level sections and nested `section` blocks)         */
 /* ------------------------------------------------------------------ */
 
@@ -82,41 +165,14 @@ export function buildContainerStyle(style = {}) {
 
   // Padding
   const preset = PADDING_PRESETS.has(s.padding_preset) ? s.padding_preset : 'none'
-  if (preset === 'custom') {
-    const r = asResponsive(s.padding)
-    for (const device of DEVICES) {
-      const sides = r[device] || {}
-      for (const [side, key] of [['top', 'pt'], ['right', 'pr'], ['bottom', 'pb'], ['left', 'pl']]) {
-        const len = toCssLength(sides[side])
-        if (len) outerVars[`--sb-${key}${SUFFIX[device]}`] = len
-      }
-    }
-  }
+  if (preset === 'custom') setSidesVars(outerVars, s.padding)
 
   // Min height
   setResponsiveVar(outerVars, '--sb-minh', s.min_height, toCssLength)
 
   // Background
-  const bgType = s.bg_type || 'none'
-  if (bgType === 'color') {
-    const c = resolveGlobalColor(s.bg_color)
-    if (c) outerVars['--sb-bg'] = c
-  } else if (bgType === 'gradient') {
-    const c1 = resolveGlobalColor(s.bg_gradient_color1) || 'transparent'
-    const c2 = resolveGlobalColor(s.bg_gradient_color2) || 'transparent'
-    const angle = Number.isFinite(Number(s.bg_gradient_angle)) ? Number(s.bg_gradient_angle) : 180
-    outerVars['--sb-bg-img'] = `linear-gradient(${angle}deg, ${c1}, ${c2})`
-  } else if (bgType === 'image' && s.bg_image?.url) {
-    outerVars['--sb-bg-img'] = `url("${String(s.bg_image.url).replace(/"/g, '%22')}")`
-    setResponsiveVar(outerVars, '--sb-bg-size', s.bg_image_size)
-    setResponsiveVar(outerVars, '--sb-bg-pos', s.bg_image_position)
-  }
-  const hasOverlay = bgType === 'image' && !!s.bg_overlay_color
-  if (hasOverlay) {
-    outerVars['--sb-overlay'] = resolveGlobalColor(s.bg_overlay_color)
-    const o = Number(s.bg_overlay_opacity)
-    outerVars['--sb-overlay-o'] = String(Number.isFinite(o) ? Math.min(100, Math.max(0, o)) / 100 : 0.5)
-  }
+  const bg = buildBackground(s)
+  Object.assign(outerVars, bg.vars)
 
   // Text color & radius
   const color = resolveGlobalColor(s.text_color)
@@ -150,9 +206,7 @@ export function buildContainerStyle(style = {}) {
   return {
     outerClasses: {
       [`sb-pad-${preset}`]: true,
-      'sb-has-bg-img': bgType === 'image' && !!s.bg_image?.url,
-      'sb-bg-fixed': bgType === 'image' && !!s.bg_fixed,
-      'sb-has-overlay': hasOverlay,
+      ...bg.classes,
       'sb-has-radius': !!radius,
       ...visibilityClasses(s.hide_on),
     },
@@ -162,7 +216,8 @@ export function buildContainerStyle(style = {}) {
     marginVars,
     widthMode,
     widthVars,
-    hasOverlay,
+    hasOverlay: bg.hasOverlay,
+    video: bg.video,
     anchorId: s.anchor_id || undefined,
   }
 }
@@ -197,14 +252,25 @@ export function buildBlockWrapperStyle(block) {
   setResponsiveVar(vars, '--sbb-w', s.width, toCssLength)
   setResponsiveVar(vars, '--sbb-maxw', s.max_width, toCssLength)
 
+  // Box: inner padding, corner radius and background (Style tab).
+  const hasPadding = setSidesVars(vars, s.box_padding)
+  const radius = toCssLength(s.box_radius)
+  if (radius) vars['--sb-radius'] = radius
+  const bg = buildBackground(s)
+  Object.assign(vars, bg.vars)
+
   return {
     classes: {
       [`sb-block--${block?.type}`]: true,
       'sb-has-w': hasAny(s.width),
       'sb-has-maxw': hasAny(s.max_width),
+      'sb-has-box': hasPadding || !!radius || bg.painted,
+      'sb-has-radius': !!radius,
+      ...bg.classes,
       ...visibilityClasses(s.hide_on),
     },
     vars,
+    video: bg.video,
     anchorId: s.anchor_id || undefined,
   }
 }

@@ -495,7 +495,6 @@ onMounted(async () => {
   const warm = () => {
     navigator.serviceWorker.ready.then(registration => {
       registration.active?.postMessage({ type: 'UPDATE_SW' })
-      registration.active?.postMessage({ type: 'WARM_PRODUCTS_CACHE' })
     })
   }
 

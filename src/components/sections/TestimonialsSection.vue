@@ -28,14 +28,13 @@
         </q-carousel-slide>
       </AppCarousel>
 
-      <div v-else class="row q-col-gutter-md">
-        <div
-            class="col-12 col-md-4"
+      <!-- Grid: columns per device come from "Items Per Row / Slide" -->
+      <div v-else class="testimonials-grid">
+        <TestimonialCard
             v-for="(testimonial, index) in props.data.data.items"
             :key="index"
-        >
-          <TestimonialCard :testimonial="testimonial" />
-        </div>
+            :testimonial="testimonial"
+        />
       </div>
     </div>
 </template>
@@ -43,13 +42,11 @@
 <script setup>
 import {computed, onMounted, onServerPrefetch, watch} from 'vue'
 import AppCarousel from '../app/AppCarousel.vue'
-import {useQuasar} from "quasar";
 import TestimonialCard from './TestimonialCard.vue'
 import { useCarousel } from 'src/composables/useCrousel.js'
+import { setResponsiveVar } from 'src/composables/useSectionStyle.js'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
-import {onBeforeRouteLeave} from "vue-router";
 
-const $q = useQuasar()
 const props = defineProps({
   data: {
     type: Object,
@@ -61,16 +58,21 @@ const props = defineProps({
 
 const isCarousel = computed(() => props.data.data.display_style === 'carousel')
 
+// A getter, so a changed "Items Per Row / Slide" (Live Preview) is re-read.
+const perView = () => props.data.data.items_per_view || {}
+
 // Always call the composable (never conditionally — same rule as any other
 // Vue hook) even though its output is only used when isCarousel is true;
 // the cost of chunking an unused array is negligible.
-const carousel = useCarousel(() => props.data.data.items || [])
+const carousel = useCarousel(() => props.data.data.items || [], { perView })
 carousel.recompute()
 
 
 const cssVars = computed(() => {
   const vars = {}
   vars['--slides'] = carousel.activeChunkSize.value
+  // Grid columns per device (--tg-cols / -t / -m)
+  setResponsiveVar(vars, '--tg-cols', perView(), (v) => (v ? Math.max(1, Math.min(6, Number(v))) : null))
   return vars
 })
 onMounted(() => {
@@ -80,15 +82,26 @@ onMounted(() => {
 onServerPrefetch(async () => {
   await carousel.recompute(true)
 })
-const stopTestimonialsWatch = watch(
-    [() => props.data.data.items, () => $q.screen.name],
+watch(
+    [() => props.data.data.items, () => carousel.device.value, () => JSON.stringify(perView())],
     () => {
       carousel.markMounted()
       carousel.recompute(true)    // forceRemount now safely diverges from SSR output
     }
 )
-onBeforeRouteLeave(() => {
-  stopTestimonialsWatch()
-})
 
 </script>
+
+<style scoped>
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--tg-cols, 3), minmax(0, 1fr));
+  gap: 16px;
+}
+@media (max-width: 1023px) {
+  .testimonials-grid { grid-template-columns: repeat(var(--tg-cols-t, 2), minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+  .testimonials-grid { grid-template-columns: repeat(var(--tg-cols-m, 1), minmax(0, 1fr)); }
+}
+</style>

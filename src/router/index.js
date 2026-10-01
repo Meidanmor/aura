@@ -1,6 +1,8 @@
 import { defineRouter } from '#q-app/wrappers'
 import { createRouter, createMemoryHistory, createWebHistory, createWebHashHistory } from 'vue-router'
 import routes from './routes'
+import { initSwUpdates } from 'src/services/sw-updates'
+import { isEditorMode } from 'src/utils/config-loader'
 
 /*
  * If not building with SSR mode, you can
@@ -61,6 +63,10 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     next();
   });
   // --- End Preview Lock Logic ---
+
+  // Pick up a newer service worker (and its updated JSON) before route
+  // changes. Not in the Shop Builder iframe, which gets data via postMessage.
+  if (process.env.CLIENT && !isEditorMode()) initSwUpdates(Router)
 
   return Router
 })

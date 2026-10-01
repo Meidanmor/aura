@@ -15,8 +15,45 @@ enableNavigationPreload();
 self.skipWaiting()
 clientsClaim()
 
-precacheAndRoute(self.__WB_MANIFEST)
+// Everything in the client build is precached, including the published
+// JSON files (public/config/*.json, public/data/*.json). Each entry carries a
+// content revision, so when the plugin pushes new JSON and the app is rebuilt,
+// this file changes, the browser installs the new worker, and only the files
+// whose revision changed are downloaded again. The app checks for that new
+// worker before route changes (src/services/sw-updates.js), so navigation
+// doesn't keep showing JSON from an older build.
+const PRECACHE_MANIFEST = self.__WB_MANIFEST
+precacheAndRoute(PRECACHE_MANIFEST)
 cleanupOutdatedCaches()
+
+// url -> revision for the published JSON files in this build. Sent to the
+// app so it can tell exactly which config files changed between versions.
+const JSON_REVISIONS = Object.fromEntries(
+  PRECACHE_MANIFEST
+    .filter(entry => typeof entry === 'object' && entry.revision)
+    .map(entry => ['/' + entry.url.replace(/^\.?\//, ''), entry.revision])
+    .filter(([url]) => /^\/(config|data)\/[^/]+\.json$/.test(url))
+)
+
+// Runtime caches from older versions that are no longer used (the JSON
+// files are served from the precache).
+const LEGACY_CACHES = ['static-data-v1', 'page-config-v1']
+
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
+    await Promise.all(LEGACY_CACHES.map(name => caches.delete(name)))
+    // Take control first, so a page that re-fetches its config on this
+    // message is already served by this worker.
+    await self.clients.claim()
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+    windows.forEach(client => client.postMessage({ type: 'SW_ACTIVATED', revisions: JSON_REVISIONS }))
+  })())
+})
+
+self.addEventListener('message', event => {
+  if (event.data?.type !== 'GET_JSON_REVISIONS') return
+  event.source?.postMessage({ type: 'JSON_REVISIONS', revisions: JSON_REVISIONS })
+})
 
 // ─── WooCommerce API: products & categories ───────────────────────────────────
 registerRoute(
@@ -60,53 +97,6 @@ registerRoute(
     ]
   })
 );
-
-// ─── products.json: StaleWhileRevalidate (large file, scalable) ───────────────
-// - Serves from cache instantly if available (good offline)
-// - Always revalidates in background (stays fresh)
-// - Cache is warmed on first real use, or via the message below
-registerRoute(
-  ({ url }) => url.pathname === '/data/products.json',
-  new StaleWhileRevalidate({
-    cacheName: 'static-data-v1',
-    plugins: [
-      new ExpirationPlugin({
-        maxEntries: 1,
-        maxAgeSeconds: 60 * 60 * 24  // 1 day
-      })
-    ]
-  })
-);
-
-registerRoute(
-    ({ url }) => url.pathname.startsWith('/config/') && url.pathname.endsWith('.json'),
-    new NetworkFirst({
-        cacheName: 'page-config-v1',
-        networkTimeoutSeconds: 3,
-        plugins: [
-            new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 })
-        ]
-    })
-)
-
-// ─── Background warm-up: client tells SW to cache products.json ───────────────
-// Called from your app after first meaningful paint
-self.addEventListener('message', async (event) => {
-  if (event.data?.type !== 'WARM_PRODUCTS_CACHE') return;
-
-  try {
-    const cache = await caches.open('static-data-v1');
-    const existing = await cache.match('/data/products.json');
-    if (existing) return; // already cached, skip
-
-    const response = await fetch('/data/products.json');
-    if (response.ok) {
-      await cache.put('/data/products.json', response);
-    }
-  } catch (err) {
-    console.warn('[SW] products.json warm-up failed', err);
-  }
-});
 
 self.addEventListener('message', async (event) => {
     if (event.data?.type !== 'UPDATE_SW') return;

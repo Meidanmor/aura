@@ -7,6 +7,7 @@
       :style="outerStyle"
       :data-section-id="data.id"
   >
+    <SectionBgVideo v-if="container.video" :video="container.video" />
     <div
         class="sb-inner"
         :class="[innerWidthClass, container.innerClasses]"
@@ -20,6 +21,7 @@
           :class="wrappers[block.id].classes"
           :style="wrappers[block.id].vars"
       >
+        <SectionBgVideo v-if="wrappers[block.id].video" :video="wrappers[block.id].video" />
         <SectionTemplate
             v-if="block.type === 'section'"
             :data="block"
@@ -67,6 +69,7 @@ import CountdownBlock from '../blocks/CountdownBlock.vue'
 import ProductGridBlock from '../blocks/ProductGridBlock.vue'
 import CarouselBlock from '../blocks/CarouselBlock.vue'
 import SocialLinksBlock from '../blocks/SocialLinksBlock.vue'
+import SectionBgVideo from './SectionBgVideo.vue'
 import { buildContainerStyle, buildBlockWrapperStyle } from 'src/composables/useSectionStyle.js'
 
 defineOptions({ name: 'SectionTemplate' })

@@ -1,3 +1,5 @@
+import { JSON_UPDATED_EVENT } from 'src/services/sw-updates'
+
 const EDITOR_FLAG_PARAM = 'qwoo_editor'
 const EDITOR_ORIGIN_PARAM = 'admin_origin'
 
@@ -21,15 +23,37 @@ function getTrustedAdminOrigin() {
 }
 
 /**
+ * Calls `callback` with the fresh published config when a new service worker
+ * brings a changed /config/{page}.json (see src/services/sw-updates.js), so
+ * a page already on screen updates without a reload. No-op on the server and
+ * in ?preview=true mode (that data comes from the WP preview endpoint).
+ */
+export function onPublishedConfigUpdate(page, callback) {
+  if (import.meta.env.SSR) return () => {}
+  if (new URLSearchParams(window.location.search).get('preview') === 'true') return () => {}
+
+  const handler = async (event) => {
+    if (!event.detail?.pages?.includes(page)) return
+    const data = await loadPageConfig(page, false)
+    if (data && Object.keys(data).length) callback(data)
+  }
+
+  window.addEventListener(JSON_UPDATED_EVENT, handler)
+  return () => window.removeEventListener(JSON_UPDATED_EVENT, handler)
+}
+
+/**
  * Subscribes to live (unsaved) draft updates pushed from Shop Builder's
- * Live Preview panel. No-op outside editor mode or on the server.
+ * Live Preview panel. Outside editor mode it subscribes to published config
+ * updates instead (onPublishedConfigUpdate), using `options.onPublished`
+ * when given, else `callback`.
  * `callback` receives just this page's slice (e.g. `payload.home`,
  * `payload.shop`) — call this once per page component, typically in
  * onMounted(), alongside your existing loadPageConfig() call.
  * Returns an unsubscribe function — call it in onUnmounted().
  */
-export function subscribeToLiveConfig(page, callback) {
-  if (!isEditorMode()) return () => {}
+export function subscribeToLiveConfig(page, callback, options = {}) {
+  if (!isEditorMode()) return onPublishedConfigUpdate(page, options.onPublished || callback)
 
   const trustedOrigin = getTrustedAdminOrigin()
   if (!trustedOrigin) {
