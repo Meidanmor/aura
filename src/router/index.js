@@ -13,6 +13,10 @@ import { isEditorMode } from 'src/utils/config-loader'
  * with the Router instance.
  */
 
+// Whether a drawer/dialog had the page scroll locked when the current
+// navigation started (see scrollBehavior).
+let navStartedScrollLocked = false
+
 export default defineRouter(function (/* { store, ssrContext } */) {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
@@ -34,15 +38,36 @@ export default defineRouter(function (/* { store, ssrContext } */) {
       // 3. For all other navigations (new links), scroll to top smoothly
       // We use a Promise with a tiny timeout to ensure the new content
       // has started rendering before we move the scrollbar.
+      //
+      // Navigating from an open drawer: Quasar locks the page scroll while
+      // the drawer is open and, when it unlocks, scrolls back to where the
+      // page was unless location.pathname changed. In the native app the
+      // router uses hash URLs, so the pathname never changes — and on iOS the
+      // unlock is also delayed — so it would undo our scroll to the top. Wait
+      // for the unlock (document.qScrollPrevented), then jump to the top
+      // instantly: the old position was never visible behind the drawer.
+      const fromLockedPage = navStartedScrollLocked
       return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve({ left: 0, top: 0, behavior: 'smooth' })
-        }, 10) // 50ms is usually enough to let Vue swap the component content
+        const startedAt = Date.now()
+        const scroll = () => {
+          if (document.qScrollPrevented === true && Date.now() - startedAt < 1000) {
+            setTimeout(scroll, 20)
+            return
+          }
+          resolve({ left: 0, top: 0, behavior: fromLockedPage ? 'auto' : 'smooth' })
+        }
+        setTimeout(scroll, 10) // 50ms is usually enough to let Vue swap the component content
       })
     },
     routes,
     history: createHistory(process.env.VUE_ROUTER_BASE)
   })
+
+  if (process.env.CLIENT) {
+    Router.beforeEach(() => {
+      navStartedScrollLocked = document.qScrollPrevented === true
+    })
+  }
 
   // --- Start Preview Lock Logic ---
   Router.beforeEach((to, from, next) => {
