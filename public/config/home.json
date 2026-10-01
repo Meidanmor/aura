@@ -113,49 +113,11 @@
             },
             "blocks": [
                 {
-                    "id": "blk_7uahmh7i7j",
-                    "type": "section",
+                    "id": "blk_jYAtHUeg0V",
+                    "type": "advantages",
                     "enabled": true,
                     "style": {
-                        "width_mode": "contained",
-                        "width": {
-                            "desktop": "",
-                            "tablet": "",
-                            "mobile": ""
-                        },
-                        "min_height": {
-                            "desktop": "",
-                            "tablet": "",
-                            "mobile": ""
-                        },
-                        "direction": {
-                            "desktop": "column",
-                            "tablet": "column",
-                            "mobile": "column"
-                        },
-                        "wrap": {
-                            "desktop": "nowrap",
-                            "tablet": "nowrap",
-                            "mobile": "nowrap"
-                        },
-                        "justify": {
-                            "desktop": "flex-start",
-                            "tablet": "flex-start",
-                            "mobile": "flex-start"
-                        },
-                        "align_items": {
-                            "desktop": "stretch",
-                            "tablet": "stretch",
-                            "mobile": "stretch"
-                        },
-                        "align_content": "normal",
-                        "gap": {
-                            "desktop": "",
-                            "tablet": "",
-                            "mobile": ""
-                        },
-                        "padding_preset": "none",
-                        "padding": {
+                        "box_padding": {
                             "desktop": {
                                 "top": "",
                                 "right": "",
@@ -175,16 +137,7 @@
                                 "left": ""
                             }
                         },
-                        "margin_top": {
-                            "desktop": "",
-                            "tablet": "",
-                            "mobile": ""
-                        },
-                        "margin_bottom": {
-                            "desktop": "",
-                            "tablet": "",
-                            "mobile": ""
-                        },
+                        "box_radius": "",
                         "bg_type": "none",
                         "bg_color": "",
                         "bg_gradient_color1": "",
@@ -209,8 +162,26 @@
                         "bg_fixed": false,
                         "bg_overlay_color": "",
                         "bg_overlay_opacity": 50,
-                        "text_color": "",
-                        "border_radius": "",
+                        "margin_top": {
+                            "desktop": "",
+                            "tablet": "",
+                            "mobile": ""
+                        },
+                        "margin_bottom": {
+                            "desktop": "",
+                            "tablet": "",
+                            "mobile": ""
+                        },
+                        "width": {
+                            "desktop": "",
+                            "tablet": "",
+                            "mobile": ""
+                        },
+                        "max_width": {
+                            "desktop": "",
+                            "tablet": "",
+                            "mobile": ""
+                        },
                         "hide_on": {
                             "desktop": false,
                             "tablet": false,
@@ -218,225 +189,52 @@
                         },
                         "anchor_id": ""
                     },
-                    "blocks": [
-                        {
-                            "id": "blk_jYAtHUeg0V",
-                            "type": "advantages",
-                            "enabled": true,
-                            "style": {
-                                "box_padding": {
-                                    "desktop": {
-                                        "top": "",
-                                        "right": "",
-                                        "bottom": "",
-                                        "left": ""
-                                    },
-                                    "tablet": {
-                                        "top": "",
-                                        "right": "",
-                                        "bottom": "",
-                                        "left": ""
-                                    },
-                                    "mobile": {
-                                        "top": "",
-                                        "right": "",
-                                        "bottom": "",
-                                        "left": ""
-                                    }
+                    "data": {
+                        "items": [
+                            {
+                                "icon": "custom",
+                                "custom_icon": {
+                                    "url": "/sections/231-Aura-logo.svg",
+                                    "width": 77,
+                                    "height": 17
                                 },
-                                "box_radius": "",
-                                "bg_type": "none",
-                                "bg_color": "",
-                                "bg_gradient_color1": "",
-                                "bg_gradient_color2": "",
-                                "bg_gradient_angle": 180,
-                                "bg_image": null,
-                                "bg_video_source": "upload",
-                                "bg_video": null,
-                                "bg_video_link": "",
-                                "bg_video_poster": null,
-                                "bg_video_mobile_poster": false,
-                                "bg_image_size": {
-                                    "desktop": "cover",
-                                    "tablet": "cover",
-                                    "mobile": "cover"
-                                },
-                                "bg_image_position": {
-                                    "desktop": "center center",
-                                    "tablet": "center center",
-                                    "mobile": "center center"
-                                },
-                                "bg_fixed": false,
-                                "bg_overlay_color": "",
-                                "bg_overlay_opacity": 50,
-                                "margin_top": {
-                                    "desktop": "",
-                                    "tablet": "",
-                                    "mobile": ""
-                                },
-                                "margin_bottom": {
-                                    "desktop": "",
-                                    "tablet": "",
-                                    "mobile": ""
-                                },
-                                "width": {
-                                    "desktop": "",
-                                    "tablet": "",
-                                    "mobile": ""
-                                },
-                                "max_width": {
-                                    "desktop": "",
-                                    "tablet": "",
-                                    "mobile": ""
-                                },
-                                "hide_on": {
-                                    "desktop": false,
-                                    "tablet": false,
-                                    "mobile": false
-                                },
-                                "anchor_id": ""
+                                "title": "Fast Shipping",
+                                "text": "Enjoy fast shipping worldwide!!"
                             },
-                            "data": {
-                                "items": [
-                                    {
-                                        "icon": "custom",
-                                        "custom_icon": {
-                                            "url": "/sections/231-Aura-logo.svg",
-                                            "width": 77,
-                                            "height": 17
-                                        },
-                                        "title": "Fast Shipping",
-                                        "text": "Enjoy fast shipping worldwide!!"
-                                    },
-                                    {
-                                        "icon": "organic",
-                                        "custom_icon": null,
-                                        "title": "Organic",
-                                        "text": "Sofsd sfdjlkfsj sfdlkjlksd vdlkjvl FFF"
-                                    },
-                                    {
-                                        "icon": "guarantee",
-                                        "custom_icon": null,
-                                        "title": "Warranty!",
-                                        "text": "Enjoy our 1 year warranty"
-                                    },
-                                    {
-                                        "icon": "returns",
-                                        "custom_icon": null,
-                                        "title": "Easy Returns!!",
-                                        "text": "vfddsf svd sd vd vdvdvsdvd vfdvdvfd dvdff"
-                                    },
-                                    {
-                                        "icon": "support",
-                                        "custom_icon": null,
-                                        "title": "Customer Support!!",
-                                        "text": "gbffd sfd d cdssdc sd s  sdf sdsd~ vfsdvsd  ~"
-                                    },
-                                    {
-                                        "icon": "quality",
-                                        "custom_icon": null,
-                                        "title": "Quality",
-                                        "text": "Top Quality with no compatition!"
-                                    }
-                                ],
-                                "icon_color": "",
-                                "text_color": ""
-                            }
-                        },
-                        {
-                            "id": "blk_zgpxj8nn89",
-                            "type": "button",
-                            "enabled": true,
-                            "style": {
-                                "box_padding": {
-                                    "desktop": {
-                                        "top": "",
-                                        "right": "",
-                                        "bottom": "",
-                                        "left": ""
-                                    },
-                                    "tablet": {
-                                        "top": "",
-                                        "right": "",
-                                        "bottom": "",
-                                        "left": ""
-                                    },
-                                    "mobile": {
-                                        "top": "",
-                                        "right": "",
-                                        "bottom": "",
-                                        "left": ""
-                                    }
-                                },
-                                "box_radius": "",
-                                "bg_type": "none",
-                                "bg_color": "",
-                                "bg_gradient_color1": "",
-                                "bg_gradient_color2": "",
-                                "bg_gradient_angle": 180,
-                                "bg_image": null,
-                                "bg_video_source": "upload",
-                                "bg_video": null,
-                                "bg_video_link": "",
-                                "bg_video_poster": null,
-                                "bg_video_mobile_poster": false,
-                                "bg_image_size": {
-                                    "desktop": "cover",
-                                    "tablet": "cover",
-                                    "mobile": "cover"
-                                },
-                                "bg_image_position": {
-                                    "desktop": "center center",
-                                    "tablet": "center center",
-                                    "mobile": "center center"
-                                },
-                                "bg_fixed": false,
-                                "bg_overlay_color": "",
-                                "bg_overlay_opacity": 50,
-                                "margin_top": {
-                                    "desktop": "",
-                                    "tablet": "",
-                                    "mobile": ""
-                                },
-                                "margin_bottom": {
-                                    "desktop": "",
-                                    "tablet": "",
-                                    "mobile": ""
-                                },
-                                "width": {
-                                    "desktop": "",
-                                    "tablet": "",
-                                    "mobile": ""
-                                },
-                                "max_width": {
-                                    "desktop": "",
-                                    "tablet": "",
-                                    "mobile": ""
-                                },
-                                "hide_on": {
-                                    "desktop": false,
-                                    "tablet": false,
-                                    "mobile": false
-                                },
-                                "anchor_id": ""
+                            {
+                                "icon": "organic",
+                                "custom_icon": null,
+                                "title": "Organic",
+                                "text": "Sofsd sfdjlkfsj sfdlkjlksd vdlkjvl FFF"
                             },
-                            "data": {
-                                "text": "Check",
-                                "url": "#",
-                                "new_tab": false,
-                                "alignment": {
-                                    "desktop": "left",
-                                    "tablet": "left",
-                                    "mobile": "left"
-                                },
-                                "style": "primary",
-                                "size": "md",
-                                "border_radius": "",
-                                "bg_color": "#ec5151",
-                                "text_color": "#181616"
+                            {
+                                "icon": "guarantee",
+                                "custom_icon": null,
+                                "title": "Warranty!",
+                                "text": "Enjoy our 1 year warranty"
+                            },
+                            {
+                                "icon": "returns",
+                                "custom_icon": null,
+                                "title": "Easy Returns!!",
+                                "text": "vfddsf svd sd vd vdvdvsdvd vfdvdvfd dvdff"
+                            },
+                            {
+                                "icon": "support",
+                                "custom_icon": null,
+                                "title": "Customer Support!!",
+                                "text": "gbffd sfd d cdssdc sd s  sdf sdsd~ vfsdvsd  ~"
+                            },
+                            {
+                                "icon": "quality",
+                                "custom_icon": null,
+                                "title": "Quality",
+                                "text": "Top Quality with no compatition!"
                             }
-                        }
-                    ]
+                        ],
+                        "icon_color": "",
+                        "text_color": ""
+                    }
                 }
             ]
         },
@@ -602,9 +400,9 @@
                             "mobile": ""
                         },
                         "margin_bottom": {
-                            "desktop": "40",
-                            "tablet": "40",
-                            "mobile": "40"
+                            "desktop": "",
+                            "tablet": "",
+                            "mobile": ""
                         },
                         "width": {
                             "desktop": "",
@@ -654,21 +452,21 @@
                     "style": {
                         "box_padding": {
                             "desktop": {
-                                "top": "",
+                                "top": "10",
                                 "right": "",
-                                "bottom": "",
+                                "bottom": "30",
                                 "left": ""
                             },
                             "tablet": {
-                                "top": "",
+                                "top": "10",
                                 "right": "",
-                                "bottom": "",
+                                "bottom": "30",
                                 "left": ""
                             },
                             "mobile": {
-                                "top": "",
+                                "top": "10",
                                 "right": "",
-                                "bottom": "",
+                                "bottom": "30",
                                 "left": ""
                             }
                         },
@@ -1138,7 +936,7 @@
                                             "width": 516,
                                             "height": 664
                                         },
-                                        "alt": "",
+                                        "alt": "Products grid",
                                         "caption": "",
                                         "link_url": "",
                                         "new_tab": false
@@ -1353,9 +1151,9 @@
                                     "mobile": ""
                                 },
                                 "margin_bottom": {
-                                    "desktop": "34",
-                                    "tablet": "34",
-                                    "mobile": "34"
+                                    "desktop": "",
+                                    "tablet": "",
+                                    "mobile": ""
                                 },
                                 "width": {
                                     "desktop": "",
@@ -1405,21 +1203,21 @@
                             "style": {
                                 "box_padding": {
                                     "desktop": {
-                                        "top": "",
+                                        "top": "10",
                                         "right": "",
-                                        "bottom": "",
+                                        "bottom": "20",
                                         "left": ""
                                     },
                                     "tablet": {
-                                        "top": "",
+                                        "top": "10",
                                         "right": "",
-                                        "bottom": "",
+                                        "bottom": "20",
                                         "left": ""
                                     },
                                     "mobile": {
-                                        "top": "",
+                                        "top": "10",
                                         "right": "",
-                                        "bottom": "",
+                                        "bottom": "20",
                                         "left": ""
                                     }
                                 },
