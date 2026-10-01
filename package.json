@@ -10,7 +10,9 @@
     "format": "prettier --write \"**/*.{js,vue,css,html,md,json}\" --ignore-path .gitignore",
     "dev": "quasar dev -m ssr",
     "build": "quasar build -m ssr",
-    "postinstall": "quasar prepare"
+    "postinstall": "quasar prepare",
+    "icons:native": "node scripts/native-icons.mjs",
+    "build:android": "npm run icons:native && quasar build -m capacitor -T android"
   },
   "dependencies": {
     "@capacitor/android": "7.6.8",
@@ -30,6 +32,7 @@
   },
   "devDependencies": {
     "@capacitor/app": "7.1.2",
+    "@capacitor/assets": "^3.0.5",
     "@eslint/js": "^9.14.0",
     "@fullhuman/postcss-purgecss": "^7.0.2",
     "@quasar/app-vite": "^2.6.2",

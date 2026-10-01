@@ -1,3 +1,5 @@
+import { liveUrl } from 'src/utils/native-app'
+
 export async function resolveLocalAsset({
                                             url,
                                             localFolder,
@@ -26,8 +28,10 @@ export async function resolveLocalAsset({
             : fallback
     }
 
+    // In the native app the local copy lives on the storefront, not in the
+    // bundled app files — liveUrl() makes the path absolute there (no-op on web).
     return await checkRemoteFile(localPath, origin)
-        ? localPath
+        ? liveUrl(localPath)
         : fallback
 }
 

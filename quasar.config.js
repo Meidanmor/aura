@@ -67,7 +67,8 @@ export default defineConfig((ctx) => {
       csp: (val) => val.replace(/\s+/g, ' ').trim(),
       head: (val) => val.trim()
     },*/
-    //boot: [],
+    // Native app only: send API calls to the live site (src/boot/native-api.js).
+    boot: ctx.mode.capacitor ? [{ path: 'native-api', server: false }] : [],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: [
@@ -110,6 +111,11 @@ export default defineConfig((ctx) => {
         // bridge only accepts messages from this origin (config-loader.js).
         WP_BACKEND_ORIGIN: (() => {
           try { return process.env.WP_BACKEND_URL ? new URL(process.env.WP_BACKEND_URL).origin : '' } catch { return '' }
+        })(),
+        // Native app (Capacitor) only: the live storefront whose /wp-json
+        // proxy the app calls (the proxy adds the WP secret server-side).
+        APP_API_ORIGIN: (() => {
+          try { return process.env.APP_API_ORIGIN ? new URL(process.env.APP_API_ORIGIN).origin : '' } catch { return '' }
         })(),
       },
       // rawDefine: {}
@@ -166,16 +172,22 @@ export default defineConfig((ctx) => {
         viteConf.build = viteConf.build || {}
         viteConf.build.rollupOptions = viteConf.build.rollupOptions || {}
 
+        // Native-only plugins: bundled into the Capacitor app (their dynamic
+        // imports must NOT carry /* @vite-ignore */, or the app is left with
+        // bare "@capacitor/..." specifiers the WebView can't resolve), and
+        // kept out of the web/SSR build, where those code paths never run.
+        const nativeOnlyPlugins = [
+          '@capgo/capacitor-social-login',
+          '@capacitor/splash-screen',
+          '@capacitor/push-notifications',
+          '@capacitor/app'
+        ]
         if (!isCapacitor) {
-          viteConf.optimizeDeps.exclude = [
-            '@capgo/capacitor-social-login',
-            '@capacitor/splash-screen'
-          ]
+          viteConf.optimizeDeps.exclude = [...nativeOnlyPlugins]
 
           viteConf.build.rollupOptions.external = [
             ...(viteConf.build.rollupOptions.external || []),
-            '@capgo/capacitor-social-login',
-            '@capacitor/splash-screen'
+            ...nativeOnlyPlugins
           ]
         }
 

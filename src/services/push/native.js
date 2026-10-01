@@ -84,7 +84,7 @@ async function createNotificationChannels() {
 export async function checkNativePermission(){
     if (!Platform.is.capacitor) return 'unsupported'
     try {
-        const pushModule = await import(/* @vite-ignore */ '@capacitor/push-notifications')
+        const pushModule = await import('@capacitor/push-notifications')
         PushNotifications = pushModule.PushNotifications
 
         const perm = await PushNotifications.checkPermissions()
@@ -105,7 +105,7 @@ export async function initNativePush() {
     if (!Platform.is.capacitor) return 'unsupported'
 
     try {
-        const pushModule = await import(/* @vite-ignore */ '@capacitor/push-notifications')
+        const pushModule = await import('@capacitor/push-notifications')
         PushNotifications = pushModule.PushNotifications
 
         // listeners (register these ONCE)
@@ -237,7 +237,7 @@ function setupCartTracking() {
 async function setupNativeAppStateTracking() {
     if (!Platform.is.capacitor) return
     try {
-        const appModule = await import(/* @vite-ignore */ '@capacitor/app')
+        const appModule = await import('@capacitor/app')
         App = appModule.App
 
         App.addListener('appStateChange', ({ isActive }) => {
@@ -264,7 +264,7 @@ export default ({ router } = {}) => {
             await setupNativeAppStateTracking()
             try {
                 // dynamic import only to copy the module for plugin detection
-                const nativePush = await import(/* @vite-ignore */ '@capacitor/push-notifications')
+                const nativePush = await import('@capacitor/push-notifications')
                 PushNotifications = nativePush.PushNotifications
                 PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
                     //console.log(action);

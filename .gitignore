@@ -25,3 +25,5 @@ yarn-error.log*
 
 # local cache
 .cache/
+# Temporary icon sources (scripts/native-icons.mjs)
+src-capacitor/.native-assets
