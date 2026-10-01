@@ -39,6 +39,17 @@ function loadAppBranding() {
 
 }
 export default defineConfig((ctx) => {
+  // The native app has no server of its own: every API call goes to the live
+  // storefront, whose origin is baked into the bundle. Refuse to build an app
+  // that can't reach it (set APP_API_ORIGIN in .env or the environment).
+  if (ctx.mode.capacitor && ctx.prod) {
+    let origin = ''
+    try { origin = new URL(process.env.APP_API_ORIGIN).origin } catch { /* invalid or unset */ }
+    if (!/^https:\/\//.test(origin)) {
+      throw new Error(`APP_API_ORIGIN must be set to the live storefront's https origin for the native app build (got "${process.env.APP_API_ORIGIN || ''}").`)
+    }
+  }
+
   const appConfig = loadAppConfig()
   const appBranding = loadAppBranding()
   return {

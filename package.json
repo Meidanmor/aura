@@ -12,12 +12,14 @@
     "build": "quasar build -m ssr",
     "postinstall": "quasar prepare",
     "icons:native": "node scripts/native-icons.mjs",
-    "build:android": "npm run icons:native && quasar build -m capacitor -T android"
+    "build:android": "npm run icons:native -- --android && quasar build -m capacitor -T android",
+    "build:ios": "npm run icons:native -- --ios && quasar build -m capacitor -T ios --skip-pkg"
   },
   "dependencies": {
     "@capacitor/android": "7.6.8",
     "@capacitor/cli": "7.6.8",
     "@capacitor/core": "7.6.8",
+    "@capacitor/ios": "7.6.8",
     "@capacitor/push-notifications": "7.0.7",
     "@capacitor/splash-screen": "7.0.5",
     "@capgo/capacitor-social-login": "7.20.0",

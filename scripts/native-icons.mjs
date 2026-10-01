@@ -13,10 +13,16 @@
  * All of these are published by the qwoo-core plugin (Branding + "Generate
  * icons"), so after pulling the latest push just run:
  *
- *   npm run icons:native        (also runs as part of `npm run build:android`)
+ *   npm run icons:native                 every native platform in src-capacitor
+ *   npm run icons:native -- --ios        just one (--android / --ios)
+ *
+ * (also runs as part of `npm run build:android` / `npm run build:ios`)
  *
  * Uses the official @capacitor/assets generator under the hood (writes every
- * Android density into src-capacitor/android/app/src/main/res).
+ * Android density into src-capacitor/android/app/src/main/res, and the iOS
+ * AppIcon/Splash sets into src-capacitor/ios/App/App/Assets.xcassets). iOS
+ * has no adaptive icon: it uses the square icon, which is flattened (App
+ * Store icons must not have transparency).
  */
 import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
 import { basename, dirname, join, resolve } from 'node:path'
@@ -26,6 +32,13 @@ import sharp from 'sharp'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const capDir = join(root, 'src-capacitor')
+const allPlatforms = ['android', 'ios']
+const requested = allPlatforms.filter((p) => process.argv.includes(`--${p}`))
+const platforms = (requested.length ? requested : allPlatforms).filter((p) => existsSync(join(capDir, p)))
+if (!platforms.length) {
+  console.error(`No native project found in src-capacitor for: ${(requested.length ? requested : allPlatforms).join(', ')} (run \`npx cap add <platform>\` there first).`)
+  process.exit(1)
+}
 const stageName = '.native-assets'
 const stageDir = join(capDir, stageName)
 
@@ -75,9 +88,10 @@ const splashLogo = await load(logoSrc || iconSrc)
 await square(2732).composite([{ input: splashLogo, gravity: 'center' }])
   .png().toFile(join(stageDir, 'splash.png'))
 
+console.log(`Platforms: ${platforms.join(', ')}`)
 console.log(`Sources: icon=${basename(iconSrc)}, adaptive=${basename(foregroundSrc)}, splash=${logoSrc ? basename(logoSrc) : basename(iconSrc)}, background=${background}`)
 
-const result = spawnSync('npx', ['capacitor-assets', 'generate', '--android', '--assetPath', stageName], {
+const result = spawnSync('npx', ['capacitor-assets', 'generate', ...platforms.map((p) => `--${p}`), '--assetPath', stageName], {
   cwd: capDir,
   stdio: 'inherit',
   shell: process.platform === 'win32',

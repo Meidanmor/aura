@@ -25,7 +25,7 @@ yarn-error.log*
 # local cache
 .cache/
 # Capacitor (native app) — the project is tracked; generated/private files aren't.
-# More Android rules live in src-capacitor/android/.gitignore.
+# More rules live in src-capacitor/android/.gitignore and src-capacitor/ios/.gitignore.
 src-capacitor/node_modules/
 src-capacitor/www/
 src-capacitor/.native-assets/
@@ -37,5 +37,3 @@ src-capacitor/ios/App/App/GoogleService-Info.plist
 *.jks
 *.p12
 *.mobileprovision
-# Leftover from the copied project; the iOS project gets recreated for com.aura.app.
-src-capacitor/ios/
