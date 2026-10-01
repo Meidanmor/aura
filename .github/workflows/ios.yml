@@ -112,7 +112,24 @@ jobs:
             SIMCTL_CHILD_NSUnbufferedIO=YES xcrun simctl launch --console-pty \
               --terminate-running-process "$UDID" "$BUNDLE_ID" > "$1" 2>&1 &
           }
+          # Wait until the app is really running. A launch right after boot can
+          # land before SpringBoard is ready to bring an app to the foreground:
+          # the process starts but never runs. If so, relaunch once.
+          started() {
+            for _ in $(seq 30); do
+              grep -q 'Loading app at' "$1" && return 0
+              sleep 1
+            done
+            return 1
+          }
           launch "$LOGS/app-console.log"
+          if ! started "$LOGS/app-console.log"; then
+            echo "::warning::The app didn't start within 30s of the first launch; relaunching."
+            xcrun simctl terminate "$UDID" "$BUNDLE_ID" || true
+            mv "$LOGS/app-console.log" "$LOGS/app-console-first-attempt.log"
+            launch "$LOGS/app-console.log"
+            started "$LOGS/app-console.log" || true
+          fi
 
           for t in 5 15 30 45; do
             sleep $(( t - ${prev:-0} )); prev=$t
