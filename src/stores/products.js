@@ -51,22 +51,31 @@ async function getFeaturedProducts(ids = [], ssrContext = null) {
   } catch (err) {
     console.error('[products store] getFeaturedProducts failed, trying fallback', err)
 
-    // API failed (offline or server error) — try store cache first
+    // API failed (offline or server error) — use what's already in the
+    // store, and fill any gaps from products.json. (Returning a PARTIAL
+    // store hit — e.g. the one product a cart/product page loaded — left
+    // carousels with a single product offline.)
     const masterMap = new Map(products.value.map(p => [p.id, p]))
-    const cached = ids.map(id => masterMap.get(Number(id))).filter(Boolean)
-    if (cached.length) return cached
-
-    // Nothing in cache — try products.json.
-    // On the client this is a relative fetch (browser resolves it fine).
-    // On the server it needs the same per-request origin as everything else.
-    try {
-      const fallbackUrl = `${getApiOrigin(ssrContext)}/data/products.json`
-      const res = await fetch(fallbackUrl)
-      const all = await res.json()
-      return all.filter(p => ids.map(Number).includes(Number(p.id)))
-    } catch {
-      return []
+    if (ids.some(id => !masterMap.has(Number(id)))) {
+      // On the client this is a relative fetch (browser resolves it fine).
+      // On the server it needs the same per-request origin as everything else.
+      try {
+        const fallbackUrl = `${getApiOrigin(ssrContext)}/data/products.json`
+        const res = await fetch(fallbackUrl)
+        const all = await res.json()
+        const wanted = new Set(ids.map(Number))
+        if (Array.isArray(all)) {
+          all.forEach(p => {
+            if (wanted.has(Number(p.id)) && !masterMap.has(Number(p.id))) masterMap.set(Number(p.id), p)
+          })
+        }
+      } catch {
+        // products.json unavailable too — return whatever the store has
+      }
     }
+
+    // In the requested order, like the online path.
+    return ids.map(id => masterMap.get(Number(id))).filter(Boolean)
   }
 }
 

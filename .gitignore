@@ -4,7 +4,6 @@ node_modules/
 # build output
 dist/
 .quasar/
-src-capacitor/
 .ssh/
 # environment files
 .env
@@ -25,5 +24,18 @@ yarn-error.log*
 
 # local cache
 .cache/
-# Temporary icon sources (scripts/native-icons.mjs)
-src-capacitor/.native-assets
+# Capacitor (native app) — the project is tracked; generated/private files aren't.
+# More Android rules live in src-capacitor/android/.gitignore.
+src-capacitor/node_modules/
+src-capacitor/www/
+src-capacitor/.native-assets/
+# Firebase config is per app/project — keep it private.
+src-capacitor/android/app/google-services*.json
+src-capacitor/ios/App/App/GoogleService-Info.plist
+# Signing keys must never be committed.
+*.keystore
+*.jks
+*.p12
+*.mobileprovision
+# Leftover from the copied project; the iOS project gets recreated for com.aura.app.
+src-capacitor/ios/

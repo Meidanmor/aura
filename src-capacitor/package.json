@@ -1,0 +1,16 @@
+{
+  "name": "qwoo-wc-pwa-shop",
+  "version": "0.0.1",
+  "dependencies": {
+    "@capacitor/android": "^7.4.5",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/push-notifications": "^7.0.4",
+    "@capacitor/splash-screen": "^7.0.0",
+    "@capgo/capacitor-social-login": "^7.20.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0"
+  },
+  "author": "Meidan Mor"
+}
