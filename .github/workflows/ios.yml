@@ -123,6 +123,12 @@ jobs:
           sleep 20
           xcrun simctl io "$UDID" screenshot "$SHOTS/relaunch-20s.png"
 
+          # Where are the app and its web content processes spending their
+          # time? (Stacks for diagnosing hangs; simulator apps are host processes.)
+          for proc in "$(pgrep -f 'CoreSimulator/Devices/.*/App.app/App$' | head -1)" $(pgrep -f 'com.apple.WebKit.WebContent' || true); do
+            [ -n "$proc" ] && sample "$proc" 2 -mayDie -file "$LOGS/sample-$proc.txt" >/dev/null 2>&1 || true
+          done
+
           # Still alive?
           if xcrun simctl spawn "$UDID" launchctl list | grep -q "UIKitApplication:$BUNDLE_ID"; then
             echo "App is running." | tee "$LOGS/status.txt"
@@ -159,6 +165,18 @@ jobs:
           # JS errors surfaced by the Capacitor bridge, and failed page loads.
           if grep -nE '⚡️ +\[error\]|ERROR MESSAGE:|Uncaught|Unhandled|APP_API_ORIGIN is not set|WebView failed|Error loading page' "$LOGS"/app-console*.log; then
             echo "::error::Errors in the app console (see above)."; fail=1
+          fi
+          if [ $fail = 1 ]; then
+            echo "::group::System log (errors, faults, WebKit/JS)"
+            grep -aiE 'error|fault|fail|exception|terminat|JavaScript|WebContent|deadlock|hang' "$LOGS/simulator-system.log" | cut -c1-400 | tail -150 || true
+            echo "::endgroup::"
+            for f in "$LOGS"/sample-*.txt; do
+              [ -f "$f" ] || continue
+              echo "::group::$(basename "$f") (main/JS threads)"
+              sed -n '1,12p' "$f"
+              awk '/Call graph:/{p=1} p' "$f" | grep -vE '^\s*$' | head -120 | cut -c1-220
+              echo "::endgroup::"
+            done
           fi
           exit $fail
 

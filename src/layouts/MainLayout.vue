@@ -434,7 +434,7 @@ const initConnectivityListeners = () => {
   window.addEventListener('offline', () => updateOnlineStatus(false))
   // Catches physical network changes (WiFi toggle) that window events miss
 
-  navigator.serviceWorker.addEventListener('message', ({ data }) => {
+  navigator.serviceWorker?.addEventListener('message', ({ data }) => {
     if (data.type === 'OFFLINE') {
       updateOnlineStatus(false)
     } else if (data.type === 'ONLINE'){
@@ -491,9 +491,10 @@ onMounted(async () => {
       subscribeToLiveConfig('footer', (data) => { footerSettings.value = data })
   )
 
-  if (!('serviceWorker' in navigator)) return
+  // No service worker in the iOS app's WebView (or old browsers): skip only
+  // the warm-up, never the hydration below — it is what hides the splash.
   const warm = () => {
-    navigator.serviceWorker.ready.then(registration => {
+    navigator.serviceWorker?.ready.then(registration => {
       registration.active?.postMessage({ type: 'UPDATE_SW' })
     })
   }
