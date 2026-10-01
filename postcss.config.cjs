@@ -28,6 +28,7 @@ safelist: {
         'html', 'body',
         /q-app/, /q-layout/, /q-page/, /q-header/, /q-footer/,
         /q-body--/,        // Vital for drawer-open overflow handling
+        /q-ios-padding/,   // iOS app: status bar / safe-area padding (set at runtime on <body>)
         /q-layout--/,      // Vital for header/drawer positioning
         // --- Drawer Fixes ---
         /q-drawer/,        // Re-added: Covers q-drawer, q-drawer--left, etc.

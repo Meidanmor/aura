@@ -839,6 +839,30 @@ header.sticky {
 header:not(.sticky) {
     position: relative;
 }
+/* iOS app (Quasar sets q-ios-padding): the WebView runs edge to edge, under
+   the status bar / Dynamic Island. Keep the page, the sticky header and the
+   drawers below it, and paint the status bar area so scrolled content
+   doesn't show through. (Android does this natively: adjustMarginsForEdgeToEdge.) */
+body.q-ios-padding .q-layout {
+    padding-top: env(safe-area-inset-top);
+}
+body.q-ios-padding header.sticky {
+    top: env(safe-area-inset-top);
+}
+body.q-ios-padding::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-top);
+    background: var(--q-bg, #fff);
+    z-index: 2001;
+    pointer-events: none;
+}
+body.q-ios-padding .q-drawer:not(.q-drawer--top-padding) .q-drawer__content {
+    padding-top: env(safe-area-inset-top);
+}
 .q-drawer .cart-details.sticky {
     position: sticky;
     bottom: 0;
