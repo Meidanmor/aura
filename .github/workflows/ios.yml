@@ -103,10 +103,14 @@ jobs:
             > "$LOGS/simulator-system.log" 2>&1 &
           LOG_PID=$!
 
-          # stdout/stderr carry Capacitor's bridge + JS console output (⚡️ ...).
-          xcrun simctl launch --terminate-running-process \
-            --stdout="$LOGS/app-console.log" --stderr="$LOGS/app-console.log" \
-            "$UDID" "$BUNDLE_ID"
+          # stdout/stderr carry Capacitor's bridge + JS console output (⚡️ ...)
+          # in Debug builds. A pty + NSUnbufferedIO keep Swift's print() from
+          # sitting in a buffer that is never flushed.
+          launch() {
+            SIMCTL_CHILD_NSUnbufferedIO=YES xcrun simctl launch --console-pty \
+              --terminate-running-process "$UDID" "$BUNDLE_ID" > "$1" 2>&1 &
+          }
+          launch "$LOGS/app-console.log"
 
           for t in 5 15 30 45; do
             sleep $(( t - ${prev:-0} )); prev=$t
@@ -115,8 +119,7 @@ jobs:
 
           # Second cold start (content now cached on the device).
           xcrun simctl terminate "$UDID" "$BUNDLE_ID" || true
-          xcrun simctl launch --stdout="$LOGS/app-console-relaunch.log" --stderr="$LOGS/app-console-relaunch.log" \
-            "$UDID" "$BUNDLE_ID"
+          launch "$LOGS/app-console-relaunch.log"
           sleep 20
           xcrun simctl io "$UDID" screenshot "$SHOTS/relaunch-20s.png"
 
@@ -127,6 +130,8 @@ jobs:
             echo "App is NOT running (crashed or exited)." | tee "$LOGS/status.txt"
           fi
 
+          xcrun simctl terminate "$UDID" "$BUNDLE_ID" || true
+          sleep 2
           kill "$LOG_PID" || true
           cp ~/Library/Logs/DiagnosticReports/App[-_]*.ips "$LOGS/" 2>/dev/null || true
 
@@ -141,11 +146,35 @@ jobs:
           if ls "$LOGS"/*.ips >/dev/null 2>&1; then
             echo "::error::Crash report(s) found: $(ls "$LOGS"/*.ips)"; fail=1
           fi
+          # Proof the web app booted and talked to the API, on both launches:
+          # the bridge loaded the page, JS hid the splash (MainLayout), and
+          # requests went out through CapacitorHttp (src/boot/native-api.js).
+          for f in "$LOGS"/app-console.log "$LOGS"/app-console-relaunch.log; do
+            for want in 'Loading app at' 'To Native -> +SplashScreen hide' 'To Native -> +CapacitorHttp request'; do
+              if ! grep -qE "$want" "$f"; then
+                echo "::error::$(basename "$f"): expected a line matching '$want'."; fail=1
+              fi
+            done
+          done
           # JS errors surfaced by the Capacitor bridge, and failed page loads.
           if grep -nE '⚡️ +\[error\]|ERROR MESSAGE:|Uncaught|Unhandled|APP_API_ORIGIN is not set|WebView failed|Error loading page' "$LOGS"/app-console*.log; then
             echo "::error::Errors in the app console (see above)."; fail=1
           fi
           exit $fail
+
+      # Small JPEG previews in the job log, so a run can be eyeballed (or
+      # checked by tooling) without downloading the artifact.
+      - name: Screenshot previews (base64)
+        if: always()
+        run: |
+          for f in "$OUT"/screenshots/*.png; do
+            [ -f "$f" ] || continue
+            sips -s format jpeg -s formatOptions 35 -Z 480 "$f" --out "${f%.png}.preview.jpg" >/dev/null
+            echo "::group::$(basename "$f")"
+            echo "PREVIEW $(basename "$f") $(base64 -i "${f%.png}.preview.jpg" | tr -d '\n')"
+            echo "::endgroup::"
+            rm "${f%.png}.preview.jpg"
+          done
 
       - name: Build unsigned .ipa
         if: success() || failure()
