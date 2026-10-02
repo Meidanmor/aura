@@ -151,8 +151,13 @@ jobs:
             | tee "$OUT/logs/xcodebuild-simulator.log" | grep -E '^(\*\*|error:|.*: error:|.*: warning: )' || true
           # (the grep above only filters the output; this is the real check)
           grep -q '^\*\* BUILD SUCCEEDED \*\*' "$OUT/logs/xcodebuild-simulator.log"
-          echo "Entitlements signed into the simulator app:"
-          codesign -d --entitlements - --xml build/sim/Build/Products/Debug-iphonesimulator/App.app 2>/dev/null | plutil -p - || true
+          # Simulator builds carry their entitlements in the binary's
+          # __TEXT,__entitlements section, not in the code signature.
+          if strings -a build/sim/Build/Products/Debug-iphonesimulator/App.app/App | grep -q '<key>aps-environment</key>'; then
+            echo "Simulator app has the aps-environment (push) entitlement."
+          else
+            echo "::error::The simulator app is missing the aps-environment entitlement."; exit 1
+          fi
 
       - name: Run in the simulator
         run: |
