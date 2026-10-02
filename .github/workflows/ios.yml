@@ -34,8 +34,15 @@ env:
 
 jobs:
   ios:
+    name: iOS ${{ matrix.ios }}
     runs-on: macos-15
-    timeout-minutes: 60
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        # latest: the newest runtime on the runner, on a notched iPhone.
+        # 16.4: the oldest iOS we test, on an iPhone 8 (its last major iOS).
+        ios: ['latest', '16.4']
     steps:
       - uses: actions/checkout@v4
 
@@ -58,25 +65,47 @@ jobs:
           xcodebuild -version
           pod --version
           node --version
+          xcrun simctl list runtimes
 
       # Icons + Quasar web build + `cap sync ios` (runs pod install).
       - name: Build web app and sync iOS project
         run: npm run build:ios
 
-      - name: Pick a simulator
+      - name: Install the iOS ${{ matrix.ios }} simulator runtime
+        if: matrix.ios != 'latest'
         run: |
-          UDID=$(xcrun simctl list devices available -j | python3 -c '
-          import json, sys
-          devs = json.load(sys.stdin)["devices"]
-          ios = sorted((k for k in devs if "iOS" in k),
-                       key=lambda k: [int(p) for p in k.rsplit("iOS-", 1)[1].split("-")])
-          for runtime in reversed(ios):
-              phones = [d for d in devs[runtime] if d["name"].startswith("iPhone")]
-              # Prefer a notched / Dynamic Island model (safe areas) over the SE.
-              phones.sort(key=lambda d: ("SE" in d["name"], d["name"]))
-              if phones:
-                  print(phones[0]["udid"]); print(phones[0]["name"], runtime, file=sys.stderr); break
-          ')
+          if xcrun simctl list runtimes | grep -q "iOS ${{ matrix.ios }} "; then exit 0; fi
+          xcodebuild -downloadPlatform iOS -buildVersion "${{ matrix.ios }}" \
+            || xcodes runtimes install "iOS ${{ matrix.ios }}"
+          xcrun simctl list runtimes
+
+      - name: Pick a simulator
+        env:
+          IOS: ${{ matrix.ios }}
+        run: |
+          UDID=$(python3 - <<'PY'
+          import json, os, subprocess, sys
+          want = os.environ["IOS"]
+          j = lambda *a: json.loads(subprocess.check_output(["xcrun", "simctl", "list", *a, "-j"]))
+          if want == "latest":
+              devs = j("devices", "available")["devices"]
+              ios = sorted((k for k in devs if "iOS" in k),
+                           key=lambda k: [int(p) for p in k.rsplit("iOS-", 1)[1].split("-")])
+              for runtime in reversed(ios):
+                  phones = [d for d in devs[runtime] if d["name"].startswith("iPhone")]
+                  # Prefer a notched / Dynamic Island model (safe areas) over the SE.
+                  phones.sort(key=lambda d: ("SE" in d["name"], d["name"]))
+                  if phones:
+                      print(phones[0]["udid"]); print(phones[0]["name"], runtime, file=sys.stderr); break
+          else:
+              runtime = next(r for r in j("runtimes")["runtimes"]
+                             if r["platform"] == "iOS" and r["version"].startswith(want) and r["isAvailable"])
+              names = [d["name"] for d in runtime["supportedDeviceTypes"]]
+              model = next(n for n in ("iPhone 8", "iPhone SE (2nd generation)", "iPhone SE (3rd generation)") if n in names)
+              udid = subprocess.check_output(["xcrun", "simctl", "create", model, model, runtime["identifier"]], text=True).strip()
+              print(udid); print(model, runtime["identifier"], file=sys.stderr)
+          PY
+          )
           test -n "$UDID"
           echo "UDID=$UDID" >> "$GITHUB_ENV"
 
@@ -122,25 +151,27 @@ jobs:
             done
             return 1
           }
-          launch "$LOGS/app-console.log"
-          if ! started "$LOGS/app-console.log"; then
-            echo "::warning::The app didn't start within 30s of the first launch; relaunching."
-            xcrun simctl terminate "$UDID" "$BUNDLE_ID" || true
-            mv "$LOGS/app-console.log" "$LOGS/app-console-first-attempt.log"
-            launch "$LOGS/app-console.log"
-            started "$LOGS/app-console.log" || true
-          fi
-
-          for t in 5 15 30 45; do
-            sleep $(( t - ${prev:-0} )); prev=$t
-            xcrun simctl io "$UDID" screenshot "$SHOTS/home-${t}s.png"
+          # Three cold starts, like a user opening the app on different days:
+          # the 1st has no saved data; the 2nd and 3rd start with what the
+          # earlier runs saved (offline copies in IndexedDB, cookies, cache).
+          for n in 1 2 3; do
+            xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
+            launch "$LOGS/app-console-$n.log"
+            if ! started "$LOGS/app-console-$n.log" && [ $n = 1 ]; then
+              echo "::warning::The app didn't start within 30s of the first launch; relaunching."
+              xcrun simctl terminate "$UDID" "$BUNDLE_ID" || true
+              mv "$LOGS/app-console-1.log" "$LOGS/app-console-1-first-attempt.log"
+              launch "$LOGS/app-console-1.log"
+              started "$LOGS/app-console-1.log" || true
+            fi
+            # Long enough for the background sync of offline copies (starts 4s
+            # after the first live response) to finish before the next start.
+            prev=0
+            for t in 5 15 30 45; do
+              sleep $(( t - prev )); prev=$t
+              xcrun simctl io "$UDID" screenshot "$SHOTS/launch$n-${t}s.png"
+            done
           done
-
-          # Second cold start (content now cached on the device).
-          xcrun simctl terminate "$UDID" "$BUNDLE_ID" || true
-          launch "$LOGS/app-console-relaunch.log"
-          sleep 20
-          xcrun simctl io "$UDID" screenshot "$SHOTS/relaunch-20s.png"
 
           # Where are the app and its web content processes spending their
           # time? (Stacks for diagnosing hangs; simulator apps are host processes.)
@@ -163,7 +194,9 @@ jobs:
       - name: Check the simulator run
         run: |
           LOGS="$OUT/logs"
-          echo "::group::App console"; cat "$LOGS"/app-console*.log; echo "::endgroup::"
+          for f in "$LOGS"/app-console*.log; do
+            echo "::group::$(basename "$f")"; cat "$f"; echo "::endgroup::"
+          done
           fail=0
           if ! grep -q "App is running" "$LOGS/status.txt"; then
             echo "::error::The app is not running at the end of the simulator run."; fail=1
@@ -171,9 +204,9 @@ jobs:
           if ls "$LOGS"/*.ips >/dev/null 2>&1; then
             echo "::error::Crash report(s) found: $(ls "$LOGS"/*.ips)"; fail=1
           fi
-          # Proof the web app booted, on both launches: the bridge loaded the
+          # Proof the web app booted, on every launch: the bridge loaded the
           # page and JS hid the splash (MainLayout's hydration).
-          for f in "$LOGS"/app-console.log "$LOGS"/app-console-relaunch.log; do
+          for f in "$LOGS"/app-console-1.log "$LOGS"/app-console-2.log "$LOGS"/app-console-3.log; do
             for want in 'Loading app at' 'To Native -> +SplashScreen hide'; do
               if ! grep -qE "$want" "$f"; then
                 echo "::error::$(basename "$f"): expected a line matching '$want'."; fail=1
@@ -226,7 +259,7 @@ jobs:
           done
 
       - name: Build unsigned .ipa
-        if: success() || failure()
+        if: (success() || failure()) && matrix.ios == 'latest'
         working-directory: src-capacitor/ios/App
         run: |
           set -o pipefail
@@ -245,19 +278,19 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ios-simulator-screenshots
+          name: ios-simulator-screenshots-${{ matrix.ios }}
           path: ios-out/screenshots
           if-no-files-found: warn
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ios-logs
+          name: ios-logs-${{ matrix.ios }}
           path: ios-out/logs
           if-no-files-found: warn
 
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && matrix.ios == 'latest'
         with:
           name: AuraSampleShop-unsigned-ipa
           path: ios-out/AuraSampleShop-unsigned.ipa
