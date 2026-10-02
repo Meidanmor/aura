@@ -12,6 +12,8 @@ on:
       - 'src-capacitor/**'
       - '!src-capacitor/android/**'
       - 'quasar.config.js'
+      - 'index.html'
+      - 'postcss.config.cjs'
       - 'package.json'
       - 'package-lock.json'
       - 'scripts/native-icons.mjs'
