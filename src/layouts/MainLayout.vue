@@ -405,8 +405,11 @@ const router = useRouter()
 
 const noDelayRoutes = ['/checkout/', '/cart/', '/my-account/']
 
+// Web only: defer the interactive UI until the first interaction (or 5s) to
+// speed up the first paint. In the native app the splash screen covers the
+// page until hydration, so there is nothing to interact with — don't wait.
 const shouldDelayHydration = computed(() => {
-  return !noDelayRoutes.includes(route.path)
+  return !Platform.is.capacitor && !noDelayRoutes.includes(route.path)
 })
 
 const initConnectivityListeners = () => {
