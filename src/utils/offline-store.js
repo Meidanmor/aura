@@ -9,14 +9,29 @@
  * IndexedDB lives in the app's private storage, survives restarts, and is
  * only cleared when the user clears the app's data / uninstalls it.
  * Every function resolves to a safe fallback (null / []) instead of
- * throwing, so a storage problem never breaks loading content.
+ * throwing — or of hanging: each call gives up after IDB_TIMEOUT_MS — so a
+ * storage problem never breaks loading content.
  */
+import { track } from 'src/utils/startup-watchdog'
+
 const DB_NAME = 'qwoo-offline'
 const DB_VERSION = 1
 export const JSON_STORE = 'json'
 export const MEDIA_STORE = 'media'
 
+const IDB_TIMEOUT_MS = 4000
+
 let dbPromise = null
+
+/** Resolves to `fallback` if `promise` hasn't settled in IDB_TIMEOUT_MS. */
+function bounded(label, promise, fallback) {
+  const done = track(label)
+  let timer
+  return Promise.race([
+    promise,
+    new Promise((resolve) => { timer = setTimeout(() => resolve(fallback), IDB_TIMEOUT_MS) }),
+  ]).finally(() => { clearTimeout(timer); done() })
+}
 
 function openDb() {
   if (dbPromise) return dbPromise
@@ -35,7 +50,11 @@ function openDb() {
   return dbPromise
 }
 
-function run(storeName, mode, fn) {
+function run(storeName, mode, fn, label) {
+  return bounded(`indexedDB ${label}`, runUnbounded(storeName, mode, fn), null)
+}
+
+function runUnbounded(storeName, mode, fn) {
   return openDb().then((db) => new Promise((resolve) => {
     if (!db) return resolve(null)
     try {
@@ -50,12 +69,16 @@ function run(storeName, mode, fn) {
   }))
 }
 
-export const idbGet = (store, key) => run(store, 'readonly', (s) => s.get(key))
-export const idbPut = (store, key, value) => run(store, 'readwrite', (s) => s.put(value, key))
-export const idbDelete = (store, key) => run(store, 'readwrite', (s) => s.delete(key))
+export const idbGet = (store, key) => run(store, 'readonly', (s) => s.get(key), `get ${store} ${key}`)
+export const idbPut = (store, key, value) => run(store, 'readwrite', (s) => s.put(value, key), `put ${store} ${key}`)
+export const idbDelete = (store, key) => run(store, 'readwrite', (s) => s.delete(key), `delete ${store} ${key}`)
 
 /** All [key, value] pairs of a store. */
 export function idbEntries(store) {
+  return bounded(`indexedDB entries ${store}`, entriesUnbounded(store), [])
+}
+
+function entriesUnbounded(store) {
   return openDb().then((db) => new Promise((resolve) => {
     if (!db) return resolve([])
     const out = []

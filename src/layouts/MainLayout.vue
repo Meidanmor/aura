@@ -104,6 +104,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Platform } from 'quasar';
 import CookieBanner from "../components/app/CookieBanner.vue";
 import ContactButton from "../components/app/ContactButton.vue";
+import { markReady as markStartupReady } from 'src/utils/startup-watchdog'
 import initPush, { subscribeToWebPush, initNativePush, checkNativePermission } from 'src/services/push/push.js'
 import { initLoadingBar } from 'src/composables/useLoadingBar.js'
 import { initAuthPopup } from 'src/composables/useAuthExpired.js'
@@ -144,10 +145,11 @@ defineOptions({
     // Fire both requests at the same time
     const isPreview = currentRoute.query.preview === 'true'
 
-    const configData = await loadPageConfig('branding', isPreview, siteURL)
-
-    const headerConfig = await loadPageConfig('header', isPreview, siteURL);
-    const footerConfig = await loadPageConfig('footer', isPreview, siteURL);
+    const [configData, headerConfig, footerConfig] = await Promise.all([
+      loadPageConfig('branding', isPreview, siteURL),
+      loadPageConfig('header', isPreview, siteURL),
+      loadPageConfig('footer', isPreview, siteURL),
+    ])
     if (configData) {
       configData.logo = await resolveHeroImageSrc(configData.logo, "branding", siteURL)
     }
@@ -190,6 +192,7 @@ if (process.env.SERVER) {
 }
 
 async function hideSplash() {
+  markStartupReady()
   if (!Platform.is.capacitor) return
   try {
     const {SplashScreen} = await import('@capacitor/splash-screen')

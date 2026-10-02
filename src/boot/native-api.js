@@ -32,8 +32,13 @@ import {
   setContentOffline, registerOfflineMedia, getOfflineMedia,
 } from 'src/utils/native-app'
 import { idbGet, idbPut, idbDelete, idbEntries, JSON_STORE, MEDIA_STORE } from 'src/utils/offline-store'
+import { startWatchdog, track, mark } from 'src/utils/startup-watchdog'
 
 const LIVE_TIMEOUT_MS = 6000
+// Read-only API calls (products, SEO, cart...) — generous, but bounded: a
+// request that never settles would otherwise hold up whatever awaits it,
+// including the app's startup.
+const API_READ_TIMEOUT_MS = 20000
 const MEDIA_TIMEOUT_MS = 30000
 const MEDIA_LIMIT_BYTES = 60 * 1024 * 1024
 const MEDIA_SYNC_DELAY_MS = 4000
@@ -83,8 +88,11 @@ function collectMedia(value, key, out) {
   return out
 }
 
-export default () => {
+export default ({ router }) => {
   if (!window.Capacitor?.isNativePlatform?.()) return
+
+  startWatchdog()
+  router.isReady().then(() => mark('first page resolved'), (err) => mark(`first page failed: ${err?.message || err}`))
 
   const apiOrigin = liveOrigin()
   if (!apiOrigin) {
@@ -217,6 +225,7 @@ export default () => {
       setContentOffline(true)
       await prepareOfflineMedia(collectMedia(data, '', new Set()))
       console.info(`[native-api] offline (${err.message}): ${path} from the ${source} copy`)
+      mark(`offline (${err.message}): ${path} from the ${source} copy`)
       return jsonResponse(absolutizeLivePaths(data))
     }
   }
@@ -243,7 +252,15 @@ export default () => {
 
   /* ---------------- fetch routing ---------------- */
 
-  window.fetch = async (resource, init) => {
+  window.fetch = (resource, init) => {
+    const done = track(`fetch ${String(resource?.url || resource).replace(apiOrigin, '').slice(0, 120)}`)
+    return routeFetch(resource, init).then(
+      (res) => { done(res.status); return res },
+      (err) => { done(err?.message || 'failed'); throw err },
+    )
+  }
+
+  async function routeFetch(resource, init) {
     const isRequest = resource instanceof Request
     const raw = isRequest ? resource.url : (typeof resource === 'string' || resource instanceof URL ? String(resource) : null)
     if (raw === null) return originalFetch(resource, init)
@@ -261,6 +278,7 @@ export default () => {
 
     // API calls (and anything else live): straight to the storefront.
     const target = apiOrigin + url.pathname + url.search
-    return originalFetch(isRequest ? new Request(target, resource) : target, init)
+    const request = originalFetch(isRequest ? new Request(target, resource) : target, init)
+    return readOnly ? withTimeout(request, API_READ_TIMEOUT_MS) : request
   }
 }

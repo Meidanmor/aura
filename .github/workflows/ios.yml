@@ -213,21 +213,20 @@ jobs:
               fi
             done
           done
-          # ...and reached the API: CapacitorHttp (src/boot/native-api.js) makes
-          # the requests from the App process itself — the WebView's own loads
-          # run in a separate networking process — so successful responses
-          # logged by App's CFNetwork are the live storefront answering.
-          ok=$(grep -acE 'App\[[0-9]+:[0-9a-f]+\] \[com.apple.CFNetwork.*received response, status [23][0-9]{2}' "$LOGS/simulator-system.log" || true)
-          bad=$(grep -acE 'App\[[0-9]+:[0-9a-f]+\] \[com.apple.CFNetwork.*received response, status [45][0-9]{2}' "$LOGS/simulator-system.log" || true)
-          echo "Native HTTP responses: $ok OK, $bad 4xx/5xx"
-          if [ "$ok" -eq 0 ]; then
-            echo "::error::No successful native HTTP response — the app never reached $APP_API_ORIGIN."; fail=1
-          fi
-          if [ "$bad" -gt 0 ]; then
-            echo "::warning::$bad native HTTP request(s) got a 4xx/5xx response (see ios-logs/simulator-system.log)."
-          fi
+          # ...and finished starting with live content: the app's startup
+          # watchdog (src/utils/startup-watchdog.js) logs every startup request
+          # with its outcome once the app is ready.
+          for f in "$LOGS"/app-console-1.log "$LOGS"/app-console-2.log "$LOGS"/app-console-3.log; do
+            if ! grep -q '\[startup\] ready' "$f"; then
+              echo "::error::$(basename "$f"): the app never reported '[startup] ready'."; fail=1
+            elif ! grep '\[startup\] ready' "$f" | grep -qE '/config/[a-z]+\.json → 200'; then
+              echo "::error::$(basename "$f"): no /config JSON loaded during startup (see the [startup] line)."; fail=1
+            elif grep '\[startup\] ready' "$f" | grep -q 'offline ('; then
+              echo "::error::$(basename "$f"): startup fell back to offline copies — the live storefront didn't answer."; fail=1
+            fi
+          done
           # JS errors surfaced by the Capacitor bridge, and failed page loads.
-          if grep -nE '⚡️ +\[error\]|ERROR MESSAGE:|Uncaught|Unhandled|APP_API_ORIGIN is not set|WebView failed|Error loading page' "$LOGS"/app-console*.log; then
+          if grep -nE '⚡️ +\[error\]|ERROR MESSAGE:|Uncaught|Unhandled|APP_API_ORIGIN is not set|WebView failed|Error loading page|\[startup\] not ready' "$LOGS"/app-console*.log; then
             echo "::error::Errors in the app console (see above)."; fail=1
           fi
           if [ $fail = 1 ]; then
