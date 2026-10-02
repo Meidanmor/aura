@@ -151,6 +151,8 @@ jobs:
             | tee "$OUT/logs/xcodebuild-simulator.log" | grep -E '^(\*\*|error:|.*: error:|.*: warning: )' || true
           # (the grep above only filters the output; this is the real check)
           grep -q '^\*\* BUILD SUCCEEDED \*\*' "$OUT/logs/xcodebuild-simulator.log"
+          echo "Entitlements signed into the simulator app:"
+          codesign -d --entitlements - --xml build/sim/Build/Products/Debug-iphonesimulator/App.app 2>/dev/null | plutil -p - || true
 
       - name: Run in the simulator
         run: |
@@ -218,6 +220,8 @@ jobs:
               sleep 1
             done
             sleep 2
+            # The simulator gets APNs tokens through the host's push daemon.
+            log show --last 3m --style compact --predicate 'process == "apsd"' > "$LOGS/host-apsd.log" 2>&1 || true
           fi
 
           # Where are the app and its web content processes spending their
@@ -278,12 +282,22 @@ jobs:
             grep '\[push-selftest\]' "$P" || true
             if ! grep -q 'firebase configured: yes' "$P"; then
               echo "::error::Firebase didn't start with the bundled GoogleService-Info.plist."; fail=1
+            elif ! grep -q 'Firebase installation ID received' "$P"; then
+              echo "::error::Firebase rejected the app: $(grep -o 'Firebase installation failed.*' "$P" || echo 'no answer within 60s'). Check the plist's API key / app ID."; fail=1
+            elif grep -q 'APNs registration failed' "$P"; then
+              echo "::error::$(grep -o 'APNs registration failed.*' "$P")"; fail=1
             elif ! grep -q 'APNs token received' "$P"; then
-              echo "::error::No APNs device token: $(grep -o 'APNs registration failed.*' "$P" || echo 'no answer within 60s')"; fail=1
+              # No answer at all (not an error from iOS): the simulator couldn't
+              # reach Apple's push service from this CI machine.
+              echo "::warning::Firebase is set up and accepted the app, but APNs never answered the simulator's registration, so the FCM token step couldn't run here."
+              echo "::group::Push diagnostics (host apsd, app push logs)"
+              tail -40 "$LOGS/host-apsd.log" 2>/dev/null | cut -c1-300 || true
+              grep -aiE 'apns|aps-|remote ?notif|push' "$LOGS/simulator-system.log" | grep -v WebKit | tail -40 | cut -c1-300 || true
+              echo "::endgroup::"
             elif ! grep -q 'FCM token received' "$P"; then
-              echo "::error::No FCM token: $(grep -o 'FCM token failed.*' "$P" || echo 'no answer within 60s')"; fail=1
+              echo "::error::APNs token issued, but no FCM token: $(grep -o 'FCM token failed.*' "$P" || echo 'no answer within 60s')"; fail=1
             else
-              echo "Push self-test passed: Firebase configured, APNs token issued, FCM token received."
+              echo "Push self-test passed: Firebase configured and accepted the app, APNs token issued, FCM token received."
             fi
           fi
           # JS errors surfaced by the Capacitor bridge, and failed page loads.

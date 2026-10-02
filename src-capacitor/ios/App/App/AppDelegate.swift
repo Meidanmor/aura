@@ -1,6 +1,7 @@
 import UIKit
 import Capacitor
 import FirebaseCore
+import FirebaseInstallations
 import FirebaseMessaging
 
 @UIApplicationMain
@@ -35,6 +36,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             let options = FirebaseApp.app()?.options
             selfTestLog("firebase configured: \(firebaseConfigured ? "yes" : "no")"
                 + (options.map { ", project \($0.projectID ?? "?"), app bundle \(Bundle.main.bundleIdentifier ?? "?"), plist bundle \($0.bundleID)" } ?? ""))
+            if firebaseConfigured {
+                // Talks to Firebase without APNs: only succeeds when the API
+                // key, app ID and project in the plist are valid together.
+                Installations.installations().installationID { id, error in
+                    if let id = id {
+                        self.selfTestLog("Firebase installation ID received (\(id.count) chars)")
+                    } else {
+                        self.selfTestLog("Firebase installation failed: \(error?.localizedDescription ?? "unknown error")")
+                    }
+                }
+            }
             application.registerForRemoteNotifications()
         }
         #endif
