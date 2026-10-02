@@ -147,9 +147,10 @@ jobs:
             -workspace App.xcworkspace -scheme App -configuration Debug \
             -destination "id=$UDID" -derivedDataPath build/sim \
             CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= \
-            CODE_SIGN_ENTITLEMENTS=App/App.entitlements \
+            CODE_SIGN_ENTITLEMENTS="$PWD/App/App.entitlements" \
             | tee "$OUT/logs/xcodebuild-simulator.log" | grep -E '^(\*\*|error:|.*: error:|.*: warning: )' || true
-          test -d build/sim/Build/Products/Debug-iphonesimulator/App.app
+          # (the grep above only filters the output; this is the real check)
+          grep -q '^\*\* BUILD SUCCEEDED \*\*' "$OUT/logs/xcodebuild-simulator.log"
 
       - name: Run in the simulator
         run: |
@@ -327,6 +328,7 @@ jobs:
             -destination 'generic/platform=iOS' -archivePath build/App.xcarchive \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
             | tee "$OUT/logs/xcodebuild-archive.log" | grep -E '^(\*\*|error:|.*: error:)' || true
+          grep -q '^\*\* ARCHIVE SUCCEEDED \*\*' "$OUT/logs/xcodebuild-archive.log"
           APP=build/App.xcarchive/Products/Applications/App.app
           test -d "$APP"
           rm -rf build/ipa && mkdir -p build/ipa/Payload
