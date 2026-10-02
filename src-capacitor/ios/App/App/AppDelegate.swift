@@ -1,22 +1,71 @@
 import UIKit
 import Capacitor
+import FirebaseCore
+import FirebaseMessaging
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
+    /// Firebase is set up only when GoogleService-Info.plist was bundled
+    /// (it's kept out of git; CI adds it from a secret). Without it, push
+    /// registration hands the plain APNs token to the app, as before.
+    private var firebaseConfigured = false
+
+    #if DEBUG
+    /// Debug builds launched with `-PushSelfTest` (the CI simulator run)
+    /// register for remote notifications right away — no permission prompt is
+    /// needed for that — and log each step, without involving the web app.
+    private let pushSelfTest = ProcessInfo.processInfo.arguments.contains("-PushSelfTest")
+    private func selfTestLog(_ message: String) {
+        if pushSelfTest { print("[push-selftest] \(message)") }
+    }
+    #else
+    private func selfTestLog(_ message: String) {}
+    #endif
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        if Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil {
+            FirebaseApp.configure()
+            firebaseConfigured = FirebaseApp.app() != nil
+        }
+        #if DEBUG
+        if pushSelfTest {
+            let options = FirebaseApp.app()?.options
+            selfTestLog("firebase configured: \(firebaseConfigured ? "yes" : "no")"
+                + (options.map { ", project \($0.projectID ?? "?"), app bundle \(Bundle.main.bundleIdentifier ?? "?"), plist bundle \($0.bundleID)" } ?? ""))
+            application.registerForRemoteNotifications()
+        }
+        #endif
         return true
     }
 
-    // Hand the APNs registration result to @capacitor/push-notifications.
+    // Hand the registration result to @capacitor/push-notifications. With
+    // Firebase, the app's backend sends through Firebase Cloud Messaging, so
+    // it needs the FCM token (which Firebase derives from the APNs token), not
+    // the APNs token itself.
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        NotificationCenter.default.post(name: .capacitorDidRegisterForRemoteNotifications, object: deviceToken)
+        selfTestLog("APNs token received (\(deviceToken.count) bytes)")
+        guard firebaseConfigured else {
+            NotificationCenter.default.post(name: .capacitorDidRegisterForRemoteNotifications, object: deviceToken)
+            return
+        }
+        Messaging.messaging().apnsToken = deviceToken
+        Messaging.messaging().token { token, error in
+            if let token = token {
+                self.selfTestLog("FCM token received: \(token.prefix(12))… (\(token.count) chars)")
+                NotificationCenter.default.post(name: .capacitorDidRegisterForRemoteNotifications, object: token)
+            } else {
+                let error = error ?? NSError(domain: "FirebaseMessaging", code: -1, userInfo: [NSLocalizedDescriptionKey: "No FCM token"])
+                self.selfTestLog("FCM token failed: \(error.localizedDescription)")
+                NotificationCenter.default.post(name: .capacitorDidFailToRegisterForRemoteNotifications, object: error)
+            }
+        }
     }
 
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        selfTestLog("APNs registration failed: \(error.localizedDescription)")
         NotificationCenter.default.post(name: .capacitorDidFailToRegisterForRemoteNotifications, object: error)
     }
 

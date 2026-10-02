@@ -73,6 +73,34 @@ jobs:
       - name: Build web app and sync iOS project
         run: npm run build:ios
 
+      # Firebase config, from the GOOGLE_SERVICE_INFO_PLIST secret (the file,
+      # base64-encoded; it's kept out of git). Without it the app is built
+      # without Firebase and the push self-test is skipped.
+      - name: Add Firebase config
+        env:
+          PLIST_B64: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          if [ -z "$PLIST_B64" ]; then
+            echo "::warning::No GOOGLE_SERVICE_INFO_PLIST secret: building without Firebase."
+            exit 0
+          fi
+          DEST=src-capacitor/ios/App/App/GoogleService-Info.plist
+          # Accept the raw file too, and certutil output with its BEGIN/END lines.
+          if printf '%s' "$PLIST_B64" | head -c 100 | grep -q '<?xml'; then
+            printf '%s' "$PLIST_B64" > "$DEST"
+          else
+            printf '%s' "$PLIST_B64" | grep -v -- '-----' | tr -d ' \r\n' | base64 -D > "$DEST"
+          fi
+          plutil -lint "$DEST"
+          BUNDLE=$(/usr/libexec/PlistBuddy -c 'Print :BUNDLE_ID' "$DEST")
+          PROJECT=$(/usr/libexec/PlistBuddy -c 'Print :PROJECT_ID' "$DEST")
+          echo "Firebase project: $PROJECT, iOS app: $BUNDLE"
+          if [ "$BUNDLE" != "$BUNDLE_ID" ]; then
+            echo "::error::GoogleService-Info.plist is for the iOS app '$BUNDLE', not '$BUNDLE_ID'. Download it for $BUNDLE_ID in the Firebase console."
+            exit 1
+          fi
+          echo "FIREBASE=1" >> "$GITHUB_ENV"
+
       - name: Install the iOS ${{ matrix.ios }} simulator runtime
         if: matrix.ios != 'latest'
         run: |
@@ -118,7 +146,8 @@ jobs:
           xcodebuild build \
             -workspace App.xcworkspace -scheme App -configuration Debug \
             -destination "id=$UDID" -derivedDataPath build/sim \
-            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= \
+            CODE_SIGN_ENTITLEMENTS=App/App.entitlements \
             | tee "$OUT/logs/xcodebuild-simulator.log" | grep -E '^(\*\*|error:|.*: error:|.*: warning: )' || true
           test -d build/sim/Build/Products/Debug-iphonesimulator/App.app
 
@@ -140,8 +169,9 @@ jobs:
           # in Debug builds. A pty + NSUnbufferedIO keep Swift's print() from
           # sitting in a buffer that is never flushed.
           launch() {
+            out=$1; shift
             SIMCTL_CHILD_NSUnbufferedIO=YES xcrun simctl launch --console-pty \
-              --terminate-running-process "$UDID" "$BUNDLE_ID" > "$1" 2>&1 &
+              --terminate-running-process "$UDID" "$BUNDLE_ID" "$@" > "$out" 2>&1 &
           }
           # Wait until the app is really running. A launch right after boot can
           # land before SpringBoard is ready to bring an app to the foreground:
@@ -174,6 +204,20 @@ jobs:
               xcrun simctl io "$UDID" screenshot "$SHOTS/launch$n-${t}s.png"
             done
           done
+
+          # Push self-test (needs Firebase): a debug launch with -PushSelfTest
+          # registers with APNs (the simulator signs with the push entitlement
+          # locally, no Apple account needed) and asks Firebase for the FCM
+          # token the backend sends to. See AppDelegate.swift.
+          if [ "${FIREBASE:-}" = 1 ]; then
+            xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
+            launch "$LOGS/app-console-push.log" -PushSelfTest
+            for _ in $(seq 60); do
+              grep -qE 'FCM token (received|failed)|APNs registration failed' "$LOGS/app-console-push.log" && break
+              sleep 1
+            done
+            sleep 2
+          fi
 
           # Where are the app and its web content processes spending their
           # time? (Stacks for diagnosing hangs; simulator apps are host processes.)
@@ -227,6 +271,20 @@ jobs:
               echo "::error::$(basename "$f"): startup fell back to offline copies — the live storefront didn't answer."; fail=1
             fi
           done
+          # Push self-test results.
+          if [ "${FIREBASE:-}" = 1 ]; then
+            P="$LOGS/app-console-push.log"
+            grep '\[push-selftest\]' "$P" || true
+            if ! grep -q 'firebase configured: yes' "$P"; then
+              echo "::error::Firebase didn't start with the bundled GoogleService-Info.plist."; fail=1
+            elif ! grep -q 'APNs token received' "$P"; then
+              echo "::error::No APNs device token: $(grep -o 'APNs registration failed.*' "$P" || echo 'no answer within 60s')"; fail=1
+            elif ! grep -q 'FCM token received' "$P"; then
+              echo "::error::No FCM token: $(grep -o 'FCM token failed.*' "$P" || echo 'no answer within 60s')"; fail=1
+            else
+              echo "Push self-test passed: Firebase configured, APNs token issued, FCM token received."
+            fi
+          fi
           # JS errors surfaced by the Capacitor bridge, and failed page loads.
           if grep -nE '⚡️ +\[error\]|ERROR MESSAGE:|Uncaught|Unhandled|APP_API_ORIGIN is not set|WebView failed|Error loading page|\[startup\] not ready' "$LOGS"/app-console*.log; then
             echo "::error::Errors in the app console (see above)."; fail=1

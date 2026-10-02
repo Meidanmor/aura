@@ -20,6 +20,9 @@ end
 target 'App' do
   capacitor_pods
   # Add your Pods here
+  # iOS push through Firebase Cloud Messaging (AppDelegate.swift swaps the APNs
+  # token for an FCM token). 11.x: Firebase 12 needs iOS 15, the app targets 14.
+  pod 'FirebaseMessaging', '~> 11.0'
 end
 
 post_install do |installer|
