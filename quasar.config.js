@@ -118,6 +118,13 @@ export default defineConfig((ctx) => {
        //analyze: true,
       // Values the CLIENT bundle may read via process.env.* (never secrets).
       env: {
+        // Native app: push notifications need the platform's Firebase config
+        // (kept out of git) — without it the app hides its "Enable
+        // notifications" prompts (src/services/push/config.js).
+        NATIVE_PUSH_CONFIGURED: !!ctx.mode.capacitor && existsSync(resolve(__dirname,
+          ctx.targetName === 'ios'
+            ? 'src-capacitor/ios/App/App/GoogleService-Info.plist'
+            : 'src-capacitor/android/app/google-services.json')),
         // Origin of the WordPress backend (wp-admin). The Live Preview
         // bridge only accepts messages from this origin (config-loader.js).
         WP_BACKEND_ORIGIN: (() => {

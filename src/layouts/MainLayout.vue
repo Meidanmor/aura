@@ -105,6 +105,7 @@ import { Platform } from 'quasar';
 import CookieBanner from "../components/app/CookieBanner.vue";
 import ContactButton from "../components/app/ContactButton.vue";
 import { markReady as markStartupReady } from 'src/utils/startup-watchdog'
+import { pushConfigured } from 'src/services/push/config.js'
 import initPush, { subscribeToWebPush, initNativePush, checkNativePermission } from 'src/services/push/push.js'
 import { initLoadingBar } from 'src/composables/useLoadingBar.js'
 import { initAuthPopup } from 'src/composables/useAuthExpired.js'
@@ -212,9 +213,8 @@ const _responsiveClasses = 'gt-sm lt-md gt-md lt-sm'
 
 const permission = ref('default')
 const supported = ref(false)
-const vapidConfigured = !!import.meta.env.VITE_VAPID_APP_PUBLIC_KEY
 const notificationSoftAskVisible = computed(() =>
-    vapidConfigured && supported.value && permission.value === 'default' && showNotificationSoftAsk.value
+    pushConfigured && supported.value && permission.value === 'default' && showNotificationSoftAsk.value
 )
 const isSuperAdmin = isAdmin
 const $q = useQuasar()
@@ -524,7 +524,7 @@ onMounted(async () => {
         cart.fetchCartOnce()
         initLoadingBar(router)
         initAuthPopup(router)
-        if (vapidConfigured) initNotificationSoftAskTracking(router)
+        if (pushConfigured) initNotificationSoftAskTracking(router)
 
         initPush({router})
 

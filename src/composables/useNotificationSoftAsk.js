@@ -17,7 +17,7 @@ let initialized = false
  * `showNotificationSoftAsk` on once the threshold is hit. Counting resets
  * each new tab/session (sessionStorage), and once dismissed it won't show
  * again for the rest of that session. The caller is still responsible for
- * also checking permission/support/VAPID-configured state before actually
+ * also checking permission/support/push-configured state before actually
  * rendering the modal — this composable only tracks "have they browsed
  * enough to ask."
  */

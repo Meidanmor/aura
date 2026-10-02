@@ -44,7 +44,7 @@
     </div>
 
     <q-banner
-        v-if="vapidConfigured && supported && permission !== 'granted' && permission !== 'denied'"
+        v-if="pushConfigured && supported && permission !== 'granted' && permission !== 'denied'"
         class="bg-secondary text-white q-ma-md rounded-borders shadow-2"
         inline-actions
     >
@@ -68,6 +68,7 @@
 </template>
 
 <script setup>
+import { pushConfigured } from 'src/services/push/config.js'
 import {
   matClose,
   matShoppingCart,
@@ -76,8 +77,6 @@ import {
   matReceipt,
   matPerson
 } from '@quasar/extras/material-icons'
-
-const vapidConfigured = !!import.meta.env.VITE_VAPID_APP_PUBLIC_KEY
 
 defineProps({
   supported: {
