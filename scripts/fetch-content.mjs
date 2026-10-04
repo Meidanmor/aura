@@ -92,7 +92,6 @@ async function main() {
 
   console.log(`[content] Using ${CONTENT_REPO}@${branch}.`)
 }
-
 // No process.exit() here: let open connections close, then exit with the code.
 main().catch((err) => {
   console.error(`[content] ${err instanceof ContentError ? err.message : err?.stack || err}`)
