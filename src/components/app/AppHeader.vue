@@ -17,7 +17,7 @@
 
         </div>
         <router-link to="/" aria-label="Navigate to home page" class="flex items-center order-first">
-          <img alt="Q-Woo logo" :src="appLogo" width="84" height="19" loading="eager" decoding="sync" fetchpriority="high" />
+          <img :alt="storeName ? `${storeName} logo` : 'Logo'" :src="appLogo" width="84" height="19" loading="eager" decoding="sync" fetchpriority="high" />
         </router-link>
         <div>
           <q-btn flat dense :icon="matFavoriteBorder" aria-label="Add to wishlist" @click="emit('toggle-wishlist')" class="q-ml-sm q-mr-sm">
@@ -43,6 +43,8 @@ import { matShoppingCart,
   matMenu } from '@quasar/extras/material-icons'
 import wishlist from 'src/stores/wishlist'
 import cart from 'src/stores/cart'
+
+const storeName = process.env.STORE_NAME || ''
 
 defineProps({
   isSuperAdmin: {

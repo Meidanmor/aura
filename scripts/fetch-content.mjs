@@ -88,6 +88,12 @@ async function main() {
       fs.cpSync(path.join(source, dir), path.join(target, dir), { recursive: true })
     }
   }
+  // favicon.ico sits at the public root: the store's own, or none (not this
+  // repo's, which belongs to the original Aura site).
+  fs.rmSync(path.join(target, 'favicon.ico'), { force: true })
+  if (fs.existsSync(path.join(source, 'favicon.ico'))) {
+    fs.copyFileSync(path.join(source, 'favicon.ico'), path.join(target, 'favicon.ico'))
+  }
   fs.rmSync(tmp, { recursive: true, force: true })
 
   console.log(`[content] Using ${CONTENT_REPO}@${branch}.`)

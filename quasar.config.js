@@ -38,6 +38,19 @@ function loadAppBranding() {
   }
 
 }
+// Favicon links for the icons this store has. A platform store's icons come
+// from its content (scripts/fetch-content.mjs runs before the build); a store
+// without its own icon shows none, so the browser isn't sent to look for one.
+function faviconLinks() {
+  const has = (file) => existsSync(resolve(__dirname, 'public', file))
+  const links = [
+    has('icons/favicon-32x32.png') && '<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">',
+    has('favicon.ico') && '<link rel="icon" href="/favicon.ico" sizes="any">',
+    has('icons/apple-touch-icon.png') && '<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">',
+  ].filter(Boolean)
+  return links.length ? links.join('\n    ') : '<link rel="icon" href="data:,">'
+}
+
 export default defineConfig((ctx) => {
   const appConfig = loadAppConfig()
   const appBranding = loadAppBranding()
@@ -67,6 +80,11 @@ export default defineConfig((ctx) => {
       csp: (val) => val.replace(/\s+/g, ' ').trim(),
       head: (val) => val.trim()
     },*/
+    // index.html: the favicon links (see faviconLinks()).
+    htmlVariables: {
+      faviconLinks: faviconLinks(),
+    },
+
     // Native app only: send API calls to the live site (src/boot/native-api.js).
     boot: ctx.mode.capacitor ? [{ path: 'native-api', server: false }] : [],
 
@@ -107,6 +125,10 @@ export default defineConfig((ctx) => {
        //analyze: true,
       // Values the CLIENT bundle may read via process.env.* (never secrets).
       env: {
+        // The store's name and description (public/config/pwa.json, from the
+        // store's content): the fallback page title and description.
+        STORE_NAME: String(appConfig.name || ''),
+        STORE_DESCRIPTION: String(appConfig.description || ''),
         // Origin of the WordPress backend (wp-admin). The Live Preview
         // bridge only accepts messages from this origin (config-loader.js).
         WP_BACKEND_ORIGIN: (() => {
@@ -448,6 +470,8 @@ devServer: {
             json[key] = value
           }
         })
+        // Only the icons this store has (none without its own icon).
+        json.icons = (json.icons || []).filter(icon => existsSync(resolve(__dirname, 'public', String(icon.src).replace(/^\//, ''))))
       },
       // useCredentialsForManifestTag: true,
       // injectPwaMetaTags: false,

@@ -2,6 +2,10 @@
 import { ref, useSSRContext } from 'vue'
 import { useMeta } from 'quasar'
 
+// The store's own name and description (set at build time from pwa.json).
+const STORE_NAME = process.env.STORE_NAME || ''
+const STORE_DESCRIPTION = process.env.STORE_DESCRIPTION || ''
+
 /**
  * Wires backend SEO data into useMeta consistently across SSR and CSR.
  * Reads synchronously at creation time (not onMounted) to avoid a
@@ -22,12 +26,12 @@ export function useSeoMeta() {
     if (!seo) return {}
 
     return {
-      title: seo.title || 'Q-Woo',
+      title: seo.title || STORE_NAME,
       meta: {
         robots: { name: 'robots', content: seo.robots || 'index, follow', key: 'robots' },
-        description: { name: 'description', content: seo.description || 'Advanced e-commerce shop', key: 'description' },
-        ogTitle: { property: 'og:title', content: seo.title || 'Q-Woo', key: 'og:title' },
-        ogDescription: { property: 'og:description', content: seo.description || 'Advanced e-commerce shop', key: 'og:description' },
+        description: { name: 'description', content: seo.description || STORE_DESCRIPTION, key: 'description' },
+        ogTitle: { property: 'og:title', content: seo.title || STORE_NAME, key: 'og:title' },
+        ogDescription: { property: 'og:description', content: seo.description || STORE_DESCRIPTION, key: 'og:description' },
         ogImage: { property: 'og:image', content: seo.og_image, key: 'og:image' },
         ogType: { property: 'og:type', content: seo.og_type || 'website', key: 'og:type' },
       },
@@ -47,8 +51,8 @@ export async function fetchSeoForPath(path, origin='') {
 
   // Define default fallbacks
   const result = {
-    title: 'Q-Woo',
-    description: "Advanced e-commerce shop",
+    title: STORE_NAME,
+    description: STORE_DESCRIPTION,
     robots: 'index, follow, max-image-preview:large',
     canonical: '',
     og_image: '',
