@@ -15,19 +15,15 @@ enableNavigationPreload();
 self.skipWaiting()
 clientsClaim()
 
-// Everything in the client build is precached, including the published
-// JSON files (public/config/*.json, public/data/*.json). Each entry carries a
-// content revision, so when the plugin pushes new JSON and the app is rebuilt,
-// this file changes, the browser installs the new worker, and only the files
-// whose revision changed are downloaded again. The app checks for that new
-// worker before route changes (src/services/sw-updates.js), so navigation
-// doesn't keep showing JSON from an older build.
+// The client build (JS, CSS, fonts, the offline page) is precached. The
+// published JSON (public/config/*.json, public/data/*.json) is not: it has
+// its own route below, so a change shows up as soon as it's deployed.
 const PRECACHE_MANIFEST = self.__WB_MANIFEST
 precacheAndRoute(PRECACHE_MANIFEST)
 cleanupOutdatedCaches()
 
-// url -> revision for the published JSON files in this build. Sent to the
-// app so it can tell exactly which config files changed between versions.
+// url -> revision for published JSON that is precached (none since the JSON
+// has its own route; kept so older app code that asks still gets an answer).
 const JSON_REVISIONS = Object.fromEntries(
   PRECACHE_MANIFEST
     .filter(entry => typeof entry === 'object' && entry.revision)
@@ -35,8 +31,74 @@ const JSON_REVISIONS = Object.fromEntries(
     .filter(([url]) => /^\/(config|data)\/[^/]+\.json$/.test(url))
 )
 
-// Runtime caches from older versions that are no longer used (the JSON
-// files are served from the precache).
+// ─── Published JSON: fresh when online, cached for offline ───────────────────
+// Network first with a short timeout; the copy in the cache answers when
+// offline or slow (and the network answer still updates the cache). When a
+// file changed, the open pages are told (JSON_UPDATED, so on-screen header,
+// footer and page content refresh in place) and the worker checks for a new
+// version of itself, since changed JSON means a new deploy.
+const PUBLISHED_JSON_CACHE = 'published-json-v1'
+const PUBLISHED_JSON = /^\/(config|data)\/[^/]+\.json$/
+const PUBLISHED_JSON_TIMEOUT_MS = 3000
+
+async function refreshPublishedJson(path) {
+  const cache = await caches.open(PUBLISHED_JSON_CACHE)
+  const response = await fetch(path, { cache: 'no-store', credentials: 'same-origin' })
+  if (!response.ok) return response
+  const body = await response.clone().text()
+  const cached = await cache.match(path)
+  const before = cached ? await cached.text() : null
+  if (before !== body) {
+    await cache.put(path, response.clone())
+    if (before !== null) {
+      const windows = await self.clients.matchAll({ type: 'window' })
+      windows.forEach(client => client.postMessage({ type: 'JSON_UPDATED', urls: [path] }))
+      self.registration.update().catch(() => {})
+      revalidatePublishedJson() // a deploy usually changes more than one file
+    }
+  }
+  return response
+}
+
+// Rechecks every saved JSON file (each change is announced as above). The
+// app asks for this on page changes and when the tab comes back into view,
+// since the header, footer and branding stay on screen without refetching.
+let sweeping = null
+function revalidatePublishedJson() {
+  if (!sweeping) {
+    sweeping = (async () => {
+      const cache = await caches.open(PUBLISHED_JSON_CACHE)
+      const requests = await cache.keys()
+      await Promise.all(requests.map(request => refreshPublishedJson(new URL(request.url).pathname).catch(() => {})))
+    })().finally(() => { sweeping = null })
+  }
+  return sweeping
+}
+
+self.addEventListener('message', event => {
+  if (event.data?.type === 'REVALIDATE_JSON') event.waitUntil(revalidatePublishedJson())
+})
+
+registerRoute(
+  ({ url }) => url.origin === self.location.origin && PUBLISHED_JSON.test(url.pathname),
+  async ({ url, event }) => {
+    const path = url.pathname // one copy per file, whatever the query string
+    const network = refreshPublishedJson(path)
+    event.waitUntil(network.catch(() => {}))
+    const cached = await caches.open(PUBLISHED_JSON_CACHE).then(cache => cache.match(path))
+    if (!cached) return network
+    // Prefer the network, but don't keep the page waiting when it's slow.
+    const timeout = new Promise(resolve => setTimeout(() => resolve(null), PUBLISHED_JSON_TIMEOUT_MS))
+    try {
+      const fresh = await Promise.race([network, timeout])
+      return fresh && fresh.ok ? fresh : cached
+    } catch {
+      return cached
+    }
+  }
+)
+
+// Runtime caches from older versions that are no longer used.
 const LEGACY_CACHES = ['static-data-v1', 'page-config-v1']
 
 self.addEventListener('activate', event => {

@@ -381,11 +381,16 @@ devServer: {
       // image when the service worker installs, and the list grows with each
       // image the Shop Builder pushes. They're cached at runtime instead,
       // when actually viewed (the image route in custom-service-worker.js).
-      // JS/CSS/fonts, the offline page and the published JSON stay precached.
+      // The published JSON (config/*.json, data/*.json) isn't precached either:
+      // the service worker fetches it fresh and keeps a copy for offline, so a
+      // change shows up as soon as it's deployed (see custom-service-worker.js).
+      // JS/CSS/fonts and the offline page stay precached.
       extendInjectManifestOptions (cfg) {
         cfg.globIgnores = [
           ...(cfg.globIgnores || []),
           '**/*.{png,jpg,jpeg,webp,avif,gif,svg,ico,mp4,webm}',
+          'config/*.json',
+          'data/*.json',
         ]
       },
       workboxMode: 'InjectManifest', // 'GenerateSW' or 'InjectManifest'
