@@ -35,7 +35,13 @@ let elements = null
 let expressCheckoutElement = null // move out of the closure so onBeforeUnmount can reach it
 
 onMounted(async () => {
-  stripe = await getStripe()
+  try {
+    stripe = await getStripe()
+  } catch (err) {
+    loading.value = false
+    cardError.value = err.message || 'Card payments aren\'t available right now.'
+    return
+  }
 
   elements = stripe.elements({
     mode: 'payment',

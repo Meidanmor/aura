@@ -1,9 +1,19 @@
+import { loadPaymentConfig } from '../config'
+
 let stripePromise = null
 
+// The key comes from the store (each store has its own Stripe account). The
+// build-time key is only a fallback for backends without /payment-config.
 export async function getStripe() {
     if (!stripePromise) {
-        const { loadStripe } = await import('@stripe/stripe-js/pure')
-        stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
+        stripePromise = (async () => {
+            const config = await loadPaymentConfig()
+            const key = config ? config.stripe?.publishable_key : import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+            if (!key) throw new Error('Card payments aren\'t available right now.')
+            const { loadStripe } = await import('@stripe/stripe-js/pure')
+            return loadStripe(key)
+        })()
+        stripePromise.catch(() => { stripePromise = null })
     }
     return stripePromise
 }

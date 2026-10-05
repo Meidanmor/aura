@@ -1,7 +1,8 @@
 import stripe from './adapters/stripe'
 import cod from './adapters/cod'
+import bacs from './adapters/bacs'
 
-const adapters = [stripe, cod]
+const adapters = [stripe, cod, bacs]
 
 export function getAdapter(id) {
     return adapters.find(a => a.id === id) || null

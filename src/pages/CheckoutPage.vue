@@ -172,6 +172,7 @@
             type="radio"
             color="secondary"
           />
+          <div v-if="paymentNote" class="text-caption text-grey-8 q-my-sm" style="white-space: pre-line">{{ paymentNote }}</div>
           <component
               :is="paymentComponent"
               v-if="paymentComponent"
@@ -235,6 +236,7 @@ import {formatCurrency} from 'src/utils/formatters.js'
 import { getWasLoggedIn } from 'src/composables/useApiFetch.js'
 import { defineAsyncComponent } from 'vue'
 import { getAdapter } from 'src/payments/registry'
+import { loadPaymentConfig, paymentConfig } from 'src/payments/config'
 import { useHoneypot } from 'src/composables/useHoneypot.js'
 import { getStripe, resetStripe } from 'src/payments/adapters/stripe'
 import { useCartSummary } from 'src/composables/useCartSummary'
@@ -351,11 +353,18 @@ const paymentComponent = computed(() => {
 })
 const paymentMethods = computed(() => {
   const methods = displayCart.value?.payment_methods || []
-  return methods.map(method => ({
-    label: getAdapter(method)?.label || method,
-    value: method,
-  }))
+  return methods
+    .filter(method => getAdapter(method))
+    .map(method => ({
+      label: paymentConfig.value?.methods?.[method]?.title || getAdapter(method).label,
+      value: method,
+    }))
 })
+const paymentNote = computed(() => paymentConfig.value?.methods?.[paymentMethod.value]?.description || '')
+// Keep a method this store offers selected.
+watch(paymentMethods, (list) => {
+  if (list.length && !list.some(m => m.value === paymentMethod.value)) paymentMethod.value = list[0].value
+}, { immediate: true })
 const initializeFormFromCart = async () => {
   const cartData = displayCart.value
   if (!cartData) return
@@ -581,7 +590,7 @@ const submitOrder = async (walletOverride = null) => {
 
     if (isWallet) walletOverride.complete('success')
 
-    router.push({ name: 'thank-you', query: { orderId: response.order_id, billing_email: response.billing_address.email, order_key: response.order_key } })
+    router.push({ name: 'thank-you', query: { orderId: response.order_id, billing_email: response.billing_address.email, order_key: response.order_key, pm: paymentMethod.value } })
     await cart.fetchCart()
   } catch (err) {
     console.error('Checkout error:', err.message)
@@ -649,7 +658,8 @@ watch(
 )
 
 onMounted(async () => {
-  getStripe()
+  // Preload Stripe only for stores that take cards.
+  loadPaymentConfig().then(config => (config ? config.stripe : true) && getStripe().catch(() => {}))
   isLoggedIn.value = getWasLoggedIn()
   if (window.__CART_ARRAY__ && !cart.state.cart_array && !cart.state.offline) {
     cart.state.cart_array = window.__CART_ARRAY__

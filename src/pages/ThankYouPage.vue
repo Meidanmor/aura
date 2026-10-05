@@ -8,6 +8,23 @@
           Please check your email inbox at <strong>{{ order.billing_address.email }}</strong> for more details.
         </div>
 
+        <q-card v-if="bank" class="q-pa-md">
+          <q-card-section>
+            <div class="text-h6">Pay by bank transfer</div>
+            <q-separator class="q-my-sm"/>
+            <p>Your order ships once the transfer arrives. Please use order number <strong>{{ order.id }}</strong> as the payment reference.</p>
+            <p v-if="bank.instructions" style="white-space: pre-line">{{ bank.instructions }}</p>
+            <div v-for="(a, i) in bank.accounts || []" :key="i" class="q-mb-sm">
+              <div v-if="a.account_name"><strong>Account name:</strong> {{ a.account_name }}</div>
+              <div v-if="a.bank_name"><strong>Bank:</strong> {{ a.bank_name }}</div>
+              <div v-if="a.account_number"><strong>Account number:</strong> {{ a.account_number }}</div>
+              <div v-if="a.sort_code"><strong>Branch:</strong> {{ a.sort_code }}</div>
+              <div v-if="a.iban"><strong>IBAN:</strong> {{ a.iban }}</div>
+              <div v-if="a.bic"><strong>BIC / SWIFT:</strong> {{ a.bic }}</div>
+            </div>
+          </q-card-section>
+        </q-card>
+
         <q-card class="q-pa-md">
           <q-card-section>
             <div class="text-h6">Order Summary</div>
@@ -119,13 +136,16 @@
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue'
+import {ref, computed, onMounted} from 'vue'
 import {useRoute} from 'vue-router'
 import {fetchWithToken} from 'src/composables/useApiFetch.js';
 import {formatCurrency} from 'src/utils/formatters.js'
+import {loadPaymentConfig, paymentConfig} from 'src/payments/config'
 
 const route = useRoute()
 const order = ref(null)
+// Bank details for orders paid by transfer (the owner's details from the store).
+const bank = computed(() => order.value && route.query.pm === 'bacs' ? paymentConfig.value?.methods?.bacs || null : null)
 
 const columns = [
   {name: 'thumbnail', label: '', align: 'left', field: 'thumbnail'},
@@ -135,6 +155,7 @@ const columns = [
 ]
 
 onMounted(async () => {
+  loadPaymentConfig()
   const orderID = route.query.orderId
   const email = route.query.billing_email
   const order_key = route.query.order_key

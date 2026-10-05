@@ -339,6 +339,20 @@ defineOptions({
 useSeoMeta()
 
 
+// A variant stores the choice's slug ("light-blue") for shared attributes
+// and the choice itself ("Light Blue") for options kept on the product.
+// The shopper picks by name, so either one matches.
+function sameChoice(attrName, value, selected) {
+  if (value == null || selected == null) return false
+  const v = String(value).toLowerCase()
+  const s = String(selected).toLowerCase()
+  if (v === s) return true
+  const term = product.value?.attributes
+    ?.find(a => a.name === attrName)
+    ?.terms.find(t => String(t.name).toLowerCase() === s)
+  return !!term && String(term.slug).toLowerCase() === v
+}
+
 function getOptionsWithDisabled(attribute) {
   // Get all original options for this attribute
   const allOptions = product.value.attributes
@@ -388,7 +402,7 @@ const availableAttributes = computed(() => {
           // Wildcard matches anything
           if (varAttr.value === null) return true
 
-          return varAttr.value.toLowerCase() === selectedVal.toLowerCase()
+          return sameChoice(name, varAttr.value, selectedVal)
         })
       })
     })
@@ -422,7 +436,7 @@ function handleAddToCart(e) {
       const attr = variation.attributes.find(a => a.name === attrName);
       if (!attr || selectedValue === null) return false;
       if (attr.value === null) return true;
-      return attr.value.toLowerCase() === selectedValue.toLowerCase();
+      return sameChoice(attrName, attr.value, selectedValue);
     });
   });
 
@@ -566,7 +580,7 @@ async function onVariationChange() {
 
         if (attr.value === null) return true
 
-        return attr.value.toLowerCase() === selectedValue.toLowerCase()
+        return sameChoice(attrName, attr.value, selectedValue)
       })
     })
 
