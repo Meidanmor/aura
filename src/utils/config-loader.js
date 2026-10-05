@@ -3,24 +3,28 @@ import { JSON_UPDATED_EVENT } from 'src/services/sw-updates'
 const EDITOR_FLAG_PARAM = 'qwoo_editor'
 const EDITOR_ORIGIN_PARAM = 'admin_origin'
 
-// The only origin allowed to drive the Live Preview: the WordPress backend
-// (wp-admin), baked in at build time from WP_BACKEND_URL (quasar.config.js
-// build.env). The admin_origin URL param is only ever CHECKED against it —
-// trusting the param itself would let any site open the storefront (e.g.
-// in a popup) and push its own content into the page.
-const TRUSTED_ADMIN_ORIGIN = (() => {
-  try {
-    return process.env.WP_BACKEND_ORIGIN ? new URL(process.env.WP_BACKEND_ORIGIN).origin : ''
-  } catch {
-    return ''
-  }
-})()
+// The only origins allowed to drive the Live Preview: the WordPress backend
+// (wp-admin) and, optionally, the store platform's owner dashboard — both
+// baked in at build time (quasar.config.js build.env: WP_BACKEND_URL,
+// QWOO_EDITOR_ORIGIN). The admin_origin URL param is only ever CHECKED
+// against them — trusting the param itself would let any site open the
+// storefront (e.g. in a popup) and push its own content into the page.
+const TRUSTED_ADMIN_ORIGINS = [process.env.WP_BACKEND_ORIGIN, process.env.QWOO_EDITOR_ORIGIN]
+  .map((value) => {
+    try {
+      return value ? new URL(value).origin : ''
+    } catch {
+      return ''
+    }
+  })
+  .filter(Boolean)
 
 function getTrustedAdminOrigin() {
-  if (import.meta.env.SSR || !TRUSTED_ADMIN_ORIGIN) return null
+  if (import.meta.env.SSR || !TRUSTED_ADMIN_ORIGINS.length) return null
   const raw = new URLSearchParams(window.location.search).get(EDITOR_ORIGIN_PARAM)
   try {
-    return raw && new URL(raw).origin === TRUSTED_ADMIN_ORIGIN ? TRUSTED_ADMIN_ORIGIN : null
+    const origin = raw ? new URL(raw).origin : ''
+    return TRUSTED_ADMIN_ORIGINS.includes(origin) ? origin : null
   } catch {
     return null
   }

@@ -6,16 +6,19 @@ import branding from '../../public/config/branding.json' // adjust path as neede
 
 const WP_BACKEND_URL = process.env.WP_BACKEND_URL || ''
 
-// The only origin ever allowed to embed this site in an iframe: the WP
-// backend itself. Derived once from server config, never trusted from the
-// request — a client-supplied admin_origin query param is only ever used
-// to CHECK AGAINST this, never to set the policy directly.
-let WP_BACKEND_ORIGIN = ''
-try {
-    WP_BACKEND_ORIGIN = WP_BACKEND_URL ? new URL(WP_BACKEND_URL).origin : ''
-} catch (err) {
-    console.warn('[render] WP_BACKEND_URL is not a valid URL — live-preview framing stays disabled:', WP_BACKEND_URL + err)
-}
+// The only origins ever allowed to embed this site in an iframe: the WP
+// backend itself and, optionally, the store platform's owner dashboard
+// (QWOO_EDITOR_ORIGIN). Derived once from server config, never trusted from
+// the request — a client-supplied admin_origin query param is only ever used
+// to CHECK AGAINST these, never to set the policy directly.
+const EDITOR_ORIGINS = [WP_BACKEND_URL, process.env.QWOO_EDITOR_ORIGIN || ''].map((value) => {
+    try {
+        return value ? new URL(value).origin : ''
+    } catch (err) {
+        console.warn('[render] Not a valid URL — live-preview framing stays disabled for it:', value + err)
+        return ''
+    }
+}).filter(Boolean)
 
 const isIgnoredRequest = (url) => {
     return (
@@ -44,17 +47,18 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
         res.setHeader('Content-Type', 'text/html')
 
         // Shop Builder's Live Preview panel embeds this site in an iframe
-        // from wp-admin — cross-origin framing, which the default policy
-        // below blocks as clickjacking protection. Only relax it for a
-        // request that is BOTH flagged as the editor (?qwoo_editor=1) AND
-        // whose declared admin_origin matches our configured WP backend's
-        // origin exactly. Every other request keeps the strict default.
+        // from wp-admin (or the platform dashboard) — cross-origin framing,
+        // which the default policy below blocks as clickjacking protection.
+        // Only relax it for a request that is BOTH flagged as the editor
+        // (?qwoo_editor=1) AND whose declared admin_origin exactly matches one
+        // of the configured editor origins. Every other request keeps the
+        // strict default.
+        const editorOrigin = typeof req.query?.admin_origin === 'string' ? req.query.admin_origin : ''
         const isEditorRequest =
             req.query?.qwoo_editor === '1' &&
-            !!WP_BACKEND_ORIGIN &&
-            req.query?.admin_origin === WP_BACKEND_ORIGIN
+            EDITOR_ORIGINS.includes(editorOrigin)
 
-        const frameAncestors = isEditorRequest ? `'self' ${WP_BACKEND_ORIGIN}` : "'self'"
+        const frameAncestors = isEditorRequest ? `'self' ${editorOrigin}` : "'self'"
 
         res.setHeader(
             'Content-Security-Policy',

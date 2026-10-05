@@ -112,6 +112,11 @@ export default defineConfig((ctx) => {
         WP_BACKEND_ORIGIN: (() => {
           try { return process.env.WP_BACKEND_URL ? new URL(process.env.WP_BACKEND_URL).origin : '' } catch { return '' }
         })(),
+        // Optional second editor: the store platform's owner dashboard
+        // (Design → live preview). Same rules as the WP backend origin.
+        QWOO_EDITOR_ORIGIN: (() => {
+          try { return process.env.QWOO_EDITOR_ORIGIN ? new URL(process.env.QWOO_EDITOR_ORIGIN).origin : '' } catch { return '' }
+        })(),
         // Native app (Capacitor) only: the live storefront whose /wp-json
         // proxy the app calls (the proxy adds the WP secret server-side).
         APP_API_ORIGIN: (() => {
