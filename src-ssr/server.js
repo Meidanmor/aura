@@ -71,6 +71,15 @@ export const create = defineSsrCreate((/* { ... } */) => {
       on: {
         proxyReq: (proxyReq) => {
           proxyReq.setHeader('X-Proxy-Secret', proxySecret)
+        },
+        // Hosts like Hostinger stamp every response with a week-long public
+        // cache (Cache-Control: public, max-age=604800) — REST answers
+        // included, errors too — so browsers kept serving old products.
+        // API answers must always be asked for again.
+        proxyRes: (proxyRes, req) => {
+          if (!req.url?.startsWith('/wp-json')) return
+          proxyRes.headers['cache-control'] = 'private, no-cache, max-age=0'
+          delete proxyRes.headers['expires']
         }
       }
     }))

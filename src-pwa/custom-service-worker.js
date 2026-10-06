@@ -7,7 +7,7 @@
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching'
 import { registerRoute } from 'workbox-routing'
-import { NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies'
+import { NetworkFirst, NetworkOnly, StaleWhileRevalidate } from 'workbox-strategies'
 import { ExpirationPlugin } from 'workbox-expiration'
 import { enable as enableNavigationPreload } from 'workbox-navigation-preload';
 
@@ -126,6 +126,9 @@ registerRoute(
     ),
   new NetworkFirst({
     cacheName: 'woocommerce-api-v2.0',
+    // Ask the server every time: browsers may still hold week-old copies
+    // from when the backend sent a 7-day public Cache-Control.
+    fetchOptions: { cache: 'no-cache' },
     networkTimeoutSeconds: 3,
     plugins: [
       new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 24 * 60 * 60 })
@@ -153,11 +156,20 @@ registerRoute(
     url.searchParams.has('path'),
   new NetworkFirst({
     cacheName: 'seo-api-v2.0',
+    fetchOptions: { cache: 'no-cache' },
     networkTimeoutSeconds: 3,
     plugins: [
       new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 24 * 60 * 60 })
     ]
   })
+);
+
+// ─── Every other API read: always from the server ────────────────────────────
+// (price range, single product, payment config…). Skips any week-old copy the
+// browser kept from the backend's old Cache-Control.
+registerRoute(
+  ({ url, request }) => url.origin === self.location.origin && url.pathname.startsWith('/wp-json/') && request.method === 'GET',
+  new NetworkOnly({ fetchOptions: { cache: 'no-cache' } })
 );
 
 self.addEventListener('message', async (event) => {
