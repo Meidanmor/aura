@@ -67,7 +67,7 @@ defineOptions({
 
   }
 })
-useSeoMeta()
+useSeoMeta({ noindex: true })
 
 const username = ref('')
 const error    = ref('')

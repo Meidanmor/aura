@@ -64,7 +64,7 @@ defineOptions({
 
   }
 })
-useSeoMeta()
+useSeoMeta({ noindex: true })
 
 const route = useRoute()
 const key   = computed(() => route.query.key || '')

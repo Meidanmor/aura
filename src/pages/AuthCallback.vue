@@ -6,6 +6,7 @@
 
 <script setup>
 import { onMounted } from 'vue'
+import { useSeoMeta } from 'src/composables/useSeo.js'
 import { useRouter } from 'vue-router'
 import cart from 'src/stores/cart.js'
 import { setLoggedIn, refreshNonce } from 'src/composables/useApiFetch.js'
@@ -13,6 +14,7 @@ import wishlist from 'src/stores/wishlist.js'
 import { setUser } from 'src/stores/user.js'
 
 const router = useRouter()
+useSeoMeta({ noindex: true })
 
 onMounted(async () => {
   const params = new URLSearchParams(window.location.search)

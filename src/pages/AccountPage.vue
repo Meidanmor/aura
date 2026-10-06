@@ -100,7 +100,7 @@ defineOptions({
   }
 })
 
-useSeoMeta()
+useSeoMeta({ noindex: true })
 
 const googleLoginEnabled = !!import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID
 

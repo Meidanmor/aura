@@ -6,8 +6,8 @@ import path from 'path';
 // kept in sync manually since this file runs standalone (outside the Vite/
 // SSR bundle) and can't safely import that module here.
 const SEO_FALLBACK = {
-    title: 'Q-Woo',
-    description: 'Advanced e-commerce shop'
+    title: '',
+    description: ''
 };
 
 async function fetchHomepageSeo() {

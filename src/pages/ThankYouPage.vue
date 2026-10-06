@@ -137,12 +137,14 @@
 
 <script setup>
 import {ref, computed, onMounted} from 'vue'
+import {useSeoMeta} from 'src/composables/useSeo.js'
 import {useRoute} from 'vue-router'
 import {fetchWithToken} from 'src/composables/useApiFetch.js';
 import {formatCurrency} from 'src/utils/formatters.js'
 import {loadPaymentConfig, paymentConfig} from 'src/payments/config'
 
 const route = useRoute()
+useSeoMeta({ noindex: true })
 const order = ref(null)
 // Bank details for orders paid by transfer (the owner's details from the store).
 const bank = computed(() => order.value && route.query.pm === 'bacs' ? paymentConfig.value?.methods?.bacs || null : null)

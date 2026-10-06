@@ -1,5 +1,6 @@
 <template>
-  <div class="main-wrapper-div">
+  <ErrorNotFound v-if="notFound" />
+  <div v-else class="main-wrapper-div">
     <div class="container">
       <SectionRenderer :sections="shopSettings?.sections" page="category" location="before_breadcrumbs"/>
 
@@ -82,6 +83,7 @@ import ArchivePagination from '../components/shop/ArchivePagination.vue';
 import SortBar from '../components/shop/SortBar.vue';
 import { useSanitizedText } from 'src/composables/useSanitizedHtml'
 import SectionRenderer from "components/sections/SectionRenderer.vue";
+import ErrorNotFound from "pages/ErrorNotFound.vue";
 
 defineOptions({ preFetch: createArchivePreFetch('category') })
 
@@ -89,7 +91,7 @@ const {
   search, selectedCategoryOBJ, currentPage, sortBy, filtersOpen,
   priceMin, priceMax, priceRange,
   paginatedProducts, totalPages, totalProducts,
-  sortOptions, onPriceChange, scrollToTop, productsStore, shopSettings
+  sortOptions, onPriceChange, scrollToTop, productsStore, shopSettings, notFound
 } = useProductArchive('category')
 
 const safeCategoryName = useSanitizedText(() => selectedCategoryOBJ.value?.name)

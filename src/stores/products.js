@@ -373,10 +373,13 @@ async function fetchSingleProduct(slug, ssrContext = null) {
   try {
     productsLoading.value = true
     const fetchSingleProduct = await fetch(`${storeApiBase(ssrContext)}/products/${slug}`)
+    // No such product: an answer, not a failure — don't go looking by search.
+    if (fetchSingleProduct.status === 404) return null
+    if (!fetchSingleProduct.ok) throw new Error(`API error: ${fetchSingleProduct.status}`)
 
     const data = await fetchSingleProduct.json();
 
-    if (data) {
+    if (data?.id) {
       products.value.push(data)
       return data
     }

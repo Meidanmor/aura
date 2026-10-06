@@ -28,6 +28,82 @@ const isIgnoredRequest = (url) => {
     )
 }
 
+const plainText = (html = '') => String(html)
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#0?39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+// Store API prices are in the currency's minor unit ("4550" = 45.50).
+const money = (amount, prices) => {
+    const unit = Number(prices?.currency_minor_unit ?? 2)
+    const value = Number(amount)
+    return Number.isFinite(value) ? (value / 10 ** unit).toFixed(unit) : undefined
+}
+
+/**
+ * schema.org data for the page being rendered: the store (homepage), the
+ * product with its price and stock, and the breadcrumb trail. Google uses
+ * these for rich results (price, availability, breadcrumbs under the title).
+ */
+function structuredData(ssrContext, req) {
+    const seo = ssrContext.seoData || {}
+    const origin = seo.canonical ? new URL(seo.canonical).origin : `https://${req.headers.host}`
+    const home = `${origin}/`
+    const out = []
+    const crumb = (items) => ({
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: items.map((item, i) => ({ '@type': 'ListItem', position: i + 1, name: item.name, item: item.url })),
+    })
+
+    if (seo.type === 'home') {
+        out.push({ '@context': 'https://schema.org', '@type': 'WebSite', name: seo.site_name || seo.title, url: home })
+        out.push({ '@context': 'https://schema.org', '@type': 'Organization', name: seo.site_name || seo.title, url: home, ...(seo.og_image ? { logo: seo.og_image } : {}) })
+    }
+
+    const product = ssrContext.productData
+    if (product?.id) {
+        const prices = product.prices || {}
+        const url = seo.canonical || `${origin}/product/${product.slug}`
+        const range = prices.price_range
+        const availability = product.is_in_stock === false ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock'
+        const offers = range && range.min_amount !== range.max_amount
+            ? { '@type': 'AggregateOffer', priceCurrency: prices.currency_code, lowPrice: money(range.min_amount, prices), highPrice: money(range.max_amount, prices), offerCount: product.variations?.length || undefined, availability }
+            : { '@type': 'Offer', priceCurrency: prices.currency_code, price: money(range ? range.min_amount : prices.price, prices), availability, url }
+        out.push({
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            name: plainText(product.name),
+            description: seo.description || plainText(product.short_description || product.description).slice(0, 5000),
+            image: (product.images || []).map((image) => image.src).filter(Boolean),
+            ...(product.sku ? { sku: product.sku } : {}),
+            url,
+            offers,
+        })
+        const category = product.categories?.[0] || product.extensions?.qwoo?.default_category
+        out.push(crumb([
+            { name: seo.site_name || 'Home', url: home },
+            ...(category?.slug ? [{ name: plainText(category.name), url: `${origin}/product-category/${category.slug}` }] : []),
+            { name: plainText(product.name), url },
+        ]))
+    }
+
+    const category = ssrContext.selectedCategoryData
+    if (category?.id && seo.type === 'product_cat') {
+        out.push(crumb([
+            { name: seo.site_name || 'Home', url: home },
+            { name: plainText(category.name), url: seo.canonical || `${origin}/product-category/${category.slug}` },
+        ]))
+    }
+    return out
+}
+
+// *.vercel.app addresses are the deployment's internal address, not the
+// store's: keep them out of search engines (the store's own address is the
+// canonical one anyway).
+const isInternalHost = (host = '') => /\.vercel\.app$/i.test(host.split(':')[0])
+
 export default defineSsrMiddleware(({ app, resolve, render }) => {
     app.get(resolve.urlPath('*'), (req, res) => {
         if (isIgnoredRequest(req.url)) {
@@ -118,6 +194,10 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
         // Prevent MIME-sniffing of responses
         res.setHeader('X-Content-Type-Options', 'nosniff')
 
+        if (isInternalHost(req.headers.host)) {
+            res.setHeader('X-Robots-Tag', 'noindex')
+        }
+
         const ssrContext = { req, res }
 
         render(ssrContext)
@@ -150,24 +230,10 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
                     seoData: ssrContext.seoData || null
                 }
 
-                // JSON-LD schema — appended, not replacing anything Quasar produced.
-                let schemaHtml = ''
-                if (productData && productData.id) {
-                    const schema = {
-                        "@context": "https://schema.org/",
-                        "@type": "Product",
-                        "name": productData.name || '',
-                        "description": (productData.short_description || '').replace(/<[^>]*>/g, ''),
-                        "image": productData.images?.[0]?.src ? [productData.images[0].src] : [],
-                        "offers": {
-                            "@type": "Offer",
-                            "priceCurrency": productData?.prices?.currency_code,
-                            "price": productData?.price || '0',
-                            "availability": productData?.stock_status === 'instock' ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
-                        }
-                    }
-                    schemaHtml = `<script type="application/ld+json" nonce="${nonce}">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script>`
-                }
+                // JSON-LD structured data — appended, not replacing anything Quasar produced.
+                const schemaHtml = structuredData(ssrContext, req)
+                    .map((schema) => `<script type="application/ld+json" nonce="${nonce}">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script>`)
+                    .join('')
 
                 const criticalHeadExtra = `
           ${schemaHtml}

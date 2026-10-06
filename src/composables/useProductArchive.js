@@ -35,6 +35,13 @@ export const sortOptions = [
     { label: 'Rating',             value: 'rating'     },
 ]
 
+// Category slugs come encoded from the API ("%d7%98…") and decoded from the
+// router ("טבעות"): compare them decoded.
+function sameSlug(a = '', b = '') {
+    const plain = (s) => { try { return decodeURIComponent(String(s)).toLowerCase() } catch { return String(s).toLowerCase() } }
+    return plain(a) === plain(b)
+}
+
 /**
  * mode: 'shop'     -> category comes from URL (checkbox multi-select)
  *       'category' -> category is locked to route.params.slug
@@ -48,7 +55,7 @@ export function createArchivePreFetch(mode) {
         const categories = await productsStore.prefetchCategories(ssrContext)
 
         const currentCat = mode === 'category'
-            ? categories.find(c => c.slug === currentRoute.params.slug) || null
+            ? categories.find(c => sameSlug(c.slug, currentRoute.params.slug)) || null
             : null
 
         const seoPath = mode === 'category'
@@ -151,7 +158,9 @@ export function useProductArchive(mode) {
             : null
     )
 
-    useSeoMeta()
+    const { seoData } = useSeoMeta()
+    // No such category: the page shows the 404 page and answers 404.
+    const notFound = computed(() => mode === 'category' && !!seoData.value?.not_found)
 
     if (process.env.SERVER) {
         const ssr = useSSRContext()
@@ -200,7 +209,7 @@ export function useProductArchive(mode) {
         }
         const hasSSRProducts = Array.isArray(window.__PRODUCTS_DATA__) && window.__PRODUCTS_DATA__.length
         const currentCatFromWindow = mode === 'category'
-            ? (window.__CATEGORIES_DATA__ || []).find(c => c.slug === route.params.slug) || null
+            ? (window.__CATEGORIES_DATA__ || []).find(c => sameSlug(c.slug, route.params.slug)) || null
             : null
 
         if (hasSSRProducts) {
@@ -327,10 +336,11 @@ export function useProductArchive(mode) {
         watch(
             () => route.params.slug,
             async (newSlug) => {
+                fetchSeoForPath(`product-category/${newSlug}`).then((seo) => { seoData.value = seo })
                 if (!Array.isArray(productsStore.categories.value) || !productsStore.categories.value.length) {
                     await productsStore.prefetchCategories()
                 }
-                const cat = productsStore.categories.value.find(c => c.slug === newSlug)
+                const cat = productsStore.categories.value.find(c => sameSlug(c.slug, newSlug))
                 if (!cat) return
 
                 selectedCategoryOBJ.value = cat
@@ -420,6 +430,6 @@ export function useProductArchive(mode) {
         search, selectedCategory, selectedCategoryOBJ, currentPage, sortBy, filtersOpen,
         priceMin, priceMax, priceRange, isHydrated,
         categoryOptions, paginatedProducts, totalPages, totalProducts,
-        sortOptions, onPriceChange, scrollToTop, productsStore, shopSettings
+        sortOptions, onPriceChange, scrollToTop, productsStore, shopSettings, notFound
     }
 }

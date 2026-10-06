@@ -224,6 +224,7 @@
 
   </div>
 
+  <ErrorNotFound v-else-if="notFound" />
   <div v-else-if="product === null" class="q-pa-md flex items-center justify-center">
     <q-spinner color="secondary" size="6em" />
   </div>
@@ -255,12 +256,15 @@ import {useCarousel} from '/src/composables/useCrousel.js'
 import {useSeoMeta} from "src/composables/useSeo.js";
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
 import SectionRenderer from "components/sections/SectionRenderer.vue";
+import ErrorNotFound from "pages/ErrorNotFound.vue";
 import {loadPageConfig, subscribeToLiveConfig} from "src/utils/config-loader.js";
 
 
 const $q = useQuasar()
 const route = useRoute()
 const product = ref(null)
+// No such product (or not published): the page shows the 404 page and answers 404.
+const notFound = ref(false)
 let unsubscribeLiveConfig = () => {}
 const quantity = ref(1)
 const productSettings = ref(
@@ -276,13 +280,17 @@ const getSlugFromPermalink = (permalink) => {
 if (process.env.SERVER) {
   const ssrContext = useSSRContext()
 
-  if (ssrContext?.productData) {
+  if (ssrContext?.productData?.id) {
     product.value = ssrContext.productData
+  } else {
+    // Only when the store says there's no such product — not when it couldn't be reached.
+    notFound.value = !!ssrContext?.seoData?.not_found
   }
   productSettings.value = ssrContext?.pageConfig || null
 
 }
 if (process.env.CLIENT) {
+  notFound.value = !!window.__SEO_DATA__?.not_found && !window.__PRODUCT_DATA__?.id
   if (window.__PRODUCT_DATA__ && window.__PRODUCT_DATA__.id) {
     const ssrProductSlug = getSlugFromPermalink(window.__PRODUCT_DATA__.permalink)
     if(ssrProductSlug === route.params.slug) {
@@ -309,11 +317,15 @@ defineOptions({
 
     const isPreview = currentRoute.query.preview === 'true'
 
-    const [seo, configData, productData] = await Promise.all([
+    let [seo, configData, productData] = await Promise.all([
       fetchSeoForPath(currentRoute.path, getApiOrigin(ssrContext)),
       loadPageConfig('product', isPreview, getApiOrigin(ssrContext)), // The helper we'll create
       productsStore.fetchSingleProduct(currentRoute.params.slug, ssrContext)
     ])
+    if (!productData?.id) productData = null
+    // The store couldn't be reached (it didn't say "no such product"):
+    // "try again later", so search engines keep the page.
+    if (ssrContext?.res && !productData && !seo.not_found) ssrContext.res.statusCode = 503
     if (ssrContext) {
 
       // ✅ Normalize categories on SSR
@@ -336,7 +348,7 @@ defineOptions({
 })
 
 
-useSeoMeta()
+const { seoData } = useSeoMeta()
 
 
 // A variant stores the choice's slug ("light-blue") for shared attributes
@@ -485,9 +497,12 @@ async function fetchProduct(slug) {
     product.value = await productsStore.fetchSingleProduct(slug)
   }
 
-  if (!product.value) {
-    console.error('Product not found:', slug)
-    return
+  if (!product.value?.id) {
+    product.value = null
+    const seo = await fetchSeoForPath(`product/${slug}`)
+    notFound.value = !!seo.not_found
+  } else {
+    notFound.value = false
   }
 }
 async function enhanceProduct() {
@@ -710,8 +725,7 @@ watch(
     imagesCarousel.slide.value = 0
     imagesCarousel.recompute(true)
 
-    fetchSeoForPath(`product/${newSlug}`)
-      .then(useSeoMeta())
+    fetchSeoForPath(`product/${newSlug}`).then((seo) => { seoData.value = seo })
   }
 )
 

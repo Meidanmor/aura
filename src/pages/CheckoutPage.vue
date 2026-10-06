@@ -300,7 +300,7 @@ const $q = useQuasar()
 $q.iconSet.field.error = matError
 
 const pageConfig = ref('');
-useSeoMeta()
+useSeoMeta({ noindex: true })
 if (process.env.SERVER) {
   const ssr = useSSRContext()
   pageConfig.value = ssr?.pageConfig || null

@@ -126,7 +126,7 @@ defineOptions({
 
   }
 })
-useSeoMeta()
+useSeoMeta({ noindex: true })
 const increase = (id) => cart.increase(id)
 const decrease = (id) => cart.decrease(id)
 const remove = (itemKey=null, itemAPIkey=null) => cart.remove(itemKey,itemAPIkey)
