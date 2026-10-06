@@ -62,6 +62,11 @@ export function createArchivePreFetch(mode) {
             ? `product-category/${currentRoute.params.slug}`
             : 'shop'
         const seo = await fetchSeoForPath(seoPath, getApiOrigin(ssrContext))
+        // The owner changed the category's address: send visitors to the new one.
+        if (seo.redirect) {
+            redirect(seo.redirect, 301)
+            return
+        }
 
         const urlFilters = parseQueryFilters(currentRoute.query)
         const sortParams = getSortParams(urlFilters.sortBy || 'menu_order')

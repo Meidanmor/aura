@@ -233,7 +233,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, useSSRContext, watch } from 'vue'
-import { useRoute, onBeforeRouteUpdate } from 'vue-router'
+import { useRoute, useRouter, onBeforeRouteUpdate } from 'vue-router'
 import { fetchProductById } from 'src/api/woocommerce.js'
 import cart from 'src/stores/cart.js'
 import wishlist from 'src/stores/wishlist.js'
@@ -262,6 +262,7 @@ import {loadPageConfig, subscribeToLiveConfig} from "src/utils/config-loader.js"
 
 const $q = useQuasar()
 const route = useRoute()
+const router = useRouter()
 const product = ref(null)
 // No such product (or not published): the page shows the 404 page and answers 404.
 const notFound = ref(false)
@@ -313,7 +314,7 @@ imagesCarousel.recompute()
 // 🟢 Run on SSR only
 // Inside your Page or Layout
 defineOptions({
-  async preFetch ({ ssrContext, currentRoute }) {
+  async preFetch ({ ssrContext, currentRoute, redirect }) {
 
     const isPreview = currentRoute.query.preview === 'true'
 
@@ -322,6 +323,11 @@ defineOptions({
       loadPageConfig('product', isPreview, getApiOrigin(ssrContext)), // The helper we'll create
       productsStore.fetchSingleProduct(currentRoute.params.slug, ssrContext)
     ])
+    // The owner changed the product's address: send visitors (and search engines) to the new one.
+    if (seo.redirect && !productData?.id) {
+      redirect(seo.redirect, 301)
+      return
+    }
     if (!productData?.id) productData = null
     // The store couldn't be reached (it didn't say "no such product"):
     // "try again later", so search engines keep the page.
@@ -500,6 +506,10 @@ async function fetchProduct(slug) {
   if (!product.value?.id) {
     product.value = null
     const seo = await fetchSeoForPath(`product/${slug}`)
+    if (seo.redirect) {
+      router.replace(seo.redirect)
+      return
+    }
     notFound.value = !!seo.not_found
   } else {
     notFound.value = false
