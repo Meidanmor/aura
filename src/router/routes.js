@@ -28,6 +28,10 @@ const routes = [
   meta: { public: true } // optional, if you have auth guards
 },
 
+      // The store owner's own pages (/about, /shipping…, built in the dashboard).
+      // The app's own routes above are static, so they always win over this one.
+      { path: ':pageSlug', name: 'custom-page', component: () => import('pages/CustomPage.vue') },
+
       // Always leave this as last one,
       // but you can also remove it.
       // Nested under MainLayout so unmatched routes still get the

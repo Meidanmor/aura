@@ -7,6 +7,22 @@
         </svg>
         <p>{{ footerText || '' }}</p>
       </div>
+      <!-- The owner's footer pages (published with the dashboard). -->
+      <template v-if="Array.isArray(pages)">
+        <div class="footer-column">
+          <h2 class="links-title">Shop</h2>
+          <nav>
+            <router-link to="/products">Shop All</router-link>
+          </nav>
+        </div>
+        <div v-if="pages.length" class="footer-column">
+          <h2 class="links-title">Information</h2>
+          <nav>
+            <router-link v-for="p in pages" :key="p.slug" :to="`/${p.slug}`">{{ p.title }}</router-link>
+          </nav>
+        </div>
+      </template>
+      <template v-else>
       <div class="footer-column">
         <h2 class="links-title">Shop</h2>
         <nav>
@@ -32,6 +48,7 @@
           <router-link to="/contact-us">Contact Us</router-link>
         </nav>
       </div>
+      </template>
       <div class="footer-bottom">
         <span>All right reserved</span>
       </div>
@@ -45,6 +62,11 @@ defineProps({
     type: String,
     default: '',
     required: false
+  },
+  // The owner's footer pages ([ { title, slug } ]); null on stores published before pages existed.
+  pages: {
+    type: Array,
+    default: null
   }
 })
 </script>

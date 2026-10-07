@@ -9,6 +9,7 @@
         @toggle-wishlist="toggleWishlistDrawer"
         :app-logo="brandSettings?.logo"
         :sticky-header="headerSettings?.settings?.sticky"
+        :pages="headerSettings?.pages || []"
     />
     <!-- Mobile Navigation Drawer -->
     <q-drawer
@@ -24,6 +25,7 @@
         v-if="uiHydrated"
     >
       <MobileNavDrawer
+          :pages="headerSettings?.pages || []"
           :supported="supported"
           :permission="permission"
           :is-super-admin="isSuperAdmin"
@@ -71,6 +73,7 @@
 
     <AppFooter
         :footer-text="footerSettings?.footer_text"
+        :pages="footerSettings?.pages"
     />
 
     <CookieBanner v-if="uiHydrated" />

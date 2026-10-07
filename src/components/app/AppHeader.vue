@@ -7,6 +7,7 @@
           <q-toolbar-title class="nav-bar gt-sm">
             <router-link to="/" class="text-h6 no-decoration">My Shop</router-link>
             <router-link to="/products/" class="text-h6 no-decoration">Products</router-link>
+            <router-link v-for="p in pages" :key="p.slug" :to="`/${p.slug}`" class="text-h6 no-decoration">{{ p.title }}</router-link>
             <router-link to="/cart/" class="text-h6 no-decoration">Cart</router-link>
             <router-link to="/checkout/" class="text-h6 no-decoration">Checkout</router-link>
             <router-link to="/my-account/" class="text-h6 no-decoration">My account</router-link>
@@ -60,6 +61,11 @@ defineProps({
     type: Boolean,
     default: false,
     required: true
+  },
+  // The owner's pages shown in the menu: [ { title, slug } ].
+  pages: {
+    type: Array,
+    default: () => []
   }
 })
 

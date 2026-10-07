@@ -20,6 +20,13 @@
           <q-item-section>Products</q-item-section>
         </q-item>
 
+        <q-item v-for="p in pages" :key="p.slug" clickable v-ripple :to="`/${p.slug}`" @click="closeMenu">
+          <q-item-section avatar>
+            <q-icon :name="matDescription" />
+          </q-item-section>
+          <q-item-section>{{ p.title }}</q-item-section>
+        </q-item>
+
         <q-item clickable v-ripple to="/cart/" @click="closeMenu">
           <q-item-section avatar>
             <q-icon :name="matShoppingCart" />
@@ -70,6 +77,7 @@
 <script setup>
 import {
   matClose,
+  matDescription,
   matShoppingCart,
   matHome,
   matStorefront,
@@ -80,6 +88,11 @@ import {
 const vapidConfigured = !!import.meta.env.VITE_VAPID_APP_PUBLIC_KEY
 
 defineProps({
+  // The owner's pages shown in the menu: [ { title, slug } ].
+  pages: {
+    type: Array,
+    default: () => []
+  },
   supported: {
     type: Boolean,
     required: true
