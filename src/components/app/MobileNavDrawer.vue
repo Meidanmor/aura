@@ -5,7 +5,12 @@
         <div class="text-h6">Menu</div>
         <q-btn flat dense aria-label="Close menu" padding="none" :icon="matClose" @click="closeMenu"/>
       </div>
-      <q-list bordered padding>
+      <!-- The owner's menu (Design → Menus). -->
+      <q-list v-if="Array.isArray(menu)" bordered padding>
+        <MobileNavItems :items="menu" @navigate="closeMenu" />
+      </q-list>
+      <!-- Stores published before menus existed. -->
+      <q-list v-else bordered padding>
         <q-item clickable v-ripple to="/" @click="closeMenu">
           <q-item-section avatar>
             <q-icon :name="matHome" />
@@ -18,13 +23,6 @@
             <q-icon :name="matStorefront" />
           </q-item-section>
           <q-item-section>Products</q-item-section>
-        </q-item>
-
-        <q-item v-for="p in pages" :key="p.slug" clickable v-ripple :to="`/${p.slug}`" @click="closeMenu">
-          <q-item-section avatar>
-            <q-icon :name="matDescription" />
-          </q-item-section>
-          <q-item-section>{{ p.title }}</q-item-section>
         </q-item>
 
         <q-item clickable v-ripple to="/cart/" @click="closeMenu">
@@ -75,9 +73,9 @@
 </template>
 
 <script setup>
+import MobileNavItems from "./MobileNavItems.vue"
 import {
   matClose,
-  matDescription,
   matShoppingCart,
   matHome,
   matStorefront,
@@ -88,10 +86,10 @@ import {
 const vapidConfigured = !!import.meta.env.VITE_VAPID_APP_PUBLIC_KEY
 
 defineProps({
-  // The owner's pages shown in the menu: [ { title, slug } ].
-  pages: {
+  // The header menu: [ { label, url, new_tab, external, children } ]; null before the store published one.
+  menu: {
     type: Array,
-    default: () => []
+    default: null
   },
   supported: {
     type: Boolean,

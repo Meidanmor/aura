@@ -9,7 +9,7 @@
         @toggle-wishlist="toggleWishlistDrawer"
         :app-logo="brandSettings?.logo"
         :sticky-header="headerSettings?.settings?.sticky"
-        :pages="headerSettings?.pages || []"
+        :menu="Array.isArray(headerSettings?.menu) ? headerSettings.menu : null"
     />
     <!-- Mobile Navigation Drawer -->
     <q-drawer
@@ -25,7 +25,7 @@
         v-if="uiHydrated"
     >
       <MobileNavDrawer
-          :pages="headerSettings?.pages || []"
+          :menu="Array.isArray(headerSettings?.menu) ? headerSettings.menu : null"
           :supported="supported"
           :permission="permission"
           :is-super-admin="isSuperAdmin"
@@ -73,7 +73,7 @@
 
     <AppFooter
         :footer-text="footerSettings?.footer_text"
-        :pages="footerSettings?.pages"
+        :columns="Array.isArray(footerSettings?.columns) ? footerSettings.columns : null"
     />
 
     <CookieBanner v-if="uiHydrated" />

@@ -396,6 +396,26 @@ async function fetchSingleProduct(slug, ssrContext = null) {
   }
   return null
 }
+// Products looked up one by one (the cart and wishlist need a product's
+// details): kept apart from `products`, which is the list the shop shows.
+const byId = new Map()
+
+/** One product (or variation) by id: from what's loaded, else from the API. null when it doesn't exist. */
+async function fetchById(id) {
+  const key = Number(id)
+  const known = getById(key) || byId.get(key)
+  if (known) return known
+  try {
+    const res = await fetch(`${storeApiBase()}/products/${key}`)
+    if (!res.ok) return null
+    const data = await res.json()
+    if (data?.id) byId.set(key, data)
+    return data?.id ? data : null
+  } catch {
+    return null
+  }
+}
+
 function getById(id) {
   return products.value.find(p => p.id === id) || null
 }
@@ -493,6 +513,7 @@ export default {
   preFetchProducts,
   fetchProductsIfNeeded,
   getById,
+  fetchById,
   getByIds,
   fetchSingleProduct,
   getFeaturedProducts,

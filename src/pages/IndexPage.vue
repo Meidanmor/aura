@@ -42,7 +42,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed, useSSRContext } from 'vue'
 import { useRoute } from 'vue-router'
-import productsStore from 'src/stores/products'
 import { loadPageConfig, subscribeToLiveConfig } from 'src/utils/config-loader'
 import SectionRenderer from '../components/sections/SectionRenderer.vue'
 import {useSeoMeta} from "src/composables/useSeo.js";
@@ -51,40 +50,14 @@ import {resolveHeroImageSrc} from 'src/utils/resolve-hero-image.js';
 import { sanitizeHeroTitle } from 'src/utils/sanitizeHtml.js'
 
 
-// Static, pre-hydration featured-products list. This is the single source of
-// truth for the SSR/no-JS markup and MUST match what preFetch resolved,
-// otherwise the client render mismatches the server-rendered HTML.
-// We do NOT fall back to deriving this from productsStore + featured_products
-// ids anymore — that's what caused the mismatch when config.featured_products
-// referenced stale/removed product ids. We trust preFetch's resolution
-// (with its own internal fallback) as the only source for this list.
-const staticFeaturedProducts = ref([])
-
-if (process.env.CLIENT && window.__HOME_PRODUCTS_DATA__) {
-  staticFeaturedProducts.value = window.__HOME_PRODUCTS_DATA__
-}
-
 const route = useRoute();
 let unsubscribeLiveConfig = () => {}
 
 defineOptions({
   async preFetch({ssrContext, currentRoute}) {
 
-    // Resolves the featured-products list for the homepage.
-    // Tries the configured featured_products ids first; falls back to the
-    // latest products if there are no ids configured, or if resolving the
-    // configured ids came back empty (e.g. stale ids no longer in the catalog).
-    async function resolveFeaturedProducts(featuredIds) {
-      let products = featuredIds?.length
-          ? await productsStore.getFeaturedProducts(featuredIds, ssrContext)
-          : await productsStore.preFetchProducts({api: true, per_page: 6, dryRun: true, ssrContext}).then(r => r.products)
-
-      if (!products?.length) {
-        products = await productsStore.preFetchProducts({api: true, per_page: 6, dryRun: true, ssrContext}).then(r => r.products)
-      }
-
-      return products
-    }
+    // Products are loaded by the sections that show them (useSectionData),
+    // only when the homepage has such a section.
 
     const {fetchSeoForPath} = await import('src/composables/useSeo')
 
@@ -100,14 +73,9 @@ defineOptions({
 
     }
 
-    const featuredIds = configData?.featured_products || []
-    const leanProducts = await resolveFeaturedProducts(featuredIds)
-
     if (ssrContext) {
       // Initialize the state object if it doesn't exist
       ssrContext.seoData = seo
-      // INJECT PRODUCTS HERE:
-      ssrContext.homeProductsData = leanProducts
       ssrContext.pageConfig = configData
       // 2. Attach it to the rendered state (for the component)
       ssrContext.heroData = {
@@ -117,7 +85,6 @@ defineOptions({
     } else {
       window.__PAGE_CONFIG__ = configData;
       window.__SEO_DATA__ = seo;
-      window.__HOME_PRODUCTS_DATA__ = leanProducts
 
     }
   }
@@ -135,7 +102,6 @@ useSeoMeta()
 if (process.env.SERVER) {
   const ssr = useSSRContext()
   homeSettings.value = ssr?.pageConfig || null
-  staticFeaturedProducts.value = ssr?.homeProductsData || [];
 
 }
 

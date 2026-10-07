@@ -186,9 +186,9 @@ async function getCachedProduct(productId) {
 
   try {
     if (typeof navigator !== 'undefined' && navigator.onLine) {
-      await productsStore.fetchProductsIfNeeded()
-      const fromAfterFetch = productsStore.getById(Number(productId))
-      if (fromAfterFetch) return fromAfterFetch
+      // Just this product, not a page of the catalog hoping it's on it.
+      const fetched = await productsStore.fetchById(productId)
+      if (fetched) return fetched
     }
   } catch (err) {
     if (DEBUG) console.warn('[cart] getCachedProduct fetch failed', err)

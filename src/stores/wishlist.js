@@ -81,8 +81,8 @@ async function _getCachedProduct(productId) {
     }
 
     if (typeof navigator !== 'undefined' && navigator.onLine) {
-      await productsStore.fetchProductsIfNeeded()
-      return productsStore.getById(Number(productId)) || null
+      // Just this product, not a page of the catalog hoping it's on it.
+      return await productsStore.fetchById(productId)
     }
   } catch (err) {
     if (DEBUG) console.warn('[wishlist] _getCachedProduct failed', err)

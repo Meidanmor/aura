@@ -30,7 +30,8 @@ const routes = [
 
       // The store owner's own pages (/about, /shipping…, built in the dashboard).
       // The app's own routes above are static, so they always win over this one.
-      { path: ':pageSlug', name: 'custom-page', component: () => import('pages/CustomPage.vue') },
+      // (pagePath may have slashes: pages inside pages, /about/team.)
+      { path: ':pagePath(.+)', name: 'custom-page', component: () => import('pages/CustomPage.vue') },
 
       // Always leave this as last one,
       // but you can also remove it.

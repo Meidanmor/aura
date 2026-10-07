@@ -7,18 +7,12 @@
         </svg>
         <p>{{ footerText || '' }}</p>
       </div>
-      <!-- The owner's footer pages (published with the dashboard). -->
-      <template v-if="Array.isArray(pages)">
-        <div class="footer-column">
-          <h2 class="links-title">Shop</h2>
-          <nav>
-            <router-link to="/products">Shop All</router-link>
-          </nav>
-        </div>
-        <div v-if="pages.length" class="footer-column">
-          <h2 class="links-title">Information</h2>
-          <nav>
-            <router-link v-for="p in pages" :key="p.slug" :to="`/${p.slug}`">{{ p.title }}</router-link>
+      <!-- The owner's footer columns (Design → Menus); a column's title is optional. -->
+      <template v-if="Array.isArray(columns)">
+        <div v-for="(column, i) in columns" :key="i" class="footer-column">
+          <h2 v-if="column.title" class="links-title">{{ column.title }}</h2>
+          <nav :aria-label="column.title || 'Footer links'">
+            <FooterLinks :items="column.links" />
           </nav>
         </div>
       </template>
@@ -56,6 +50,7 @@
   </footer>
 </template>
 <script setup>
+import FooterLinks from "./FooterLinks.vue"
 
 defineProps({
   footerText: {
@@ -63,8 +58,8 @@ defineProps({
     default: '',
     required: false
   },
-  // The owner's footer pages ([ { title, slug } ]); null on stores published before pages existed.
-  pages: {
+  // The footer columns: [ { title, links } ]; null on stores published before menus existed.
+  columns: {
     type: Array,
     default: null
   }
