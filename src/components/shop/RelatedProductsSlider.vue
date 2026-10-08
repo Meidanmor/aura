@@ -89,11 +89,22 @@ watch(() => $q.screen.name, () => {
   carousel.recompute(false)
 })
 
+// Once per product: the page can re-render with the same product (hydration,
+// the full product replacing the cached one) without asking again.
+let loadedFor = ''
 const fetchRelatedProducts = async () => {
+  if (!props.productId) return
+  const key = `${props.productId}|${props.categoryId || ''}`
+  if (key === loadedFor) return
+  loadedFor = key
+
+  // dryRun: only return them, never replace the shop's product list.
   let result = await preFetchProducts({
     category: props.categoryId,
     per_page: 9,
+    dryRun: true,
   })
+  if (key !== loadedFor) return
 
   let related = (Array.isArray(result) ? result : result?.products ?? [])
       .filter((p) => p.id !== props.productId)
@@ -103,7 +114,8 @@ const fetchRelatedProducts = async () => {
       }))
 
   if (related.length === 0) {
-    result = await preFetchProducts({ per_page: 9 })
+    result = await preFetchProducts({ per_page: 9, dryRun: true })
+    if (key !== loadedFor) return
 
     related = (Array.isArray(result) ? result : result?.products ?? [])
         .filter((p) => p.id !== props.productId && p.is_in_stock)

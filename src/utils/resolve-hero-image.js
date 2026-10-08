@@ -1,14 +1,18 @@
 import {resolveLocalAsset} from "src/utils/server/resolve-local-resource.js";
+import { liveUrl } from 'src/utils/native-app'
 
-export async function resolveHeroImageSrc(heroImageUrl, path='homepage-hero', origin='') {
+/**
+ * The storefront's own copy of a published image (logo, hero), else the
+ * backend URL. Configs published since images got their own names say
+ * exactly where the copy is (localPath: "/branding/12-logo.svg"), so nothing
+ * has to be looked up; older configs are checked for a copy by file name.
+ */
+export async function resolveHeroImageSrc(heroImageUrl, path='homepage-hero', origin='', localPath='') {
     if (!heroImageUrl) return ''
 
-    // Only attempt local-file resolution on the server — fs/path don't exist in the browser,
-    // and on a client-side SPA navigation we can't check the filesystem anyway, so just
-    // pass the backend URL straight through as the fallback.
-    /*if (!process.env.SERVER) {
-        return heroImageUrl
-    }*/
+    if (typeof localPath === 'string' && /^\/(homepage-hero|branding)\/[^/]+$/.test(localPath)) {
+        return liveUrl(localPath)
+    }
 
     return resolveLocalAsset({
         url: heroImageUrl,

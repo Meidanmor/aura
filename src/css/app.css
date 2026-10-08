@@ -719,6 +719,25 @@ footer .footer-column.first {
     flex-direction: column;
     gap: 20px;
 }
+footer .footer-brand {
+    display: inline-flex;
+    text-decoration: none;
+    color: inherit;
+}
+footer .footer-brand img {
+    max-height: 40px;
+    max-width: 160px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+.footer-store-name,
+.header-store-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--q-text, #111);
+    text-decoration: none;
+}
 footer .footer-column:not(.first) {
     text-align: center;
     display: flex;
@@ -864,7 +883,7 @@ header:not(.sticky) {
   background: white;
   color: #111;
   border-radius: 18px;
-  padding: 40px 25px;
+  padding: 20px 25px;
   box-shadow: 0 10px 30px rgba(0,0,0,.12);
   display: flex;
   gap: 14px;
@@ -914,12 +933,30 @@ header:not(.sticky) {
 }
 
 @media (max-width: 600px) {
+  /* A short strip at the bottom on phones, so it doesn't hide the page under it. */
+  .cookie-banner {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  .cookie-text {
+    min-width: 0;
+    font-size: 13px;
+  }
+
   .cookie-actions {
-    width: 100%;
+    flex-shrink: 0;
+    gap: 4px;
   }
 
   .cookie-actions .q-btn {
-    flex: 1;
+    padding: 4px 8px;
+    min-height: 32px;
   }
 }
 

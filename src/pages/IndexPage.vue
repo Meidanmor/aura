@@ -1,6 +1,7 @@
 <template>
   <div>
-    <section class="hero-section-sec">
+    <!-- No hero at all when the owner left it empty (no plain coloured block). -->
+    <section v-if="hasHero" class="hero-section-sec">
       <img
           v-if="homeSettings?.hero_image"
           fetchpriority="high"
@@ -35,7 +36,9 @@
 
     <!-- CMS-configurable Homepage Sections (Shop Builder plugin) — renders
          below the hero, in the order configured in wp-admin. -->
-    <SectionRenderer :sections="homeSettings?.sections" />
+    <div :class="{ 'default-home': sections === DEFAULT_SECTIONS }">
+      <SectionRenderer :sections="sections" />
+    </div>
   </div>
 </template>
 
@@ -69,7 +72,7 @@ defineOptions({
     ])
 
     if (configData) {
-      configData.hero_image = await resolveHeroImageSrc(configData.hero_image, "homepage-hero", getApiOrigin(ssrContext))
+      configData.hero_image = await resolveHeroImageSrc(configData.hero_image, "homepage-hero", getApiOrigin(ssrContext), configData.hero_image_path)
 
     }
 
@@ -107,6 +110,26 @@ if (process.env.SERVER) {
 
 const sanitizedHeroTitle = computed(() => sanitizeHeroTitle(homeSettings.value?.hero_title))
 
+const hasHero = computed(() => {
+  const h = homeSettings.value
+  return !!(h?.hero_image || sanitizedHeroTitle.value || h?.hero_description || (h?.hero_btn?.text && h?.hero_btn?.url))
+})
+
+// A store whose homepage isn't designed yet still shows its products, not an empty page.
+const DEFAULT_SECTIONS = [{
+  id: 'sec_default_home',
+  enabled: true,
+  style: {},
+  blocks: [
+    { id: 'blk_default_heading', type: 'heading', enabled: true, style: {}, data: { title: 'Our products', tag: 'h2', alignment: 'center' } },
+    { id: 'blk_default_products', type: 'product_grid', enabled: true, style: {}, data: { query_type: 'newest', limit: 8, show_view_all: true, view_all_url: '/products', view_all_text: 'View all products' } },
+  ],
+}]
+const sections = computed(() => {
+  const own = (homeSettings.value?.sections || []).filter((s) => s && s.enabled !== false)
+  return own.length ? own : DEFAULT_SECTIONS
+})
+
 // ----------------- Mounted -----------------
 onMounted(async() => {
   if (window.__PAGE_CONFIG__ && Object.keys(window.__PAGE_CONFIG__).length) {
@@ -117,7 +140,7 @@ onMounted(async() => {
     const freshConfig = await loadPageConfig('home', isPreview)
     if (freshConfig) {
       if(freshConfig?.hero_image){
-        freshConfig.hero_image = await resolveHeroImageSrc(freshConfig.hero_image, 'homepage-hero');
+        freshConfig.hero_image = await resolveHeroImageSrc(freshConfig.hero_image, 'homepage-hero', '', freshConfig.hero_image_path);
       }
       homeSettings.value = freshConfig
     }
@@ -125,7 +148,7 @@ onMounted(async() => {
   unsubscribeLiveConfig = subscribeToLiveConfig('home', (data) => { homeSettings.value = data }, {
     // Published update (new deploy): resolve the hero image like preFetch does.
     onPublished: async (data) => {
-      if (data?.hero_image) data.hero_image = await resolveHeroImageSrc(data.hero_image, 'homepage-hero')
+      if (data?.hero_image) data.hero_image = await resolveHeroImageSrc(data.hero_image, 'homepage-hero', '', data.hero_image_path)
       homeSettings.value = data
     }
   })
@@ -136,6 +159,12 @@ onUnmounted(() => {
 })
 
 </script>
+
+<style scoped>
+.default-home {
+  padding-top: 48px;
+}
+</style>
 <style>
 @import 'src/css/home-page.css';
 </style>

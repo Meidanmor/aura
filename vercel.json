@@ -30,5 +30,34 @@
       "source": "/(.*)",
       "destination": "/api/server.js"
     }
+  ],
+  "headers": [
+    {
+      "source": "/sections/:file(\\d+-.+)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/branding/:file(\\d+-.+)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/homepage-hero/:file(\\d+-.+)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
   ]
 }

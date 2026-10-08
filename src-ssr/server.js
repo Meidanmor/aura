@@ -126,6 +126,9 @@ export const close = defineSsrClose(({ listenResult }) => {
   return listenResult.close()
 })
 
+// "assets/IndexPage-C3Q_Mkj-.js": Vite's hashed build files.
+const hashedRE = /[\\/]assets[\\/][^\\/]+-[\w-]{8}\.(js|css|woff2?|png|jpe?g|svg|webp)$/
+
 const maxAge = process.env.DEV
   ? 0
   : 1000 * 60 * 60 * 24 * 30
@@ -141,7 +144,14 @@ const maxAge = process.env.DEV
  */
 export const serveStaticContent = defineSsrServeStaticContent(({ app, resolve }) => {
   return ({ urlPath = '/', pathToServe = '.', opts = {} }) => {
-    const serveFn = express.static(resolve.public(pathToServe), { maxAge, ...opts })
+    const serveFn = express.static(resolve.public(pathToServe), {
+      maxAge,
+      // Build files carry a hash in their name (a change is a new file): keep them for good.
+      setHeaders: (res, filePath) => {
+        if (!process.env.DEV && hashedRE.test(filePath)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+      },
+      ...opts
+    })
     app.use(resolve.urlPath(urlPath), serveFn)
   }
 })

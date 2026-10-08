@@ -21,7 +21,9 @@
 
         </div>
         <router-link to="/" aria-label="Navigate to home page" class="flex items-center order-first">
-          <img :alt="storeName ? `${storeName} logo` : 'Logo'" :src="appLogo" width="84" height="19" loading="eager" decoding="sync" fetchpriority="high" />
+          <img v-if="appLogo" :alt="storeName ? `${storeName} logo` : 'Logo'" :src="appLogo" width="84" height="19" loading="eager" decoding="sync" fetchpriority="high" />
+          <!-- No logo yet: the store's name instead of a broken image. -->
+          <span v-else class="header-store-name">{{ storeName || 'Home' }}</span>
         </router-link>
         <div>
           <q-btn flat dense :icon="matFavoriteBorder" aria-label="Add to wishlist" @click="emit('toggle-wishlist')" class="q-ml-sm q-mr-sm">
@@ -58,8 +60,7 @@ defineProps({
   },
   appLogo: {
     type: String,
-    default: '',
-    required: true
+    default: ''
   },
   stickyHeader: {
     type: Boolean,

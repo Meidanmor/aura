@@ -72,6 +72,7 @@
     </q-page-container>
 
     <AppFooter
+        :app-logo="brandSettings?.logo"
         :footer-text="footerSettings?.footer_text"
         :columns="Array.isArray(footerSettings?.columns) ? footerSettings.columns : null"
     />
@@ -152,7 +153,7 @@ defineOptions({
     const headerConfig = await loadPageConfig('header', isPreview, siteURL);
     const footerConfig = await loadPageConfig('footer', isPreview, siteURL);
     if (configData) {
-      configData.logo = await resolveHeroImageSrc(configData.logo, "branding", siteURL)
+      configData.logo = await resolveHeroImageSrc(configData.logo, "branding", siteURL, configData.logo_path)
     }
 
     if (ssrContext) {
