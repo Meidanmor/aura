@@ -80,6 +80,10 @@
       <div class="col-12 col-md-6">
 
         <h1 class="q-mb-sm">{{ product.name }}</h1>
+        <a v-if="reviewsOn && product.review_count" href="#reviews" class="product-rating q-mb-sm" @click.prevent="scrollToReviews">
+          <q-rating :model-value="Number(product.average_rating)" readonly size="1.1em" color="amber" :icon="matStarBorder" :icon-selected="matStar" :icon-half="matStarHalf" />
+          <span>{{ Number(product.average_rating).toFixed(1) }} · {{ product.review_count }} {{ product.review_count === 1 ? 'review' : 'reviews' }}</span>
+        </a>
 
         <!-- Categories -->
         <div class="q-mb-md">
@@ -214,6 +218,7 @@
       </div>
     </div>
 
+    <ProductReviews v-if="reviewsOn" :key="product.id" :product-id="product.id" />
     <SectionRenderer :sections="productSettings?.sections" page="product" location="before_related_products"/>
     <RelatedProductsSlider
       :productId="product.id"
@@ -238,6 +243,7 @@ import { fetchProductById } from 'src/api/woocommerce.js'
 import cart from 'src/stores/cart.js'
 import wishlist from 'src/stores/wishlist.js'
 import RelatedProductsSlider from '../components/shop/RelatedProductsSlider.vue'
+import ProductReviews from 'components/shop/ProductReviews.vue'
 import { useQuasar } from 'quasar'
 import { fetchSeoForPath } from 'src/composables/useSeo'
 import productsStore from 'src/stores/products'
@@ -247,7 +253,8 @@ import {
   matAdd,
   matRemove,
   matArrowDropDown,
-  matCancel, matError
+  matCancel, matError,
+  matStar, matStarBorder, matStarHalf
 } from '@quasar/extras/material-icons'
 import { useSanitizedDescription, useSanitizedPrice, useSanitizedText } from 'src/composables/useSanitizedHtml'
 import LightboxGallery from 'src/components/LightboxGallery.vue'
@@ -674,6 +681,12 @@ if(selectedVariation.value){
   }
 }
 const safeDescription = useSanitizedDescription(() => product.value?.description)
+
+// Reviews: shown when the store turned them on (Store API extension data).
+const reviewsOn = computed(() => product.value?.extensions?.qwoo?.reviews === true)
+function scrollToReviews() {
+  document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 const safePrice = useSanitizedPrice(() => product.value?.price_html)
 const safeVariationPrice = useSanitizedPrice(() => selectedVariation.value?.price_html)
 const safeCategoryName = useSanitizedText(() => product.value?.categories?.[0]?.name)
@@ -772,5 +785,16 @@ img {
 }
 .category-chip {
   display: inline-flex;
+}
+.product-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+  text-decoration: none;
+  font-size: 14px;
+}
+.product-rating:hover span {
+  text-decoration: underline;
 }
 </style>

@@ -80,6 +80,10 @@ function structuredData(ssrContext, req) {
             ...(product.sku ? { sku: product.sku } : {}),
             url,
             offers,
+            // Approved reviews' average, when the store shows reviews.
+            ...(product.extensions?.qwoo?.reviews === true && Number(product.review_count) > 0
+                ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: Number(product.average_rating).toFixed(1), reviewCount: Number(product.review_count), bestRating: '5', worstRating: '1' } }
+                : {}),
         })
         const category = product.categories?.[0] || product.extensions?.qwoo?.default_category
         out.push(crumb([

@@ -22,6 +22,8 @@ const routes = [
       { path: 'my-account', name: 'my-account', component: () => import('pages/AccountPage.vue') },
       { path: 'forgot-password', name: 'forgot-password', component: () => import('pages/ForgotPasswordPage.vue') },
       { path: 'reset-password', name: 'reset-password', component: () => import('pages/ResetPasswordPage.vue') },
+      // From the "How was your order?" email (?o=order&p=product&t=token).
+      { path: 'review', name: 'review', component: () => import('pages/ReviewPage.vue') },
         {
   path: '/auth/callback',
   component: () => import('pages/AuthCallback.vue'),
