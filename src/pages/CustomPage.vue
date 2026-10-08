@@ -40,6 +40,15 @@ export const plain = (s) => {
 // Pages published before pages had parents have a slug and no path.
 const pathOf = (p) => p.path || p.slug || ''
 
+/** The owner's homepage (the page with role "home", at "/"), or null. */
+export async function homePageOf(origin = '') {
+  const list = await loadPageConfig('pages', false, origin)
+  const entry = (list?.pages || []).find((p) => p.role === 'home')
+  if (!entry) return null
+  const page = await loadPageConfig(`page-${entry.id}`, false, origin)
+  return page?.sections ? page : null
+}
+
 /** The published page at an address, or null. */
 export async function pageAt(path, origin = '') {
   const list = await loadPageConfig('pages', false, origin)
