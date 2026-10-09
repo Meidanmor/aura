@@ -4,7 +4,7 @@
 
     <div class="q-pa-md">
       <q-breadcrumbs>
-          <q-breadcrumbs-el label="Home" to="/" />
+          <q-breadcrumbs-el :label="t('Home')" to="/" />
           <q-breadcrumbs-el :to="`/product-category/${product?.categories[0]?.slug}`"><span v-html="safeCategoryName"></span></q-breadcrumbs-el>
           <q-breadcrumbs-el :label="product?.name" />
       </q-breadcrumbs>
@@ -41,7 +41,7 @@
               :src="img.src"
               :srcset="img.srcset"
               :sizes="img.sizes"
-              :alt="`${product.name} image ${index}`"
+              :alt="t('{name} image {n}', { name: product.name, n: index })"
               :loading="index === 0 ? 'eager' : 'lazy'"
               :fetchpriority="index === 0 ? 'high' : 'auto'"
               :decoding="index === 0 ? 'sync' : 'async'"
@@ -61,7 +61,7 @@
             :sizes="product.images[0]?.sizes"
             fetchpriority="high"
             loading="eager"
-            :alt="`${product.name} featured image`"
+            :alt="t('{name} featured image', { name: product.name })"
             style="cursor: zoom-in; max-height: 500px"
             height="400"
             width="400"
@@ -139,8 +139,8 @@
   :dropdown-icon="matArrowDropDown"
   :clear-icon="matCancel"
   clearable
-  :placeholder="`Select a ${attribute.name}`"
-  :label="`Select a ${attribute.name}`"
+  :placeholder="t('Select a {name}', { name: attribute.name })"
+  :label="t('Select a {name}', { name: attribute.name })"
   emit-value
   map-options
   @update:model-value="onVariationChange"
@@ -151,19 +151,19 @@
           </div>
         </div>
 
-        <div v-if="product.status && product.status === 'draft'"><b>This is a draft product. It's shown for admins only!</b></div>
+        <div v-if="product.status && product.status === 'draft'"><b>{{ t('This is a draft product. It\'s shown for admins only!') }}</b></div>
 
         <div v-else-if="product.is_in_stock">
           <div style="color:red" v-if="Number(product.add_to_cart?.maximum) != 0 && Number(product.add_to_cart?.maximum) < 10">
-            <span v-if="Number(product.add_to_cart?.maximum) === 1">The is only 1 left in stock!</span>
-            <span v-else>The are only {{product.add_to_cart?.maximum}} left in stock!</span>
+            <span v-if="Number(product.add_to_cart?.maximum) === 1">{{ t('Only 1 left in stock!') }}</span>
+            <span v-else>{{ t('Only {n} left in stock!', { n: product.add_to_cart?.maximum }) }}</span>
           </div>
 
           <SectionRenderer :sections="productSections" page="product" location="before_add_to_cart_form"/>
 
           <!-- Quantity Selector -->
         <div class="row items-center q-mb-md">
-          <q-btn aria-label="Decrease quantity" flat round :icon="matRemove" @click="decreaseQty" />
+          <q-btn :aria-label="t('Decrease quantity')" flat round :icon="matRemove" @click="decreaseQty" />
           <q-input
             v-model.number="quantity"
             type="number"
@@ -171,13 +171,13 @@
             :max="product?.add_to_cart?.maximum"
             dense
             style="width: 60px; text-align: center"
-            :aria-label="`Quantity for ${product.name}`"
+            :aria-label="t('Quantity for {name}', { name: product.name })"
           />
-          <q-btn aria-label="Increase quantity" flat round :icon="matAdd" @click="increaseQty(product.add_to_cart?.maximum)" />
+          <q-btn :aria-label="t('Increase quantity')" flat round :icon="matAdd" @click="increaseQty(product.add_to_cart?.maximum)" />
         </div>
 
         <q-btn
-          label="Add to Cart"
+          :label="t('Add to Cart')"
           class="q-mr-sm"
           color="secondary"
           :disable="shouldDisableCartButtons"
@@ -185,12 +185,13 @@
           :loading="cart.state.loading.cart"
         >
           <q-tooltip v-if="shouldDisableCartButtons">
-            Please select a variation first.
+            {{ t('Please select a variation first.') }}
           </q-tooltip>
         </q-btn>
 
         <q-btn
-          label="Quick Checkout"
+          :label="t('Quick Checkout')"
+          data-quick-checkout
           color="black"
           to="/checkout"
           class="quick-checkout-btn"
@@ -199,7 +200,7 @@
           :loading="cart.state.loading.quickbuy"
         >
           <q-tooltip v-if="shouldDisableCartButtons">
-            Please select a variation first.
+            {{ t('Please select a variation first.') }}
           </q-tooltip>
         </q-btn>
 
@@ -207,11 +208,11 @@
 
         </div>
 
-        <div v-else> Out of stock </div>
+        <div v-else> {{ t('Out of stock') }} </div>
 
        <div class="full-width">
-        <q-btn class="text-black q-pa-none text-caption q-mt-sm" flat :loading="wishlist.isLoading(product.id)" v-if="wishlist.state.items && Object.values(wishlist.state.items).find(obj => selectedVariation ? selectedVariation.id : product.id === obj.id)" @click="addToWishlist" color="accent" label="Remove from wishlist" :icon="matFavorite" />
-        <q-btn class="text-black q-pa-none text-caption q-mt-sm" flat :loading="wishlist.isLoading(product.id)" v-else @click="addToWishlist" color="accent" label="Add to wishlist" :icon="matFavoriteBorder" />
+        <q-btn class="text-black q-pa-none text-caption q-mt-sm" flat :loading="wishlist.isLoading(product.id)" v-if="wishlist.state.items && Object.values(wishlist.state.items).find(obj => selectedVariation ? selectedVariation.id : product.id === obj.id)" @click="addToWishlist" color="accent" :label="t('Remove from wishlist')" :icon="matFavorite" />
+        <q-btn class="text-black q-pa-none text-caption q-mt-sm" flat :loading="wishlist.isLoading(product.id)" v-else @click="addToWishlist" color="accent" :label="t('Add to wishlist')" :icon="matFavoriteBorder" />
         </div>
         <SectionRenderer :sections="productSections" page="product" location="after_product_summary"/>
 
@@ -266,6 +267,9 @@ import {getApiOrigin} from "src/utils/server/get-api-origin.js";
 import SectionRenderer from "components/sections/SectionRenderer.vue";
 import ErrorNotFound from "pages/ErrorNotFound.vue";
 import {loadPageConfig, subscribeToLiveConfig} from "src/utils/config-loader.js";
+import { useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 
 const $q = useQuasar()
@@ -456,7 +460,7 @@ function addToCart(e) {
   handleAddToCart(e)
 }
 function handleAddToCart(e) {
-  if (e && e.target.innerText == 'QUICK CHECKOUT') {
+  if (e?.target?.closest?.('[data-quick-checkout]')) {
     openDrawer.value = false;
   }
   const matchedVariation = product.value.variations.find((variation) => {
@@ -491,7 +495,7 @@ function handleAddToCart(e) {
 }
 function increaseQty(maxQty) {
   if(quantity.value === maxQty){
-    cart.notifyUser($q, 'negative', 'There are only 9 in stock', matError)
+    cart.notifyUser($q, 'negative', t('There are only {n} in stock', { n: 9 }), matError)
     return;
   }
   quantity.value++
@@ -631,7 +635,7 @@ async function onVariationChange() {
       variationError.value = ''
     } else {
       selectedVariation.value = null
-      variationError.value = 'Please select valid variation options.'
+      variationError.value = t('Please select valid variation options.')
     }
 
     // Ensure no empty selections remain
@@ -661,7 +665,7 @@ async function onVariationChange() {
 function addToCartHandler(e) {
   if (isVariable.value) {
     if (!selectedVariation.value) {
-      variationError.value = 'Please select all variation options.'
+      variationError.value = t('Please select all variation options.')
       return
     }
     addToCart(e)

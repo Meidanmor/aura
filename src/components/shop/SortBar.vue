@@ -5,10 +5,10 @@
         filled
         :model-value="sortBy"
         @update:model-value="$emit('update:sortBy', $event)"
-        label="Sort by"
+        :label="t('Sort by')"
         emit-value
         map-options
-        :options="sortOptions"
+        :options="(sortOptions || []).map((o) => ({ ...o, label: t(o.label) }))"
         :dropdown-icon="matArrowDropDown"
         :loading-icon="matAutorenew"
         :clear-icon="matClose"
@@ -18,7 +18,7 @@
         class="mobile-only"
         :icon="matFilterList"
         :label="filterButtonLabel"
-        aria-label="Filter products button"
+        :aria-label="t('Filter products button')"
         color="secondary"
         @click="$emit('toggle-filters')"
     />

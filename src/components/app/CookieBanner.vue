@@ -1,8 +1,8 @@
 <template>
   <transition name="fade">
-    <div v-if="visible" class="cookie-banner" role="region" aria-label="Cookies">
+    <div v-if="visible" class="cookie-banner" role="region" :aria-label="t('Cookies')">
       <div class="cookie-text">
-        We use cookies to improve your experience on our website.
+        {{ t('We use cookies to improve your experience on our website.') }}
       </div>
 
       <div class="cookie-actions">
@@ -11,7 +11,7 @@
           v-if="privacyPath"
           flat
           no-caps
-          label="Privacy"
+          :label="t('Privacy')"
           :to="privacyPath"
           color="secondary"
         />
@@ -20,7 +20,7 @@
           unelevated
           no-caps
           color="secondary"
-          label="Accept"
+          :label="t('Accept')"
           @click="acceptCookies"
         />
       </div>

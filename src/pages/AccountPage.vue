@@ -1,24 +1,24 @@
 <!-- AccountPage.vue -->
 <template>
   <div class="q-pa-md">
-    <div v-if="deleteLink || deleteDone" class="delete-confirm q-pa-md q-mb-lg" role="region" aria-label="Delete account">
+    <div v-if="deleteLink || deleteDone" class="delete-confirm q-pa-md q-mb-lg" role="region" :aria-label="t('Delete account')">
       <template v-if="deleteDone">
-        <h2 class="text-h5 q-mt-none">Your account was deleted</h2>
-        <p>We've removed your account and your personal details. Thank you for shopping with us.</p>
-        <q-btn color="secondary" label="Back to the store" to="/" no-caps />
+        <h2 class="text-h5 q-mt-none">{{ t('Your account was deleted') }}</h2>
+        <p>{{ t('We\'ve removed your account and your personal details. Thank you for shopping with us.') }}</p>
+        <q-btn color="secondary" :label="t('Back to the store')" to="/" no-caps />
       </template>
       <template v-else>
-        <h2 class="text-h5 q-mt-none">Delete your account?</h2>
-        <p>Your account, saved details and your name, email, phone and addresses on past orders are removed for good. This can't be undone.</p>
+        <h2 class="text-h5 q-mt-none">{{ t('Delete your account?') }}</h2>
+        <p>{{ t('Your account, saved details and your name, email, phone and addresses on past orders are removed for good. This can\'t be undone.') }}</p>
         <div class="row q-gutter-sm">
-          <q-btn color="negative" label="Delete my account" no-caps :loading="deleteBusy" @click="confirmDelete" />
-          <q-btn flat label="Keep my account" no-caps @click="cancelDelete" />
+          <q-btn color="negative" :label="t('Delete my account')" no-caps :loading="deleteBusy" @click="confirmDelete" />
+          <q-btn flat :label="t('Keep my account')" no-caps @click="cancelDelete" />
         </div>
         <p v-if="deleteError" class="text-negative q-mt-sm" role="alert">{{ deleteError }}</p>
       </template>
     </div>
     <div class="container">
-      <h2>My account</h2>
+      <h2>{{ t('My account') }}</h2>
 
       <!-- Checking session on mount -->
       <div v-if="sessionLoading">
@@ -28,7 +28,7 @@
       <!-- Not logged in -->
       <div class="account-login-container" v-else-if="!isLoggedIn">
         <LoginForm @login-success="onLogin" />
-        <span class="flex q-mb-sm q-mt-sm text-h6" v-if="googleLoginEnabled">OR</span>
+        <span class="flex q-mb-sm q-mt-sm text-h6" v-if="googleLoginEnabled">{{ t('OR') }}</span>
         <GoogleLoginButton @login-success="onLogin"/>
       </div>
 
@@ -46,10 +46,10 @@
           active-color="primary"
           align="justify"
         >
-          <q-tab name="dashboard" label="Dashboard" />
-          <q-tab name="orders"    label="My Orders" />
-          <q-tab name="details"   label="Account Details" />
-          <q-tab name="logout"    label="Logout" />
+          <q-tab name="dashboard" :label="t('Dashboard')" />
+          <q-tab name="orders"    :label="t('My Orders')" />
+          <q-tab name="details"   :label="t('Account Details')" />
+          <q-tab name="logout"    :label="t('Logout')" />
         </q-tabs>
 
         <q-separator />
@@ -57,9 +57,9 @@
         <q-tab-panels v-model="tab" animated>
 
           <q-tab-panel name="dashboard">
-            <h2 class="text-h4">Dashboard</h2>
+            <h2 class="text-h4">{{ t('Dashboard') }}</h2>
             <div v-if="userData">
-              Welcome, {{ userData.first_name }} {{ userData.last_name }}
+              {{ t('Welcome, {first_name} {last_name}', { first_name: userData.first_name, last_name: userData.last_name }) }}
             </div>
             <div v-else>
               <q-spinner color="secondary" size="2em" />
@@ -76,7 +76,7 @@
           </q-tab-panel>
 
           <q-tab-panel name="logout">
-            <q-btn @click="logout" :loading="logoutLoading" label="Logout" />
+            <q-btn @click="logout" :loading="logoutLoading" :label="t('Logout')" />
             <div v-if="logoutError" class="text-negative q-mt-md">{{ logoutError }}</div>
           </q-tab-panel>
 
@@ -100,12 +100,15 @@ import { useRoute, useRouter } from 'vue-router'
 import GoogleLoginButton  from '../components/account/GoogleLoginButton.vue'
 import { matChevronLeft, matChevronRight } from '@quasar/extras/material-icons'
 import {useSeoMeta} from "src/composables/useSeo.js";
+import { t as i18nT, useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 defineOptions({
   async preFetch ({ ssrContext }) {
 
     const seo = {
-      title: 'My account',
+      title: i18nT('My account'),
       description: 'Account page',
       robots: 'index, follow'
     }
@@ -144,7 +147,7 @@ async function confirmDelete() {
       body: JSON.stringify(deleteLink.value),
     }, null, { skipNonceRetry: true })
     const json = await res.json().catch(() => ({}))
-    if (!res.ok) throw new Error(json?.message || 'Something went wrong. Please try again.')
+    if (!res.ok) throw new Error(json?.message || t('Something went wrong. Please try again.'))
     deleteDone.value = true
     userData.value   = null
     isLoggedIn.value = false
@@ -209,7 +212,7 @@ async function logout() {
     await fetchWithToken('/wp-json/qwoo/v1/logout', { method: 'POST' })
   } catch (err) {
     console.error('Logout request failed:', err)
-    logoutError.value = 'Logout failed. Please try again.'
+    logoutError.value = t('Logout failed. Please try again.')
     return
   } finally {
     logoutLoading.value = false

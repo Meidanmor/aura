@@ -3,9 +3,9 @@
     <div class="container not-found-inner text-center">
       <div class="not-found-code" aria-hidden="true">404</div>
 
-      <h1>Page not found</h1>
+      <h1>{{ t('Page not found') }}</h1>
       <p class="not-found-text">
-        The page you're looking for doesn't exist, may have been moved, or the link might be broken.
+        {{ t('The page you\'re looking for doesn\'t exist, may have been moved, or the link might be broken.') }}
       </p>
 
       <div class="not-found-actions">
@@ -15,7 +15,7 @@
             text-color="primary"
             class="btn-big"
             to="/"
-            label="Back to Homepage"
+            :label="t('Back to Homepage')"
         />
 
         <q-btn
@@ -24,7 +24,7 @@
             text-color="black"
             class="btn-styled"
             to="/products"
-            label="Browse Products"
+            :label="t('Browse Products')"
         />
       </div>
     </div>
@@ -34,12 +34,15 @@
 <script setup>
 import { useMeta } from 'quasar'
 import { useSSRContext } from 'vue'
+import { useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 // Static, standalone meta for this page — it isn't backed by real
 // content, so it shouldn't be indexed or inherit SEO data from
 // whatever route the user actually hit.
 useMeta({
-  title: '404 - Page Not Found',
+  title: t('404 - Page Not Found'),
   meta: {
     robots: { name: 'robots', content: 'noindex, nofollow', key: 'robots' }
   }

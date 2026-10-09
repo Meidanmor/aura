@@ -13,7 +13,7 @@ import { fetchSeoForPath } from 'src/composables/useSeo.js'
 import { getApiOrigin } from 'src/utils/server/get-api-origin.js'
 import { loadPageConfig } from 'src/utils/config-loader.js'
 import { blogCategoryMatch, pickSections } from 'src/utils/layouts.js'
-import { DEFAULT_BLOG_SECTIONS, postsPerPage } from 'src/utils/blog-templates.js'
+import { DEFAULT_BLOG_SECTIONS, localizeDefaults, postsPerPage } from 'src/utils/blog-templates.js'
 
 const keyOf = (category, page) => `list|${category}|${page}`
 const pathOf = (category) => (category ? `blog/category/${category}` : 'blog')
@@ -21,7 +21,7 @@ const pathOf = (category) => (category ? `blog/category/${category}` : 'blog')
 /** The template's sections for a category ('' = /blog): its layout, the default, or the built-in one. */
 export function blogSections(config, category) {
   const own = config && ((config.sections || []).length || (config.layouts || []).length || config.preview_layout !== undefined)
-  return own ? pickSections(config, blogCategoryMatch(category)) : DEFAULT_BLOG_SECTIONS
+  return own ? pickSections(config, blogCategoryMatch(category)) : localizeDefaults(DEFAULT_BLOG_SECTIONS, t)
 }
 
 /** The posts (as many per page as the template's posts grid shows), the search listing and the template. */
@@ -45,6 +45,9 @@ import ErrorNotFound from 'pages/ErrorNotFound.vue'
 import SectionRenderer from 'components/sections/SectionRenderer.vue'
 import { useSeoMeta } from 'src/composables/useSeo.js'
 import { subscribeToLiveConfig } from 'src/utils/config-loader.js'
+import { useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 defineOptions({
   async preFetch({ ssrContext, currentRoute }) {
@@ -91,7 +94,7 @@ async function load() {
   config.value = blog.config || config.value
   notFound.value = blog.missing
   seoData.value = seo
-  if (!blog.data && !blog.missing) error.value = 'The blog could not be loaded. Try again in a moment.'
+  if (!blog.data && !blog.missing) error.value = t('The blog could not be loaded. Try again in a moment.')
 }
 
 let unsubscribe = () => {}

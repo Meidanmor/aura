@@ -54,7 +54,7 @@
         type="button"
         class="qwoo-contact-fab qwoo-contact-fab--toggle"
         @click="expanded = !expanded"
-        :aria-label="expanded ? 'Close contact options' : 'Contact us'"
+        :aria-label="expanded ? t('Close contact options') : t('Contact us')"
         :aria-expanded="expanded"
     >
       <span class="qwoo-contact-icon" v-html="expanded ? icons.close : icons.chat"></span>
@@ -65,6 +65,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { contactMethods, loadContactOptions } from 'src/composables/useContactOptions.js'
+import { useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 const expanded = ref(false)
 
@@ -73,15 +76,15 @@ onMounted(() => {
 })
 
 const labels = {
-  whatsapp: 'WhatsApp',
-  phone: 'Call us',
-  email: 'Email us',
-  telegram: 'Telegram',
+  whatsapp: t('WhatsApp'),
+  phone: t('Call us'),
+  email: t('Email us'),
+  telegram: t('Telegram'),
 }
 
 function labelFor(method) {
-  if (method.type === 'custom') return method.label || 'Contact us'
-  return labels[method.type] || 'Contact us'
+  if (method.type === 'custom') return method.label || t('Contact us')
+  return labels[method.type] || t('Contact us')
 }
 
 // Small, dependency-free inline icon set — avoids pulling in a brand-icon

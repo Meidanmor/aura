@@ -8,19 +8,19 @@
   />
   <q-input
       v-model="model.city"
-      :label="required ? 'City *' : 'City'"
+      :label="required ? t('City *') : t('City')"
       filled
       class="q-mb-sm"
-      :rules="required ? [val => !!val || 'City is required'] : []"
+      :rules="required ? [val => !!val || t('City is required')] : []"
   />
   <q-input
       v-model="model.postcode"
-      :label="required ? 'Postcode *' : 'Postcode'"
+      :label="required ? t('Postcode *') : t('Postcode')"
       filled
       class="q-mb-sm"
-      :rules="required ? [val => !!val || 'Postcode is required'] : []"
+      :rules="required ? [val => !!val || t('Postcode is required')] : []"
   />
-  <q-input v-model="model.country" label="Country" filled />
+  <q-input v-model="model.country" :label="t('Country')" filled />
 </template>
 
 <script setup>

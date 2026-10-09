@@ -3,13 +3,13 @@
     <div class="container">
       <SectionRenderer :sections="shopSettings?.sections" page="shop" location="before_breadcrumbs"/>
       <q-breadcrumbs>
-          <q-breadcrumbs-el label="Home" to="/" />
-          <q-breadcrumbs-el label="Products" />
+          <q-breadcrumbs-el :label="t('Home')" to="/" />
+          <q-breadcrumbs-el :label="t('Products')" />
         </q-breadcrumbs>
       <SectionRenderer :sections="shopSettings?.sections" page="shop" location="after_breadcrumbs"/>
 
 
-      <h1>Products</h1>
+      <h1>{{ t('Products') }}</h1>
       <div class="archive-layout flex no-wrap">
 
         <div class="filters-wrap flex" :class="{ 'shown': filtersOpen }" @pointerdown.stop >
@@ -18,20 +18,20 @@
           <q-scroll-area class="fit">
 
           <div class="sticky filters-drawer-header flex justify-between q-mb-md">
-          <div class="text-h6">Filters</div>
+          <div class="text-h6">{{ t('Filters') }}</div>
             <q-btn
                 class="mobile-only"
                 :icon="matClose"
                 flat
                 dense
                 @click="filtersOpen = false"
-                aria-label="Close filters drawer"
+                :aria-label="t('Close filters drawer')"
             />
         </div>
 
         <!-- Search and Filter -->
         <div class="col-xs-12 col-md-6 q-mb-md">
-            <q-input filled v-model="search" label="Search products..." debounce="300" />
+            <q-input filled v-model="search" :label="t('Search products...')" debounce="300" />
         </div>
 
         <div class="filters-inner-wrap col-xs-12 col-md-6"  v-if="!isHydrated && !categoryOptions.length">
@@ -41,7 +41,7 @@
         <div class="col-xs-12 col-md-6" v-else>
           <q-card class="filters-inner-wrap q-pa-md q-mb-md">
             <div class="text-subtitle1 q-mb-sm">
-              Filter by Category
+              {{ t('Filter by Category') }}
             </div>
             <q-option-group
                 v-model="selectedCategory"
@@ -60,7 +60,7 @@
 
           <div v-if="paginatedProducts.length" class="flex justify-between q-mb-md total-products">
             <div v-if="totalProducts" class="text-subtitle1 q-mb-sm">
-              Found {{ totalProducts || 0 }} product{{ totalProducts === 1 ? '' : 's' }}
+              {{ tn('Found {n} product', 'Found {n} products', totalProducts || 0) }}
             </div>
           </div>
 

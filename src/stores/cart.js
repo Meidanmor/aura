@@ -1,4 +1,5 @@
 import { reactive, computed, toRaw } from 'vue'
+import { t } from 'src/i18n/index.js'
 import { fetchWithToken } from 'src/composables/useApiFetch.js'
 import productsStore from 'src/stores/products'
 import { matShoppingCart, matError, matCloudOff } from '@quasar/extras/material-icons'
@@ -1000,7 +1001,7 @@ function _finishAdd($q, openDrawer = true) {
   persistLocalCart()
   rebuildMergedView()
   scheduleSyncLocalToServer()
-  notifyUser($q, 'positive', 'Added to cart', matShoppingCart)
+  notifyUser($q, 'positive', t('Added to cart'), matShoppingCart)
   state.loading.cart = false
   if (openDrawer) state.drawerOpen = true
 }
@@ -1011,7 +1012,7 @@ function _addToExistingLocalItem(localItem, quantity, $q, openDrawer = true) {
   const addQty = maxAllowed === Infinity ? quantity : Math.min(quantity, maxAllowed - current)
 
   if (addQty <= 0) {
-    notifyUser($q, 'negative', 'No more stock available', matError)
+    notifyUser($q, 'negative', t('No more stock available'), matError)
     state.loading.cart = false
     return
   }
@@ -1031,7 +1032,7 @@ function _addFromApiItem(apiItem, quantity, variationArr, variationId, $q, openD
   const clampQty = maxAllowed === Infinity ? intendedQty : Math.min(intendedQty, maxAllowed)
 
   if (clampQty <= (apiItem.quantity || 0)) {
-    notifyUser($q, 'negative', 'Only 0 more available for this product.', matError)
+    notifyUser($q, 'negative', t('No more available for this product.'), matError)
     state.loading.cart = false
     return
   }
@@ -1086,7 +1087,7 @@ async function _addNewItem(productId, quantity, variationArr, variationId, produ
   const maxAllowedNew = getMaxAllowed(localItemNew)
   if (maxAllowedNew !== Infinity && localItemNew.quantity > maxAllowedNew) {
     localItemNew.quantity = maxAllowedNew
-    notifyUser($q, 'negative', `Only ${maxAllowedNew} available for this product`, matError)
+    notifyUser($q, 'negative', t('Only {n} available for this product', { n: maxAllowedNew }), matError)
   }
 
   state.local_cart.items.push(localItemNew)
@@ -1137,14 +1138,14 @@ async function increase(productIdOrKey, $q = null) {
   if (localItem) {
     const max = getMaxAllowed(localItem)
     if (max !== Infinity && (localItem.quantity || 0) >= max) {
-      notifyUser($q, 'negative', `Reached max stock (${max}) for ${localItem.name || 'item'}`, matError)
+      notifyUser($q, 'negative', t('Reached max stock ({n}) for {name}', { n: max, name: localItem.name || t('this item') }), matError)
       return
     }
     localItem.quantity = Number(localItem.quantity || 0) + 1
     persistLocalCart()
     rebuildMergedView()
     scheduleSyncLocalToServer()
-    notifyUser($q, 'info', 'Quantity updated', matShoppingCart)
+    notifyUser($q, 'info', t('Quantity updated'), matShoppingCart)
     return
   }
 
@@ -1159,7 +1160,7 @@ async function increase(productIdOrKey, $q = null) {
   persistLocalCart()
   rebuildMergedView()
   scheduleSyncLocalToServer()
-  notifyUser($q, 'info', 'Quantity updated', matShoppingCart)
+  notifyUser($q, 'info', t('Quantity updated'), matShoppingCart)
 }
 
 async function decrease(cartItemKey) {
@@ -1276,7 +1277,7 @@ async function remove(cartItemKey = null, cartItemAPIKey = null, $q = null) {
 
     persistLocalCart()
     rebuildMergedView()
-    notifyUser($q, 'positive', 'Removed from cart', matShoppingCart)
+    notifyUser($q, 'positive', t('Removed from cart'), matShoppingCart)
 
     if (!state.offline) {
       // Cancel any accumulated debounce and fire sync immediately
@@ -1311,7 +1312,7 @@ async function remove(cartItemKey = null, cartItemAPIKey = null, $q = null) {
 
   persistLocalCart()
   rebuildMergedView()
-  notifyUser($q, state.offline ? 'info' : 'positive', state.offline ? 'Removed from cart (local)' : 'Removed from cart', state.offline ? matCloudOff : matShoppingCart)
+  notifyUser($q, state.offline ? 'info' : 'positive', state.offline ? t('Removed from cart (local)') : t('Removed from cart'), state.offline ? matCloudOff : matShoppingCart)
 
   if (!state.offline) {
     cancelPendingSync()

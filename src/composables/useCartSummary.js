@@ -2,6 +2,7 @@ import { computed, ref } from 'vue'
 import cart from 'src/stores/cart'
 import { fetchWithToken } from 'src/composables/useApiFetch.js'
 import { formatCurrency } from 'src/utils/formatters.js'
+import { t } from 'src/i18n/index.js'
 
 export function useCartSummary() {
     const couponCode = ref('')
@@ -90,7 +91,7 @@ export function useCartSummary() {
 
     const applyCoupon = async (coupon) => {
         if(!coupon) {
-            couponError.value = 'Please type a coupon'
+            couponError.value = t('Please type a coupon')
             return
         }
 
@@ -99,7 +100,7 @@ export function useCartSummary() {
         try {
             await cart.applyCoupon(coupon)
         } catch (err) {
-            couponError.value = err.message || 'Failed to apply coupon'
+            couponError.value = t(err.message || 'Failed to apply coupon')
         } finally {
             loadingCoupon.value = false
         }
@@ -109,7 +110,7 @@ export function useCartSummary() {
         try {
             await cart.removeCoupon(coupon)
         } catch (err) {
-            couponError.value = err.message || 'Failed to remove coupon'
+            couponError.value = t(err.message || 'Failed to remove coupon')
         }
     }
 

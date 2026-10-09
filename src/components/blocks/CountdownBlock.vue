@@ -1,7 +1,7 @@
 <template>
   <div v-if="!hidden" class="countdown-block" :class="`countdown-block--${d.style || 'boxes'}`" :style="cssVars">
     <p v-if="expired && d.expired_action === 'message'" class="countdown-block__message" role="status">
-      {{ d.expired_message || 'This offer has ended.' }}
+      {{ d.expired_message || t('This offer has ended.') }}
     </p>
     <div
         v-else
@@ -21,6 +21,9 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { setResponsiveVar, toCssLength, alignToFlex } from 'src/composables/useSectionStyle.js'
+import { useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -67,10 +70,10 @@ const units = computed(() => {
   const fmt = (v) => (v === null ? '--' : pad(v))
 
   const list = []
-  if (showDays) list.push({ key: 'd', value: fmt(days), label: d.value.label_days || 'Days' })
-  list.push({ key: 'h', value: fmt(hours), label: d.value.label_hours || 'Hours' })
-  list.push({ key: 'm', value: fmt(minutes), label: d.value.label_minutes || 'Minutes' })
-  if (d.value.show_seconds !== false) list.push({ key: 's', value: fmt(seconds), label: d.value.label_seconds || 'Seconds' })
+  if (showDays) list.push({ key: 'd', value: fmt(days), label: d.value.label_days || t('Days') })
+  list.push({ key: 'h', value: fmt(hours), label: d.value.label_hours || t('Hours') })
+  list.push({ key: 'm', value: fmt(minutes), label: d.value.label_minutes || t('Minutes') })
+  if (d.value.show_seconds !== false) list.push({ key: 's', value: fmt(seconds), label: d.value.label_seconds || t('Seconds') })
   return list
 })
 

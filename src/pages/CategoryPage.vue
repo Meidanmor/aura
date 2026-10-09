@@ -5,8 +5,8 @@
       <SectionRenderer :sections="categorySections" page="category" location="before_breadcrumbs"/>
 
       <q-breadcrumbs>
-        <q-breadcrumbs-el label="Home" to="/" />
-        <q-breadcrumbs-el label="Products" to="/products" />
+        <q-breadcrumbs-el :label="t('Home')" to="/" />
+        <q-breadcrumbs-el :label="t('Products')" to="/products" />
         <q-breadcrumbs-el><span v-html="safeCategoryName"></span></q-breadcrumbs-el>
       </q-breadcrumbs>
 
@@ -21,19 +21,19 @@
           <q-scroll-area class="fit">
 
             <div class="sticky filters-drawer-header flex justify-between q-mb-md">
-              <div class="text-h6">Filters</div>
+              <div class="text-h6">{{ t('Filters') }}</div>
               <q-btn
                   class="mobile-only"
                   :icon="matClose"
                   flat
                   dense
                   @click="filtersOpen = false"
-                  aria-label="Close filters drawer"
+                  :aria-label="t('Close filters drawer')"
               />
             </div>
 
           <div class="col-xs-12 col-md-6 q-mb-md">
-            <q-input filled v-model="search" label="Search products..." debounce="300" />
+            <q-input filled v-model="search" :label="t('Search products...')" debounce="300" />
           </div>
 
           <PriceFilterCard v-model="priceRange" :min="priceMin" :max="priceMax" @change="onPriceChange" />
@@ -43,7 +43,7 @@
         <div class="products-wrap">
           <div class="flex justify-between q-mb-md total-products">
             <div v-if="totalProducts" class="text-subtitle1 q-mb-sm">
-              Found {{ totalProducts || 0 }} product{{ totalProducts === 1 ? '' : 's' }}
+              {{ tn('Found {n} product', 'Found {n} products', totalProducts || 0) }}
             </div>
           </div>
 

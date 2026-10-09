@@ -91,13 +91,13 @@
 
       <!-- Honeypot: hidden from people, filled in by naive bots. -->
       <div class="hp-field" aria-hidden="true">
-        <label>Leave this empty <input v-model="honeypotField" type="text" tabindex="-1" autocomplete="off" /></label>
+        <label>{{ t('Leave this empty') }} <input v-model="honeypotField" type="text" tabindex="-1" autocomplete="off" /></label>
       </div>
 
       <div class="form-block__actions">
         <q-btn
             type="submit"
-            :label="d.submit_text || 'Submit'"
+            :label="d.submit_text || t('Submit')"
             :loading="submitting"
             :outline="buttonStyle === 'outline'"
             :unelevated="buttonStyle !== 'outline'"
@@ -119,6 +119,9 @@ import { matCheckCircle } from '@quasar/extras/material-icons'
 import { useHoneypot } from 'src/composables/useHoneypot.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToFlex } from 'src/composables/useSectionStyle.js'
+import { useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -137,17 +140,17 @@ const fields = computed(() => {
   switch (d.value.form_type) {
     case 'contact':
       return [
-        { key: 'name', label: 'Name', field_type: 'text', required: true, width: 'half' },
-        { key: 'email', label: 'Email', field_type: 'email', required: true, width: 'half' },
-        { key: 'phone', label: 'Phone', field_type: 'tel', required: false, width: 'full' },
-        { key: 'message', label: 'Message', field_type: 'textarea', required: true, width: 'full' },
+        { key: 'name', label: t('Name'), field_type: 'text', required: true, width: 'half' },
+        { key: 'email', label: t('Email'), field_type: 'email', required: true, width: 'half' },
+        { key: 'phone', label: t('Phone'), field_type: 'tel', required: false, width: 'full' },
+        { key: 'message', label: t('Message'), field_type: 'textarea', required: true, width: 'full' },
       ]
     case 'custom':
       return (d.value.fields || []).filter((f) => f.key && f.label)
     default: {
       const list = []
-      if (d.value.collect_name) list.push({ key: 'name', label: 'Name', field_type: 'text', required: false, width: 'full' })
-      list.push({ key: 'email', label: 'Email', field_type: 'email', required: true, width: 'full', placeholder: 'you@example.com' })
+      if (d.value.collect_name) list.push({ key: 'name', label: t('Name'), field_type: 'text', required: false, width: 'full' })
+      list.push({ key: 'email', label: t('Email'), field_type: 'email', required: true, width: 'full', placeholder: 'you@example.com' })
       return list
     }
   }
@@ -213,16 +216,16 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 function textRules(f) {
   const rules = []
   if (f.required) rules.push((v) => (v !== '' && v != null) || `“${f.label}” is required.`)
-  if (f.field_type === 'email') rules.push((v) => !v || EMAIL_RE.test(v) || 'Please enter a valid email address.')
-  if (f.field_type === 'url') rules.push((v) => !v || /^https?:\/\/\S+$/i.test(v) || 'Please enter a full URL (https://…).')
+  if (f.field_type === 'email') rules.push((v) => !v || EMAIL_RE.test(v) || t('Please enter a valid email address.'))
+  if (f.field_type === 'url') rules.push((v) => !v || /^https?:\/\/\S+$/i.test(v) || t('Please enter a full URL (https://…).'))
   return rules
 }
 
 function groupRules(f) {
   if (!f.required) return []
   return f.field_type === 'radio'
-      ? [(v) => !!v || `Please choose an option for “${f.label}”.`]
-      : [(v) => (Array.isArray(v) && v.length > 0) || `Please choose at least one option for “${f.label}”.`]
+      ? [(v) => !!v || t('Please choose an option for “{name}”.', { name: f.label })]
+      : [(v) => (Array.isArray(v) && v.length > 0) || t('Please choose at least one option for “{name}”.', { name: f.label })]
 }
 
 function onValidationError() {
@@ -238,7 +241,7 @@ async function onSubmit() {
 
   if (isLikelyBot()) {
     // Quietly pretend it worked.
-    successMessage.value = d.value.success_message || 'Thanks!'
+    successMessage.value = d.value.success_message || t('Thanks!')
     submitted.value = true
     return
   }
@@ -258,15 +261,15 @@ async function onSubmit() {
     if (!res.ok) {
       const fieldErrors = json?.data?.fields || {}
       Object.assign(serverErrors, fieldErrors)
-      formError.value = json?.message || 'Something went wrong. Please try again.'
+      formError.value = t(json?.message || 'Something went wrong. Please try again.')
       return
     }
 
-    successMessage.value = json.message || d.value.success_message || 'Thanks!'
+    successMessage.value = d.value.success_message || t(json.message || 'Thanks!')
     submitted.value = true
   } catch (err) {
     console.error('[FormBlock] submit failed', err)
-    formError.value = 'Could not send the form. Please check your connection and try again.'
+    formError.value = t('Could not send the form. Please check your connection and try again.')
   } finally {
     submitting.value = false
   }

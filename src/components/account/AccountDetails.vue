@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="text-h4">Account Details</h1>
+    <h1 class="text-h4">{{ t('Account Details') }}</h1>
 
     <!-- Loading state -->
     <div v-if="loading">
@@ -17,17 +17,17 @@
       <q-form @submit.prevent="updateDetails">
         <q-input
           v-model="account.first_name"
-          label="First Name"
+          :label="t('First Name')"
           :disable="saving"
         />
         <q-input
           v-model="account.last_name"
-          label="Last Name"
+          :label="t('Last Name')"
           :disable="saving"
         />
         <q-input
           v-model="account.email"
-          label="Email"
+          :label="t('Email')"
           type="email"
           disable
           readonly
@@ -35,14 +35,14 @@
 
         <q-btn
           type="submit"
-          label="Save Changes"
+          :label="t('Save Changes')"
           color="secondary"
           :loading="saving"
         />
 
         <!-- Save feedback -->
         <div v-if="saveError" class="text-negative q-mt-md">{{ saveError }}</div>
-        <div v-if="saveSuccess" class="text-positive q-mt-md">Profile updated successfully.</div>
+        <div v-if="saveSuccess" class="text-positive q-mt-md">{{ t('Profile updated successfully.') }}</div>
       </q-form>
     </div>
   </div>
@@ -51,6 +51,9 @@
 <script setup>
 import { ref } from 'vue'
 import { fetchWithToken } from 'src/composables/useApiFetch.js'
+import { useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 const props = defineProps({
   user: {
     type: Object,
@@ -87,7 +90,7 @@ async function updateDetails() {
     const data = await res.json()
 
     if (!data.success) {
-      saveError.value = data.message || 'Failed to save changes. Please try again.'
+      saveError.value = t(data.message || 'Failed to save changes. Please try again.')
       return
     }
 
@@ -102,7 +105,7 @@ async function updateDetails() {
 
   } catch (err) {
     console.error('Failed to update account:', err)
-    saveError.value = 'A server error occurred. Please try again later.'
+    saveError.value = t('A server error occurred. Please try again later.')
   } finally {
     saving.value = false
   }

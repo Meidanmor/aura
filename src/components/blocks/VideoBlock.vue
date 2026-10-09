@@ -8,7 +8,7 @@
             v-if="playing"
             class="video-block__media"
             :src="embedSrc"
-            :title="d.title || 'Video'"
+            :title="d.title || t('Video')"
             allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
             allowfullscreen
             loading="lazy"
@@ -18,7 +18,7 @@
             v-else
             type="button"
             class="video-block__cover"
-            :aria-label="`Play video${d.title ? ': ' + d.title : ''}`"
+            :aria-label="d.title ? t('Play video: {title}', { title: d.title }) : t('Play video')"
             @click="playing = true"
         >
           <img v-if="coverSrc" :src="coverSrc" :alt="''" class="video-block__media" loading="lazy" decoding="async" />
@@ -40,7 +40,7 @@
           :loop="!!d.loop"
           playsinline
           preload="metadata"
-          :aria-label="d.title || 'Video'"
+          :aria-label="d.title || t('Video')"
       />
     </div>
   </div>

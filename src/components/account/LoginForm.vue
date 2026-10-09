@@ -3,7 +3,7 @@
   <q-form @submit.prevent="login">
     <!-- Honeypot: real users never see or fill this. -->
     <div class="hp-field" aria-hidden="true">
-      <label for="login-website">Website</label>
+      <label for="login-website">{{ t('Website') }}</label>
       <input
           id="login-website"
           v-model="honeypotField"
@@ -16,25 +16,25 @@
 
     <q-input
         v-model="username"
-        label="Username or Email"
+        :label="t('Username or Email')"
         filled
         :disable="loading"
     />
     <q-input
         v-model="password"
         type="password"
-        label="Password"
+        :label="t('Password')"
         filled
         :disable="loading"
     />
 
     <div class="login-row">
-      <q-checkbox v-model="remember" label="Remember me" :disable="loading" color="secondary" dense />
-      <router-link to="/forgot-password" class="forgot-link">Forgot password?</router-link>
+      <q-checkbox v-model="remember" :label="t('Remember me')" :disable="loading" color="secondary" dense />
+      <router-link to="/forgot-password" class="forgot-link">{{ t('Forgot password?') }}</router-link>
     </div>
 
     <q-btn
-        label="Login"
+        :label="t('Login')"
         type="submit"
         color="secondary"
         :loading="loading"
@@ -51,6 +51,9 @@ import cart from 'src/stores/cart.js'
 import wishlist from 'src/stores/wishlist.js'
 import { setUser } from 'src/stores/user.js'
 import { useHoneypot } from 'src/composables/useHoneypot.js'
+import { useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 const username = ref('')
 const password = ref('')
@@ -85,7 +88,7 @@ async function login() {
   // so an automated submission gets no signal it was caught by a
   // different check than a wrong password.
   if (isLikelyBot()) {
-    error.value = 'Login failed. Please try again.'
+    error.value = t('Login failed. Please try again.')
     return
   }
 
@@ -105,7 +108,7 @@ async function login() {
 
     // 2. Handle login errors returned from the endpoint
     if (!data.success) {
-      error.value = data.message || 'Login failed. Please try again.'
+      error.value = t(data.message || 'Login failed. Please try again.')
       return
     }
 
@@ -135,7 +138,7 @@ async function login() {
 
   } catch (err) {
     console.error('Login error:', err)
-    error.value = 'A server error occurred. Please try again later.'
+    error.value = t('A server error occurred. Please try again later.')
   } finally {
     loading.value = false
   }

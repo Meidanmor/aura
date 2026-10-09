@@ -11,6 +11,25 @@ import { dirname, resolve } from 'node:path'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const appConfigPath = resolve(__dirname, 'public/config/pwa.json')
 const appBrandingPath = resolve(__dirname, 'public/config/branding.json')
+const languagesPath = resolve(__dirname, 'public/config/languages.json')
+
+/**
+ * The store's languages (public/config/languages.json, written by the store
+ * when the owner picks the language): { main: 'he', extra: [], prefixes: {} }.
+ * Missing → English only.
+ */
+function loadLanguages() {
+  if (!existsSync(languagesPath)) {
+    return { main: 'en', extra: [], prefixes: {} }
+  }
+  try {
+    const data = JSON.parse(readFileSync(languagesPath, 'utf-8'))
+    return { main: String(data.main || 'en'), extra: Array.isArray(data.extra) ? data.extra.map(String) : [], prefixes: data.prefixes && typeof data.prefixes === 'object' ? data.prefixes : {} }
+  } catch (e) {
+    console.warn('Could not parse languages.json:', e.message)
+    return { main: 'en', extra: [], prefixes: {} }
+  }
+}
 
 function loadAppConfig() {
   if (!existsSync(appConfigPath)) {
@@ -86,7 +105,8 @@ export default defineConfig((ctx) => {
     },
 
     // Native app only: send API calls to the live site (src/boot/native-api.js).
-    boot: ctx.mode.capacitor ? [{ path: 'native-api', server: false }] : [],
+    // i18n: the store's language (t() in templates, Quasar's texts and direction).
+    boot: ['i18n', ...(ctx.mode.capacitor ? [{ path: 'native-api', server: false }] : [])],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: [
@@ -129,6 +149,8 @@ export default defineConfig((ctx) => {
         // store's content): the fallback page title and description.
         STORE_NAME: String(appConfig.name || ''),
         STORE_DESCRIPTION: String(appConfig.description || ''),
+        // The store's languages (src/i18n): the main one and any extra ones.
+        QWOO_LANGUAGES: JSON.stringify(loadLanguages()),
         // Origin of the WordPress backend (wp-admin). The Live Preview
         // bridge only accepts messages from this origin (config-loader.js).
         WP_BACKEND_ORIGIN: (() => {

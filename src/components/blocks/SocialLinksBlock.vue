@@ -26,6 +26,9 @@ import { computed } from 'vue'
 import { socialNetworks, socialHref } from 'src/utils/builder-icons.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { setResponsiveVar, toCssLength, alignToFlex } from 'src/composables/useSectionStyle.js'
+import { useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -48,7 +51,7 @@ const links = computed(() => (d.value.items || []).map((item, i) => {
     key: `${i}-${item.network}`,
     href,
     icon: net.icon,
-    label: item.label || net.label,
+    label: item.label || t(net.label),
     external: /^https?:/i.test(href),
     style,
   }

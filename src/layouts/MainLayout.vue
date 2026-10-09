@@ -124,6 +124,9 @@ import {
   matSignalWifiOff,
   matError } from '@quasar/extras/material-icons'
 import { setCssVar } from 'quasar'
+import { useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 function applyGlobalColors(colors) {
   if (!colors) return
@@ -426,11 +429,11 @@ const initConnectivityListeners = () => {
     cart.state.offline = !isOnline
 
     if (becameOnline) {
-      $q.notify({ type: 'positive', message: 'You are back online!', icon: matWifi, timeout: 3000 })
+      $q.notify({ type: 'positive', message: t('You are back online!'), icon: matWifi, timeout: 3000 })
       await cart.fetchCart()
       await wishlist.fetchWishlistItems()
     } else {
-      $q.notify({ type: 'warning', message: 'You are offline. Some features may be limited.', icon: matSignalWifiOff, timeout: 3000 })
+      $q.notify({ type: 'warning', message: t('You are offline. Some features may be limited.'), icon: matSignalWifiOff, timeout: 3000 })
     }
   }
 
@@ -555,13 +558,14 @@ onMounted(async () => {
   // Define headerBtnClick after scheduler so it can reference it
   const headerBtnClick = async (e) => {
     await scheduler()
-    const btn = e.target.closest('[aria-label]')
+    // data-action, not the (translated) aria-label.
+    const btn = e.target.closest('[data-action]')
     if (btn) {
-      const label = btn.getAttribute('aria-label')
+      const action = btn.getAttribute('data-action')
       requestAnimationFrame(() => {
-        if (label === 'Open menu') mobileMenuDrawer.value = true
-        else if (label === 'Add to wishlist') wishlistDrawerOpen.value = true
-        else if (label === 'View cart') cartDrawer.value = true
+        if (action === 'menu') mobileMenuDrawer.value = true
+        else if (action === 'wishlist') wishlistDrawerOpen.value = true
+        else if (action === 'cart') cartDrawer.value = true
       })
     }
   }
@@ -612,7 +616,7 @@ watch(
         rejected.forEach(item => {
           $q.notify({
             type: 'warning',
-            message: `"${item.name}" was removed — no longer available`,
+            message: t('"{name}" was removed — no longer available', { name: item.name }),
             icon: matError,
             timeout: 8000
           })

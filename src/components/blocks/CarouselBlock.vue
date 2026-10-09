@@ -58,7 +58,7 @@
   <div v-else-if="items.length" class="carousel-block cb-row" :class="`cb-row--${source}`" :style="cssVars"
        @mouseenter="paused = true" @mouseleave="paused = false" @focusin="paused = true" @focusout="paused = false">
     <div class="cb-row__viewport">
-      <button v-if="d.arrows && pages > 1" type="button" class="cb-row__arrow cb-row__arrow--prev" aria-label="Previous" @click="go(-1)">
+      <button v-if="d.arrows && pages > 1" type="button" class="cb-row__arrow cb-row__arrow--prev" :aria-label="t('Previous')" @click="go(-1)">
         <q-icon :name="matChevronLeft" size="28px" />
       </button>
 
@@ -102,7 +102,7 @@
         </div>
       </div>
 
-      <button v-if="d.arrows && pages > 1" type="button" class="cb-row__arrow cb-row__arrow--next" aria-label="Next" @click="go(1)">
+      <button v-if="d.arrows && pages > 1" type="button" class="cb-row__arrow cb-row__arrow--next" :aria-label="t('Next')" @click="go(1)">
         <q-icon :name="matChevronRight" size="28px" />
       </button>
     </div>
@@ -114,7 +114,7 @@
           type="button"
           class="cb-row__dot"
           :class="{ 'is-active': p - 1 === page }"
-          :aria-label="`Go to slide ${p}`"
+          :aria-label="t('Go to slide {n}', { n: p })"
           :aria-current="p - 1 === page ? 'true' : undefined"
           @click="goTo(p - 1)"
       />
@@ -132,6 +132,9 @@ import { useBlockQuery } from 'src/composables/useBlockQuery.js'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
+import { useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -181,7 +184,7 @@ const items = computed(() => {
   return []
 })
 
-const ariaLabel = computed(() => ({ images: 'Image carousel', logos: 'Brands', products: 'Products', categories: 'Categories' }[source.value] || 'Carousel'))
+const ariaLabel = computed(() => t({ images: 'Image carousel', logos: 'Brands', products: 'Products', categories: 'Categories' }[source.value] || 'Carousel'))
 
 /* ---------- Autoplay (paused on hover/focus/touch and for reduced motion) ---------- */
 

@@ -1,6 +1,6 @@
 <template>
   <div class="blog-posts" :style="cssVars">
-    <p v-if="list && !list.posts?.length" class="blog-posts-empty">No posts yet. Check back soon.</p>
+    <p v-if="list && !list.posts?.length" class="blog-posts-empty">{{ t('No posts yet. Check back soon.') }}</p>
     <div v-else-if="list" class="blog-posts-grid">
       <BlogCard
         v-for="p in list.posts"
@@ -10,10 +10,10 @@
         :show-date="d.show_date !== false"
       />
     </div>
-    <nav v-if="list?.pages > 1" class="blog-posts-pager" aria-label="Pages">
-      <router-link v-if="list.page > 1" :to="pageLink(list.page - 1)">← Newer posts</router-link>
-      <span>Page {{ list.page }} of {{ list.pages }}</span>
-      <router-link v-if="list.page < list.pages" :to="pageLink(list.page + 1)">Older posts →</router-link>
+    <nav v-if="list?.pages > 1" class="blog-posts-pager" :aria-label="t('Pages')">
+      <router-link v-if="list.page > 1" :to="pageLink(list.page - 1)">{{ t('← Newer posts') }}</router-link>
+      <span>{{ t('Page {page} of {pages}', { page: list.page, pages: list.pages }) }}</span>
+      <router-link v-if="list.page < list.pages" :to="pageLink(list.page + 1)">{{ t('Older posts →') }}</router-link>
     </nav>
   </div>
 </template>

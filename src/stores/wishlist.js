@@ -1,4 +1,5 @@
 import { reactive, toRaw } from 'vue'
+import { t } from 'src/i18n/index.js'
 import { fetchWithToken } from 'src/composables/useApiFetch.js'
 import { isLoggedIn } from 'src/stores/user'
 import { matFavorite } from '@quasar/extras/material-icons'
@@ -162,7 +163,7 @@ async function toggleWishlistItem(productId, $q = null) {
       }
 
       persist()
-      notifyUser($q, 'positive', exists ? 'Removed from wishlist' : 'Added to wishlist', matFavorite)
+      notifyUser($q, 'positive', exists ? t('Removed from wishlist') : t('Added to wishlist'), matFavorite)
     } catch (err) {
       if (DEBUG) console.warn('[wishlist] guest toggle failed', err)
     } finally {
@@ -198,7 +199,7 @@ async function toggleWishlistItem(productId, $q = null) {
     state.items = wishlistData.wishlist || wishlistData || []
     persist()
 
-    notifyUser($q, 'positive', exists ? 'Removed from wishlist' : 'Added to wishlist', matFavorite)
+    notifyUser($q, 'positive', exists ? t('Removed from wishlist') : t('Added to wishlist'), matFavorite)
   } catch (err) {
     if (DEBUG) console.error('[wishlist] toggleWishlistItem failed', err)
     state.error = err.message

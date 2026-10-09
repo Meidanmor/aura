@@ -9,7 +9,7 @@
         <q-icon :name="matWifiOff" />
       </template>
 
-      You are currently offline. Some features may be limited.
+      {{ t('You are currently offline. Some features may be limited.') }}
     </q-banner>
 
     <router-view />
@@ -20,6 +20,12 @@
 import {matWifiOff} from '@quasar/extras/material-icons'
 import cart from "src/stores/cart.js";
 import { onMounted } from "vue";
+import { useMeta } from 'quasar'
+import { useI18n } from 'src/i18n/index.js'
+
+// The page's language and direction (the CSS has rules for both directions).
+const i18n = useI18n()
+useMeta({ htmlAttr: { lang: i18n.lang, dir: i18n.dir } })
 import { useRouter } from "vue-router";
 
 const router = useRouter();

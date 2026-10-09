@@ -36,7 +36,10 @@ import SectionRenderer from 'components/sections/SectionRenderer.vue'
 import { useSeoMeta } from 'src/composables/useSeo.js'
 import { subscribeToLiveConfig } from 'src/utils/config-loader.js'
 import { pickSections, postMatch } from 'src/utils/layouts.js'
-import { DEFAULT_BLOG_POST_SECTIONS } from 'src/utils/blog-templates.js'
+import { DEFAULT_BLOG_POST_SECTIONS, localizeDefaults } from 'src/utils/blog-templates.js'
+import { useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 defineOptions({
   async preFetch({ ssrContext, currentRoute, redirect }) {
@@ -72,7 +75,7 @@ provide('blogPost', post)
 const sections = computed(() => {
   const c = config.value
   const own = c && ((c.sections || []).length || (c.layouts || []).length || c.preview_layout !== undefined)
-  return own ? pickSections(c, postMatch(post.value)) : DEFAULT_BLOG_POST_SECTIONS
+  return own ? pickSections(c, postMatch(post.value)) : localizeDefaults(DEFAULT_BLOG_POST_SECTIONS, t)
 })
 
 function adopt(blog) {
@@ -94,7 +97,7 @@ async function load() {
   config.value = blog.config || config.value
   notFound.value = blog.missing
   seoData.value = seo
-  if (!blog.post && !blog.missing) error.value = 'The post could not be loaded. Try again in a moment.'
+  if (!blog.post && !blog.missing) error.value = t('The post could not be loaded. Try again in a moment.')
 }
 
 let unsubscribe = () => {}

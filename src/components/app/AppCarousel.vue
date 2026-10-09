@@ -28,7 +28,7 @@
       fontSize: '5px',
       padding: 0
     }"
-    :aria-label="`Go to slide ${name + 1}`"
+    :aria-label="t('Go to slide {n}', { n: name + 1 })"
     @click="onClick"
   />
 </template>
@@ -36,7 +36,7 @@
     <template v-if="showControls" #control>
       <q-carousel-control position="left" class="flex items-center">
         <q-btn flat dense color="secondary"
-          aria-label="Previous slide"
+          :aria-label="t('Previous slide')"
           @click="slide = (slide - 1 + total) % total"
         >
           <svg viewBox="8.59 6 7.41 12" xmlns="http://www.w3.org/2000/svg">
@@ -46,7 +46,7 @@
       </q-carousel-control>
       <q-carousel-control position="right" class="flex items-center">
         <q-btn flat dense color="secondary"
-          aria-label="Next slide"
+          :aria-label="t('Next slide')"
           @click="slide = (slide + 1) % total"
         >
           <svg viewBox="8.59 6 7.41 12" xmlns="http://www.w3.org/2000/svg">

@@ -1,7 +1,7 @@
 <template>
   <div v-if="GOOGLE_WEB_CLIENT_ID" class="google-login-btn-wrap">
 <q-btn
-    label="Sign in with Google"
+    :label="t('Sign in with Google')"
     color="primary"
     text-color="secondary"
     no-caps

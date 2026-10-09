@@ -22,7 +22,7 @@
     </div>
   </div>
 
-  <div v-else class="text-center q-mt-lg">No products found</div>
+  <div v-else class="text-center q-mt-lg">{{ t('No products found') }}</div>
 </template>
 
 <script setup>

@@ -1,5 +1,5 @@
 <template>
-  <section v-if="items.length" class="post-more" :aria-label="d.title || 'More to read'">
+  <section v-if="items.length" class="post-more" :aria-label="d.title || t('More to read')">
     <h2 v-if="d.title">{{ d.title }}</h2>
     <div class="post-more-grid">
       <BlogCard v-for="p in items" :key="p.id" :post="p" :show-excerpt="false" />

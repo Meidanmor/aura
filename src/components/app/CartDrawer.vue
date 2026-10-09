@@ -1,8 +1,8 @@
 <template>
 <q-scroll-area :visible="false" class="fit">
   <div class="sticky cart-drawer-header flex justify-between q-mb-md">
-    <div class="text-h6">Cart</div>
-    <q-btn flat dense aria-label="Close cart drawer" padding="none" :icon="matClose" @click="emit('toggle-cart')"/>
+    <div class="text-h6">{{ t('Cart') }}</div>
+    <q-btn flat dense :aria-label="t('Close cart drawer')" padding="none" :icon="matClose" @click="emit('toggle-cart')"/>
   </div>
 
   <div v-if="itemsCount && Number(itemsCount) !== 0">
@@ -14,7 +14,7 @@
             v-if="item.images"
             :src="cart.state.offline === true ? item?.images[0]?.src || '/naturaBloom-circle.svg' : item.images[0]?.thumbnail || '/naturaBloom-circle.svg'"
             style="width: 70px; height: 70px; object-fit: cover"
-            :alt="`Cart item - ${item?.name}`"
+            :alt="t('Cart item - {name}', { name: item?.name })"
         />
         <div class="product-meta text-text">
           <div>
@@ -49,11 +49,11 @@
 
   </div>
   <div v-else class="q-pa-sm column items-start">
-    <h2 class="text-h5 q-mb-sm">seems like your cart is empty</h2>
+    <h2 class="text-h5 q-mb-sm">{{ t('seems like your cart is empty') }}</h2>
     <router-link to="/products/">
       <q-btn
           color="secondary"
-          label="Shop now!"
+          :label="t('Shop now!')"
       />
     </router-link>
   </div>
@@ -61,36 +61,36 @@
   <div class="cart-details sticky" v-if="Number(itemsCount) > 0">
     <div class="coupon-wrap">
       <div class="row items-center q-col-gutter-sm q-mb-sm">
-        <div class="col"><q-input v-model="couponCode" label="Coupon code" dense filled @keydown.enter.stop.prevent="applyCoupon(couponCode)"/></div>
-        <div class="col-auto"><q-btn label="Apply" color="secondary" :loading="loadingCoupon" @click="applyCoupon(couponCode)" /></div>
+        <div class="col"><q-input v-model="couponCode" :label="t('Coupon code')" dense filled @keydown.enter.stop.prevent="applyCoupon(couponCode)"/></div>
+        <div class="col-auto"><q-btn :label="t('Apply')" color="secondary" :loading="loadingCoupon" @click="applyCoupon(couponCode)" /></div>
       </div>
       <div v-if="couponError" class="text-negative">{{ couponError }}</div>
       <div v-if="couponApplied" class="text-positive q-mt-sm">
-        Coupon applied successfully!
+        {{ t('Coupon applied successfully!') }}
       </div>
       <div v-if="couponApplied">
         <div v-for="coupon in displayCart.coupons" :key="coupon.code" class="row items-center q-mb-sm">
           <q-chip color="secondary" text-color="white" style="line-height:1">{{ coupon.code }}</q-chip>
-          <q-btn flat color="negative" label="Remove" @click="removeCoupon(coupon.code)" />
+          <q-btn flat color="negative" :label="t('Remove')" @click="removeCoupon(coupon.code)" />
         </div>
       </div>
     </div>
     <div class="cart-totals">
-      <div class="flex justify-between" v-if="couponApplied"><span>Total discount:</span> <span>{{formatCurrency(cartTotalDiscount)}}</span></div>
-      <div class="flex justify-between"><span>Subtotal:</span> <div><span v-if="couponApplied"><del>{{formatCurrency((Number(cartTotalDiscount)+Number(cartItemsTotal)))}}</del> {{formatCurrency((Number(cartItemsTotal)-Number(cartTotalDiscount)))}}</span> <span v-else>{{ formatCurrency(cartItemsTotal) }}</span></div></div>
+      <div class="flex justify-between" v-if="couponApplied"><span>{{ t('Total discount:') }}</span> <span>{{formatCurrency(cartTotalDiscount)}}</span></div>
+      <div class="flex justify-between"><span>{{ t('Subtotal:') }}</span> <div><span v-if="couponApplied"><del>{{formatCurrency((Number(cartTotalDiscount)+Number(cartItemsTotal)))}}</del> {{formatCurrency((Number(cartItemsTotal)-Number(cartTotalDiscount)))}}</span> <span v-else>{{ formatCurrency(cartItemsTotal) }}</span></div></div>
     </div>
     <div class="buttons-wrap">
       <router-link to="/checkout/">
         <q-btn
             color="secondary"
-            label="Checkout"
+            :label="t('Checkout')"
         />
       </router-link>
       <router-link to="/cart/">
         <q-btn
             :outline="true"
             color="transparent"
-            label="View Cart"
+            :label="t('View Cart')"
         />
       </router-link>
     </div>
@@ -106,6 +106,9 @@ import {
   matClose,
   matRemove } from '@quasar/extras/material-icons'
 import {useCartSummary} from "src/composables/useCartSummary.js";
+import { useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 const emit = defineEmits([
   'toggle-cart',
@@ -116,7 +119,7 @@ const $q = useQuasar();
 const increase = (item) => {
   if(item?.quantity_limits){
     if(item.quantity === item.quantity_limits.maximum){
-      cart.notifyUser($q, 'negative', 'There are only 9 in stock')
+      cart.notifyUser($q, 'negative', t('There are only {n} in stock', { n: 9 }))
       return;
     }
   }

@@ -1,6 +1,6 @@
 <template>
-  <nav v-if="list?.categories?.length" class="blog-cats" aria-label="Blog categories">
-    <router-link to="/blog" class="blog-cat" :class="{ on: !current }" :aria-current="!current ? 'page' : undefined">{{ d.all_label || 'All' }}</router-link>
+  <nav v-if="list?.categories?.length" class="blog-cats" :aria-label="t('Blog categories')">
+    <router-link to="/blog" class="blog-cat" :class="{ on: !current }" :aria-current="!current ? 'page' : undefined">{{ d.all_label || t('All') }}</router-link>
     <router-link
       v-for="c in list.categories"
       :key="c.slug"

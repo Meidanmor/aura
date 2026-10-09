@@ -1,18 +1,18 @@
 <template>
   <div class="container q-pa-md forgot-password-page">
-    <h2>Forgot your password?</h2>
+    <h2>{{ t('Forgot your password?') }}</h2>
 
     <div v-if="sent" class="sent-msg">
       <p>{{ message }}</p>
-      <router-link to="/my-account">Back to login</router-link>
+      <router-link to="/my-account">{{ t('Back to login') }}</router-link>
     </div>
 
     <q-form v-else @submit.prevent="submit" class="account-login-wrap">
-      <p class="hint">Enter your username or email and we'll send you a link to reset your password.</p>
+      <p class="hint">{{ t('Enter your username or email and we\'ll send you a link to reset your password.') }}</p>
 
       <!-- Honeypot: real users never see or fill this. -->
       <div class="hp-field" aria-hidden="true">
-        <label for="forgot-website">Website</label>
+        <label for="forgot-website">{{ t('Website') }}</label>
         <input
             id="forgot-website"
             v-model="honeypotField"
@@ -25,13 +25,13 @@
 
       <q-input
           v-model="username"
-          label="Username or Email"
+          :label="t('Username or Email')"
           filled
           :disable="loading"
       />
 
       <q-btn
-          label="Send reset link"
+          :label="t('Send reset link')"
           type="submit"
           color="secondary"
           :loading="loading"
@@ -40,7 +40,7 @@
       <div v-if="error" class="text-negative q-mt-md">{{ error }}</div>
 
       <div class="q-mt-md">
-        <router-link to="/my-account">Back to login</router-link>
+        <router-link to="/my-account">{{ t('Back to login') }}</router-link>
       </div>
     </q-form>
   </div>
@@ -50,11 +50,14 @@
 import { ref } from 'vue'
 import { useHoneypot } from 'src/composables/useHoneypot.js'
 import {useSeoMeta} from "src/composables/useSeo.js";
+import { t as i18nT, useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 defineOptions({
   async preFetch ({ ssrContext }) {
     const seo = {
-      title: 'Forgot password',
+      title: i18nT('Forgot password'),
       description: 'Forgot password page',
       robots: 'noindex, follow'
     }
@@ -102,11 +105,11 @@ async function submit() {
 
     // The endpoint always returns success:true (whether or not an account
     // matched) to avoid leaking which usernames/emails are registered.
-    message.value = data.message || "If an account matches that, we've sent a password reset link to it."
+    message.value = t(data.message || "If an account matches that, we've sent a password reset link to it.")
     sent.value = true
   } catch (err) {
     console.error('Forgot password error:', err)
-    error.value = 'A server error occurred. Please try again later.'
+    error.value = t('A server error occurred. Please try again later.')
   } finally {
     loading.value = false
   }

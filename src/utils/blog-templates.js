@@ -3,6 +3,15 @@
 
 const block = (id, type, data = {}) => ({ id, type, enabled: true, style: {}, data })
 
+/** The built-in layouts with their texts ("More to read", "All"…) in the store's language. */
+export function localizeDefaults(sections, t) {
+  const TEXT_KEYS = ['label', 'title', 'all_label']
+  return sections.map((s) => ({
+    ...s,
+    blocks: s.blocks.map((b) => ({ ...b, data: Object.fromEntries(Object.entries(b.data).map(([k, v]) => [k, TEXT_KEYS.includes(k) && typeof v === 'string' ? t(v) : v])) })),
+  }))
+}
+
 export const DEFAULT_BLOG_POST_SECTIONS = [{
   id: 'sec_defaultpost',
   enabled: true,

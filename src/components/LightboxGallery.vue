@@ -61,12 +61,12 @@
 
         <!-- Arrows -->
         <template v-if="images.length > 1 && zoom.scale === 1">
-          <button class="lightbox-arrow lightbox-arrow--left" @click.stop="navigate(-1)" :aria-label="'Previous image'">
+          <button class="lightbox-arrow lightbox-arrow--left" @click.stop="navigate(-1)" :aria-label="t('Previous image')">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
-          <button class="lightbox-arrow lightbox-arrow--right" @click.stop="navigate(1)" :aria-label="'Next image'">
+          <button class="lightbox-arrow lightbox-arrow--right" @click.stop="navigate(1)" :aria-label="t('Next image')">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
@@ -76,7 +76,7 @@
         <!-- Zoom hint -->
         <transition name="fade-hint">
           <div v-if="showZoomHint" class="lightbox-zoom-hint">
-            {{ zoom.scale > 1 ? 'Double-click to reset' : 'Double-click to zoom' }}
+            {{ zoom.scale > 1 ? t('Double-click to reset') : t('Double-click to zoom') }}
           </div>
         </transition>
       </div>
@@ -90,7 +90,7 @@
             class="lightbox-thumb"
             :class="{ 'lightbox-thumb--active': i === currentIndex }"
             @click="goTo(i)"
-            :aria-label="`View image ${i + 1}`"
+            :aria-label="t('View image {n}', { n: i + 1 })"
           >
             <img :src="img.thumbnail || img.src" :alt="img.alt || ''" draggable="false" />
           </button>

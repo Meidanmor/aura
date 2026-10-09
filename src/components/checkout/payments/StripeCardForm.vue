@@ -6,7 +6,7 @@
 
     <div v-show="!loading">
       <div ref="expressEl" class="q-mb-md"></div>
-      <div v-if="showDivider" class="text-center text-grey q-mb-md">— or pay with card —</div>
+      <div v-if="showDivider" class="text-center text-grey q-mb-md">{{ t('— or pay with card —') }}</div>
       <div ref="cardEl" class="stripe-card-element q-pa-md" style="border:1px solid #ccc; border-radius:4px; background:#fff;"></div>
     </div>
     <div v-if="cardError" class="text-negative q-mt-sm">{{ cardError }}</div>
@@ -16,6 +16,9 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { getStripe } from "src/payments/adapters/stripe.js";
+import { useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 const props = defineProps({
   amount: { type: Number, required: true },   // total, in smallest currency unit
@@ -39,7 +42,7 @@ onMounted(async () => {
     stripe = await getStripe()
   } catch (err) {
     loading.value = false
-    cardError.value = err.message || 'Card payments aren\'t available right now.'
+    cardError.value = t(err.message || 'Card payments aren\'t available right now.')
     return
   }
 

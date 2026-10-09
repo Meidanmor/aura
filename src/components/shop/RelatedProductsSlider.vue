@@ -1,7 +1,7 @@
 <template>
   <section class="related-products">
     <div class="container">
-      <h2 class="text-h5 q-mb-md text-center">Related Products</h2>
+      <h2 class="text-h5 q-mb-md text-center">{{ t('Related Products') }}</h2>
 
       <!-- GRID MODE (for few products) -->
       <div v-if="products.length <= perSlide" class="related-product-wrapper row justify-center">

@@ -7,7 +7,7 @@
           fetchpriority="high"
           loading="eager"
           decoding="sync"
-          alt="Homepage hero image"
+          :alt="t('Homepage hero image')"
           :src="`${homeSettings?.hero_image}`"
           sizes="100vw"
           width="1367"
@@ -22,7 +22,7 @@
 
           <q-btn
               v-if="homeSettings?.hero_btn?.text && homeSettings.hero_btn?.url"
-              title="Go to products page"
+              :title="t('Go to products page')"
               :label="homeSettings.hero_btn.text"
               color="secondary"
               text-color="primary"
@@ -53,6 +53,9 @@ import {resolveHeroImageSrc} from 'src/utils/resolve-hero-image.js';
 import { sanitizeHeroTitle } from 'src/utils/sanitizeHtml.js'
 import { homePageOf } from 'src/pages/CustomPage.vue'
 import { isEditorMode, onPublishedConfigUpdate } from 'src/utils/config-loader.js'
+import { useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 
 const route = useRoute();
@@ -133,8 +136,8 @@ const DEFAULT_SECTIONS = [{
   enabled: true,
   style: {},
   blocks: [
-    { id: 'blk_default_heading', type: 'heading', enabled: true, style: {}, data: { title: 'Our products', tag: 'h2', alignment: 'center' } },
-    { id: 'blk_default_products', type: 'product_grid', enabled: true, style: {}, data: { query_type: 'newest', limit: 8, show_view_all: true, view_all_url: '/products', view_all_text: 'View all products' } },
+    { id: 'blk_default_heading', type: 'heading', enabled: true, style: {}, data: { title: t('Our products'), tag: 'h2', alignment: 'center' } },
+    { id: 'blk_default_products', type: 'product_grid', enabled: true, style: {}, data: { query_type: 'newest', limit: 8, show_view_all: true, view_all_url: '/products', view_all_text: t('View all products') } },
   ],
 }]
 const sections = computed(() => {

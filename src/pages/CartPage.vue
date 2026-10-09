@@ -1,9 +1,9 @@
 <template>
   <div class="container q-pa-md">
-    <h2>Your Cart</h2>
+    <h2>{{ t('Your Cart') }}</h2>
     <SectionRenderer :sections="cartConfig?.sections" page="cart" location="before_cart"/>
     <div v-if="cartItems.length === 0" class="empty-cart-msg">
-      Your cart is empty. <router-link to="/products/">Go to shop</router-link>
+      {{ t('Your cart is empty.') }} <router-link to="/products/">{{ t('Go to shop') }}</router-link>
     </div>
         <div v-else-if="cart.hasItems.value && isHydrated" class="cart-items-wrap">
         <SectionRenderer :sections="cartConfig?.sections" page="cart" location="before_cart_items"/>
@@ -46,22 +46,22 @@
     <SectionRenderer v-if="cart.hasItems.value && isHydrated" :sections="cartConfig?.sections" page="cart" location="before_cart_totals"/>
     <q-card v-if="!cart.state.offline && cart.hasItems.value && isHydrated" flat bordered class="q-mt-md q-pa-md relative-position">
       <div class="blockUi" v-if="cart.state.loading.cart"></div>
-      <div class="text-subtitle1">Coupon</div>
+      <div class="text-subtitle1">{{ t('Coupon') }}</div>
       <div class="row items-center q-col-gutter-sm q-mb-sm">
-        <div class="col"><q-input v-model="couponCode" label="Coupon code" dense filled @keydown.enter.stop.prevent="applyCoupon(couponCode)"/></div>
-        <div class="col-auto"><q-btn label="Apply" color="secondary" :loading="loadingCoupon" @click="applyCoupon(couponCode)" /></div>
+        <div class="col"><q-input v-model="couponCode" :label="t('Coupon code')" dense filled @keydown.enter.stop.prevent="applyCoupon(couponCode)"/></div>
+        <div class="col-auto"><q-btn :label="t('Apply')" color="secondary" :loading="loadingCoupon" @click="applyCoupon(couponCode)" /></div>
       </div>
       <div v-if="couponError" class="text-negative">{{ couponError }}</div>
       <div v-if="couponApplied" class="text-positive q-mt-sm">
-        Coupon applied successfully!
+        {{ t('Coupon applied successfully!') }}
       </div>
       <div v-if="couponApplied">
         <div v-for="coupon in displayCart.coupons" :key="coupon.code" class="row items-center q-mb-sm">
         <q-chip color="secondary" text-color="white">{{ coupon.code }}</q-chip>
-        <q-btn flat color="negative" label="Remove" @click="removeCoupon(coupon.code)" />
+        <q-btn flat color="negative" :label="t('Remove')" @click="removeCoupon(coupon.code)" />
       </div>
       </div>
-      <div class="text-subtitle1 q-mt-md">Shipping</div>
+      <div class="text-subtitle1 q-mt-md">{{ t('Shipping') }}</div>
       <q-option-group
           v-if="shippingOptions.length"
           v-model="selectedShippingRateId"
@@ -70,15 +70,15 @@
           color="secondary"
           @update:model-value="onShippingMethodChange"
       />
-      <div v-else class="text-caption">Enter your address at checkout to see shipping options</div>
+      <div v-else class="text-caption">{{ t('Enter your address at checkout to see shipping options') }}</div>
       <div class="q-mt-md">
-      <div v-if="couponApplied">Total discount: {{formatCurrency(cartTotalDiscount)}}</div>
-      <div class="text-h6">Total: {{ formatCurrency(cartTotal) }}</div>
+      <div v-if="couponApplied">{{ t('Total discount: {amount}', { amount: formatCurrency(cartTotalDiscount) }) }}</div>
+      <div class="text-h6">{{ t('Total: {amount}', { amount: formatCurrency(cartTotal) }) }}</div>
       </div>
       <router-link to="/checkout/">
         <q-btn
             color="secondary"
-            label="Checkout"
+            :label="t('Checkout')"
         />
       </router-link>
 
@@ -102,6 +102,9 @@ import SectionRenderer from 'components/sections/SectionRenderer.vue'
 import { loadPageConfig } from 'src/utils/config-loader.js'
 import { getApiOrigin } from 'src/utils/server/get-api-origin.js'
 import { usePageConfig } from 'src/composables/usePageConfig.js'
+import { t as i18nT, useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 const {
   displayCart, cartTotal, cartItems, cartTotalDiscount, couponApplied, shippingOptions,
@@ -120,7 +123,7 @@ defineOptions({
 
     const configData = await loadPageConfig('cart', false, getApiOrigin(ssrContext)).catch(() => null)
     const seo = {
-      title: 'Cart',
+      title: i18nT('Cart'),
       description: 'Cart page',
       robots: 'noindex, follow'
     }

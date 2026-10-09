@@ -15,6 +15,11 @@ module.exports = {
       ]
     }),
 
+    // Right-to-left (Hebrew): every rule with a direction also gets a mirrored
+    // [dir="rtl"] version, so one build serves both directions (Quasar's
+    // own CSS included). The page sets <html dir> from the store's language.
+    require('postcss-rtlcss')({}),
+
     // Now we call the extracted function
     purgeCSSPlugin({
       content: [
@@ -123,6 +128,8 @@ safelist: {
     ],
     greedy: [ /^q-scrollarea/, /q-transition/, /rotate/, /^q-radio/, /^q-range/]
 },
+      // [dir="ltr"] / [dir="rtl"] rules (postcss-rtlcss) depend on <html dir>, set at runtime.
+      dynamicAttributes: ['dir'],
       defaultExtractor: content => content.match(/[\w-/:]+(?<!:)/g) || []
     })
   ]

@@ -1,3 +1,4 @@
+import { currentLocale } from 'src/i18n/index.js'
 // The store's blog (qwoo/v1/blog), read live like products.
 // origin: the storefront's own address during SSR (its /wp-json proxy), '' in the browser.
 
@@ -26,5 +27,6 @@ export async function fetchBlogPost(slug, origin = '') {
  */
 export function postDate(seconds, day = '') {
   const date = /^\d{4}-\d{2}-\d{2}$/.test(day) ? new Date(`${day}T12:00:00Z`) : new Date(seconds * 1000)
-  return date.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })
+  const locale = currentLocale()
+  return date.toLocaleDateString(locale === 'en-US' ? 'en-GB' : locale, { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })
 }

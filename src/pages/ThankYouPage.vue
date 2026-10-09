@@ -2,36 +2,35 @@
   <q-page class="q-pa-md">
     <div class="container">
       <div v-if="order" class="q-gutter-md">
-        <div class="text-h4 text-center">Thank you!</div>
+        <div class="text-h4 text-center">{{ t('Thank you!') }}</div>
         <div class="text-subtitle1 text-center">
-          Hey {{ order.billing_address.first_name }}. Your order is being processed and will get to you soon!
-          Please check your email inbox at <strong>{{ order.billing_address.email }}</strong> for more details.
+          {{ t('Hey {first_name}. Your order is being processed and will get to you soon! Please check your email inbox at', { first_name: order.billing_address.first_name }) }} <strong>{{ order.billing_address.email }}</strong> {{ t('for more details.') }}
         </div>
 
         <q-card v-if="bank" class="q-pa-md">
           <q-card-section>
-            <div class="text-h6">Pay by bank transfer</div>
+            <div class="text-h6">{{ t('Pay by bank transfer') }}</div>
             <q-separator class="q-my-sm"/>
-            <p>Your order ships once the transfer arrives. Please use order number <strong>{{ order.id }}</strong> as the payment reference.</p>
+            <p>{{ t('Your order ships once the transfer arrives. Please use order number') }} <strong>{{ order.id }}</strong> {{ t('as the payment reference.') }}</p>
             <p v-if="bank.instructions" style="white-space: pre-line">{{ bank.instructions }}</p>
             <div v-for="(a, i) in bank.accounts || []" :key="i" class="q-mb-sm">
-              <div v-if="a.account_name"><strong>Account name:</strong> {{ a.account_name }}</div>
-              <div v-if="a.bank_name"><strong>Bank:</strong> {{ a.bank_name }}</div>
-              <div v-if="a.account_number"><strong>Account number:</strong> {{ a.account_number }}</div>
-              <div v-if="a.sort_code"><strong>Branch:</strong> {{ a.sort_code }}</div>
-              <div v-if="a.iban"><strong>IBAN:</strong> {{ a.iban }}</div>
-              <div v-if="a.bic"><strong>BIC / SWIFT:</strong> {{ a.bic }}</div>
+              <div v-if="a.account_name"><strong>{{ t('Account name:') }}</strong> {{ a.account_name }}</div>
+              <div v-if="a.bank_name"><strong>{{ t('Bank:') }}</strong> {{ a.bank_name }}</div>
+              <div v-if="a.account_number"><strong>{{ t('Account number:') }}</strong> {{ a.account_number }}</div>
+              <div v-if="a.sort_code"><strong>{{ t('Branch:') }}</strong> {{ a.sort_code }}</div>
+              <div v-if="a.iban"><strong>{{ t('IBAN:') }}</strong> {{ a.iban }}</div>
+              <div v-if="a.bic"><strong>{{ t('BIC / SWIFT:') }}</strong> {{ a.bic }}</div>
             </div>
           </q-card-section>
         </q-card>
 
         <q-card class="q-pa-md">
           <q-card-section>
-            <div class="text-h6">Order Summary</div>
+            <div class="text-h6">{{ t('Order Summary') }}</div>
             <q-separator class="q-my-sm"/>
-            <div><strong>Order Number:</strong> {{ order.id }}</div>
+            <div><strong>{{ t('Order Number:') }}</strong> {{ order.id }}</div>
 
-            <div v-if="order.totals.total_items === 0 || order.totals.total_items !== order.totals.subtotal"><strong>Subtotal:</strong>
+            <div v-if="order.totals.total_items === 0 || order.totals.total_items !== order.totals.subtotal"><strong>{{ t('Subtotal:') }}</strong>
               <span style="text-decoration:line-through;">{{
                   formatCurrency(order.totals.subtotal, {
                     minorUnit: parseInt(order.totals.currency_minor_unit),
@@ -53,7 +52,7 @@
                 })
               }}
             </div>
-            <div v-else><strong>Subtotal:</strong> {{
+            <div v-else><strong>{{ t('Subtotal:') }}</strong> {{
                 formatCurrency(order.totals.subtotal, {
                   minorUnit: parseInt(order.totals.currency_minor_unit),
                   symbol: order.totals.currency_symbol,
@@ -64,7 +63,7 @@
                 })
               }}
             </div>
-            <div><strong>Shipping:</strong> {{
+            <div><strong>{{ t('Shipping:') }}</strong> {{
                 formatCurrency(order.totals.total_shipping, {
                   minorUnit: parseInt(order.totals.currency_minor_unit),
                   symbol: order.totals.currency_symbol,
@@ -75,7 +74,7 @@
                 })
               }}
             </div>
-            <div><strong>Total:</strong> {{
+            <div><strong>{{ t('Total:') }}</strong> {{
                 formatCurrency(order.totals.total_price, {
                   minorUnit: parseInt(order.totals.currency_minor_unit),
                   symbol: order.totals.currency_symbol,
@@ -89,7 +88,7 @@
           </q-card-section>
 
           <q-card-section>
-            <div class="text-h6 q-mb-md">Products</div>
+            <div class="text-h6 q-mb-md">{{ t('Products') }}</div>
             <q-table
               :rows="order.items"
               :columns="columns"
@@ -129,7 +128,7 @@
 
       <div v-else class="text-center q-my-xl">
         <q-spinner color="secondary" size="lg"/>
-        <div class="q-mt-md">Loading your order...</div>
+        <div class="q-mt-md">{{ t('Loading your order...') }}</div>
       </div>
     </div>
   </q-page>
@@ -142,6 +141,9 @@ import {useRoute} from 'vue-router'
 import {fetchWithToken} from 'src/composables/useApiFetch.js';
 import {formatCurrency} from 'src/utils/formatters.js'
 import {loadPaymentConfig, paymentConfig} from 'src/payments/config'
+import { useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 const route = useRoute()
 useSeoMeta({ noindex: true })
@@ -151,9 +153,9 @@ const bank = computed(() => order.value && route.query.pm === 'bacs' ? paymentCo
 
 const columns = [
   {name: 'thumbnail', label: '', align: 'left', field: 'thumbnail'},
-  {name: 'name', label: 'Product', align: 'center', field: 'name'},
-  {name: 'quantity', label: 'Qty', align: 'center', field: 'quantity'},
-  {name: 'total', label: 'Total', align: 'center', field: 'total'}
+  {name: 'name', label: t('Product'), align: 'center', field: 'name'},
+  {name: 'quantity', label: t('Qty'), align: 'center', field: 'quantity'},
+  {name: 'total', label: t('Total'), align: 'center', field: 'total'}
 ]
 
 onMounted(async () => {

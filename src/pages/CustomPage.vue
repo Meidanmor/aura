@@ -4,7 +4,7 @@
     <div v-if="page.crumbs?.length || (page.show_title !== false && page.title)" class="container">
       <!-- A page inside other pages: the trail back up (Home › About › Team). -->
       <q-breadcrumbs v-if="page.crumbs?.length" class="custom-page-crumbs">
-        <q-breadcrumbs-el label="Home" to="/" />
+        <q-breadcrumbs-el :label="t('Home')" to="/" />
         <q-breadcrumbs-el v-for="c in page.crumbs" :key="c.path" :label="c.title" :to="`/${c.path}`" />
         <q-breadcrumbs-el :label="page.title" />
       </q-breadcrumbs>

@@ -18,7 +18,7 @@
     <iframe
         :src="video.src"
         :style="frameSize"
-        title="Background video"
+        :title="t('Background video')"
         tabindex="-1"
         allow="autoplay; encrypted-media; picture-in-picture"
         referrerpolicy="strict-origin-when-cross-origin"

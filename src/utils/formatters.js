@@ -1,5 +1,6 @@
 // src/utils/formatters.js
 import cart from 'src/stores/cart'
+import { currentLocale } from 'src/i18n/index.js'
 
 export function formatCurrency(amountStr, {
   minorUnit,
@@ -21,7 +22,8 @@ export function formatCurrency(amountStr, {
 
   const factor = Math.pow(10, resolvedMinorUnit);
   const number = amount / factor;
-  return `${resolvedPrefix}${number.toLocaleString(undefined, {
+  // The store's language, the same on the server and in the browser.
+  return `${resolvedPrefix}${number.toLocaleString(currentLocale(), {
     minimumFractionDigits: resolvedMinorUnit,
     maximumFractionDigits: resolvedMinorUnit
   })}${resolvedSuffix}`;

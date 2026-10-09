@@ -8,31 +8,31 @@
             <!-- The owner's menu (Design → Menus); stores published before menus existed keep the old links. -->
             <NavMenu v-if="Array.isArray(menu)" :items="menu" />
             <template v-else>
-              <router-link to="/" class="text-h6 no-decoration">Home</router-link>
-              <router-link to="/products/" class="text-h6 no-decoration">Products</router-link>
-              <router-link to="/cart/" class="text-h6 no-decoration">Cart</router-link>
-              <router-link to="/checkout/" class="text-h6 no-decoration">Checkout</router-link>
-              <router-link to="/my-account/" class="text-h6 no-decoration">My account</router-link>
+              <router-link to="/" class="text-h6 no-decoration">{{ t('Home') }}</router-link>
+              <router-link to="/products/" class="text-h6 no-decoration">{{ t('Products') }}</router-link>
+              <router-link to="/cart/" class="text-h6 no-decoration">{{ t('Cart') }}</router-link>
+              <router-link to="/checkout/" class="text-h6 no-decoration">{{ t('Checkout') }}</router-link>
+              <router-link to="/my-account/" class="text-h6 no-decoration">{{ t('My account') }}</router-link>
             </template>
           </q-toolbar-title>
 
           <!-- Mobile Menu Toggle -->
-          <q-btn flat dense :icon="matMenu" aria-label="Open menu" class="lt-md" @click="emit('open-menu')" />
+          <q-btn flat dense :icon="matMenu" :aria-label="t('Open menu')" data-action="menu" class="lt-md" @click="emit('open-menu')" />
 
         </div>
-        <router-link to="/" aria-label="Navigate to home page" class="flex items-center order-first">
-          <img v-if="appLogo" :alt="storeName ? `${storeName} logo` : 'Logo'" :src="appLogo" width="84" height="19" loading="eager" decoding="sync" fetchpriority="high" />
+        <router-link to="/" :aria-label="t('Navigate to home page')" class="flex items-center order-first">
+          <img v-if="appLogo" :alt="storeName ? t('{name} logo', { name: storeName }) : t('Logo')" :src="appLogo" width="84" height="19" loading="eager" decoding="sync" fetchpriority="high" />
           <!-- No logo yet: the store's name instead of a broken image. -->
-          <span v-else class="header-store-name">{{ storeName || 'Home' }}</span>
+          <span v-else class="header-store-name">{{ storeName || t('Home') }}</span>
         </router-link>
         <div>
-          <q-btn flat dense :icon="matFavoriteBorder" aria-label="Add to wishlist" @click="emit('toggle-wishlist')" class="q-ml-sm q-mr-sm">
+          <q-btn flat dense :icon="matFavoriteBorder" :aria-label="t('Add to wishlist')" data-action="wishlist" @click="emit('toggle-wishlist')" class="q-ml-sm q-mr-sm">
             <q-no-ssr>
               <q-badge v-if="wishlist.state.items && Object.keys(wishlist.state.items).length > 0" floating color="red">{{ Object.keys(wishlist.state.items).length }}</q-badge>
             </q-no-ssr>
           </q-btn>
 
-          <q-btn flat dense :icon="matShoppingCart" aria-label="View cart" @click="emit('toggle-cart')">
+          <q-btn flat dense :icon="matShoppingCart" :aria-label="t('View cart')" data-action="cart" @click="emit('toggle-cart')">
             <q-no-ssr>
               <q-badge v-if="cart.state.items_count > 0" floating color="red">{{ cart.state.items_count }}</q-badge>
             </q-no-ssr>

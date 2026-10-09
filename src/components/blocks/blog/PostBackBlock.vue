@@ -1,5 +1,5 @@
 <template>
-  <router-link to="/blog" class="post-back">{{ d.label || '← Blog' }}</router-link>
+  <router-link to="/blog" class="post-back">{{ d.label || t('← Blog') }}</router-link>
 </template>
 
 <script setup>

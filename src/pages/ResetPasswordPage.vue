@@ -1,38 +1,38 @@
 <template>
   <div class="container q-pa-md reset-password-page">
-    <h2>Reset your password</h2>
+    <h2>{{ t('Reset your password') }}</h2>
 
     <div v-if="!key || !login" class="text-negative q-mt-md">
-      This link is missing information and can't be used. Please request a new reset link.
+      {{ t('This link is missing information and can\'t be used. Please request a new reset link.') }}
       <div class="q-mt-sm">
-        <router-link to="/forgot-password">Request a new link</router-link>
+        <router-link to="/forgot-password">{{ t('Request a new link') }}</router-link>
       </div>
     </div>
 
     <div v-else-if="done" class="sent-msg">
-      <p>Your password has been reset.</p>
-      <router-link to="/my-account">Log in</router-link>
+      <p>{{ t('Your password has been reset.') }}</p>
+      <router-link to="/my-account">{{ t('Log in') }}</router-link>
     </div>
 
     <q-form v-else @submit.prevent="submit" class="account-login-wrap">
       <q-input
           v-model="password"
           type="password"
-          label="New password"
+          :label="t('New password')"
           filled
           :disable="loading"
-          hint="At least 8 characters"
+          :hint="t('At least 8 characters')"
       />
       <q-input
           v-model="confirmPassword"
           type="password"
-          label="Confirm new password"
+          :label="t('Confirm new password')"
           filled
           :disable="loading"
       />
 
       <q-btn
-          label="Reset password"
+          :label="t('Reset password')"
           type="submit"
           color="secondary"
           :loading="loading"
@@ -47,11 +47,14 @@
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import {useSeoMeta} from "src/composables/useSeo.js";
+import { t as i18nT, useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 defineOptions({
   async preFetch ({ ssrContext }) {
     const seo = {
-      title: 'Reset password',
+      title: i18nT('Reset password'),
       description: 'Reset password page',
       robots: 'noindex, follow'
     }
@@ -80,11 +83,11 @@ async function submit() {
   error.value = ''
 
   if (password.value.length < 8) {
-    error.value = 'Password must be at least 8 characters.'
+    error.value = t('Password must be at least 8 characters.')
     return
   }
   if (password.value !== confirmPassword.value) {
-    error.value = 'Passwords do not match.'
+    error.value = t('Passwords do not match.')
     return
   }
 
@@ -103,14 +106,14 @@ async function submit() {
     const data = await res.json()
 
     if (!data.success) {
-      error.value = data.message || 'Could not reset your password. Please try again.'
+      error.value = t(data.message || 'Could not reset your password. Please try again.')
       return
     }
 
     done.value = true
   } catch (err) {
     console.error('Reset password error:', err)
-    error.value = 'A server error occurred. Please try again later.'
+    error.value = t('A server error occurred. Please try again later.')
   } finally {
     loading.value = false
   }

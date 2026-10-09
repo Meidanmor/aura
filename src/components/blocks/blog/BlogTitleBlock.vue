@@ -1,6 +1,6 @@
 <template>
   <header class="blog-title" :class="`is-${align}`">
-    <h1>{{ list?.category ? list.category.name : (d.title || 'Blog') }}</h1>
+    <h1>{{ list?.category ? list.category.name : (d.title || t('Blog')) }}</h1>
     <p v-if="d.show_description !== false && list?.category?.description" class="blog-title-intro">{{ list.category.description }}</p>
   </header>
 </template>

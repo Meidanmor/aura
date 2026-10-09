@@ -2,8 +2,8 @@
   <q-scroll-area class="fit">
     <div class="q-pa-md">
       <div class="mobile-drawer-header flex justify-between q-mb-md">
-        <div class="text-h6">Menu</div>
-        <q-btn flat dense aria-label="Close menu" padding="none" :icon="matClose" @click="closeMenu"/>
+        <div class="text-h6">{{ t('Menu') }}</div>
+        <q-btn flat dense :aria-label="t('Close menu')" padding="none" :icon="matClose" @click="closeMenu"/>
       </div>
       <!-- The owner's menu (Design → Menus). -->
       <q-list v-if="Array.isArray(menu)" bordered padding>
@@ -15,35 +15,35 @@
           <q-item-section avatar>
             <q-icon :name="matHome" />
           </q-item-section>
-          <q-item-section>Home</q-item-section>
+          <q-item-section>{{ t('Home') }}</q-item-section>
         </q-item>
 
         <q-item clickable v-ripple to="/products/" @click="closeMenu">
           <q-item-section avatar>
             <q-icon :name="matStorefront" />
           </q-item-section>
-          <q-item-section>Products</q-item-section>
+          <q-item-section>{{ t('Products') }}</q-item-section>
         </q-item>
 
         <q-item clickable v-ripple to="/cart/" @click="closeMenu">
           <q-item-section avatar>
             <q-icon :name="matShoppingCart" />
           </q-item-section>
-          <q-item-section>Cart</q-item-section>
+          <q-item-section>{{ t('Cart') }}</q-item-section>
         </q-item>
 
         <q-item clickable v-ripple to="/checkout/" @click="closeMenu">
           <q-item-section avatar>
             <q-icon :name="matReceipt" />
           </q-item-section>
-          <q-item-section>Checkout</q-item-section>
+          <q-item-section>{{ t('Checkout') }}</q-item-section>
         </q-item>
 
         <q-item clickable v-ripple to="/my-account/" @click="closeMenu">
           <q-item-section avatar>
             <q-icon :name="matPerson" />
           </q-item-section>
-          <q-item-section>My Account</q-item-section>
+          <q-item-section>{{ t('My Account') }}</q-item-section>
         </q-item>
       </q-list>
     </div>
@@ -54,7 +54,7 @@
         inline-actions
     >
       <div class="text-subtitle1">
-        Enable push notifications?
+        {{ t('Enable push notifications?') }}
       </div>
 
       <template #action>
@@ -64,7 +64,7 @@
             padding="sm"
             color="secondary"
             text-color="white"
-            label="Enable"
+            :label="t('Enable')"
             @click="emit('subscribe')"
         />
       </template>

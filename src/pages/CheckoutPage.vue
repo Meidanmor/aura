@@ -2,13 +2,13 @@
     <div class="container q-pa-md">
       <div v-if="isProcessingOrder" class="processing-overlay">
         <q-spinner color="secondary" size="3em" />
-        <div class="q-mt-md text-h6">Processing your order…</div>
+        <div class="q-mt-md text-h6">{{ t('Processing your order…') }}</div>
       </div>
-      <h1>Checkout</h1>
+      <h1>{{ t('Checkout') }}</h1>
       <SectionRenderer :sections="pageConfig?.sections" page="checkout" location="before_checkout"/>
       <div v-if="isLoggedIn === false && checkoutReady && itemsCount !== '0'">
         <q-expansion-item
-            label="Have an account?"
+            :label="t('Have an account?')"
             header-class="text-bold cursor-pointer"
             class="q-mb-sm"
             :expand-icon="matKeyboardArrowDown"
@@ -17,7 +17,7 @@
 
           <div class="account-login-container q-mb-md">
             <LoginForm @login-success="onLogin" />
-            <span class="flex q-mb-sm q-mt-sm text-h6" v-if="googleLoginEnabled">OR</span>
+            <span class="flex q-mb-sm q-mt-sm text-h6" v-if="googleLoginEnabled">{{ t('OR') }}</span>
             <GoogleLoginButton @login-success="onLogin"/>
           </div>
 
@@ -27,7 +27,7 @@
       <q-form class="flex" v-if="displayCart && itemsCount !== '0'" @submit.prevent="submitOrder" @validation-error="onValidationError">
       <!-- Honeypot: real users never see or fill this. -->
       <div class="hp-field" aria-hidden="true">
-        <label for="checkout-website">Website</label>
+        <label for="checkout-website">{{ t('Website') }}</label>
         <input
             id="checkout-website"
             v-model="honeypotField"
@@ -43,62 +43,62 @@
       <!-- Personal Info -->
       <q-card class="q-mb-md">
         <q-card-section class="q-pa-md">
-          <div class="text-h6">Personal Details</div>
-          <q-input @blur="handleInputBlur" v-model="form.first_name" label="First Name *" filled class="q-mb-sm" :rules="[val => !!val || 'First Name is required']"/>
-          <q-input @blur="handleInputBlur" v-model="form.last_name" label="Last Name *" filled class="q-mb-sm" :rules="[val => !!val || 'Last Name is required']"/>
+          <div class="text-h6">{{ t('Personal Details') }}</div>
+          <q-input @blur="handleInputBlur" v-model="form.first_name" :label="t('First Name *')" filled class="q-mb-sm" :rules="[val => !!val || t('First Name is required')]"/>
+          <q-input @blur="handleInputBlur" v-model="form.last_name" :label="t('Last Name *')" filled class="q-mb-sm" :rules="[val => !!val || t('Last Name is required')]"/>
           <q-input
               @blur="handleInputBlur" v-model="form.email"
-              label="Email *" filled class="q-mb-sm"
+              :label="t('Email *')" filled class="q-mb-sm"
               type="text"
               :rules="[
-                  val => !!val || 'Email is required',
-    val => /^\S+@\S+\.\S+$/.test(val) || 'Please enter a valid email'
+                  val => !!val || t('Email is required'),
+    val => /^\S+@\S+\.\S+$/.test(val) || t('Please enter a valid email')
   ]"
           />
-          <q-input @blur="handleInputBlur" v-model="form.phone" label="Phone *" filled :rules="[val => !!val || 'Phone is required']"/>
+          <q-input @blur="handleInputBlur" v-model="form.phone" :label="t('Phone *')" filled :rules="[val => !!val || t('Phone is required')]"/>
         </q-card-section>
       </q-card>
 
       <!-- Shipping Address -->
       <q-card class="q-mb-md">
         <q-card-section class="q-pa-md">
-          <div class="text-h6">Shipping Address</div>
-          <q-input @blur="handleInputBlur" v-model="form.shipping.address_1" label="Address *" filled class="q-mb-sm" :rules="[val => !!val || 'Address is required']"/>
-          <q-input @blur="handleInputBlur" v-model="form.shipping.city" label="City *" filled class="q-mb-sm" :rules="[val => !!val || 'City is required']"/>
-          <q-input @blur="handleInputBlur" v-model="form.shipping.postcode" label="Postcode" filled class="q-mb-sm" :rules="[val => !!val || 'Postcode is required']"/>
-          <q-input readonly @blur="handleInputBlur" v-model="form.shipping.country" label="Country" filled />
+          <div class="text-h6">{{ t('Shipping Address') }}</div>
+          <q-input @blur="handleInputBlur" v-model="form.shipping.address_1" :label="t('Address *')" filled class="q-mb-sm" :rules="[val => !!val || t('Address is required')]"/>
+          <q-input @blur="handleInputBlur" v-model="form.shipping.city" :label="t('City *')" filled class="q-mb-sm" :rules="[val => !!val || t('City is required')]"/>
+          <q-input @blur="handleInputBlur" v-model="form.shipping.postcode" :label="t('Postcode')" filled class="q-mb-sm" :rules="[val => !!val || t('Postcode is required')]"/>
+          <q-input readonly @blur="handleInputBlur" v-model="form.shipping.country" :label="t('Country')" filled />
         </q-card-section>
 
         <q-card-section>
-          <q-checkbox @update:model-value="handleCheckboxBlur" v-model="differentBillingAddress" label="Different billing address?" color="secondary" />
+          <q-checkbox @update:model-value="handleCheckboxBlur" v-model="differentBillingAddress" :label="t('Different billing address?')" color="secondary" />
         </q-card-section>
       </q-card>
 
       <!-- Billing Address (conditional) -->
       <q-card v-if="differentBillingAddress" class="q-mb-md">
         <q-card-section class="q-pa-md">
-          <div class="text-h6">Billing Address</div>
-          <q-input @blur="handleInputBlur" v-model="form.billing.address_1" label="Billing Address *" filled class="q-mb-sm" />
-          <q-input @blur="handleInputBlur" v-model="form.billing.city" label="City *" filled class="q-mb-sm" />
-          <q-input @blur="handleInputBlur" v-model="form.billing.postcode" label="Postcode" filled class="q-mb-sm" />
-          <q-input @blur="handleInputBlur" v-model="form.billing.country" label="Country" filled />
+          <div class="text-h6">{{ t('Billing Address') }}</div>
+          <q-input @blur="handleInputBlur" v-model="form.billing.address_1" :label="t('Billing Address *')" filled class="q-mb-sm" />
+          <q-input @blur="handleInputBlur" v-model="form.billing.city" :label="t('City *')" filled class="q-mb-sm" />
+          <q-input @blur="handleInputBlur" v-model="form.billing.postcode" :label="t('Postcode')" filled class="q-mb-sm" />
+          <q-input @blur="handleInputBlur" v-model="form.billing.country" :label="t('Country')" filled />
         </q-card-section>
       </q-card>
 
       <!-- Coupon Section -->
       <q-card class="q-mb-md">
         <q-card-section class="q-pa-md">
-          <div class="text-h6">Coupon</div>
+          <div class="text-h6">{{ t('Coupon') }}</div>
           <div class="row items-center q-col-gutter-md">
             <div class="col">
-              <q-input v-model="couponCode" label="Coupon code" filled @keydown.enter.stop.prevent="applyCoupon(couponCode)"/>
+              <q-input v-model="couponCode" :label="t('Coupon code')" filled @keydown.enter.stop.prevent="applyCoupon(couponCode)"/>
             </div>
             <div class="col-auto">
-              <q-btn label="Apply" color="secondary" :loading="loadingCoupon" @click="applyCoupon(couponCode)" />
+              <q-btn :label="t('Apply')" color="secondary" :loading="loadingCoupon" @click="applyCoupon(couponCode)" />
             </div>
           </div>
           <div v-if="couponApplied" class="text-positive q-mt-sm">
-            Coupon applied successfully!
+            {{ t('Coupon applied successfully!') }}
           </div>
           <div v-if="couponError" class="text-negative q-mt-sm">
             {{ couponError }}
@@ -108,7 +108,7 @@
               <q-chip color="secondary" text-color="white" class="q-mr-sm">
                 {{ coupon.code }}
               </q-chip>
-              <q-btn flat color="negative" label="Remove" @click="removeCoupon(coupon.code)" />
+              <q-btn flat color="negative" :label="t('Remove')" @click="removeCoupon(coupon.code)" />
             </div>
           </div>
         </q-card-section>
@@ -121,7 +121,7 @@
       <!-- Cart Items -->
       <q-card class="q-mb-md">
         <q-card-section class="q-pa-md">
-          <div class="text-h6">Your Cart</div>
+          <div class="text-h6">{{ t('Your Cart') }}</div>
           <div v-for="item in cartItems" :key="item.key" class="checkout-items q-my-sm flex items-center no-wrap">
             <div>
              <q-img
@@ -154,7 +154,7 @@
     <!-- Shipping Method -->
     <q-card class="q-mb-md">
       <q-card-section class="q-pa-md">
-        <div class="text-h6">Choose Shipping Method</div>
+        <div class="text-h6">{{ t('Choose Shipping Method') }}</div>
         <q-option-group
           v-model="selectedShippingRateId"
           :options="shippingOptions"
@@ -168,7 +168,7 @@
       <!-- Payment -->
       <q-card class="q-mb-md">
         <q-card-section class="q-pa-md">
-          <div class="text-h6">Payment Method</div>
+          <div class="text-h6">{{ t('Payment Method') }}</div>
           <q-option-group
             v-model="paymentMethod"
             :options="paymentMethods"
@@ -192,48 +192,48 @@
       <!-- Total & Place Order -->
       <q-card class="q-pa-md">
         <q-card-section>
-          <div v-if="couponApplied">Total discount: {{formatCurrency(cartTotalDiscount)}}</div>
-          <div class="text-h6">Total: <span v-if="couponApplied"><del>{{formatCurrency((Number(cartTotalDiscount)+Number(cartTotal)))}}</del></span> {{ formatCurrency(cartTotal) }}</div>
+          <div v-if="couponApplied">{{ t('Total discount: {amount}', { amount: formatCurrency(cartTotalDiscount) }) }}</div>
+          <div class="text-h6">{{ t('Total:') }} <span v-if="couponApplied"><del>{{formatCurrency((Number(cartTotalDiscount)+Number(cartTotal)))}}</del></span> {{ formatCurrency(cartTotal) }}</div>
         </q-card-section>
         <q-card-section v-if="(allowSignup && isLoggedIn === false) || termsRequired" class="q-pt-none checkout-agree">
-          <q-checkbox v-if="allowSignup && isLoggedIn === false" v-model="createAccount" color="secondary" label="Create an account (we'll email you a link to set your password)" />
+          <q-checkbox v-if="allowSignup && isLoggedIn === false" v-model="createAccount" color="secondary" :label="t('Create an account (we\'ll email you a link to set your password)')" />
           <q-checkbox v-if="termsRequired" v-model="agreeTerms" color="secondary">
             <span>
-              I have read and agree to the
-              <template v-if="legal.terms"><router-link :to="legal.terms" target="_blank" @click.stop>terms and conditions</router-link></template>
-              <template v-if="legal.terms && legal.privacy"> and the </template>
-              <template v-if="legal.privacy"><router-link :to="legal.privacy" target="_blank" @click.stop>privacy policy</router-link></template>
-              of this store. *
+              {{ t('I have read and agree to the') }}
+              <template v-if="legal.terms"><router-link :to="legal.terms" target="_blank" @click.stop>{{ t('terms and conditions') }}</router-link></template>
+              <template v-if="legal.terms && legal.privacy"> {{ t('and the') }} </template>
+              <template v-if="legal.privacy"><router-link :to="legal.privacy" target="_blank" @click.stop>{{ t('privacy policy') }}</router-link></template>
+              {{ t('of this store. *') }}
             </span>
           </q-checkbox>
         </q-card-section>
         <q-card-actions>
-          <q-btn label="Place Order" type="submit" color="secondary" />
+          <q-btn :label="t('Place Order')" type="submit" color="secondary" />
         </q-card-actions>
       </q-card>
         </div>
     </q-form>
 
       <div v-else-if="displayCart && itemsCount === '0'">
-        Your cart is empty!
-        <router-link to="/products/">Go to shop</router-link>
+        {{ t('Your cart is empty!') }}
+        <router-link to="/products/">{{ t('Go to shop') }}</router-link>
       </div>
 
       <!-- Render loader and sync retry state -->
       <div v-else class="centered">
         <q-spinner color="secondary" size="2em" />
-        <div>Synchronizing cart, please wait...</div>
+        <div>{{ t('Synchronizing cart, please wait...') }}</div>
       </div>
 
       <!-- Offline banner inside the form, at the top -->
       <div v-if="displayCart?._offline" class="bg-warning text-dark q-pa-sm q-mb-md rounded-borders">
-        You're offline. Your form data is being saved locally and your order will be submitted when you reconnect.
+        {{ t('You\'re offline. Your form data is being saved locally and your order will be submitted when you reconnect.') }}
       </div>
 
       <SectionRenderer :sections="pageConfig?.sections" page="checkout" location="after_checkout"/>
       <div v-if="syncError" class="text-negative q-mt-md text-center">
         {{ syncError }}
-        <q-btn label="Retry Sync" color="secondary" @click="syncCart" class="q-ml-md" />
+        <q-btn :label="t('Retry Sync')" color="secondary" @click="syncCart" class="q-ml-md" />
       </div>
     </div>
 </template>
@@ -262,6 +262,9 @@ import {useSeoMeta} from "src/composables/useSeo.js";
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
 import LoginForm from 'src/components/account/LoginForm.vue'
 import {setUser} from "stores/user.js";
+import { t as i18nT, useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 const {
   displayCart, itemsCount, cartItems, cartTotal, cartTotalDiscount, couponApplied,
   shippingOptions, selectedShippingRateId, couponCode, couponError, loadingCoupon,
@@ -278,7 +281,7 @@ defineOptions({
     }
      //const seo = await fetchSeoForPath('checkout')
       const seo = {
-        title: 'Checkout',
+        title: i18nT('Checkout'),
         description: 'Checkout page',
         robots: 'noindex, follow'
       }
@@ -386,7 +389,7 @@ const paymentMethods = computed(() => {
   return methods
     .filter(method => getAdapter(method))
     .map(method => ({
-      label: paymentConfig.value?.methods?.[method]?.title || getAdapter(method).label,
+      label: t(paymentConfig.value?.methods?.[method]?.title || getAdapter(method).label),
       value: method,
     }))
 })
@@ -475,7 +478,7 @@ const updateShippingAddress = async (differentBilling=null) => {
     shippingUpdateError.value = true
     $q.notify({
       type: 'negative',
-      message: "We couldn't save your shipping address. Please check your connection and try again.",
+      message: t("We couldn't save your shipping address. Please check your connection and try again."),
       icon: matError
     })
   }
@@ -532,14 +535,14 @@ const submitOrder = async (walletOverride = null) => {
   if (!walletOverride && isLikelyBot()) {
     $q.notify({
       type: 'negative',
-      message: 'Something went wrong placing your order. Please try again.',
+      message: t('Something went wrong placing your order. Please try again.'),
       icon: matError
     })
     return
   }
 
   if (termsRequired.value && !agreeTerms.value) {
-    $q.notify({ type: 'negative', message: "Please tick the box to agree to the store's terms before placing your order.", icon: matError })
+    $q.notify({ type: 'negative', message: t("Please tick the box to agree to the store's terms before placing your order."), icon: matError })
     walletOverride?.complete?.('fail')
     return
   }
@@ -547,7 +550,7 @@ const submitOrder = async (walletOverride = null) => {
   if (shippingUpdateError.value) {
     $q.notify({
       type: 'negative',
-      message: 'Your shipping address failed to save. Please re-enter it before placing your order.',
+      message: t('Your shipping address failed to save. Please re-enter it before placing your order.'),
       icon: matError
     })
     return
@@ -582,7 +585,7 @@ const submitOrder = async (walletOverride = null) => {
         console.error('Payment error:', err.message)
         $q.notify({
           type: 'negative',
-          message: err.message || 'Payment failed. Please check your payment details and try again.',
+          message: t(err.message || 'Payment failed. Please check your payment details and try again.'),
           icon: matError
         })
         isProcessingOrder.value = false
@@ -634,7 +637,7 @@ const submitOrder = async (walletOverride = null) => {
     console.error('Checkout error:', err.message)
     $q.notify({
       type: 'negative',
-      message: err.message || "We couldn't place your order. Please try again.",
+      message: t(err.message || "We couldn't place your order. Please try again."),
       icon: matError
     })
     if (isWallet) walletOverride.complete('fail')
@@ -652,7 +655,7 @@ const syncCart = async () => {
   try {
     await cart.syncLocalCartWithServer()
   } catch {
-    syncError.value = cart.state.error || 'Failed to sync cart'
+    syncError.value = t(cart.state.error || 'Failed to sync cart')
   }
 }
 
