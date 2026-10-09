@@ -2,7 +2,7 @@
   <ErrorNotFound v-if="notFound" />
   <div v-else class="main-wrapper-div">
     <div class="container">
-      <SectionRenderer :sections="shopSettings?.sections" page="category" location="before_breadcrumbs"/>
+      <SectionRenderer :sections="categorySections" page="category" location="before_breadcrumbs"/>
 
       <q-breadcrumbs>
         <q-breadcrumbs-el label="Home" to="/" />
@@ -10,13 +10,13 @@
         <q-breadcrumbs-el><span v-html="safeCategoryName"></span></q-breadcrumbs-el>
       </q-breadcrumbs>
 
-      <SectionRenderer :sections="shopSettings?.sections" page="category" location="after_breadcrumbs"/>
+      <SectionRenderer :sections="categorySections" page="category" location="after_breadcrumbs"/>
 
       <h1 v-html="safeCategoryName || 'Products'"></h1>
 
       <div class="archive-layout flex no-wrap">
         <div class="filters-wrap flex" :class="{ 'shown': filtersOpen }" @pointerdown.stop >
-          <SectionRenderer :sections="shopSettings?.sections" page="category" location="before_filters"/>
+          <SectionRenderer :sections="categorySections" page="category" location="before_filters"/>
 
           <q-scroll-area class="fit">
 
@@ -53,11 +53,11 @@
               @toggle-filters="filtersOpen = !filtersOpen"
           />
 
-          <SectionRenderer :sections="shopSettings?.sections" page="category" location="before_products_grid"/>
+          <SectionRenderer :sections="categorySections" page="category" location="before_products_grid"/>
 
           <ProductResultsGrid :loading="productsStore.productsLoading.value" :products="paginatedProducts" />
 
-          <SectionRenderer :sections="shopSettings?.sections" page="category" location="after_products_grid"/>
+          <SectionRenderer :sections="categorySections" page="category" location="after_products_grid"/>
 
           <ArchivePagination
               v-model="currentPage"
@@ -68,7 +68,7 @@
         </div>
       </div>
 
-      <SectionRenderer :sections="shopSettings?.sections" page="category" location="after_pagination"/>
+      <SectionRenderer :sections="categorySections" page="category" location="after_pagination"/>
 
     </div>
   </div>
@@ -76,6 +76,8 @@
 
 <script setup>
 import { createArchivePreFetch, useProductArchive } from 'src/composables/useProductArchive'
+import { computed } from 'vue'
+import { categoryMatch, pickSections } from 'src/utils/layouts.js'
 import { matClose } from '@quasar/extras/material-icons'
 import PriceFilterCard from '../components/shop/PriceFilterCard.vue'
 import ProductResultsGrid from '../components/shop/ProductResultsGrid.vue';
@@ -93,6 +95,8 @@ const {
   paginatedProducts, totalPages, totalProducts,
   sortOptions, onPriceChange, scrollToTop, productsStore, shopSettings, notFound
 } = useProductArchive('category')
+// The category's layout (Store builder): one made for this category, else the default.
+const categorySections = computed(() => pickSections(shopSettings.value, categoryMatch(selectedCategoryOBJ.value)))
 
 const safeCategoryName = useSanitizedText(() => selectedCategoryOBJ.value?.name)
 

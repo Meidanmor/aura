@@ -55,6 +55,15 @@ import CategoryGridSection from './CategoryGridSection.vue'
 import TestimonialsSection from './TestimonialsSection.vue'
 import FeaturedProductsSection from './FeaturedProductsSection.vue'
 import LatestPostsSection from './LatestPostsSection.vue'
+import PostTitleBlock from '../blocks/blog/PostTitleBlock.vue'
+import PostMetaBlock from '../blocks/blog/PostMetaBlock.vue'
+import PostImageBlock from '../blocks/blog/PostImageBlock.vue'
+import PostContentBlock from '../blocks/blog/PostContentBlock.vue'
+import PostMoreBlock from '../blocks/blog/PostMoreBlock.vue'
+import PostBackBlock from '../blocks/blog/PostBackBlock.vue'
+import BlogTitleBlock from '../blocks/blog/BlogTitleBlock.vue'
+import BlogCategoriesBlock from '../blocks/blog/BlogCategoriesBlock.vue'
+import BlogPostsBlock from '../blocks/blog/BlogPostsBlock.vue'
 import AdvantagesSection from './AdvantagesSection.vue'
 import TextBlock from './TextBlock.vue'
 import ImageBlock from './ImageBlock.vue'
@@ -92,6 +101,16 @@ const blockComponents = {
   form: FormBlock,
   featured_products: FeaturedProductsSection,
   latest_posts: LatestPostsSection,
+  // Blog templates (Store builder → Blog): the post or posts of the page.
+  post_title: PostTitleBlock,
+  post_meta: PostMetaBlock,
+  post_featured_image: PostImageBlock,
+  post_content: PostContentBlock,
+  post_more: PostMoreBlock,
+  post_back: PostBackBlock,
+  blog_title: BlogTitleBlock,
+  blog_categories: BlogCategoriesBlock,
+  blog_posts: BlogPostsBlock,
   category_grid: CategoryGridSection,
   testimonials: TestimonialsSection,
   advantages: AdvantagesSection,

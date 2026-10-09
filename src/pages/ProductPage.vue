@@ -1,6 +1,6 @@
 <template>
   <div class="container" v-if="product">
-    <SectionRenderer :sections="productSettings?.sections" page="product" location="before_breadcrumbs"/>
+    <SectionRenderer :sections="productSections" page="product" location="before_breadcrumbs"/>
 
     <div class="q-pa-md">
       <q-breadcrumbs>
@@ -10,14 +10,14 @@
       </q-breadcrumbs>
     </div>
 
-    <SectionRenderer :sections="productSettings?.sections" page="product" location="after_breadcrumbs"/>
+    <SectionRenderer :sections="productSections" page="product" location="after_breadcrumbs"/>
 
     <div class="q-pa-md row q-col-gutter-lg">
 
       <!-- Product Images -->
       <div class="col-12 col-md-6">
 
-        <SectionRenderer :sections="productSettings?.sections" page="product" location="before_product_images"/>
+        <SectionRenderer :sections="productSections" page="product" location="before_product_images"/>
 
         <div v-if="product?.images?.length > 1">
             <AppCarousel
@@ -71,7 +71,7 @@
           />
         </div>
 
-        <SectionRenderer :sections="productSettings?.sections" page="product" location="after_product_images"/>
+        <SectionRenderer :sections="productSections" page="product" location="after_product_images"/>
 
       </div>
 
@@ -159,7 +159,7 @@
             <span v-else>The are only {{product.add_to_cart?.maximum}} left in stock!</span>
           </div>
 
-          <SectionRenderer :sections="productSettings?.sections" page="product" location="before_add_to_cart_form"/>
+          <SectionRenderer :sections="productSections" page="product" location="before_add_to_cart_form"/>
 
           <!-- Quantity Selector -->
         <div class="row items-center q-mb-md">
@@ -203,7 +203,7 @@
           </q-tooltip>
         </q-btn>
 
-          <SectionRenderer :sections="productSettings?.sections" page="product" location="after_add_to_cart_form"/>
+          <SectionRenderer :sections="productSections" page="product" location="after_add_to_cart_form"/>
 
         </div>
 
@@ -213,19 +213,19 @@
         <q-btn class="text-black q-pa-none text-caption q-mt-sm" flat :loading="wishlist.isLoading(product.id)" v-if="wishlist.state.items && Object.values(wishlist.state.items).find(obj => selectedVariation ? selectedVariation.id : product.id === obj.id)" @click="addToWishlist" color="accent" label="Remove from wishlist" :icon="matFavorite" />
         <q-btn class="text-black q-pa-none text-caption q-mt-sm" flat :loading="wishlist.isLoading(product.id)" v-else @click="addToWishlist" color="accent" label="Add to wishlist" :icon="matFavoriteBorder" />
         </div>
-        <SectionRenderer :sections="productSettings?.sections" page="product" location="after_product_summary"/>
+        <SectionRenderer :sections="productSections" page="product" location="after_product_summary"/>
 
       </div>
     </div>
 
     <ProductReviews v-if="reviewsOn" :key="product.id" :product-id="product.id" />
-    <SectionRenderer :sections="productSettings?.sections" page="product" location="before_related_products"/>
+    <SectionRenderer :sections="productSections" page="product" location="before_related_products"/>
     <RelatedProductsSlider
       :productId="product.id"
       :categoryId="product.categories[0]?.id"
       :maxVisible="4"
     />
-    <SectionRenderer :sections="productSettings?.sections" page="product" location="after_related_products"/>
+    <SectionRenderer :sections="productSections" page="product" location="after_related_products"/>
 
   </div>
 
@@ -244,6 +244,7 @@ import cart from 'src/stores/cart.js'
 import wishlist from 'src/stores/wishlist.js'
 import RelatedProductsSlider from '../components/shop/RelatedProductsSlider.vue'
 import ProductReviews from 'components/shop/ProductReviews.vue'
+import { pickSections, productMatch } from 'src/utils/layouts.js'
 import { useQuasar } from 'quasar'
 import { fetchSeoForPath } from 'src/composables/useSeo'
 import productsStore from 'src/stores/products'
@@ -280,6 +281,8 @@ const productSettings = ref(
         ? window.__PAGE_CONFIG__
         : null
 )
+// The product's layout (Store builder): one made for this product or its category, else the default.
+const productSections = computed(() => pickSections(productSettings.value, productMatch(product.value)))
 const getSlugFromPermalink = (permalink) => {
   const match = permalink.match(/product\/([^/]+)\/?$/)
   return match ? match[1] : ''

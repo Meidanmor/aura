@@ -5,6 +5,7 @@
         <div class="q-mt-md text-h6">Processing your order…</div>
       </div>
       <h1>Checkout</h1>
+      <SectionRenderer :sections="pageConfig?.sections" page="checkout" location="before_checkout"/>
       <div v-if="isLoggedIn === false && checkoutReady && itemsCount !== '0'">
         <q-expansion-item
             label="Have an account?"
@@ -38,6 +39,7 @@
       </div>
 
       <div class="float-left">
+      <SectionRenderer :sections="pageConfig?.sections" page="checkout" location="before_customer_details"/>
       <!-- Personal Info -->
       <q-card class="q-mb-md">
         <q-card-section class="q-pa-md">
@@ -111,10 +113,11 @@
           </div>
         </q-card-section>
       </q-card>
-
+      <SectionRenderer :sections="pageConfig?.sections" page="checkout" location="after_customer_details"/>
       </div>
       <div class="float-right relative-position">
         <div class="blockUi" v-if="cart.state.loading.cart === true"></div>
+        <SectionRenderer :sections="pageConfig?.sections" page="checkout" location="before_order_review"/>
       <!-- Cart Items -->
       <q-card class="q-mb-md">
         <q-card-section class="q-pa-md">
@@ -185,11 +188,24 @@
         </q-card-section>
       </q-card>
 
+      <SectionRenderer :sections="pageConfig?.sections" page="checkout" location="before_place_order"/>
       <!-- Total & Place Order -->
       <q-card class="q-pa-md">
         <q-card-section>
           <div v-if="couponApplied">Total discount: {{formatCurrency(cartTotalDiscount)}}</div>
           <div class="text-h6">Total: <span v-if="couponApplied"><del>{{formatCurrency((Number(cartTotalDiscount)+Number(cartTotal)))}}</del></span> {{ formatCurrency(cartTotal) }}</div>
+        </q-card-section>
+        <q-card-section v-if="(allowSignup && isLoggedIn === false) || termsRequired" class="q-pt-none checkout-agree">
+          <q-checkbox v-if="allowSignup && isLoggedIn === false" v-model="createAccount" color="secondary" label="Create an account (we'll email you a link to set your password)" />
+          <q-checkbox v-if="termsRequired" v-model="agreeTerms" color="secondary">
+            <span>
+              I have read and agree to the
+              <template v-if="legal.terms"><router-link :to="legal.terms" target="_blank" @click.stop>terms and conditions</router-link></template>
+              <template v-if="legal.terms && legal.privacy"> and the </template>
+              <template v-if="legal.privacy"><router-link :to="legal.privacy" target="_blank" @click.stop>privacy policy</router-link></template>
+              of this store. *
+            </span>
+          </q-checkbox>
         </q-card-section>
         <q-card-actions>
           <q-btn label="Place Order" type="submit" color="secondary" />
@@ -214,6 +230,7 @@
         You're offline. Your form data is being saved locally and your order will be submitted when you reconnect.
       </div>
 
+      <SectionRenderer :sections="pageConfig?.sections" page="checkout" location="after_checkout"/>
       <div v-if="syncError" class="text-negative q-mt-md text-center">
         {{ syncError }}
         <q-btn label="Retry Sync" color="secondary" @click="syncCart" class="q-ml-md" />
@@ -228,6 +245,7 @@ import { useRouter, onBeforeRouteLeave } from 'vue-router';
 import { useQuasar } from 'quasar';
 import {fetchWithToken, setLoggedIn} from 'src/composables/useApiFetch.js';
 import GoogleLoginButton from '../components/account/GoogleLoginButton.vue';
+import SectionRenderer from 'components/sections/SectionRenderer.vue';
 import { loadPageConfig, subscribeToLiveConfig } from 'src/utils/config-loader'
 
 let unsubscribeConfigUpdates = () => {}
@@ -305,6 +323,18 @@ if (process.env.SERVER) {
   const ssr = useSSRContext()
   pageConfig.value = ssr?.pageConfig || null
 }
+// The same config the server rendered with (sections in the slots).
+if (process.env.CLIENT && window.__PAGE_CONFIG__ && Object.keys(window.__PAGE_CONFIG__).length) {
+  pageConfig.value = window.__PAGE_CONFIG__
+}
+
+// Store builder → Checkout: the terms checkbox (once a terms or privacy page is
+// published) and "Create an account" for guests.
+const legal = computed(() => pageConfig.value?.legal || {})
+const termsRequired = computed(() => pageConfig.value?.require_terms !== false && !!(legal.value.terms || legal.value.privacy))
+const allowSignup = computed(() => !!pageConfig.value && pageConfig.value.allow_signup !== false)
+const agreeTerms = ref(false)
+const createAccount = ref(false)
 
 const syncError = ref(null);
 
@@ -508,6 +538,12 @@ const submitOrder = async (walletOverride = null) => {
     return
   }
 
+  if (termsRequired.value && !agreeTerms.value) {
+    $q.notify({ type: 'negative', message: 'Please agree to the terms and the privacy policy to place your order.', icon: matError })
+    walletOverride?.complete?.('fail')
+    return
+  }
+
   if (shippingUpdateError.value) {
     $q.notify({
       type: 'negative',
@@ -577,8 +613,10 @@ const submitOrder = async (walletOverride = null) => {
       },
       payment_method: paymentMethod.value,
       payment_data: paymentData,
-      extensions: {},
-      billing_same_as_shipping: !differentBillingAddress.value
+      // The store checks the agreement (only sent when it asks for one).
+      extensions: termsRequired.value ? { qwoo: { terms: agreeTerms.value } } : {},
+      billing_same_as_shipping: !differentBillingAddress.value,
+      ...(allowSignup.value && isLoggedIn.value === false && createAccount.value ? { create_account: true } : {}),
     }
 
     const response = await cart.placeOrder(payload)

@@ -1,10 +1,12 @@
 <template>
   <div class="container q-pa-md">
     <h2>Your Cart</h2>
+    <SectionRenderer :sections="cartConfig?.sections" page="cart" location="before_cart"/>
     <div v-if="cartItems.length === 0" class="empty-cart-msg">
       Your cart is empty. <router-link to="/products/">Go to shop</router-link>
     </div>
         <div v-else-if="cart.hasItems.value && isHydrated" class="cart-items-wrap">
+        <SectionRenderer :sections="cartConfig?.sections" page="cart" location="before_cart_items"/>
         <div v-for="item in cart.state.items" :key="item.id" class="q-pa-sm row items-center" :class="[item.key.includes('offline') ? 'offline-item' : '']">
           <div class="flex">
           <img v-if="item.images" :src="cart.state.offline === true ? item?.images[0]?.src : item.images[0]?.thumbnail" style="width: 70px; height: 70px; object-fit: cover" />
@@ -40,6 +42,8 @@
         </div>
 
         </div>
+    <SectionRenderer v-if="cart.hasItems.value && isHydrated" :sections="cartConfig?.sections" page="cart" location="after_cart_items"/>
+    <SectionRenderer v-if="cart.hasItems.value && isHydrated" :sections="cartConfig?.sections" page="cart" location="before_cart_totals"/>
     <q-card v-if="!cart.state.offline && cart.hasItems.value && isHydrated" flat bordered class="q-mt-md q-pa-md relative-position">
       <div class="blockUi" v-if="cart.state.loading.cart"></div>
       <div class="text-subtitle1">Coupon</div>
@@ -79,6 +83,8 @@
       </router-link>
 
     </q-card>
+    <SectionRenderer v-if="cart.hasItems.value && isHydrated" :sections="cartConfig?.sections" page="cart" location="after_cart_totals"/>
+    <SectionRenderer :sections="cartConfig?.sections" page="cart" location="after_cart"/>
     </div>
 </template>
 
@@ -92,6 +98,10 @@ import {
 import {formatCurrency} from 'src/utils/formatters.js'
 import { useCartSummary } from 'src/composables/useCartSummary'
 import {useSeoMeta} from "src/composables/useSeo.js";
+import SectionRenderer from 'components/sections/SectionRenderer.vue'
+import { loadPageConfig } from 'src/utils/config-loader.js'
+import { getApiOrigin } from 'src/utils/server/get-api-origin.js'
+import { usePageConfig } from 'src/composables/usePageConfig.js'
 
 const {
   displayCart, cartTotal, cartItems, cartTotalDiscount, couponApplied, shippingOptions,
@@ -108,6 +118,7 @@ defineOptions({
       cartData = await cart.syncLocalCartWithServer()
     }
 
+    const configData = await loadPageConfig('cart', false, getApiOrigin(ssrContext)).catch(() => null)
     const seo = {
       title: 'Cart',
       description: 'Cart page',
@@ -118,15 +129,19 @@ defineOptions({
 
       ssrContext.cartArray = cartData
       ssrContext.seoData = seo
+      ssrContext.pageConfig = configData
     } else {
       window.__CART_ARRAY__ = cartData
       window.__SEO_DATA__ = seo
+      window.__PAGE_CONFIG__ = configData
 
     }
 
   }
 })
 useSeoMeta({ noindex: true })
+// Store builder → Cart: sections in the cart's slots.
+const cartConfig = usePageConfig('cart')
 const increase = (id) => cart.increase(id)
 const decrease = (id) => cart.decrease(id)
 const remove = (itemKey=null, itemAPIkey=null) => cart.remove(itemKey,itemAPIkey)
