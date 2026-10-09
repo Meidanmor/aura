@@ -539,7 +539,7 @@ const submitOrder = async (walletOverride = null) => {
   }
 
   if (termsRequired.value && !agreeTerms.value) {
-    $q.notify({ type: 'negative', message: 'Please agree to the terms and the privacy policy to place your order.', icon: matError })
+    $q.notify({ type: 'negative', message: "Please tick the box to agree to the store's terms before placing your order.", icon: matError })
     walletOverride?.complete?.('fail')
     return
   }

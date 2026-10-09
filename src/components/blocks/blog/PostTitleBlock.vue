@@ -6,7 +6,7 @@
 import { computed, inject } from 'vue'
 
 /** "Post Title" (blog post template): the post's title. */
-const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' } })
+const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
 const post = inject('blogPost', null)
 const d = computed(() => props.data.data || {})
 const tag = computed(() => (d.value.tag === 'h2' ? 'h2' : 'h1'))

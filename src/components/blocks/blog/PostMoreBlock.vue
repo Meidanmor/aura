@@ -12,7 +12,7 @@ import { computed, inject } from 'vue'
 import BlogCard from 'components/blog/BlogCard.vue'
 
 /** "More Posts To Read" (blog post template): other posts, same category first. */
-const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' } })
+const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
 const post = inject('blogPost', null)
 const d = computed(() => props.data.data || {})
 const items = computed(() => (post.value?.more || []).slice(0, Math.max(1, Math.min(3, Number(d.value.count) || 3))))

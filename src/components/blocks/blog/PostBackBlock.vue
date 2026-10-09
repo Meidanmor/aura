@@ -6,7 +6,7 @@
 import { computed } from 'vue'
 
 /** "Back To Blog Link" (blog post template). */
-const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' } })
+const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
 const d = computed(() => props.data.data || {})
 </script>
 

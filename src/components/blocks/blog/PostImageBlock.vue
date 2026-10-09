@@ -16,7 +16,7 @@
 import { computed, inject } from 'vue'
 
 /** "Post Cover Image" (blog post template): shown only where the owner places it. */
-const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' } })
+const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
 const post = inject('blogPost', null)
 const d = computed(() => props.data.data || {})
 const ratio = computed(() => (['16/9', '4/3', '1/1'].includes(d.value.ratio) ? d.value.ratio.replace('/', ' / ') : ''))

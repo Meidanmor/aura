@@ -8,7 +8,7 @@ import { computed, inject } from 'vue'
 import { sanitizeBlogHtml } from 'src/utils/sanitizeHtml.js'
 
 /** "Post Content" (blog post template): the post's text. */
-defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' } })
+defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
 const post = inject('blogPost', null)
 const html = computed(() => sanitizeBlogHtml(post.value?.content || ''))
 </script>

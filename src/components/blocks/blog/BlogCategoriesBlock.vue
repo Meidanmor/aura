@@ -16,7 +16,7 @@
 import { computed, inject } from 'vue'
 
 /** "Blog Category Links" (blog page template). */
-const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' } })
+const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
 const list = inject('blogList', null)
 const d = computed(() => props.data.data || {})
 const current = computed(() => list.value?.category?.slug || '')

@@ -9,7 +9,7 @@
 import { computed, inject } from 'vue'
 
 /** "Blog Title" (blog page template): "Blog" on /blog, the category's name on its page. */
-const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' } })
+const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
 const list = inject('blogList', null)
 const d = computed(() => props.data.data || {})
 const align = computed(() => (['left', 'center', 'right'].includes(d.value.align) ? d.value.align : 'left'))

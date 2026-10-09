@@ -12,7 +12,7 @@ import { computed, inject } from 'vue'
 import { postDate } from 'src/api/blog.js'
 
 /** "Post Date & Categories" (blog post template). */
-const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' } })
+const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
 const post = inject('blogPost', null)
 const d = computed(() => props.data.data || {})
 const showDate = computed(() => d.value.show_date !== false)

@@ -28,7 +28,7 @@ import BlogCard from 'components/blog/BlogCard.vue'
  * category, with pages. How many per page is read by the page itself
  * (BlogPage.vue), which loads them.
  */
-const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' } })
+const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
 const list = inject('blogList', null)
 const route = useRoute()
 const d = computed(() => props.data.data || {})
