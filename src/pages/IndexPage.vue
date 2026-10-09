@@ -52,6 +52,7 @@ import {getApiOrigin} from "src/utils/server/get-api-origin.js";
 import {resolveHeroImageSrc} from 'src/utils/resolve-hero-image.js';
 import { sanitizeHeroTitle } from 'src/utils/sanitizeHtml.js'
 import { homePageOf } from 'src/pages/CustomPage.vue'
+import { currentLang, isExtraLang } from 'src/i18n/lang.js'
 import { isEditorMode, onPublishedConfigUpdate } from 'src/utils/config-loader.js'
 import { useI18n } from 'src/i18n/index.js'
 
@@ -76,9 +77,10 @@ defineOptions({
       homePageOf(getApiOrigin(ssrContext)),
     ])
     // The owner's Home page (one of their pages); stores that haven't published one keep the old homepage.
+    // (An extra language without its own Home page yet shows the default sections.)
     const configData = homePage
       ? { home_page: homePage }
-      : await loadPageConfig('home', isPreview, getApiOrigin(ssrContext))
+      : isExtraLang(currentLang()) ? {} : await loadPageConfig('home', isPreview, getApiOrigin(ssrContext))
 
     if (configData && !configData.home_page) {
       configData.hero_image = await resolveHeroImageSrc(configData.hero_image, "homepage-hero", getApiOrigin(ssrContext), configData.hero_image_path)
@@ -154,7 +156,7 @@ onMounted(async() => {
     homePage.value = window.__PAGE_CONFIG__.home_page || null
   } else if ((homePage.value = await homePageOf())) {
     homeSettings.value = { home_page: homePage.value }
-  } else {
+  } else if (!isExtraLang(currentLang())) {
     const isPreview = route.query.preview === 'true'
     // Use it directly
     const freshConfig = await loadPageConfig('home', isPreview)

@@ -3,6 +3,7 @@
     <div class="q-pa-md">
       <div class="mobile-drawer-header flex justify-between q-mb-md">
         <div class="text-h6">{{ t('Menu') }}</div>
+        <LanguageSwitcher class="q-ml-auto q-mr-sm" />
         <q-btn flat dense :aria-label="t('Close menu')" padding="none" :icon="matClose" @click="closeMenu"/>
       </div>
       <!-- The owner's menu (Design → Menus). -->
@@ -74,6 +75,7 @@
 
 <script setup>
 import MobileNavItems from "./MobileNavItems.vue"
+import LanguageSwitcher from './LanguageSwitcher.vue'
 import {
   matClose,
   matShoppingCart,

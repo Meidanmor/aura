@@ -1,4 +1,15 @@
 import { JSON_UPDATED_EVENT } from 'src/services/sw-updates'
+import { currentLang, isExtraLang } from 'src/i18n/lang.js'
+
+// Files each extra language has its own copy of (in /config/{lang}/); the
+// rest (branding, app, icons…) are shared by every language.
+const OWN_COPY = /^(header|footer|home|checkout|contact|shop|category|product|cart|blog|blog_post|pages|page-[\w-]+)$/
+
+/** Where a page's published config lives for the page's language: 'home' → 'en/home'. */
+export function configName(page) {
+  const lang = currentLang()
+  return isExtraLang(lang) && OWN_COPY.test(page) ? `${lang}/${page}` : page
+}
 
 const EDITOR_FLAG_PARAM = 'qwoo_editor'
 const EDITOR_ORIGIN_PARAM = 'admin_origin'
@@ -52,7 +63,7 @@ export function onPublishedConfigUpdate(page, callback) {
   if (import.meta.env.SSR) return () => {}
 
   const handler = async (event) => {
-    if (!event.detail?.pages?.includes(page)) return
+    if (!event.detail?.pages?.includes(configName(page))) return
     const data = await loadPageConfig(page, false)
     if (data && Object.keys(data).length) callback(data)
   }
@@ -106,6 +117,8 @@ export function subscribeToLiveConfig(page, callback, options = {}) {
  */
 export async function loadPageConfig(page, _isPreview, origin='') {
   const API_BASE = origin
+  // An extra language's own copy (/config/en/home.json).
+  const name = configName(page)
 
   // Editor mode, client-side: skip the fetch entirely. The calling
   // component is expected to also call subscribeToLiveConfig(page, ...) to
@@ -125,12 +138,12 @@ if (import.meta.env.SSR) {
       const { readFile } = await import('fs/promises')
       const { resolve } = await import('path')
 
-      const filePath = resolve(process.cwd(), 'public', 'config', `${page}.json`)
+      const filePath = resolve(process.cwd(), 'public', 'config', `${name}.json`)
 
       const raw = await readFile(filePath, 'utf-8')
       return JSON.parse(raw)
     } else {
-      const url = `${API_BASE}/config/${page}.json`
+      const url = `${API_BASE}/config/${name}.json`
 
       const response = await fetch(url, { cache: 'no-store' })
       if (response.ok) return await response.json()
@@ -145,7 +158,7 @@ if (import.meta.env.SSR) {
 // --- CLIENT SIDE LOGIC ---
   else {
     try {
-      const url = `/config/${page}.json`;
+      const url = `/config/${name}.json`;
 
       const response = await fetch(url, {
         cache: 'no-store'

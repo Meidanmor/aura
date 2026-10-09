@@ -6,10 +6,12 @@
  *   t('{n} in stock', { n: 3 })
  *   tn('{n} item', '{n} items', count)        → the form for count
  *
- * The store's language comes from config/languages.json, read at build time
+ * The store's languages come from config/languages.json, read at build time
  * (quasar.config.js → process.env.QWOO_LANGUAGES), so the server and the
- * browser always render the same text. The boot file (boot/i18n.js) makes
- * t() and tn() available in every template, and useI18n() in scripts.
+ * browser always render the same text. Each page is in one of them (main, or
+ * an extra language under its prefix: see lang.js). The boot file
+ * (boot/i18n.js) makes t() and tn() available in every template, and
+ * useI18n() in scripts.
  */
 import { inject } from 'vue'
 
@@ -89,17 +91,24 @@ export async function loadDictionary(code) {
 const english = createI18n('en')
 let fallback = english
 
-/** For code outside components (stores, utils): the app's i18n, set by the boot file. */
+/**
+ * For code outside components (stores, utils): the app's i18n, set by the
+ * boot file. On the server each request has its own (requests in different
+ * languages render at the same time), kept in the request's store.
+ */
 export function setDefaultI18n(i18n) {
-  fallback = i18n
+  const store = typeof window === 'undefined' ? globalThis.__QWOO_LANG_ALS?.getStore() : null
+  if (store) store.i18n = i18n
+  else fallback = i18n
 }
+const active = () => (typeof window === 'undefined' && globalThis.__QWOO_LANG_ALS?.getStore()?.i18n) || fallback
 
 /** In a component's setup: { t, tn, lang, dir, locale }. */
 export function useI18n() {
-  return inject('i18n', null) || fallback
+  return inject('i18n', null) || active()
 }
 
 /** Outside components. */
-export const t = (text, params) => fallback.t(text, params)
-export const tn = (one, other, n, params) => fallback.tn(one, other, n, params)
-export const currentLocale = () => fallback.locale
+export const t = (text, params) => active().t(text, params)
+export const tn = (one, other, n, params) => active().tn(one, other, n, params)
+export const currentLocale = () => active().locale

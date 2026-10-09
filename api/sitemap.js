@@ -16,12 +16,12 @@ function escapeXml(value) {
  * products and categories with their last change, minus anything the owner
  * keeps out of search engines. { base, urls: [ { path, lastmod } ] } or null.
  */
-async function fromStore() {
+async function fromStore(lang = '') {
   const backend = process.env.WP_BACKEND_URL;
   if (!backend) return null;
   try {
     const res = await fetch(`${backend}/wp-json/qwoo/v1/sitemap`, {
-      headers: { 'x-proxy-secret': process.env.PROXY_SHARED_SECRET || '' }
+      headers: { 'x-proxy-secret': process.env.PROXY_SHARED_SECRET || '', ...(lang ? { 'x-qwoo-lang': lang } : {}) }
     });
     if (!res.ok) return null;
     const json = await res.json();
@@ -29,6 +29,18 @@ async function fromStore() {
   } catch (e) {
     console.error('[sitemap] the store did not answer', e);
     return null;
+  }
+}
+
+/** The store's live extra languages and their address prefixes (config/languages.json). */
+function extraLanguages() {
+  try {
+    const data = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'public/config/languages.json'), 'utf-8'));
+    return (Array.isArray(data.extra) ? data.extra : [])
+      .filter((code) => /^[a-z]{2}$/.test(code) && code !== data.main)
+      .map((code) => ({ code, prefix: String(data.prefixes?.[code] || code) }));
+  } catch {
+    return [];
   }
 }
 
@@ -56,6 +68,16 @@ export default async function handler(req, res) {
   const protocol = req.headers['x-forwarded-proto'] || 'https';
   const list = (await fromStore()) || fromBuild();
   const siteUrl = (list.base || `${protocol}://${req.headers.host}`).replace(/\/+$/, '');
+  const entries = list.urls.map((u) => ({ loc: siteUrl + u.path, lastmod: u.lastmod }));
+
+  // Each extra language's own addresses (/en/…): the store lists what exists
+  // in it (its pages and translated posts), behind its prefix.
+  for (const { code, prefix } of extraLanguages()) {
+    const own = await fromStore(code);
+    if (!own) continue;
+    const base = (own.base || `${siteUrl}/${prefix}`).replace(/\/+$/, '');
+    for (const u of own.urls) entries.push({ loc: u.path === '/' ? base : base + u.path, lastmod: u.lastmod });
+  }
 
   // Shared caches keep it for 10 minutes; a stale copy may be served for a
   // day while a fresh one is fetched.
@@ -63,8 +85,8 @@ export default async function handler(req, res) {
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${list.urls.map(u => `  <url>
-    <loc>${escapeXml(siteUrl + u.path)}</loc>${u.lastmod ? `
+${entries.map(u => `  <url>
+    <loc>${escapeXml(u.loc)}</loc>${u.lastmod ? `
     <lastmod>${escapeXml(u.lastmod)}</lastmod>` : ''}
   </url>`).join('\n')}
 </urlset>`;

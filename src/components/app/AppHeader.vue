@@ -25,7 +25,8 @@
           <!-- No logo yet: the store's name instead of a broken image. -->
           <span v-else class="header-store-name">{{ storeName || t('Home') }}</span>
         </router-link>
-        <div>
+        <div class="flex items-center no-wrap">
+          <LanguageSwitcher class="gt-sm" />
           <q-btn flat dense :icon="matFavoriteBorder" :aria-label="t('Add to wishlist')" data-action="wishlist" @click="emit('toggle-wishlist')" class="q-ml-sm q-mr-sm">
             <q-no-ssr>
               <q-badge v-if="wishlist.state.items && Object.keys(wishlist.state.items).length > 0" floating color="red">{{ Object.keys(wishlist.state.items).length }}</q-badge>
@@ -49,6 +50,7 @@ import { matShoppingCart,
   matMenu } from '@quasar/extras/material-icons'
 import wishlist from 'src/stores/wishlist'
 import NavMenu from './NavMenu.vue'
+import LanguageSwitcher from './LanguageSwitcher.vue'
 import cart from 'src/stores/cart'
 
 const storeName = process.env.STORE_NAME || ''

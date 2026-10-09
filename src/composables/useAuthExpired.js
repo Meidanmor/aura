@@ -1,5 +1,6 @@
 import { Dialog } from 'quasar'
 import { t } from 'src/i18n/index.js'
+import { localPath } from 'src/i18n/lang.js'
 import { clearSessionState } from 'src/composables/useSessionCleanup.js'
 let shown = false
 
@@ -23,7 +24,7 @@ export function initAuthPopup() {
             noEscDismiss: true,
             noBackdropDismiss: true
         }).onOk(() => {
-            window.location.href = '/my-account'  // hard reload instead of router.push
+            window.location.href = localPath('/my-account')  // hard reload instead of router.push
         })
     })
 }

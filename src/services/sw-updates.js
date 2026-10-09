@@ -16,6 +16,8 @@
  * slow interval.
  */
 
+import { currentLang, isExtraLang } from 'src/i18n/lang.js'
+
 export const JSON_UPDATED_EVENT = 'qwoo:json-updated'
 
 const CHECK_GAP_MS = 30 * 1000          // min time between two update checks
@@ -74,12 +76,17 @@ let primed = false
 // Files the layout shows on every page. They come from the server-rendered
 // first load, so the browser never fetches them itself; fetching them once
 // through the SW saves the copy that later rechecks compare against.
-const LAYOUT_JSON = ['/config/branding.json', '/config/header.json', '/config/footer.json']
+// (An extra language has its own header and footer.)
+function layoutJson() {
+  const lang = currentLang()
+  const own = isExtraLang(lang) ? `${lang}/` : ''
+  return ['/config/branding.json', `/config/${own}header.json`, `/config/${own}footer.json`]
+}
 
 function primeLayoutJson() {
   if (primed || !navigator.serviceWorker?.controller) return
   primed = true
-  LAYOUT_JSON.forEach(url => fetch(url, { cache: 'no-store' }).catch(() => {}))
+  layoutJson().forEach(url => fetch(url, { cache: 'no-store' }).catch(() => {}))
 }
 
 /**
@@ -98,10 +105,10 @@ function changedFiles(previous, next) {
   return [...urls].filter(url => previous[url] !== next[url])
 }
 
-/** Tells on-screen components that published JSON changed ('/config/home.json' → page 'home'). */
+/** Tells on-screen components that published JSON changed ('/config/home.json' → 'home', '/config/en/home.json' → 'en/home'). */
 function announce(urls) {
   const pages = urls
-    .map(url => url.match(/^\/config\/([^/]+)\.json$/)?.[1])
+    .map(url => url.match(/^\/config\/((?:[a-z]{2}\/)?[^/]+)\.json$/)?.[1])
     .filter(Boolean)
   window.dispatchEvent(new CustomEvent(JSON_UPDATED_EVENT, { detail: { urls, pages } }))
 }

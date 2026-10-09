@@ -1,7 +1,54 @@
 // ssr-src/middlewares/render.js
 import { defineSsrMiddleware } from '#q-app/wrappers'
 import { randomBytes } from 'crypto'
+import { AsyncLocalStorage } from 'node:async_hooks'
 import branding from '../../public/config/branding.json' // adjust path as needed
+import { allLangs, isExtraLang, langFromPath, mainLang, stripLang, withLang } from '../../src/i18n/lang.js'
+
+/*
+ * The language of each page being rendered (an extra language lives under
+ * its prefix, /en/…). Requests in different languages render at the same
+ * time, so it's kept per request (src/i18n/lang.js reads it), and the
+ * server's own calls to the store's API say which language they want.
+ */
+const langStore = globalThis.__QWOO_LANG_ALS || (globalThis.__QWOO_LANG_ALS = new AsyncLocalStorage())
+if (!globalThis.__QWOO_FETCH_LANG) {
+    globalThis.__QWOO_FETCH_LANG = true
+    const original = globalThis.fetch
+    globalThis.fetch = (input, init) => {
+        const lang = langStore.getStore()?.lang
+        if (isExtraLang(lang)) {
+            const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input?.url || ''
+            if (url.includes('/wp-json/')) {
+                const headers = new Headers(init?.headers || (input instanceof Request ? input.headers : undefined))
+                headers.set('X-Qwoo-Lang', lang)
+                return original(input, { ...init, headers })
+            }
+        }
+        return original(input, init)
+    }
+}
+
+// Pages that exist in every language (products, categories, the shop and
+// the homepage): they list their other-language versions for search engines.
+const SHARED_TYPES = ['home', 'product', 'product_cat', 'product_archive']
+
+function alternateLinks(ssrContext, req) {
+    if (allLangs().length < 2 || !SHARED_TYPES.includes(ssrContext.seoData?.type)) return ''
+    const seo = ssrContext.seoData
+    let origin = `https://${req.headers.host}`
+    try {
+        if (seo.canonical) origin = new URL(seo.canonical).origin
+    } catch {
+        // the request's own address
+    }
+    const path = stripLang(req.path || '/')
+    const href = (code) => origin + withLang(path, code)
+    const escape = (value) => String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+    return [...allLangs().map((code) => [code, href(code)]), ['x-default', href(mainLang())]]
+        .map(([code, url]) => `<link rel="alternate" hreflang="${code}" href="${escape(url)}">`)
+        .join('')
+}
 
 
 const WP_BACKEND_URL = process.env.WP_BACKEND_URL || ''
@@ -228,7 +275,7 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
 
         const ssrContext = { req, res }
 
-        render(ssrContext)
+        langStore.run({ lang: langFromPath(req.path || req.url) }, () => render(ssrContext))
             .then(html => {
                 // NOTE: html already contains the correct <title>/<meta>/<link>/<script>
                 // tags from every useMeta() call in the rendered component tree,
@@ -266,6 +313,7 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
 
                 const criticalHeadExtra = `
           ${schemaHtml}
+          ${alternateLinks(ssrContext, req)}
           ${WP_BACKEND_URL ? `<link rel="preconnect" href="${WP_BACKEND_URL}">` : ''}
           ${heroData.src ? `
             <link

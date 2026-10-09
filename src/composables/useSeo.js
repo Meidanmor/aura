@@ -1,6 +1,7 @@
 // src/composables/useSeo.js
 import { ref, useSSRContext } from 'vue'
 import { useMeta } from 'quasar'
+import { localPath, stripLang } from 'src/i18n/lang.js'
 
 // The store's own name and description (set at build time from pwa.json).
 const STORE_NAME = process.env.STORE_NAME || ''
@@ -85,8 +86,9 @@ export async function fetchSeoForPath(path, origin='') {
   }
 
   try {
+    // The store knows addresses without the language prefix (it answers in the page's language).
     const res = await fetch(
-        `${API_BASE}/wp-json/qwoo/v1/seo?path=${encodeURIComponent(path)}`
+        `${API_BASE}/wp-json/qwoo/v1/seo?path=${encodeURIComponent(stripLang(path))}`
     )
 
     // Nothing at this address: say so, so the page can answer 404.
@@ -95,7 +97,10 @@ export async function fetchSeoForPath(path, origin='') {
 
     // Use the Spread operator (...) to merge the API data
     // into your result object. This keeps all new fields!
-    return { ...result, ...(await res.json()) }
+    const answer = { ...result, ...(await res.json()) }
+    // A moved page's new address, in this language.
+    if (typeof answer.redirect === 'string') answer.redirect = localPath(answer.redirect)
+    return answer
 
   } catch (err) {
     console.error('[fetchSeoForPath] fetch error', err)

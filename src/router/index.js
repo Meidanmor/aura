@@ -3,6 +3,24 @@ import { createRouter, createMemoryHistory, createWebHistory, createWebHashHisto
 import routes from './routes'
 import { initSwUpdates } from 'src/services/sw-updates'
 import { isEditorMode } from 'src/utils/config-loader'
+import { currentLang, isExtraLang, langFromPath, withLang } from 'src/i18n/lang.js'
+
+/**
+ * On a page of an extra language, every link and navigation stays in it:
+ * '/cart' becomes '/en/cart', and { name: 'products' } the language's own
+ * 'products@en'. Addresses that already name a language are left alone (the
+ * language switcher).
+ */
+function localize(router, to) {
+  const lang = currentLang()
+  if (!isExtraLang(lang)) return to
+  const local = (path) => (typeof path === 'string' && path.startsWith('/') && !path.startsWith('//') && langFromPath(path) !== lang && !path.startsWith('/auth/') ? withLang(path, lang) : path)
+  if (typeof to === 'string') return local(to)
+  if (!to || typeof to !== 'object') return to
+  if (typeof to.name === 'string' && !to.name.includes('@') && router.hasRoute(`${to.name}@${lang}`)) return { ...to, name: `${to.name}@${lang}` }
+  if (typeof to.path === 'string') return { ...to, path: local(to.path) }
+  return to
+}
 
 /*
  * If not building with SSR mode, you can
@@ -43,6 +61,23 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     routes,
     history: createHistory(process.env.VUE_ROUTER_BASE)
   })
+
+  // Links (RouterLink resolves) and navigations keep the page's language.
+  for (const method of ['resolve', 'push', 'replace']) {
+    const original = Router[method].bind(Router)
+    Router[method] = (to, ...rest) => original(localize(Router, to), ...rest)
+  }
+
+  // Another language is another app (its own texts and store answers): load it fresh.
+  if (process.env.CLIENT) {
+    Router.beforeEach((to, from) => {
+      const lang = to.meta?.lang || langFromPath(to.path)
+      if (from.matched.length && lang !== currentLang()) {
+        window.location.assign(to.fullPath)
+        return false
+      }
+    })
+  }
 
   // --- Start Preview Lock Logic ---
   Router.beforeEach((to, from, next) => {

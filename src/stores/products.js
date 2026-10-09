@@ -360,9 +360,13 @@ async function fetchProductsIfNeeded(ctx) {
 }
 
 // --- consumer helpers ---
+// On the server this module is shared by every request (other visitors,
+// other languages): it never answers from what an earlier request loaded.
+const onServer = typeof window === 'undefined'
+
 async function fetchSingleProduct(slug, ssrContext = null) {
   // 1. Check if we already have it in the existing list
-  const existing = products.value.find(p => {
+  const existing = !onServer && products.value.find(p => {
     const pSlug = p.permalink?.split('/').filter(Boolean).pop()
     return pSlug === slug
   })
@@ -380,7 +384,7 @@ async function fetchSingleProduct(slug, ssrContext = null) {
     const data = await fetchSingleProduct.json();
 
     if (data?.id) {
-      products.value.push(data)
+      if (!onServer) products.value.push(data)
       return data
     }
   } catch (err) {
@@ -403,13 +407,13 @@ const byId = new Map()
 /** One product (or variation) by id: from what's loaded, else from the API. null when it doesn't exist. */
 async function fetchById(id) {
   const key = Number(id)
-  const known = getById(key) || byId.get(key)
+  const known = !onServer && (getById(key) || byId.get(key))
   if (known) return known
   try {
     const res = await fetch(`${storeApiBase()}/products/${key}`)
     if (!res.ok) return null
     const data = await res.json()
-    if (data?.id) byId.set(key, data)
+    if (data?.id && !onServer) byId.set(key, data)
     return data?.id ? data : null
   } catch {
     return null

@@ -1,5 +1,6 @@
 <template>
   <q-layout view="hHh lpR fFf">
+    <AlsoInBar />
     <AnnouncementBar v-if="headerSettings?.announcement?.enabled && (typeof headerSettings?.announcement?.text === 'string' && headerSettings.announcement.text.trim().length > 0)" :announcement="headerSettings?.announcement" />
 
     <AppHeader
@@ -104,6 +105,8 @@ import MobileNavDrawer from '../components/app/MobileNavDrawer.vue'
 import AppHeader from '../components/app/AppHeader.vue'
 import AppFooter from '../components/app/AppFooter.vue'
 import AnnouncementBar from '../components/app/AnnouncementBar.vue'
+import AlsoInBar from '../components/app/AlsoInBar.vue'
+import { stripLang } from 'src/i18n/lang.js'
 import { useRoute, useRouter } from 'vue-router'
 import { Platform } from 'quasar';
 import CookieBanner from "../components/app/CookieBanner.vue";
@@ -410,7 +413,7 @@ const router = useRouter()
 const noDelayRoutes = ['/checkout/', '/cart/', '/my-account/']
 
 const shouldDelayHydration = computed(() => {
-  return !noDelayRoutes.includes(route.path)
+  return !noDelayRoutes.includes(stripLang(route.path))
 })
 
 const initConnectivityListeners = () => {
