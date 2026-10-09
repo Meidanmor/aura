@@ -54,6 +54,7 @@ import { computed } from 'vue'
 import CategoryGridSection from './CategoryGridSection.vue'
 import TestimonialsSection from './TestimonialsSection.vue'
 import FeaturedProductsSection from './FeaturedProductsSection.vue'
+import LatestPostsSection from './LatestPostsSection.vue'
 import AdvantagesSection from './AdvantagesSection.vue'
 import TextBlock from './TextBlock.vue'
 import ImageBlock from './ImageBlock.vue'
@@ -90,6 +91,7 @@ const blockComponents = {
   spacer: SpacerBlock,
   form: FormBlock,
   featured_products: FeaturedProductsSection,
+  latest_posts: LatestPostsSection,
   category_grid: CategoryGridSection,
   testimonials: TestimonialsSection,
   advantages: AdvantagesSection,

@@ -93,6 +93,30 @@ function structuredData(ssrContext, req) {
         ]))
     }
 
+    // A blog post: an article for Google, and its breadcrumb (Home › Blog › post).
+    const post = ssrContext.blogData?.post
+    if (post?.id) {
+        const url = seo.canonical || `${origin}/blog/${post.slug}`
+        out.push({
+            '@context': 'https://schema.org',
+            '@type': 'BlogPosting',
+            headline: plainText(post.title).slice(0, 110),
+            description: seo.description || plainText(post.excerpt),
+            ...(post.image?.url ? { image: [post.image.url] } : {}),
+            datePublished: new Date(post.date * 1000).toISOString(),
+            dateModified: new Date((post.modified || post.date) * 1000).toISOString(),
+            author: { '@type': 'Organization', name: seo.site_name || 'Store', url: home },
+            publisher: { '@type': 'Organization', name: seo.site_name || 'Store', url: home },
+            mainEntityOfPage: url,
+            url,
+        })
+        out.push(crumb([
+            { name: seo.site_name || 'Home', url: home },
+            { name: 'Blog', url: `${origin}/blog` },
+            { name: plainText(post.title), url },
+        ]))
+    }
+
     const category = ssrContext.selectedCategoryData
     if (category?.id && seo.type === 'product_cat') {
         out.push(crumb([
@@ -231,7 +255,8 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
                     selectedCategoryData: ssrContext.selectedCategoryData || {},
                     priceMeta: ssrContext.priceMeta || {},
                     ssrQuery: ssrContext.ssrQuery || {},
-                    seoData: ssrContext.seoData || null
+                    seoData: ssrContext.seoData || null,
+                    blogData: ssrContext.blogData || null
                 }
 
                 // JSON-LD structured data — appended, not replacing anything Quasar produced.

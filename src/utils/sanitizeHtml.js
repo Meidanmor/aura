@@ -105,6 +105,41 @@ const builderTextFilter = new FilterXSS({
     }
 })
 
+// For blog posts: the store's Qwoo_Blog::TAGS. Links to other sites open in
+// a new tab; images only over https (the store keeps its own uploads only).
+const blogFilter = new FilterXSS({
+    whiteList: {
+        p: [], br: [], strong: [], em: [], b: [], i: [], u: [],
+        ul: [], ol: [], li: [], blockquote: [], hr: [],
+        h2: [], h3: [], h4: [],
+        a: ['href', 'title'],
+        img: ['src', 'alt', 'width', 'height', 'loading']
+    },
+    stripIgnoreTag: true,
+    stripIgnoreTagBody: ['script', 'style'],
+    onTag(tag, html, options) {
+        if (options.isClosing) return
+        if (tag === 'a') {
+            const href = (html.match(/href\s*=\s*"([^"]*)"/i) || [])[1] || ''
+            if (!isSafeUrl(href, ['http', 'https', 'mailto', 'tel'])) return '<a>'
+            const outside = /^https?:/i.test(href)
+            return outside
+                ? `<a href="${xss.escapeAttrValue(href)}" target="_blank" rel="noopener noreferrer">`
+                : `<a href="${xss.escapeAttrValue(href)}">`
+        }
+        if (tag === 'img') {
+            const src = (html.match(/src\s*=\s*"([^"]*)"/i) || [])[1] || ''
+            if (!/^https:\/\//i.test(src)) return ''
+            const alt = (html.match(/alt\s*=\s*"([^"]*)"/i) || [])[1] || ''
+            return `<img src="${xss.escapeAttrValue(src)}" alt="${xss.escapeAttrValue(alt)}" loading="lazy" decoding="async">`
+        }
+    }
+})
+
+export function sanitizeBlogHtml(html) {
+    return blogFilter.process(html || '')
+}
+
 export function sanitizeBuilderHtml(html) {
     return builderTextFilter.process(html || '')
 }

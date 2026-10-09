@@ -24,6 +24,10 @@ const routes = [
       { path: 'reset-password', name: 'reset-password', component: () => import('pages/ResetPasswordPage.vue') },
       // From the "How was your order?" email (?o=order&p=product&t=token).
       { path: 'review', name: 'review', component: () => import('pages/ReviewPage.vue') },
+      // The store's blog (posts read live from the store).
+      { path: 'blog', name: 'blog', component: () => import('pages/BlogPage.vue') },
+      { path: 'blog/category/:category', name: 'blog-category', component: () => import('pages/BlogPage.vue') },
+      { path: 'blog/:slug', name: 'blog-post', component: () => import('pages/BlogPostPage.vue') },
         {
   path: '/auth/callback',
   component: () => import('pages/AuthCallback.vue'),
