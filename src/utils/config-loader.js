@@ -116,9 +116,20 @@ export function subscribeToLiveConfig(page, callback, options = {}) {
  * subscribeToLiveConfig() instead. Kept so existing callers stay valid.
  */
 export async function loadPageConfig(page, _isPreview, origin='') {
-  const API_BASE = origin
   // An extra language's own copy (/config/en/home.json).
   const name = configName(page)
+  const data = await loadConfigFile(name, origin)
+  // Not published in this language yet: the main language's file (never
+  // another language's pages, which only exist once they're translated).
+  if (name !== page && !Object.keys(data || {}).length && !/^(pages|page-)/.test(page)) {
+    return loadConfigFile(page, origin)
+  }
+  return data
+}
+
+/** One published config file by name ('home', 'en/home'); {} when it can't be read. */
+async function loadConfigFile(name, origin = '') {
+  const API_BASE = origin
 
   // Editor mode, client-side: skip the fetch entirely. The calling
   // component is expected to also call subscribeToLiveConfig(page, ...) to

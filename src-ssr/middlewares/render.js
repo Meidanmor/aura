@@ -69,6 +69,10 @@ const EDITOR_ORIGINS = [WP_BACKEND_URL, process.env.QWOO_EDITOR_ORIGIN || ''].ma
 
 const isIgnoredRequest = (url) => {
     return (
+        // Published files that don't exist (static files are served before
+        // this): a page would load its config again and again from itself.
+        url.startsWith('/config/') ||
+        url.startsWith('/data/') ||
         url.startsWith('/.well-known') ||
         url.includes('devtools') ||
         url.endsWith('.map')

@@ -240,7 +240,10 @@ let startX = 0
 let startY = 0
 let currentX = 0
 let dragging = false
-let activeDrawer = null // 'left' | 'right'
+let activeDrawer = null // 'left' (menu) | 'right' (cart): the drawer's side as written
+// The edge it slides in from on screen: right-to-left pages (Hebrew) show the
+// menu on the right and the cart on the left, so swipes follow the screen.
+let activeEdge = null // 'left' | 'right'
 let activeEl = null
 let activeAside = null
 let activeBackdrop = null
@@ -279,6 +282,7 @@ const handlePointerDown = (e) => {
   currentX = startX
   dragging = false
   activeDrawer = null
+  activeEdge = null
   activeEl = null
   activeAside = null
   activeBackdrop = null
@@ -297,7 +301,9 @@ const handlePointerMove = (e) => {
     if (Math.abs(dy) > Math.abs(dx)) return // vertical scroll, bail
 
     dragging = true
-    activeDrawer = dx > 0 ? 'left' : 'right'
+    // A left-to-right swipe pulls in the drawer on the left edge of the screen.
+    activeEdge = dx > 0 ? 'left' : 'right'
+    activeDrawer = (activeEdge === 'left') !== !!$q.lang.rtl ? 'left' : 'right'
     activeEl = activeDrawer === 'left' ? getEl(mobileDrawerEl) : getEl(cartDrawerEl)
     activeAside = getAside(activeEl)
     activeBackdrop = getBackdrop(activeEl)
@@ -316,7 +322,7 @@ const handlePointerMove = (e) => {
   const width = drawerWidth.value
   const dist = Math.min(width, Math.max(0, Math.abs(dx)))
   const progress = dist / width // 0 → 1
-  const translate = activeDrawer === 'left' ? dist - width : width - dist
+  const translate = activeEdge === 'left' ? dist - width : width - dist
   activeAside.style.transform = `translateX(${translate}px)`
   activeAside.style.visibility = 'visible'
 
@@ -341,6 +347,7 @@ const handlePointerUp = (e) => {
   const shouldOpen = dist > width * OPEN_THRESHOLD_RATIO
   const el = activeEl
   const drawer = activeDrawer
+  const edge = activeEdge
   activeBackdrop = getBackdrop(el)
 
   el.querySelector('aside').style.transition = 'transform 0.2s ease-out'
@@ -356,7 +363,7 @@ const handlePointerUp = (e) => {
     if (drawer === 'left') mobileMenuDrawer.value = true
       else cartDrawer.value = true
   } else {
-    el.querySelector('aside').style.transform = drawer === 'left' ? `translateX(-${width}px)` : `translateX(${width}px)`
+    el.querySelector('aside').style.transform = edge === 'left' ? `translateX(-${width}px)` : `translateX(${width}px)`
     if (activeBackdrop) {
       activeBackdrop.style.backgroundColor = 'rgba(0,0,0,0)'
       activeBackdrop.classList.add('hidden')
@@ -367,6 +374,7 @@ const handlePointerUp = (e) => {
 
   dragging = false
   activeDrawer = null
+  activeEdge = null
   activeEl = null
 }
 const handlePointerCancel = (e) => {
@@ -379,6 +387,7 @@ const handlePointerCancel = (e) => {
 
   dragging = false
   activeDrawer = null
+  activeEdge = null
   activeEl = null
   activeAside = null
   activeBackdrop = null
