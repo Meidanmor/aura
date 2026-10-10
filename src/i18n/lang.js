@@ -2,8 +2,8 @@
  * Which language a page is in. The main language lives at the store's own
  * addresses (/product/mug); each extra language (premium addon) at the same
  * addresses behind its prefix (/en/product/mug). Addresses are never
- * translated. The languages and prefixes come from config/languages.json at
- * build time (process.env.QWOO_LANGUAGES, see storeLanguages()).
+ * translated. The languages and prefixes come from config/languages.json
+ * (the published version, see storeLanguages()).
  *
  * The language of the page being rendered:
  *   - on the server, per request: src-ssr/middlewares/render.js runs each
@@ -15,16 +15,15 @@
  */
 import { storeLanguages } from './index.js'
 
-const LANGS = storeLanguages()
 const isServer = typeof window === 'undefined'
 
-export const mainLang = () => LANGS.main
-export const extraLangs = () => LANGS.extra
-export const allLangs = () => [LANGS.main, ...LANGS.extra]
-export const isExtraLang = (code) => !!code && code !== LANGS.main && LANGS.extra.includes(code)
+export const mainLang = () => storeLanguages().main
+export const extraLangs = () => storeLanguages().extra
+export const allLangs = () => [storeLanguages().main, ...storeLanguages().extra]
+export const isExtraLang = (code) => !!code && code !== storeLanguages().main && storeLanguages().extra.includes(code)
 
 /** The address prefix of a language ('' for the main language). */
-export const prefixOf = (code) => (isExtraLang(code) ? String(LANGS.prefixes?.[code] || code) : '')
+export const prefixOf = (code) => (isExtraLang(code) ? String(storeLanguages().prefixes?.[code] || code) : '')
 
 /** The language an address belongs to ('/en/cart' → 'en', '/cart' → the main language). */
 export function langFromPath(path) {
@@ -35,7 +34,8 @@ export function langFromPath(path) {
   } catch {
     // keep it as it is
   }
-  return LANGS.extra.find((code) => prefixOf(code) === segment) || LANGS.main
+  const { main, extra } = storeLanguages()
+  return extra.find((code) => prefixOf(code) === segment) || main
 }
 
 /** The address without its language prefix ('/en/cart' → '/cart', 'en/cart' → 'cart'). */
@@ -62,7 +62,7 @@ let clientLang = null
 
 /** The language of the page being rendered. */
 export function currentLang() {
-  if (isServer) return globalThis.__QWOO_LANG_ALS?.getStore()?.lang || LANGS.main
+  if (isServer) return globalThis.__QWOO_LANG_ALS?.getStore()?.lang || mainLang()
   if (clientLang === null) clientLang = langFromPath(window.location.pathname)
   return clientLang
 }

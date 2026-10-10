@@ -58,7 +58,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
         }, 10) // 50ms is usually enough to let Vue swap the component content
       })
     },
-    routes,
+    routes: routes(),
     history: createHistory(process.env.VUE_ROUTER_BASE)
   })
 

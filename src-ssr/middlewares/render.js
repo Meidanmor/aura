@@ -5,6 +5,7 @@ import { AsyncLocalStorage } from 'node:async_hooks'
 import branding from '../../public/config/branding.json' // adjust path as needed
 import { allLangs, isExtraLang, langFromPath, mainLang, stripLang, withLang } from '../../src/i18n/lang.js'
 import { LANGUAGES } from '../../src/i18n/index.js'
+import { clientSite } from '../site-content.js'
 
 /*
  * The language of each page being rendered (an extra language lives under
@@ -179,6 +180,35 @@ function structuredData(ssrContext, req) {
     return out
 }
 
+/*
+ * What used to be built in from the store's published files (colours,
+ * favicon, theme colour), from the live version instead (site-content.js).
+ */
+const BRAND_VARS = { primary: 'primary', secondary: 'secondary', accent: 'accent', bg: 'bg', dark: 'dark', darkPage: 'dark-page', positive: 'positive', negative: 'negative', info: 'info', warning: 'warning', text: 'text' }
+const CSS_COLOR = /^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\)|hsla?\([\d\s.,%deg]+\)|[a-z]{3,20})$/i
+const attr = (value) => String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+
+function siteHead(site) {
+    if (!site) return ''
+    const colors = site.json['config/branding.json']?.global_colors || {}
+    const vars = Object.entries(BRAND_VARS)
+        .filter(([key]) => typeof colors[key] === 'string' && CSS_COLOR.test(colors[key].trim()))
+        .map(([key, name]) => `--q-${name}:${colors[key].trim()};`)
+        .join('')
+    const has = (file) => !!site.files[file]
+    const icons = [
+        has('icons/favicon-32x32.png') && '<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">',
+        has('favicon.ico') && '<link rel="icon" href="/favicon.ico" sizes="any">',
+        has('icons/apple-touch-icon.png') && '<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">',
+    ].filter(Boolean)
+    const theme = site.json['config/pwa.json']?.theme_color
+    return [
+        vars ? `<style id="qwoo-colors">:root{${vars}}</style>` : '',
+        icons.length ? icons.join('') : '<link rel="icon" href="data:,">',
+        typeof theme === 'string' && CSS_COLOR.test(theme.trim()) ? `<meta name="theme-color" content="${attr(theme.trim())}">` : '',
+    ].join('')
+}
+
 // *.vercel.app addresses are the deployment's internal address, not the
 // store's: keep them out of search engines (the store's own address is the
 // canonical one anyway).
@@ -279,6 +309,8 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
         }
 
         const ssrContext = { req, res }
+        // The store's live published version (set by site-content.js for this request), or null.
+        const site = globalThis.__QWOO_SITE || null
         const pageLang = langFromPath(req.path || req.url)
 
         langStore.run({ lang: pageLang }, () => render(ssrContext))
@@ -309,7 +341,9 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
                     priceMeta: ssrContext.priceMeta || {},
                     ssrQuery: ssrContext.ssrQuery || {},
                     seoData: ssrContext.seoData || null,
-                    blogData: ssrContext.blogData || null
+                    blogData: ssrContext.blogData || null,
+                    // window.__QWOO_SITE__: the languages and the store's name, as published.
+                    qwooSite: clientSite(site)
                 }
 
                 // JSON-LD structured data — appended, not replacing anything Quasar produced.
@@ -339,6 +373,7 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
             }
           </style>
           ${brandDevFixStyle}
+          ${siteHead(site)}
         `
 
                 const bodyBottom = Object.entries(states)
@@ -358,7 +393,11 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
                 // is told not to set them: in the browser it would first set
                 // its default left-to-right, a flash on Hebrew pages).
                 const langAttrs = `lang="${pageLang}" dir="${LANGUAGES[pageLang]?.dir || 'ltr'}"`
-                const output = withNonce
+                // The live version's favicon and theme colour replace the built-in ones.
+                const page = site
+                    ? withNonce.replace(/<link\s+rel="(icon|apple-touch-icon)"[^>]*>/g, '').replace(/<meta\s+name="theme-color"[^>]*>/g, '')
+                    : withNonce
+                const output = page
                     .replace(/<html\b([^>]*)>/, (tag, attrs) => `<html ${attrs.replace(/\s(lang|dir)=("[^"]*"|\S+)/g, '').trim()} ${langAttrs}>`.replace('<html  ', '<html '))
                     .replace('</head>', `${criticalHeadExtra}</head>`)
                     .replace('</body>', `${bodyBottom}</body>`)

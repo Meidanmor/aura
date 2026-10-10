@@ -54,8 +54,9 @@
 <script setup>
 import FooterLinks from "./FooterLinks.vue"
 import { useI18n } from 'src/i18n/index.js'
+import { storeName as liveStoreName } from 'src/utils/site-info.js'
 
-const storeName = process.env.STORE_NAME || ''
+const storeName = liveStoreName()
 const { t } = useI18n()
 const copyright = `© ${new Date().getFullYear()}${storeName ? ` ${storeName}` : ''}. ${t('All rights reserved.')}`
 

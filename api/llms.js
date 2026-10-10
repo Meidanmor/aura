@@ -1,6 +1,5 @@
 // api/llms.js
-import fs from 'fs';
-import path from 'path';
+import { publishedJson } from './_published.js';
 
 // Same fallback values used by src/composables/useSeo.js's fetchSeoForPath,
 // kept in sync manually since this file runs standalone (outside the Vite/
@@ -39,23 +38,13 @@ export default async function handler(req, res) {
 
     const { title: siteName, description: siteDescription } = await fetchHomepageSeo();
 
-    const publicDir = path.join(process.cwd(), 'public/data');
-
-    let products = [];
-    try {
-        const raw = fs.readFileSync(path.join(publicDir, 'products.json'), 'utf-8');
-        products = JSON.parse(raw);
-    } catch (e) {
-        console.error('Failed to read products.json', e);
-    }
-
-    let categories = [];
-    try {
-        const raw = fs.readFileSync(path.join(publicDir, 'categories.json'), 'utf-8');
-        categories = JSON.parse(raw);
-    } catch (e) {
-        console.error('Failed to read categories.json', e);
-    }
+    // The products backup the store publishes (data/*.json).
+    const [productsData, categoriesData] = await Promise.all([
+        publishedJson(siteUrl, 'data/products.json'),
+        publishedJson(siteUrl, 'data/categories.json'),
+    ]);
+    const products = Array.isArray(productsData) ? productsData : [];
+    const categories = Array.isArray(categoriesData) ? categoriesData : [];
 
     // Strip HTML tags from WooCommerce's rich-text description down to a
     // short plain-text summary — this file is meant to be read, not rendered.

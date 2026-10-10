@@ -2,10 +2,7 @@
 import { ref, useSSRContext } from 'vue'
 import { useMeta } from 'quasar'
 import { localPath, stripLang } from 'src/i18n/lang.js'
-
-// The store's own name and description (set at build time from pwa.json).
-const STORE_NAME = process.env.STORE_NAME || ''
-const STORE_DESCRIPTION = process.env.STORE_DESCRIPTION || ''
+import { storeDescription, storeName } from 'src/utils/site-info.js'
 
 // Pages with nothing for search engines (cart, checkout, account…).
 const NOINDEX = 'noindex, nofollow'
@@ -34,12 +31,12 @@ export function useSeoMeta({ noindex = false } = {}) {
     // A private page never takes another page's tags (window.__SEO_DATA__
     // still holds the page the visit started on).
     if (noindex) {
-      return { title: STORE_NAME, meta: { robots: { name: 'robots', content: NOINDEX, key: 'robots' } }, link: {} }
+      return { title: storeName(), meta: { robots: { name: 'robots', content: NOINDEX, key: 'robots' } }, link: {} }
     }
     if (!seo) return {}
 
-    const title = seo.title || STORE_NAME
-    const description = seo.description || STORE_DESCRIPTION
+    const title = seo.title || storeName()
+    const description = seo.description || storeDescription()
     // Never the address with its query (filters, sorting, tracking): that's a duplicate of the page.
     const canonical = seo.canonical || (process.env.CLIENT ? window.location.origin + window.location.pathname : '')
 
@@ -47,7 +44,7 @@ export function useSeoMeta({ noindex = false } = {}) {
       robots: { name: 'robots', content: seo.robots || 'index, follow', key: 'robots' },
       ogTitle: { property: 'og:title', content: title, key: 'og:title' },
       ogType: { property: 'og:type', content: seo.og_type || 'website', key: 'og:type' },
-      ogSiteName: { property: 'og:site_name', content: seo.site_name || STORE_NAME, key: 'og:site_name' },
+      ogSiteName: { property: 'og:site_name', content: seo.site_name || storeName(), key: 'og:site_name' },
       twitterCard: { name: 'twitter:card', content: seo.og_image ? 'summary_large_image' : 'summary', key: 'twitter:card' },
     }
     // No description at all beats an empty one: search engines then pick text from the page.
@@ -77,8 +74,8 @@ export async function fetchSeoForPath(path, origin='') {
 
   // Define default fallbacks
   const result = {
-    title: STORE_NAME,
-    description: STORE_DESCRIPTION,
+    title: storeName(),
+    description: storeDescription(),
     robots: 'index, follow, max-image-preview:large',
     canonical: '',
     og_image: '',

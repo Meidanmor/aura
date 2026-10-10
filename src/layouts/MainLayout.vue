@@ -8,6 +8,8 @@
         @toggle-cart="toggleCart()"
         @toggle-wishlist="toggleWishlistDrawer"
         :app-logo="brandSettings?.logo"
+        :logo-width="brandSettings?.logo_width"
+        :logo-height="brandSettings?.logo_height"
         :sticky-header="headerSettings?.settings?.sticky"
         :menu="Array.isArray(headerSettings?.menu) ? headerSettings.menu : null"
     />
@@ -255,7 +257,10 @@ const getEl = (r) => r?.value?.$el || null
 const getAside = (el) => el?.querySelector('aside') || null
 const getBackdrop = (el) => el?.querySelector('.q-drawer__backdrop') || null
 
-const resetDrag = (el) => {
+// closed: the drag ended with the drawer still closed, so the backdrop gets back
+// the "hidden" class the drag took off (Quasar only sets it again when the drawer
+// opens or closes; a transparent full-screen backdrop would block every click).
+const resetDrag = (el, closed = false) => {
   if (!el) return
   const aside = getAside(el)
   const backdrop = getBackdrop(el)
@@ -267,13 +272,30 @@ const resetDrag = (el) => {
   if (backdrop) {
     backdrop.style.transition = ''
     backdrop.style.backgroundColor = ''
+    if (closed) backdrop.classList.add('hidden')
   }
+}
+
+// Swipes that start inside something that scrolls sideways (carousels, tables,
+// tabs) scroll it instead of pulling in a drawer.
+const inSidewaysScroller = (target) => {
+  for (let el = target instanceof Element ? target : null; el && el !== document.body; el = el.parentElement) {
+    if (el.scrollWidth > el.clientWidth + 1) {
+      const overflow = getComputedStyle(el).overflowX
+      if (overflow === 'auto' || overflow === 'scroll') return true
+    }
+  }
+  return false
 }
 
 const handlePointerDown = (e) => {
   // Only left mouse button, ignore right-click/middle-click
   if (e.pointerType === 'mouse' && e.button !== 0) return
   if (mobileMenuDrawer.value || cartDrawer.value || wishlistDrawerOpen.value) return
+  if (inSidewaysScroller(e.target)) {
+    activePointerId = null
+    return
+  }
 
   startX = e.clientX
   startY = e.clientY
@@ -367,7 +389,7 @@ const handlePointerUp = (e) => {
       activeBackdrop.classList.add('hidden')
 
     }
-    setTimeout(() => resetDrag(el), 200)
+    setTimeout(() => resetDrag(el, !(drawer === 'left' ? mobileMenuDrawer.value : cartDrawer.value)), 200)
   }
 
   dragging = false
@@ -380,7 +402,9 @@ const handlePointerCancel = (e) => {
   activePointerId = null
 
   if (dragging && activeEl) {
-    resetDrag(activeEl) // snap back to whatever state it was in, don't leave it stranded
+    // Snap back closed, don't leave it stranded. The browser cancels a swipe when
+    // it starts scrolling the page or a carousel itself.
+    resetDrag(activeEl, true)
   }
 
   dragging = false

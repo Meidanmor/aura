@@ -1,6 +1,5 @@
 // api/sitemap.js
-import fs from 'fs';
-import path from 'path';
+import { publishedJson } from './_published.js';
 
 function escapeXml(value) {
   return String(value)
@@ -33,9 +32,9 @@ async function fromStore(lang = '') {
 }
 
 /** The store's live extra languages and their address prefixes (config/languages.json). */
-function extraLanguages() {
+async function extraLanguages(siteUrl) {
   try {
-    const data = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'public/config/languages.json'), 'utf-8'));
+    const data = (await publishedJson(siteUrl, 'config/languages.json')) || {};
     return (Array.isArray(data.extra) ? data.extra : [])
       .filter((code) => /^[a-z]{2}$/.test(code) && code !== data.main)
       .map((code) => ({ code, prefix: String(data.prefixes?.[code] || code) }));
@@ -44,10 +43,11 @@ function extraLanguages() {
   }
 }
 
-/** The products published with the last build, when the store can't be reached. */
-function fromBuild() {
+/** The products backup (data/products.json), when the store can't be reached. */
+async function fromBuild(siteUrl) {
   try {
-    const products = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'public/data/products.json'), 'utf-8'));
+    const products = await publishedJson(siteUrl, 'data/products.json');
+    if (!Array.isArray(products)) throw new Error('no products backup');
     return {
       base: '',
       urls: [
@@ -66,13 +66,14 @@ export default async function handler(req, res) {
   res.setHeader('Content-Type', 'application/xml; charset=utf-8');
 
   const protocol = req.headers['x-forwarded-proto'] || 'https';
-  const list = (await fromStore()) || fromBuild();
-  const siteUrl = (list.base || `${protocol}://${req.headers.host}`).replace(/\/+$/, '');
+  const ownUrl = `${protocol}://${req.headers.host}`;
+  const list = (await fromStore()) || (await fromBuild(ownUrl));
+  const siteUrl = (list.base || ownUrl).replace(/\/+$/, '');
   const entries = list.urls.map((u) => ({ loc: siteUrl + u.path, lastmod: u.lastmod }));
 
   // Each extra language's own addresses (/en/…): the store lists what exists
   // in it (its pages and translated posts), behind its prefix.
-  for (const { code, prefix } of extraLanguages()) {
+  for (const { code, prefix } of await extraLanguages(ownUrl)) {
     const own = await fromStore(code);
     if (!own) continue;
     const base = (own.base || `${siteUrl}/${prefix}`).replace(/\/+$/, '');

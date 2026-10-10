@@ -48,7 +48,11 @@ const pages = (suffix = '') => {
   ]
 }
 
-const routes = [
+/**
+ * Built for each router (each page render on the server, once in the
+ * browser), from the store's languages as published.
+ */
+const routes = () => [
   {
     path: '/',
     component: MainLayout,

@@ -21,7 +21,7 @@
 
         </div>
         <router-link to="/" :aria-label="t('Navigate to home page')" class="flex items-center order-first">
-          <img v-if="appLogo" :alt="storeName ? t('{name} logo', { name: storeName }) : t('Logo')" :src="appLogo" width="84" height="19" loading="eager" decoding="sync" fetchpriority="high" />
+          <img v-if="appLogo" :alt="storeName ? t('{name} logo', { name: storeName }) : t('Logo')" :src="appLogo" :width="logoWidth || undefined" :height="logoHeight || undefined" class="header-logo" loading="eager" decoding="sync" fetchpriority="high" />
           <!-- No logo yet: the store's name instead of a broken image. -->
           <span v-else class="header-store-name">{{ storeName || t('Home') }}</span>
         </router-link>
@@ -52,8 +52,9 @@ import wishlist from 'src/stores/wishlist'
 import NavMenu from './NavMenu.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
 import cart from 'src/stores/cart'
+import { storeName as liveStoreName } from 'src/utils/site-info.js'
 
-const storeName = process.env.STORE_NAME || ''
+const storeName = liveStoreName()
 
 defineProps({
   isSuperAdmin: {
@@ -63,6 +64,15 @@ defineProps({
   appLogo: {
     type: String,
     default: ''
+  },
+  // The logo file's own size (branding.json), so the browser saves its space before it loads.
+  logoWidth: {
+    type: Number,
+    default: 0
+  },
+  logoHeight: {
+    type: Number,
+    default: 0
   },
   stickyHeader: {
     type: Boolean,

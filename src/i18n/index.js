@@ -6,9 +6,11 @@
  *   t('{n} in stock', { n: 3 })
  *   tn('{n} item', '{n} items', count)        → the form for count
  *
- * The store's languages come from config/languages.json, read at build time
- * (quasar.config.js → process.env.QWOO_LANGUAGES), so the server and the
- * browser always render the same text. Each page is in one of them (main, or
+ * The store's languages come from config/languages.json: the published
+ * version the server runs with (src-ssr/site-content.js, passed to the
+ * browser in window.__QWOO_SITE__), else the one built in
+ * (process.env.QWOO_LANGUAGES), so the server and the browser always render
+ * the same text. Each page is in one of them (main, or
  * an extra language under its prefix: see lang.js). The boot file
  * (boot/i18n.js) makes t() and tn() available in every template, and
  * useI18n() in scripts.
@@ -20,16 +22,35 @@ export const LANGUAGES = {
   he: { name: 'עברית', dir: 'rtl', locale: 'he-IL' },
 }
 
-/** { main, extra, prefixes } from the build (main: the store's language). */
+let builtIn = null
+let lastSource = null
+let lastLanguages = null
+
+/** { main, extra, prefixes } (main: the store's language). */
 export function storeLanguages() {
-  let parsed = {}
-  try {
-    parsed = JSON.parse(process.env.QWOO_LANGUAGES || '{}') || {}
-  } catch {
-    parsed = {}
+  const live = typeof window === 'undefined' ? globalThis.__QWOO_SITE?.languages : window.__QWOO_SITE__?.languages
+  let source = live
+  if (!source || typeof source !== 'object') {
+    if (!builtIn) {
+      try {
+        builtIn = JSON.parse(process.env.QWOO_LANGUAGES || '{}') || {}
+      } catch {
+        builtIn = {}
+      }
+    }
+    source = builtIn
   }
-  const main = LANGUAGES[parsed.main] ? parsed.main : 'en'
-  return { main, extra: Array.isArray(parsed.extra) ? parsed.extra.filter((c) => LANGUAGES[c] && c !== main) : [], prefixes: parsed.prefixes || {} }
+  // Asked for on every link: worked out once per published version.
+  if (source !== lastSource) {
+    const main = LANGUAGES[source.main] ? source.main : 'en'
+    lastLanguages = {
+      main,
+      extra: Array.isArray(source.extra) ? source.extra.filter((c) => LANGUAGES[c] && c !== main) : [],
+      prefixes: source.prefixes && typeof source.prefixes === 'object' ? source.prefixes : {},
+    }
+    lastSource = source
+  }
+  return lastLanguages
 }
 
 const fill = (text, params) => (params ? String(text).replace(/\{(\w+)\}/g, (m, k) => (params[k] ?? params[k] === 0 ? String(params[k]) : m)) : String(text))

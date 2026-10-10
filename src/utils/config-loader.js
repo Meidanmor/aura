@@ -143,6 +143,13 @@ async function loadConfigFile(name, origin = '') {
 
   // --- SERVER SIDE LOGIC ---
 if (import.meta.env.SSR) {
+  // The store's live version, already in memory (src-ssr/site-content.js).
+  // A copy: pages change what they get (the logo's address…).
+  const site = globalThis.__QWOO_SITE
+  if (site) {
+    const data = site.json[`config/${name}.json`]
+    return data && typeof data === 'object' ? structuredClone(data) : {}
+  }
   try {
     // Filesystem in dev, HTTP fetch in production
     if (import.meta.env.DEV) {

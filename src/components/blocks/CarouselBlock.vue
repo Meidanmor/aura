@@ -55,11 +55,14 @@
   </div>
 
   <!-- ===== Multi-item row: images / logos / products / categories ===== -->
-  <div v-else-if="items.length" class="carousel-block cb-row" :class="`cb-row--${source}`" :style="cssVars"
+  <div v-else-if="items.length" class="carousel-block cb-row" :class="[`cb-row--${source}`, { 'cb-row--arrows': d.arrows && pages > 1 }]" :style="cssVars"
        @mouseenter="paused = true" @mouseleave="paused = false" @focusin="paused = true" @focusout="paused = false">
     <div class="cb-row__viewport">
+      <!-- The same arrows as the product page's related products (AppCarousel). -->
       <button v-if="d.arrows && pages > 1" type="button" class="cb-row__arrow cb-row__arrow--prev" :aria-label="t('Previous')" @click="go(-1)">
-        <q-icon :name="matChevronLeft" size="28px" />
+        <svg viewBox="8.59 6 7.41 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path fill="currentColor" d="M14.59 6L16 7.41 11.42 12l4.58 4.59L14.59 18 8.59 12z"/>
+        </svg>
       </button>
 
       <div
@@ -103,7 +106,9 @@
       </div>
 
       <button v-if="d.arrows && pages > 1" type="button" class="cb-row__arrow cb-row__arrow--next" :aria-label="t('Next')" @click="go(1)">
-        <q-icon :name="matChevronRight" size="28px" />
+        <svg viewBox="8.59 6 7.41 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+        </svg>
       </button>
     </div>
 
@@ -209,17 +214,21 @@ function measure() {
   onScroll()
 }
 
+// Right-to-left pages (Hebrew) scroll the other way: scrollLeft goes from 0 down.
+const rtl = (el) => getComputedStyle(el).direction === 'rtl'
+
 function onScroll() {
   const el = trackRef.value
   if (!el) return
-  const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4
-  page.value = atEnd ? pages.value - 1 : Math.round(el.scrollLeft / el.clientWidth)
+  const left = Math.abs(el.scrollLeft)
+  const atEnd = left + el.clientWidth >= el.scrollWidth - 4
+  page.value = atEnd ? pages.value - 1 : Math.round(left / el.clientWidth)
 }
 
 function goTo(p) {
   const el = trackRef.value
   if (!el) return
-  el.scrollTo({ left: p * el.clientWidth, behavior: reducedMotion.value ? 'auto' : 'smooth' })
+  el.scrollTo({ left: (rtl(el) ? -1 : 1) * p * el.clientWidth, behavior: reducedMotion.value ? 'auto' : 'smooth' })
 }
 
 function go(step) {
@@ -346,26 +355,30 @@ const cssVars = computed(() => {
 .cb-row__track:focus-visible { outline: 2px solid var(--cb-control, currentColor); outline-offset: 4px; }
 .cb-row__item { scroll-snap-align: start; min-width: 0; }
 
+/* Arrows in a gutter at each side, like the related products carousel. */
+.cb-row--arrows .cb-row__viewport { padding: 0 20px; }
 .cb-row__arrow {
   position: absolute;
-  top: 50%;
+  top: 38%;
   z-index: 2;
   transform: translateY(-50%);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  width: 23px;
+  padding: 4px;
   border: 0;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--cb-control, #333);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  background: transparent;
+  color: var(--cb-control, var(--q-secondary));
 }
-.cb-row__arrow--prev { left: -8px; }
-.cb-row__arrow--next { right: -8px; }
-.cb-row__arrow:focus-visible { outline: 2px solid var(--cb-control, #333); outline-offset: 2px; }
+.cb-row__arrow svg { display: block; width: 100%; height: auto; }
+[dir="rtl"] .cb-row__arrow svg { transform: scaleX(-1); }
+.cb-row__arrow--prev { left: 0; }
+.cb-row__arrow--next { right: 0; }
+.cb-row__arrow:hover { background: rgba(0, 0, 0, 0.05); }
+.cb-row__arrow:focus-visible { outline: 2px solid var(--cb-control, var(--q-secondary)); outline-offset: 2px; }
 
 .cb-row__dots { display: flex; justify-content: center; gap: 8px; margin-top: 16px; }
 .cb-row__dot {
@@ -431,7 +444,6 @@ const cssVars = computed(() => {
     --cb-gap-now: var(--cb-gap-m, 12px);
     grid-auto-columns: calc((100% - (var(--cb-per-m, 2) - 1) * var(--cb-gap-now)) / var(--cb-per-m, 2));
   }
-  .cb-row__arrow { display: none; } /* swipe on touch screens */
   .cb-img img { height: var(--cb-img-h-m, auto); }
   .cb-row--logos .cb-img img { height: var(--cb-img-h-m, 48px); }
 }

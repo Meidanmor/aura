@@ -23,7 +23,7 @@
       "destination": "/dist/ssr/client/_quasar/$1"
     },
     {
-      "source": "/(js|css|fonts|icons|sw.js|favicon.ico|data)/(.*)",
+      "source": "/(js|css|fonts)/(.*)",
       "destination": "/dist/ssr/client/$1/$2"
     },
     {

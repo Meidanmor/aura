@@ -169,7 +169,10 @@ onMounted(async() => {
   }
   // Live preview: the dashboard sends every page's draft; show the one marked as the homepage.
   unsubscribeHomeDraft = subscribeToLiveConfig('custom_pages', (pages) => {
-    const draft = (Array.isArray(pages) ? pages : []).find((p) => p.role === 'home')
+    // By role, or by the published Home page's id (older dashboards didn't send the role).
+    const homeId = homePage.value?.id
+    const list = Array.isArray(pages) ? pages : []
+    const draft = list.find((p) => p.role === 'home') || (homeId && list.find((p) => p.id === homeId))
     if (draft) homePage.value = draft
   })
   if (homePage.value?.id && !isEditorMode()) {

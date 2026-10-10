@@ -12,6 +12,7 @@
 import express from 'express'
 import compression from 'compression'
 import { createProxyMiddleware } from 'http-proxy-middleware'
+import { siteContentMiddleware } from './site-content.js'
 import {
   defineSsrCreate,
   defineSsrListen,
@@ -28,13 +29,17 @@ import {
  * Can be async: defineSsrCreate(async ({ ... }) => { ... })
  */
 
-export const create = defineSsrCreate((/* { ... } */) => {
+export const create = defineSsrCreate(({ folders }) => {
   const app = express()
   app.disable('x-powered-by')
 
   if (process.env.PROD) {
     app.use(compression())
   }
+
+  // The store's published files, read while running (before the built-in
+  // static files, which they replace). See site-content.js.
+  app.use(siteContentMiddleware({ publicDir: folders?.public || '' }))
 
   const backendTarget = process.env.WP_BACKEND_URL // server-only env var, no VITE_ prefix
 
