@@ -9,7 +9,7 @@
     "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{js,cjs,mjs,vue}\"",
     "format": "prettier --write \"**/*.{js,vue,css,html,md,json}\" --ignore-path .gitignore",
     "dev": "quasar dev -m ssr",
-    "build": "node scripts/fetch-content.mjs && quasar build -m ssr",
+    "build": "node scripts/fetch-content.mjs && quasar build -m ssr && node scripts/after-build.mjs",
     "postinstall": "quasar prepare",
     "icons:native": "node scripts/native-icons.mjs",
     "build:android": "npm run icons:native && quasar build -m capacitor -T android"

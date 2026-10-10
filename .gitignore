@@ -24,6 +24,8 @@ yarn-error.log*
 
 # local cache
 .cache/
+# scripts/fetch-content.mjs: where this build's store files came from
+.qwoo-content.json
 # Capacitor (native app) — the project is tracked; generated/private files aren't.
 # More Android rules live in src-capacitor/android/.gitignore.
 src-capacitor/node_modules/

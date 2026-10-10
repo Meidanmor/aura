@@ -7,10 +7,10 @@
  * How it stays fast:
  *   - The live version (all config files in one download) is kept in memory.
  *     Nothing waits for the store once a server instance has it.
- *   - Which version is live is checked at most every CHECK_MS, in the
- *     background, through this site's own CDN (/__site/current, cached a few
- *     seconds), so the store itself is asked about once per few seconds
- *     whatever the traffic.
+ *   - Which version is live is checked at most every CHECK_MS (a request
+ *     waits up to CHECK_WAIT_MS for it), through this site's own CDN
+ *     (/__site/current, cached 2 seconds), so the store itself is asked about
+ *     once per few seconds whatever the traffic.
  *   - A version (/__site/m/{version}) and images named by attachment
  *     (/branding/12-logo.png) never change: the CDN keeps them for a year.
  *
@@ -27,6 +27,7 @@ const SECRET = process.env.PROXY_SHARED_SECRET || ''
 /** Tells the store this storefront reads its published files (it switches publishing over). */
 const STOREFRONT_VERSION = '2'
 const CHECK_MS = 3000
+const CHECK_WAIT_MS = 500
 const NOT_YET_MS = 10000
 const FAILED_MS = 60000
 const TIMEOUT_MS = 5000
@@ -165,7 +166,9 @@ function refresh(origin) {
 export async function currentSite(origin = '') {
   if (!BACKEND) return null
   if (!checkedAt) await refresh(origin)
-  else if (Date.now() > nextCheck) refresh(origin)
+  // Due for a check: wait for it briefly (usually a CDN hit), so a page right
+  // after a publish shows it; a slow answer finishes in the background.
+  else if (Date.now() > nextCheck) await Promise.race([refresh(origin), new Promise((resolve) => setTimeout(resolve, CHECK_WAIT_MS))])
   return pointer?.version && site ? site : null
 }
 
@@ -289,7 +292,8 @@ export function siteContentMiddleware({ publicDir }) {
       if (req.path === '/__site/current') {
         const p = await pointerFromStore()
         res.setHeader('Cache-Control', 'no-store')
-        res.setHeader('Vercel-CDN-Cache-Control', 'max-age=3, stale-while-revalidate=60')
+        // Never an older answer than that (no stale-while-revalidate): a publish shows within seconds.
+        res.setHeader('Vercel-CDN-Cache-Control', 'max-age=2')
         return res.json(p)
       }
       // A version never changes: cached for good.

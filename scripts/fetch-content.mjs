@@ -31,6 +31,8 @@ const { CONTENT_REPO, QWOO_CONTENT_TOKEN_URL, QWOO_CONTENT_KEY, WP_BACKEND_URL, 
 /** Folders in public/ that belong to a store's content and are replaced as a whole. */
 const CONTENT_DIRS = ['config', 'data', 'sections', 'homepage-hero', 'branding', 'icons']
 const CONTENT_RE = /^(config|data|sections|homepage-hero|branding|icons)\/[^/].*$|^favicon\.ico$/
+/** Where this build's store files came from (read by scripts/after-build.mjs). */
+const MARKER = path.resolve('.qwoo-content.json')
 
 class ContentError extends Error {}
 
@@ -138,6 +140,8 @@ async function fromStore() {
     }))
   }
 
+  // scripts/after-build.mjs takes them out of public/ again after the build.
+  fs.writeFileSync(MARKER, JSON.stringify({ source: 'store', version: pointer.version }))
   console.log(`[content] Using the store's published version ${pointer.version} (${entries.length - missing} files${missing ? `, ${missing} left out` : ''}).`)
   return true
 }
@@ -206,6 +210,7 @@ async function fromRepo() {
 }
 
 async function main() {
+  fs.rmSync(MARKER, { force: true })
   // Only a platform store's build (never a local one: public/ is this repo's own content).
   if (!CONTENT_REPO) {
     console.log('[content] CONTENT_REPO not set — using public/ from this repo.')

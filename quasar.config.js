@@ -438,8 +438,11 @@ devServer: {
         cfg.globIgnores = [
           ...(cfg.globIgnores || []),
           '**/*.{png,jpg,jpeg,webp,avif,gif,svg,ico,mp4,webm}',
-          'config/*.json',
-          'data/*.json',
+          // Every language's copies too (config/he/…), and the app manifest:
+          // the store's published files, never kept from one build to the next.
+          'config/**/*.json',
+          'data/**/*.json',
+          'manifest.json',
         ]
       },
       workboxMode: 'InjectManifest', // 'GenerateSW' or 'InjectManifest'
