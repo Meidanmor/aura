@@ -19,25 +19,34 @@
 
         <SectionRenderer :sections="productSections" page="product" location="before_product_images"/>
 
-        <div v-if="product?.images?.length > 1">
+        <div v-if="gallery.length > 1" ref="galleryEl">
             <AppCarousel
                 v-model="imagesCarousel.slide.value"
                 :carousel-key="imagesCarousel.carouselKey.value"
                 :show-controls="imagesCarousel.showControls.value"
                 :total="imagesCarousel.total.value"
                 :on-keydown="imagesCarousel.onKeydown"
-                v-if="product?.images?.length > 1"
             >
             <q-carousel-slide
-              v-for="(img, index) in product?.images"
+              v-for="(img, index) in gallery"
               :key="index"
               :name="index"
               @mousedown="onImageMouseDown"
               @mousemove="onImageMouseMove"
-              @click="onImageClick(index)"
-              style="cursor: zoom-in;max-height: 400px;object-fit: contain;"
+              @click="img.kind === 'image' && onImageClick(index)"
+              :style="img.kind === 'image' ? 'cursor: zoom-in;max-height: 400px;object-fit: contain;' : 'max-height: 400px;'"
               >
+              <video
+                v-if="img.kind === 'video'"
+                :src="img.src"
+                :aria-label="t('{name} video', { name: product.name })"
+                controls
+                playsinline
+                preload="metadata"
+                class="product-video"
+              />
               <img
+              v-else
               :src="img.src"
               :srcset="img.srcset"
               :sizes="img.sizes"
@@ -52,6 +61,17 @@
             </q-carousel-slide>
             </AppCarousel>
 
+        </div>
+
+        <div v-else-if="gallery[0]?.kind === 'video'">
+          <video
+            :src="gallery[0].src"
+            :aria-label="t('{name} video', { name: product.name })"
+            controls
+            playsinline
+            preload="metadata"
+            class="product-video"
+          />
         </div>
 
         <div v-else>
@@ -317,8 +337,19 @@ if (process.env.CLIENT) {
   }
 }
 
+// Photos and videos in the owner's order: the Store API's images, with the
+// store's videos (extensions.qwoo.videos) put back in their places.
+const gallery = computed(() => {
+  const list = (product.value?.images || []).map((img) => ({ ...img, kind: 'image' }))
+  for (const v of product.value?.extensions?.qwoo?.videos || []) {
+    list.splice(Math.min(v.position, list.length), 0, { kind: 'video', id: v.id, src: v.src, type: v.type })
+  }
+  return list
+})
+const galleryEl = ref(null)
+
 const imagesCarousel = useCarousel(
-  async () => product.value?.images,
+  async () => gallery.value,
     {
       chunkSizes: { xs: 1, sm: 1, md: 1 }
     }
@@ -452,8 +483,15 @@ const lightboxRef = ref(null)
 
 // replace your openLightbox function with:
 function openLightbox(index) {
-  lightboxRef.value.open(product.value?.images.length ? product.value?.images :  [{ src: '/naturaBloom-circle.svg' }], index)
+  // The lightbox shows photos only: count the photos before this one.
+  const photoIndex = gallery.value.slice(0, index).filter((item) => item.kind === 'image').length
+  lightboxRef.value.open(product.value?.images.length ? product.value?.images :  [{ src: '/naturaBloom-circle.svg' }], photoIndex)
 }
+
+// A video stops when the shopper moves to another slide.
+watch(() => imagesCarousel.slide.value, () => {
+  galleryEl.value?.querySelectorAll('video').forEach((video) => video.pause())
+})
 
 const openDrawer = ref(true);
 function addToCart(e) {
@@ -789,6 +827,14 @@ img {
   max-width: 100%;
   max-height: 100%;
   height: 100%;
+}
+.product-video {
+  display: block;
+  width: 100%;
+  max-height: 400px;
+  margin: 0 auto;
+  background: #000;
+  border-radius: 8px;
 }
 .category-chip {
   display: inline-flex;

@@ -5,6 +5,7 @@ export default {
   "\"{name}\" was removed — no longer available": "\"{name}\" הוסר — כבר לא זמין",
   "{n} out of 5 stars": "{n} מתוך 5 כוכבים",
   "{name} featured image": "התמונה הראשית של {name}",
+  "{name} video": "סרטון של {name}",
   "{name} image {n}": "{name} תמונה {n}",
   "{name} logo": "הלוגו של {name}",
   "← Blog": "→ בלוג",
