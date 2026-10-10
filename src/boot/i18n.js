@@ -6,7 +6,7 @@
  */
 import { defineBoot } from '#q-app/wrappers'
 import { Lang } from 'quasar'
-import { createI18n, loadDictionary, setDefaultI18n } from 'src/i18n/index.js'
+import { LANGUAGES, createI18n, loadDictionary, setDefaultI18n } from 'src/i18n/index.js'
 import { currentLang, isExtraLang } from 'src/i18n/lang.js'
 
 /** In the browser: the store's API answers in the page's language. */
@@ -29,6 +29,11 @@ function sendLanguage(lang) {
 
 export default defineBoot(async ({ app, ssrContext }) => {
   const lang = currentLang()
+  // The page's direction stays as the server sent it (Quasar doesn't set it: noHtmlAttrs).
+  if (!ssrContext) {
+    document.documentElement.setAttribute('lang', lang)
+    document.documentElement.setAttribute('dir', LANGUAGES[lang]?.dir || 'ltr')
+  }
   const i18n = createI18n(lang, await loadDictionary(lang))
   app.provide('i18n', i18n)
   app.config.globalProperties.t = i18n.t

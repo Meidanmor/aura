@@ -4,6 +4,7 @@ import { randomBytes } from 'crypto'
 import { AsyncLocalStorage } from 'node:async_hooks'
 import branding from '../../public/config/branding.json' // adjust path as needed
 import { allLangs, isExtraLang, langFromPath, mainLang, stripLang, withLang } from '../../src/i18n/lang.js'
+import { LANGUAGES } from '../../src/i18n/index.js'
 
 /*
  * The language of each page being rendered (an extra language lives under
@@ -278,8 +279,9 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
         }
 
         const ssrContext = { req, res }
+        const pageLang = langFromPath(req.path || req.url)
 
-        langStore.run({ lang: langFromPath(req.path || req.url) }, () => render(ssrContext))
+        langStore.run({ lang: pageLang }, () => render(ssrContext))
             .then(html => {
                 // NOTE: html already contains the correct <title>/<meta>/<link>/<script>
                 // tags from every useMeta() call in the rendered component tree,
@@ -352,7 +354,12 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
                 )
 
                 // Append (not replace) — Quasar's own head content stays intact.
+                // The page's language and direction, from its address (Quasar
+                // is told not to set them: in the browser it would first set
+                // its default left-to-right, a flash on Hebrew pages).
+                const langAttrs = `lang="${pageLang}" dir="${LANGUAGES[pageLang]?.dir || 'ltr'}"`
                 const output = withNonce
+                    .replace(/<html\b([^>]*)>/, (tag, attrs) => `<html ${attrs.replace(/\s(lang|dir)=("[^"]*"|\S+)/g, '').trim()} ${langAttrs}>`.replace('<html  ', '<html '))
                     .replace('</head>', `${criticalHeadExtra}</head>`)
                     .replace('</body>', `${bodyBottom}</body>`)
 
