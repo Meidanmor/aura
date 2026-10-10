@@ -544,6 +544,13 @@ i.q-icon.on-left.notranslate.material-icons {
     font-weight: 700;
 }
 
+/* Sale / sold-out badge on product cards: opposite the wishlist button (both flip on right-to-left pages). */
+.card-badge {
+    z-index: 3;
+    top: 11px;
+    left: 10px;
+}
+
 .item-loop-wl.absolute {
     z-index: 1;
     top: 7px;

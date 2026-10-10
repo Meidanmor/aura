@@ -6,8 +6,7 @@
           </div>
       <div
     v-if="!product.is_in_stock"
-    class="absolute q-ma-sm"
-    style="z-index: 3; top: 11px; left: 10px;"
+    class="absolute q-ma-sm card-badge"
   >
     <q-badge
       color="grey-8"
@@ -17,8 +16,7 @@
   </div>
           <div
     v-if="product.is_in_stock && product.on_sale"
-    class="absolute q-ma-sm"
-    style="z-index: 3; top: 11px; left: 10px;"
+    class="absolute q-ma-sm card-badge"
   >
     <q-badge
       color="grey-8"

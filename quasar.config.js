@@ -321,6 +321,11 @@ devServer: {
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#framework
     framework: {
       config: {
+        // The page's lang and dir come from App.vue (useMeta), per page language.
+        // Quasar would otherwise set them to its default English in the
+        // browser before the app's language loads: a left-to-right flash on
+        // right-to-left pages.
+        lang: { noHtmlAttrs: true },
         brand: {
           primary: appBranding.global_colors.primary || '#FFFFFF',
           bg: appBranding.global_colors.bg || '#FFFFFF',
