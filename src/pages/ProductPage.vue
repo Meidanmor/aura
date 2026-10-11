@@ -82,7 +82,7 @@
             fetchpriority="high"
             loading="eager"
             :alt="t('{name} featured image', { name: product.name })"
-            style="cursor: zoom-in; max-height: 500px"
+            style="cursor: zoom-in; max-height: 500px;margin: 0 auto;"
             height="400"
             width="400"
   @mousedown="onImageMouseDown"
