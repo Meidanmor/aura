@@ -14,7 +14,7 @@
             loading="lazy"
         />
         <q-icon v-else :name="generalIcons[item.icon] || generalIcons.check" class="icon-list__icon" aria-hidden="true" />
-        <span class="icon-list__text">{{ item.text }}</span>
+        <span class="icon-list__text" v-bind="itemText">{{ item.text }}</span>
       </component>
     </li>
   </ul>
@@ -26,6 +26,7 @@ import { RouterLink } from 'vue-router'
 import { generalIcons } from 'src/utils/builder-icons.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToFlex } from 'src/composables/useSectionStyle.js'
+import { textStyle, tsKeys } from 'src/utils/text-style.js'
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -33,6 +34,8 @@ const props = defineProps({
 })
 
 const d = computed(() => props.data.data || {})
+// Size and color are this block's own variables (older settings); font and weight here.
+const itemText = computed(() => textStyle(d.value, tsKeys('text', { size: null, color: null })))
 const items = computed(() => (d.value.items || []).filter((i) => i.text))
 
 const customUrl = (item) => (typeof item.custom_icon === 'string' ? item.custom_icon : item.custom_icon?.url) || ''

@@ -1,7 +1,7 @@
 <template>
   <div v-if="posts?.length" class="latest-posts" :style="cssVars">
     <div class="latest-posts-grid">
-      <BlogCard v-for="p in posts" :key="p.id" :post="p" :show-excerpt="opts.show_excerpt !== false" :show-date="opts.show_date !== false" />
+      <BlogCard v-for="p in posts" :key="p.id" :post="p" :show-excerpt="opts.show_excerpt !== false" :show-date="opts.show_date !== false" :title-text="cardTitle" :excerpt-text="excerptText" />
     </div>
     <div v-if="opts.button_label" class="latest-posts-more">
       <q-btn outline color="secondary" :label="opts.button_label" to="/blog" no-caps />
@@ -12,6 +12,7 @@
 <script setup>
 import { computed, onMounted, onServerPrefetch, useSSRContext, watch } from 'vue'
 import BlogCard from 'components/blog/BlogCard.vue'
+import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { fetchBlogList } from 'src/api/blog.js'
 import { getApiOrigin } from 'src/utils/server/get-api-origin.js'
 import { useSectionData } from 'src/composables/useSectionData.js'
@@ -23,6 +24,8 @@ const props = defineProps({
 })
 
 const opts = computed(() => props.data.data || {})
+const cardTitle = computed(() => textStyle(opts.value, tsKeys('card_title'), 'headings'))
+const excerptText = computed(() => textStyle(opts.value, tsKeys('excerpt')))
 const count = () => Math.max(1, Math.min(12, Number(opts.value.count) || 3))
 
 const { data: posts, resolve } = useSectionData(props.blockId, async (ssrContext) => {

@@ -2,6 +2,7 @@
   <div
        v-if="blockData.items?.length"
        class="container advantages-section"
+       :class="{ 'advantages-section--no-divider': blockData.mobile_divider === false }"
        :style="cssVars"
   >
       <div class="row justify-center gap">
@@ -23,8 +24,8 @@
                 size="40px"
                 class="advantage-card__icon"
             />
-            <span v-if="item.title" class="advantage-card__title">{{ item.title }}</span>
-            <p v-if="item.text" class="advantage-card__text">{{ item.text }}</p>
+            <span v-if="item.title" class="advantage-card__title" v-bind="titleText">{{ item.title }}</span>
+            <p v-if="item.text" class="advantage-card__text" v-bind="descText">{{ item.text }}</p>
           </div>
         </div>
       </div>
@@ -33,6 +34,7 @@
 <script setup>
 import { computed } from 'vue'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
+import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { matLocalShipping, matSpa, matVerified, matAssignmentReturn, matSupportAgent, matWorkspacePremium } from '@quasar/extras/material-icons'
 
 const iconMap = {
@@ -54,6 +56,10 @@ const blockData = computed(() => props.data.data || {})
 
 // Custom icons are { url, width, height } (schema v3); older JSON had a plain URL.
 const customIconUrl = (item) => (typeof item.custom_icon === 'string' ? item.custom_icon : item.custom_icon?.url) || ''
+
+// Card titles and descriptions (Style tab); their own color wins over Text Color.
+const titleText = computed(() => textStyle(blockData.value, tsKeys('title')))
+const descText = computed(() => textStyle(blockData.value, tsKeys('desc')))
 
 const cssVars = computed(() => ({
   '--advantage-icon-color': resolveGlobalColor(blockData.value.icon_color) || 'var(--q-secondary)',
@@ -100,6 +106,7 @@ const cssVars = computed(() => ({
     border-bottom: 1px solid var(--advantage-text-color);
     width: 100%;
   }
+  .advantages-section--no-divider .advantage-card { border-bottom: 0; }
 }
 @media(min-width: 768px) {
   .advantage-card {

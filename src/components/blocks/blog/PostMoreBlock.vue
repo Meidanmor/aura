@@ -1,20 +1,23 @@
 <template>
   <section v-if="items.length" class="post-more" :aria-label="d.title || t('More to read')">
-    <h2 v-if="d.title">{{ d.title }}</h2>
+    <h2 v-if="d.title" v-bind="headingText">{{ d.title }}</h2>
     <div class="post-more-grid">
-      <BlogCard v-for="p in items" :key="p.id" :post="p" :show-excerpt="false" />
+      <BlogCard v-for="p in items" :key="p.id" :post="p" :show-excerpt="false" :title-text="cardTitle" />
     </div>
   </section>
 </template>
 
 <script setup>
 import { computed, inject } from 'vue'
+import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import BlogCard from 'components/blog/BlogCard.vue'
 
 /** "More Posts To Read" (blog post template): other posts, same category first. */
 const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
 const post = inject('blogPost', null)
 const d = computed(() => props.data.data || {})
+const headingText = computed(() => textStyle(d.value, tsKeys('heading'), 'headings'))
+const cardTitle = computed(() => textStyle(d.value, tsKeys('card_title'), 'headings'))
 const items = computed(() => (post.value?.more || []).slice(0, Math.max(1, Math.min(3, Number(d.value.count) || 3))))
 </script>
 

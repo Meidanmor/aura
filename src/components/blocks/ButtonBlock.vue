@@ -3,7 +3,7 @@
     <q-btn
         v-bind="linkAttrs"
         class="btn-block__btn"
-        :class="[`btn-block__btn--${variant}`, `btn-block__btn--${size}`]"
+        :class="[`btn-block__btn--${variant}`, `btn-block__btn--${size}`, labelText.class]"
         :style="btnVars"
         :label="d.text"
         :outline="variant === 'outline'"
@@ -21,6 +21,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { brandFontVar } from 'src/utils/brand-fonts.js'
+import { textStyle } from 'src/utils/text-style.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToFlex } from 'src/composables/useSectionStyle.js'
 
 const props = defineProps({
@@ -69,6 +70,9 @@ const fullWidthClasses = computed(() => {
   return { 'btn-full-d': a.desktop === 'stretch', 'btn-full-t': a.tablet === 'stretch', 'btn-full-m': a.mobile === 'stretch' }
 })
 
+// Button Text: its size and weight (font and color are set with the button's own).
+const labelText = computed(() => textStyle(d.value, { size: 'text_size', weight: 'font_weight' }))
+
 const btnVars = computed(() => {
   const vars = {}
   const bg = resolveGlobalColor(d.value.bg_color)
@@ -86,6 +90,7 @@ const btnVars = computed(() => {
   if (radius) vars['border-radius'] = radius
   const font = brandFontVar(d.value.font, 'buttons')
   if (font) vars['font-family'] = font
+  Object.assign(vars, labelText.value.style)
   return vars
 })
 </script>

@@ -33,6 +33,7 @@ const cssVars = computed(() => {
   if (color) vars['--tb-color'] = color
   const font = brandFontVar(d.value.font, 'text')
   if (font) vars['font-family'] = font
+  if (/^[1-9]00$/.test(String(d.value.font_weight ?? ''))) vars['font-weight'] = d.value.font_weight
   return vars
 })
 

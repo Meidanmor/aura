@@ -7,11 +7,11 @@
         :open="idx === 0 && !!d.first_open"
         @toggle="onToggle($event, idx)"
     >
-      <summary class="faq-block__question">
+      <summary class="faq-block__question" v-bind="questionText">
         <span>{{ item.question }}</span>
         <span class="faq-block__icon" aria-hidden="true" />
       </summary>
-      <div class="faq-block__answer" v-html="sanitizeBuilderHtml(item.answer)" />
+      <div class="faq-block__answer" v-bind="answerText" v-html="sanitizeBuilderHtml(item.answer)" />
     </details>
   </div>
 </template>
@@ -22,6 +22,7 @@ import { useMeta } from 'quasar'
 import { sanitizeBuilderHtml } from 'src/utils/sanitizeHtml.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
+import { textStyle, tsKeys } from 'src/utils/text-style.js'
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -31,6 +32,10 @@ const props = defineProps({
 const d = computed(() => props.data.data || {})
 const items = computed(() => (d.value.items || []).filter((i) => i.question))
 const rootRef = ref(null)
+
+// Questions: size and color are this block's own variables (older settings); font and weight here.
+const questionText = computed(() => textStyle(d.value, tsKeys('question', { size: null, color: null })))
+const answerText = computed(() => textStyle(d.value, tsKeys('answer', { color: null })))
 
 // "One open at a time": closing the others when one opens.
 function onToggle(event, idx) {

@@ -36,18 +36,19 @@
         </picture>
         <div class="cb-slide__overlay" :style="overlayStyle(slide)" />
         <div class="cb-slide__content" :class="`cb-slide__content--${slide.content_align || 'center'}`" :style="{ color: resolveGlobalColor(slide.text_color) || '#fff' }">
-          <h2 v-if="slide.title" class="cb-slide__title"><span v-html="sanitizeSectionText(slide.title)" /></h2>
-          <p v-if="slide.text" class="cb-slide__text">{{ slide.text }}</p>
+          <h2 v-if="slide.title" class="cb-slide__title" v-bind="titleText"><span v-html="sanitizeSectionText(slide.title)" /></h2>
+          <p v-if="slide.text" class="cb-slide__text" v-bind="slideText">{{ slide.text }}</p>
           <q-btn
               v-if="slide.button_text && slide.button_url"
               v-bind="linkAttrs(slide.button_url)"
               :label="slide.button_text"
               class="cb-slide__btn"
-              :class="`cb-slide__btn--${d.button_style || 'light'}`"
+              :class="[`cb-slide__btn--${d.button_style || 'light'}`, buttonText.class]"
+              :style="buttonText.style"
               :outline="d.button_style === 'outline'"
               unelevated
               no-caps
-              size="lg"
+              :size="['sm', 'md', 'lg'].includes(d.button_size) ? d.button_size : 'lg'"
           />
         </div>
       </q-carousel-slide>
@@ -139,6 +140,7 @@ import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
+import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { useI18n } from 'src/i18n/index.js'
 
 const { t } = useI18n()
@@ -149,6 +151,10 @@ const props = defineProps({
 })
 
 const d = computed(() => props.data.data || {})
+// Slide texts: the color is each slide's own; the title size is this block's --cb-title.
+const titleText = computed(() => textStyle(d.value, tsKeys('title', { size: null, color: null }), 'headings'))
+const slideText = computed(() => textStyle(d.value, tsKeys('text', { color: null })))
+const buttonText = computed(() => textStyle(d.value, tsKeys('button', { size: 'button_text_size', color: null }), 'buttons'))
 const source = computed(() => d.value.source || 'slides')
 const loop = computed(() => d.value.loop !== false)
 

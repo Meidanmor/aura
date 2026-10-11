@@ -10,8 +10,8 @@
           <span v-if="showDate && post.categories?.length"> · </span>
           <span v-if="post.categories?.length">{{ post.categories.map((c) => c.name).join(', ') }}</span>
         </p>
-        <h3 class="blog-card-title">{{ post.title }}</h3>
-        <p v-if="showExcerpt && post.excerpt" class="blog-card-excerpt">{{ post.excerpt }}</p>
+        <h3 class="blog-card-title" v-bind="titleText">{{ post.title }}</h3>
+        <p v-if="showExcerpt && post.excerpt" class="blog-card-excerpt" v-bind="excerptText">{{ post.excerpt }}</p>
       </div>
     </router-link>
   </article>
@@ -25,6 +25,9 @@ defineProps({
   post: { type: Object, required: true },
   showExcerpt: { type: Boolean, default: true },
   showDate: { type: Boolean, default: true },
+  // Text styles from the block (src/utils/text-style.js): { class, style }.
+  titleText: { type: Object, default: () => ({}) },
+  excerptText: { type: Object, default: () => ({}) },
 })
 </script>
 

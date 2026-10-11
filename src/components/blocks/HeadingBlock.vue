@@ -62,6 +62,7 @@ const titleStyle = computed(() => ({
 const subtitleStyle = computed(() => ({
   color: resolveGlobalColor(d.value.subtitle_color) || undefined,
   fontFamily: brandFontVar(d.value.subtitle_font, 'text'),
+  fontWeight: /^[1-9]00$/.test(String(d.value.subtitle_weight ?? '')) ? d.value.subtitle_weight : undefined,
 }))
 </script>
 

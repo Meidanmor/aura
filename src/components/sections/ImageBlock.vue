@@ -21,7 +21,7 @@
             decoding="async"
         />
       </component>
-      <figcaption v-if="img.caption" class="image-block__caption">{{ img.caption }}</figcaption>
+      <figcaption v-if="img.caption" class="image-block__caption" v-bind="captionText">{{ img.caption }}</figcaption>
     </figure>
   </div>
 </template>
@@ -30,6 +30,7 @@
 import { computed } from 'vue'
 import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { RouterLink } from 'vue-router'
+import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToFlex, DEVICES } from 'src/composables/useSectionStyle.js'
 
 const props = defineProps({
@@ -43,6 +44,7 @@ const RATIOS = new Set(['1/1', '4/3', '3/2', '16/9', '3/4', '2/3'])
 const FITS = new Set(['cover', 'contain', 'fill', 'none'])
 
 const d = computed(() => props.data.data || {})
+const captionText = computed(() => textStyle(d.value, tsKeys('caption')))
 
 // Image payloads are { url, width, height } (schema v3); older JSON had a
 // plain URL string.

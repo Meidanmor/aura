@@ -92,6 +92,19 @@ div.text-h1,div.text-h2,div.text-h3,div.text-h4,div.text-h5,div.text-h6 {
 .q-btn {
     font-family: var(--qf-buttons);
 }
+/* Text styles (src/utils/text-style.js): a size / line height set for a screen size wins over the block's own. */
+@media (min-width: 1024px) {
+    .ts-sz-d { font-size: var(--ts-size) !important; }
+    .ts-lh-d { line-height: var(--ts-lh) !important; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+    .ts-sz-t { font-size: var(--ts-size-t) !important; }
+    .ts-lh-t { line-height: var(--ts-lh-t) !important; }
+}
+@media (max-width: 767px) {
+    .ts-sz-m { font-size: var(--ts-size-m) !important; }
+    .ts-lh-m { line-height: var(--ts-lh-m) !important; }
+}
 h1,h2,h3,h4,h5,h6 {
     margin: 0;
     line-height: 1.05;

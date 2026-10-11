@@ -1,6 +1,6 @@
 <template>
-  <div class="form-block" :class="layoutClasses" :style="cssVars">
-    <div v-if="submitted" class="form-block__success" role="status">
+  <div class="form-block" :class="[layoutClasses, fieldText.class]" :style="[cssVars, fieldText.style]">
+    <div v-if="submitted" class="form-block__success" role="status" v-bind="messageText">
       <q-icon :name="matCheckCircle" size="24px" />
       <span>{{ successMessage }}</span>
     </div>
@@ -103,7 +103,9 @@
             :unelevated="buttonStyle !== 'outline'"
             :color="buttonStyle === 'secondary' ? 'secondary' : 'primary'"
             class="form-block__submit"
-            :style="submitStyle"
+            :class="buttonText.class"
+            :style="[submitStyle, buttonText.style]"
+            :size="['sm', 'md', 'lg'].includes(d.button_size) ? d.button_size : 'md'"
             no-caps
         />
       </div>
@@ -120,6 +122,7 @@ import { useHoneypot } from 'src/composables/useHoneypot.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToFlex } from 'src/composables/useSectionStyle.js'
 import { useI18n } from 'src/i18n/index.js'
+import { mergeBinds, textStyle, textVars, tsKeys } from 'src/utils/text-style.js'
 
 const { t } = useI18n()
 
@@ -175,6 +178,15 @@ const formError = ref('')
 const successMessage = ref('')
 
 const buttonStyle = computed(() => d.value.button_style || 'primary')
+
+// Text styles: labels and input text are drawn inside Quasar's fields (CSS
+// variables, read below); the button and the thank-you message directly.
+const fieldText = computed(() => mergeBinds(
+  textVars(d.value, tsKeys('label'), 'text', 'fl'),
+  textVars(d.value, tsKeys('input'), 'text', 'fi'),
+))
+const buttonText = computed(() => textStyle(d.value, tsKeys('button', { size: 'button_text_size', color: null }), 'buttons'))
+const messageText = computed(() => textStyle(d.value, tsKeys('message')))
 
 // Fill set explicitly: the theme's global `body .q-btn { background: … }`
 // rule would otherwise override Quasar's bg-primary/bg-secondary.
@@ -309,6 +321,26 @@ const cssVars = computed(() => {
 .form-block__field { flex: 1 1 100%; min-width: 0; }
 .form-block__actions { display: flex; justify-content: var(--fb-btn-align, flex-start); margin-top: 4px; }
 .form-block__error { color: var(--q-negative); margin: 12px 0 0; }
+
+/* Labels: the fields' own labels, checkbox and radio labels. */
+.ts-fl-font :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { font-family: var(--ts-fl-font); }
+.ts-fl-weight :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { font-weight: var(--ts-fl-weight); }
+.ts-fl-color :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { color: var(--ts-fl-color); }
+/* Input text: what's typed or picked. */
+.ts-fi-font :deep(:is(.q-field__native, .q-field__input)) { font-family: var(--ts-fi-font); }
+.ts-fi-color :deep(:is(.q-field__native, .q-field__input)) { color: var(--ts-fi-color); }
+@media (min-width: 1024px) {
+  .ts-fl-sz-d :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { font-size: var(--ts-fl-size); }
+  .ts-fi-sz-d :deep(:is(.q-field__native, .q-field__input)) { font-size: var(--ts-fi-size); }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .ts-fl-sz-t :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { font-size: var(--ts-fl-size-t); }
+  .ts-fi-sz-t :deep(:is(.q-field__native, .q-field__input)) { font-size: var(--ts-fi-size-t); }
+}
+@media (max-width: 767px) {
+  .ts-fl-sz-m :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { font-size: var(--ts-fl-size-m); }
+  .ts-fi-sz-m :deep(:is(.q-field__native, .q-field__input)) { font-size: var(--ts-fi-size-m); }
+}
 .form-block__success {
   display: flex;
   align-items: center;

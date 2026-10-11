@@ -1,6 +1,6 @@
 <template>
   <div v-if="!hidden" class="countdown-block" :class="`countdown-block--${d.style || 'boxes'}`" :style="cssVars">
-    <p v-if="expired && d.expired_action === 'message'" class="countdown-block__message" role="status">
+    <p v-if="expired && d.expired_action === 'message'" class="countdown-block__message" role="status" v-bind="labelText">
       {{ d.expired_message || t('This offer has ended.') }}
     </p>
     <div
@@ -10,8 +10,8 @@
         :aria-label="ariaLabel"
     >
       <div v-for="unit in units" :key="unit.key" class="countdown-block__unit">
-        <span class="countdown-block__number">{{ unit.value }}</span>
-        <span v-if="d.show_labels !== false" class="countdown-block__label">{{ unit.label }}</span>
+        <span class="countdown-block__number" v-bind="numberText">{{ unit.value }}</span>
+        <span v-if="d.show_labels !== false" class="countdown-block__label" v-bind="labelText">{{ unit.label }}</span>
       </div>
     </div>
   </div>
@@ -21,6 +21,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { setResponsiveVar, toCssLength, alignToFlex } from 'src/composables/useSectionStyle.js'
+import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { useI18n } from 'src/i18n/index.js'
 
 const { t } = useI18n()
@@ -31,6 +32,9 @@ const props = defineProps({
 })
 
 const d = computed(() => props.data.data || {})
+// Numbers: size and color are this block's own variables (older settings).
+const numberText = computed(() => textStyle(d.value, tsKeys('number', { size: null, color: null })))
+const labelText = computed(() => textStyle(d.value, tsKeys('label', { color: null })))
 // end_at is ISO 8601 with the store's UTC offset (resolved by the plugin).
 const endMs = computed(() => {
   const t = Date.parse(d.value.end_at || '')

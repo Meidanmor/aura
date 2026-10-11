@@ -1,17 +1,20 @@
 <template>
   <header class="blog-title" :class="`is-${align}`" :style="{ textAlign: align }">
-    <h1>{{ list?.category ? list.category.name : (d.title || t('Blog')) }}</h1>
-    <p v-if="d.show_description !== false && list?.category?.description" class="blog-title-intro">{{ list.category.description }}</p>
+    <h1 v-bind="titleText">{{ list?.category ? list.category.name : (d.title || t('Blog')) }}</h1>
+    <p v-if="d.show_description !== false && list?.category?.description" class="blog-title-intro" v-bind="descText">{{ list.category.description }}</p>
   </header>
 </template>
 
 <script setup>
 import { computed, inject } from 'vue'
+import { textStyle, tsKeys } from 'src/utils/text-style.js'
 
 /** "Blog Title" (blog page template): "Blog" on /blog, the category's name on its page. */
 const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
 const list = inject('blogList', null)
 const d = computed(() => props.data.data || {})
+const titleText = computed(() => textStyle(d.value, tsKeys('title'), 'headings'))
+const descText = computed(() => textStyle(d.value, tsKeys('desc')))
 // "default" (and older data without a value): the start of the line in the page's language.
 const align = computed(() => (['left', 'center', 'right'].includes(d.value.align) ? d.value.align : 'start'))
 </script>

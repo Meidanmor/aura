@@ -14,6 +14,7 @@
           type="button"
           role="tab"
           class="tabs-block__tab"
+          v-bind="tabText"
           :class="{ 'is-active': idx === active }"
           :aria-selected="idx === active ? 'true' : 'false'"
           :aria-controls="`${uid}-panel-${idx}`"
@@ -34,6 +35,7 @@
       <button
           type="button"
           class="tabs-block__acc-header"
+          v-bind="tabText"
           :aria-expanded="openItems.has(idx) ? 'true' : 'false'"
           :aria-controls="`${uid}-panel-${idx}`"
           @click="toggle(idx)"
@@ -44,6 +46,7 @@
       <div
           :id="`${uid}-panel-${idx}`"
           class="tabs-block__panel"
+          v-bind="contentText"
           role="tabpanel"
           :aria-labelledby="`${uid}-tab-${idx}`"
           tabindex="0"
@@ -58,6 +61,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { sanitizeBuilderHtml } from 'src/utils/sanitizeHtml.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { asResponsive, alignToFlex } from 'src/composables/useSectionStyle.js'
+import { textStyle, tsKeys } from 'src/utils/text-style.js'
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -67,6 +71,10 @@ const props = defineProps({
 const d = computed(() => props.data.data || {})
 const items = computed(() => (d.value.items || []).filter((i) => i.title))
 const uid = computed(() => `tabs-${props.blockId}`)
+
+// Tab titles keep their active / pill colors: their color stays the block's --tb-text.
+const tabText = computed(() => textStyle(d.value, tsKeys('tab', { color: null })))
+const contentText = computed(() => textStyle(d.value, tsKeys('content', { color: null })))
 
 const active = ref(0)
 const openItems = reactive(new Set([0]))

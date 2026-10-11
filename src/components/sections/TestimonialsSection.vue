@@ -21,7 +21,7 @@
                 v-for="(testimonial, index) in group"
                 :key="index"
             >
-              <TestimonialCard :testimonial="testimonial" />
+              <TestimonialCard :testimonial="testimonial" v-bind="cardStyles" />
             </div>
           </div>
 
@@ -34,6 +34,7 @@
             v-for="(testimonial, index) in props.data.data.items"
             :key="index"
             :testimonial="testimonial"
+            v-bind="cardStyles"
         />
       </div>
     </div>
@@ -46,6 +47,8 @@ import TestimonialCard from './TestimonialCard.vue'
 import { useCarousel } from 'src/composables/useCrousel.js'
 import { setResponsiveVar } from 'src/composables/useSectionStyle.js'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
+import { textStyle, tsKeys } from 'src/utils/text-style.js'
+import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 
 const props = defineProps({
   data: {
@@ -55,6 +58,13 @@ const props = defineProps({
   blockId: { type: String, default: '' },
 })
 
+
+// Names, reviews and stars (Style tab).
+const cardStyles = computed(() => ({
+  nameText: textStyle(props.data.data, tsKeys('name'), 'headings'),
+  reviewText: textStyle(props.data.data, tsKeys('review')),
+  starColor: resolveGlobalColor(props.data.data.star_color) || '',
+}))
 
 const isCarousel = computed(() => props.data.data.display_style === 'carousel')
 

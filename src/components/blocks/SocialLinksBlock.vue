@@ -15,7 +15,7 @@
           :aria-label="d.display === 'icon_label' ? undefined : link.label"
       >
         <span class="social-links__icon"><q-icon :name="link.icon" aria-hidden="true" /></span>
-        <span v-if="d.display === 'icon_label'" class="social-links__label">{{ link.label }}</span>
+        <span v-if="d.display === 'icon_label'" class="social-links__label" v-bind="labelText">{{ link.label }}</span>
       </a>
     </li>
   </ul>
@@ -26,6 +26,7 @@ import { computed } from 'vue'
 import { socialNetworks, socialHref } from 'src/utils/builder-icons.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { setResponsiveVar, toCssLength, alignToFlex } from 'src/composables/useSectionStyle.js'
+import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { useI18n } from 'src/i18n/index.js'
 
 const { t } = useI18n()
@@ -36,6 +37,7 @@ const props = defineProps({
 })
 
 const d = computed(() => props.data.data || {})
+const labelText = computed(() => textStyle(d.value, tsKeys('label')))
 
 const links = computed(() => (d.value.items || []).map((item, i) => {
   const net = socialNetworks[item.network] || socialNetworks.website

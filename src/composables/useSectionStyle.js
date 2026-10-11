@@ -128,6 +128,21 @@ function setSidesVars(vars, value) {
  * A video's poster doubles as the CSS background image, so it shows while
  * the video loads and wherever the video isn't played.
  */
+/**
+ * The background position per screen size: a preset ("center top"), or
+ * "Custom" with its own horizontal / vertical values (50% when left empty).
+ */
+function bgPosition(s) {
+  const pos = asResponsive(s.bg_image_position)
+  const x = asResponsive(s.bg_pos_x)
+  const y = asResponsive(s.bg_pos_y)
+  const out = {}
+  for (const d of DEVICES) {
+    out[d] = pos[d] === 'custom' ? `${toCssLength(x[d]) || '50%'} ${toCssLength(y[d]) || '50%'}` : pos[d]
+  }
+  return out
+}
+
 export function buildBackground(style = {}) {
   const s = style || {}
   const vars = {}
@@ -148,7 +163,7 @@ export function buildBackground(style = {}) {
     // Only the image of the screen size in use is downloaded (CSS picks it).
     setResponsiveVar(vars, '--sb-bg-img', bgImageUrls(s.bg_image), (u) => (u ? cssUrl(u) : 'none'))
     setResponsiveVar(vars, '--sb-bg-size', s.bg_image_size)
-    setResponsiveVar(vars, '--sb-bg-pos', s.bg_image_position)
+    setResponsiveVar(vars, '--sb-bg-pos', bgPosition(s))
   } else if (bgType === 'video') {
     // Upload (a <video> file) or a YouTube / Vimeo embed.
     const kind = s.bg_video_source === 'youtube' || s.bg_video_source === 'vimeo' ? s.bg_video_source : 'file'
@@ -165,7 +180,7 @@ export function buildBackground(style = {}) {
       hasImage = true
       vars['--sb-bg-img'] = cssUrl(poster)
     }
-    if (src || poster) setResponsiveVar(vars, '--sb-bg-pos', s.bg_image_position)
+    if (src || poster) setResponsiveVar(vars, '--sb-bg-pos', bgPosition(s))
     if (src) video = { kind, src, poster, mobile: !s.bg_video_mobile_poster }
   }
 

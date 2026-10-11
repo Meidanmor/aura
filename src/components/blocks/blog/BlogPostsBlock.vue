@@ -8,6 +8,8 @@
         :post="d.show_image === false ? { ...p, image: null } : p"
         :show-excerpt="d.show_excerpt !== false"
         :show-date="d.show_date !== false"
+        :title-text="cardTitle"
+        :excerpt-text="excerptText"
       />
     </div>
     <nav v-if="list?.pages > 1" class="blog-posts-pager" :aria-label="t('Pages')">
@@ -20,6 +22,7 @@
 
 <script setup>
 import { computed, inject } from 'vue'
+import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { useRoute } from 'vue-router'
 import BlogCard from 'components/blog/BlogCard.vue'
 
@@ -32,6 +35,8 @@ const props = defineProps({ data: { type: Object, required: true }, blockId: { t
 const list = inject('blogList', null)
 const route = useRoute()
 const d = computed(() => props.data.data || {})
+const cardTitle = computed(() => textStyle(d.value, tsKeys('card_title'), 'headings'))
+const excerptText = computed(() => textStyle(d.value, tsKeys('excerpt')))
 const pageLink = (n) => ({ path: route.path, query: n > 1 ? { page: n } : {} })
 
 const cssVars = computed(() => {
