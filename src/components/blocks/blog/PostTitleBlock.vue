@@ -10,7 +10,8 @@ const props = defineProps({ data: { type: Object, required: true }, blockId: { t
 const post = inject('blogPost', null)
 const d = computed(() => props.data.data || {})
 const tag = computed(() => (d.value.tag === 'h2' ? 'h2' : 'h1'))
-const align = computed(() => (['left', 'center', 'right'].includes(d.value.align) ? d.value.align : 'left'))
+// "default" (and older data without a value): the start of the line in the page's language.
+const align = computed(() => (['left', 'center', 'right'].includes(d.value.align) ? d.value.align : 'start'))
 </script>
 
 <style scoped>

@@ -320,7 +320,17 @@ export function siteContentMiddleware({ publicDir }) {
     const s = await currentSite(originOf(req))
     // One store per deployment: the render reads it from here.
     globalThis.__QWOO_SITE = s
-    if (!s) return next()
+    if (!s) {
+      // The store couldn't be reached (a cold start at a slow moment…): the
+      // build's copy answers, but must never be kept. It used to go out with
+      // the static files' 30-day cache, so Vercel's CDN served that old copy
+      // to every visitor for hours after the store was back (found 2026-10-11).
+      if (req.path === '/manifest.json' || CONTENT_RE.test(req.path.replace(/^\/+/, ''))) {
+        res.setHeader('Cache-Control', 'no-store')
+        res.setHeader('Vercel-CDN-Cache-Control', 'no-store')
+      }
+      return next()
+    }
 
     if (req.path === '/manifest.json') {
       res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8')

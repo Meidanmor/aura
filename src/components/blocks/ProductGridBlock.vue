@@ -1,8 +1,8 @@
 <template>
   <div class="product-grid-block" :style="cssVars">
     <div v-if="products?.length" class="product-grid-block__grid">
-      <div v-for="product in products" :key="product.id" class="product-grid-block__cell">
-        <ProductCard :product="product" />
+      <div v-for="(product, index) in products" :key="product.id" class="product-grid-block__cell">
+        <ProductCard :product="product" :priority="picked && index < 3" />
       </div>
     </div>
     <div v-if="d.show_view_all && d.view_all_url && products?.length" class="product-grid-block__footer">
@@ -23,6 +23,7 @@ import { computed } from 'vue'
 import ProductCard from '../shop/ProductCard.vue'
 import productsStore from 'src/stores/products'
 import { useBlockQuery } from 'src/composables/useBlockQuery.js'
+import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
 
 const props = defineProps({
@@ -37,6 +38,9 @@ const isInternal = (url) => String(url).startsWith('/') && !String(url).startsWi
 const queryKey = () => JSON.stringify([
   d.value.query_type, d.value.category_ids, d.value.tag_ids, d.value.product_ids, d.value.limit, d.value.hide_out_of_stock,
 ])
+
+// The page's first images (src/utils/priority-image.js): its first cards.
+const picked = usePriorityBlock(props.blockId)
 
 const { data: products } = useBlockQuery(props.blockId, queryKey, (ssrContext) =>
     productsStore.queryProducts(d.value, ssrContext)

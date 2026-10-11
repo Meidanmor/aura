@@ -12,7 +12,7 @@
 import { computed } from 'vue'
 import { sanitizeBuilderHtml } from 'src/utils/sanitizeHtml.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
-import { asResponsive, setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
+import { asResponsive, setResponsiveVar, toCssLength, alignToText } from 'src/composables/useSectionStyle.js'
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -24,7 +24,7 @@ const d = computed(() => props.data.data || {})
 
 const cssVars = computed(() => {
   const vars = {}
-  setResponsiveVar(vars, '--sb-align', d.value.alignment)
+  setResponsiveVar(vars, '--sb-align', d.value.alignment, alignToText)
   setResponsiveVar(vars, '--tb-size', d.value.font_size, toCssLength)
   // Line height may be unitless (1.6) — don't append px to it.
   setResponsiveVar(vars, '--tb-lh', d.value.line_height)

@@ -351,6 +351,16 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
                     .map((schema) => `<script type="application/ld+json" nonce="${nonce}">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script>`)
                     .join('')
 
+                // The page's first image from its first section (src/utils/priority-image.js):
+                // preloaded, per screen size when they differ (a CSS background is otherwise
+                // found late). The old homepage hero has its own preload above.
+                const attr = (v) => String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+                const seenPreloads = new Set()
+                const priorityPreloads = heroData.src ? '' : (ssrContext.priorityImages || [])
+                    .filter((l) => l?.href && !seenPreloads.has(l.href + '|' + l.media) && seenPreloads.add(l.href + '|' + l.media))
+                    .map((l) => `<link rel="preload" as="image" href="${attr(l.href)}"${l.media ? ` media="${attr(l.media)}"` : ''} fetchpriority="high">`)
+                    .join('')
+
                 const criticalHeadExtra = `
           ${schemaHtml}
           ${alternateLinks(ssrContext, req)}
@@ -364,6 +374,7 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
               ${heroData.sizes ? `imagesizes="${heroData.sizes}"` : ''}
               fetchpriority="high"
             >` : ''}
+          ${priorityPreloads}
           <style>
             .hero-section-sec, .lcp-wrapper, .hero-img, .q-layout, .q-page-container, #q-app {
               opacity: 1 !important;
@@ -397,7 +408,11 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
                 const page = site
                     ? withNonce.replace(/<link\s+rel="(icon|apple-touch-icon)"[^>]*>/g, '').replace(/<meta\s+name="theme-color"[^>]*>/g, '')
                     : withNonce
-                const output = page
+                // A section image comes first: the header logo stops competing with it.
+                const withLogo = ssrContext.sectionPriority
+                    ? page.replace(/<img\b[^>]*\bheader-logo\b[^>]*>/, (tag) => tag.replace('fetchpriority="high"', 'fetchpriority="auto"'))
+                    : page
+                const output = withLogo
                     .replace(/<html\b([^>]*)>/, (tag, attrs) => `<html ${attrs.replace(/\s(lang|dir)=("[^"]*"|\S+)/g, '').trim()} ${langAttrs}>`.replace('<html  ', '<html '))
                     .replace('</head>', `${criticalHeadExtra}</head>`)
                     .replace('</body>', `${bodyBottom}</body>`)

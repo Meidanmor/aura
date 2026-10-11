@@ -34,7 +34,7 @@
             :srcset="product.images[0]?.srcset"
             :sizes="product.images[0]?.sizes"
             :alt="product.name"
-            :loading="priority ? 'eager' : 'lazy'"
+            :loading="priority || eager ? 'eager' : 'lazy'"
             :fetchpriority="priority ? 'high' : 'auto'"
             height="350px"
             width="auto"
@@ -68,7 +68,9 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  priority: Boolean
+  priority: Boolean,
+  // Loaded right away, without competing with the page's first image.
+  eager: Boolean
 })
 
 const sanitizedPrice = useSanitizedPrice(() => props.product.price_html)

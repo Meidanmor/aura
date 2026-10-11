@@ -37,7 +37,7 @@
     <!-- CMS-configurable Homepage Sections (Shop Builder plugin) — renders
          below the hero, in the order configured in wp-admin. -->
     <div :class="{ 'default-home': sections === DEFAULT_SECTIONS }">
-      <SectionRenderer :sections="sections" :page="homePage ? 'custom' : 'home'" />
+      <SectionRenderer :sections="sections" :page="homePage ? 'custom' : 'home'" :no-priority="hasHero" />
     </div>
   </div>
 </template>

@@ -1,5 +1,7 @@
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { youtubeId, vimeoId, youtubeThumbnail, backgroundEmbedUrl } from 'src/utils/video-embed.js'
+import { currentLang } from 'src/i18n/lang.js'
+import { LANGUAGES } from 'src/i18n/index.js'
 
 /**
  * Turns Shop Builder (schema v3) style objects into CSS classes + custom
@@ -65,8 +67,39 @@ export function visibilityClasses(hideOn) {
   }
 }
 
-const ALIGN_TO_FLEX = { left: 'flex-start', center: 'center', right: 'flex-end', stretch: 'stretch' }
-export const alignToFlex = (v) => ALIGN_TO_FLEX[v] || null
+/** Whether the page being rendered reads right to left. */
+export const isRtlPage = () => LANGUAGES[currentLang()]?.dir === 'rtl'
+
+/**
+ * Alignment → a flex value. "default" is the start of the line in the
+ * page's language (flex-start flips by itself in RTL); left and right are
+ * always that side, so they swap ends on right-to-left pages.
+ */
+export function alignToFlex(v) {
+  if (v === 'default') return 'flex-start'
+  if (v === 'center' || v === 'stretch') return v
+  if (v === 'left') return isRtlPage() ? 'flex-end' : 'flex-start'
+  if (v === 'right') return isRtlPage() ? 'flex-start' : 'flex-end'
+  return null
+}
+
+/** Alignment → text-align ("default": the start of the line in the page's language). */
+export const alignToText = (v) => (v === 'default' ? 'start' : ['left', 'center', 'right'].includes(v) ? v : null)
+
+/**
+ * A background image: one { url } (older data) or one per screen size
+ * ({ desktop, tablet, mobile }, already filled in by the store).
+ */
+export function bgImageUrls(img) {
+  if (img && typeof img === 'object' && ('desktop' in img || 'tablet' in img || 'mobile' in img)) {
+    const d = img.desktop?.url || ''
+    const t = img.tablet?.url || d
+    const m = img.mobile?.url || t
+    return { desktop: d, tablet: t, mobile: m }
+  }
+  const u = img?.url || ''
+  return { desktop: u, tablet: u, mobile: u }
+}
 
 /* ------------------------------------------------------------------ */
 /* Backgrounds & padding (shared by containers and blocks)             */
@@ -113,9 +146,10 @@ export function buildBackground(style = {}) {
     const c2 = resolveGlobalColor(s.bg_gradient_color2) || 'transparent'
     const angle = Number.isFinite(Number(s.bg_gradient_angle)) ? Number(s.bg_gradient_angle) : 180
     vars['--sb-bg-img'] = `linear-gradient(${angle}deg, ${c1}, ${c2})`
-  } else if (bgType === 'image' && s.bg_image?.url) {
+  } else if (bgType === 'image' && Object.values(bgImageUrls(s.bg_image)).some(Boolean)) {
     hasImage = true
-    vars['--sb-bg-img'] = cssUrl(s.bg_image.url)
+    // Only the image of the screen size in use is downloaded (CSS picks it).
+    setResponsiveVar(vars, '--sb-bg-img', bgImageUrls(s.bg_image), (u) => (u ? cssUrl(u) : 'none'))
     setResponsiveVar(vars, '--sb-bg-size', s.bg_image_size)
     setResponsiveVar(vars, '--sb-bg-pos', s.bg_image_position)
   } else if (bgType === 'video') {

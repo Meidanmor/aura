@@ -17,7 +17,8 @@ const post = inject('blogPost', null)
 const d = computed(() => props.data.data || {})
 const showDate = computed(() => d.value.show_date !== false)
 const cats = computed(() => (d.value.show_categories !== false ? post.value?.categories || [] : []))
-const align = computed(() => (['left', 'center', 'right'].includes(d.value.align) ? d.value.align : 'left'))
+// "default" (and older data without a value): the start of the line in the page's language.
+const align = computed(() => (['left', 'center', 'right'].includes(d.value.align) ? d.value.align : 'start'))
 </script>
 
 <style scoped>

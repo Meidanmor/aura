@@ -234,7 +234,7 @@ body section {
     --sb-pt-t: initial; --sb-pr-t: initial; --sb-pb-t: initial; --sb-pl-t: initial;
     --sb-pt-m: initial; --sb-pr-m: initial; --sb-pb-m: initial; --sb-pl-m: initial;
     --sb-minh: initial; --sb-minh-t: initial; --sb-minh-m: initial;
-    --sb-bg: initial; --sb-bg-img: initial;
+    --sb-bg: initial; --sb-bg-img: initial; --sb-bg-img-t: initial; --sb-bg-img-m: initial;
     --sb-bg-size: initial; --sb-bg-size-t: initial; --sb-bg-size-m: initial;
     --sb-bg-pos: initial; --sb-bg-pos-t: initial; --sb-bg-pos-m: initial;
     --sb-overlay: initial; --sb-overlay-o: initial;
@@ -339,7 +339,7 @@ body section {
     --sb-pt: initial; --sb-pr: initial; --sb-pb: initial; --sb-pl: initial;
     --sb-pt-t: initial; --sb-pr-t: initial; --sb-pb-t: initial; --sb-pl-t: initial;
     --sb-pt-m: initial; --sb-pr-m: initial; --sb-pb-m: initial; --sb-pl-m: initial;
-    --sb-bg: initial; --sb-bg-img: initial;
+    --sb-bg: initial; --sb-bg-img: initial; --sb-bg-img-t: initial; --sb-bg-img-m: initial;
     --sb-bg-size: initial; --sb-bg-size-t: initial; --sb-bg-size-m: initial;
     --sb-bg-pos: initial; --sb-bg-pos-t: initial; --sb-bg-pos-m: initial;
     --sb-overlay: initial; --sb-overlay-o: initial; --sb-radius: initial;
@@ -384,6 +384,7 @@ body section {
     }
     .sb-container,
     .sb-block.sb-has-box {
+        background-image: var(--sb-bg-img-t, var(--sb-bg-img, none));
         background-size: var(--sb-bg-size-t, cover);
         background-position: var(--sb-bg-pos-t, center center);
     }
@@ -423,6 +424,7 @@ body section {
     }
     .sb-container,
     .sb-block.sb-has-box {
+        background-image: var(--sb-bg-img-m, var(--sb-bg-img-t, var(--sb-bg-img, none)));
         background-size: var(--sb-bg-size-m, cover);
         background-position: var(--sb-bg-pos-m, center center);
     }
@@ -446,9 +448,9 @@ body section {
 }
 
 /* Shared responsive helper for blocks: --sb-align / -t / -m → text-align */
-.sb-text-align { text-align: var(--sb-align, left); }
-@media (max-width: 1023px) { .sb-text-align { text-align: var(--sb-align-t, left); } }
-@media (max-width: 767px) { .sb-text-align { text-align: var(--sb-align-m, left); } }
+.sb-text-align { text-align: var(--sb-align, start); }
+@media (max-width: 1023px) { .sb-text-align { text-align: var(--sb-align-t, start); } }
+@media (max-width: 767px) { .sb-text-align { text-align: var(--sb-align-m, start); } }
 
 .offline-item {
   position: relative;

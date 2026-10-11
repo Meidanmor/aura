@@ -21,7 +21,7 @@
 import { computed } from 'vue'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
-import { asResponsive, setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
+import { asResponsive, setResponsiveVar, toCssLength, alignToText } from 'src/composables/useSectionStyle.js'
 
 const TAGS = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
 
@@ -35,7 +35,7 @@ const tag = computed(() => (TAGS.has(d.value.tag) ? d.value.tag : 'h2'))
 
 const cssVars = computed(() => {
   const vars = {}
-  setResponsiveVar(vars, '--sb-align', d.value.alignment)
+  setResponsiveVar(vars, '--sb-align', d.value.alignment, alignToText)
   setResponsiveVar(vars, '--hb-size', d.value.font_size, toCssLength)
   setResponsiveVar(vars, '--hb-sub-size', d.value.subtitle_size, toCssLength)
   return vars

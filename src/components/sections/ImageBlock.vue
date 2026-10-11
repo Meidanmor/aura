@@ -16,7 +16,8 @@
             :alt="img.alt || ''"
             :width="img.width || undefined"
             :height="img.height || undefined"
-            loading="lazy"
+            :loading="picked && idx === 0 ? 'eager' : 'lazy'"
+            :fetchpriority="picked && idx === 0 ? 'high' : undefined"
             decoding="async"
         />
       </component>
@@ -27,6 +28,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { RouterLink } from 'vue-router'
 import { asResponsive, setResponsiveVar, toCssLength, alignToFlex, DEVICES } from 'src/composables/useSectionStyle.js'
 
@@ -44,6 +46,9 @@ const d = computed(() => props.data.data || {})
 
 // Image payloads are { url, width, height } (schema v3); older JSON had a
 // plain URL string.
+// The page's first image (src/utils/priority-image.js).
+const picked = usePriorityBlock(props.blockId)
+
 const images = computed(() => (d.value.images || [])
     .map((img) => {
       const payload = typeof img.image === 'string' ? { url: img.image } : (img.image || {})

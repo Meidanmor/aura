@@ -8,16 +8,18 @@
     :alt="post.image.alt || ''"
     :width="post.image.width || undefined"
     :height="post.image.height || undefined"
-    fetchpriority="high"
+    :fetchpriority="picked ? 'high' : undefined"
   >
 </template>
 
 <script setup>
 import { computed, inject } from 'vue'
+import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 
 /** "Post Cover Image" (blog post template): shown only where the owner places it. */
 const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
 const post = inject('blogPost', null)
+const picked = usePriorityBlock(props.blockId)
 const d = computed(() => props.data.data || {})
 const ratio = computed(() => (['16/9', '4/3', '1/1'].includes(d.value.ratio) ? d.value.ratio.replace('/', ' / ') : ''))
 </script>

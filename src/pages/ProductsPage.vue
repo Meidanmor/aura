@@ -73,7 +73,7 @@
 
           <SectionRenderer :sections="shopSettings?.sections" page="shop" location="before_products_grid"/>
 
-          <ProductResultsGrid :loading="productsStore.productsLoading.value" :products="paginatedProducts"/>
+          <ProductResultsGrid :loading="productsStore.productsLoading.value" :products="paginatedProducts" :priority-count="gridPriority"/>
 
           <SectionRenderer :sections="shopSettings?.sections" page="shop" location="after_products_grid"/>
 
@@ -100,6 +100,8 @@ import ProductResultsGrid from '../components/shop/ProductResultsGrid.vue';
 import ArchivePagination from '../components/shop/ArchivePagination.vue';
 import SortBar from '../components/shop/SortBar.vue';
 import SectionRenderer from '../components/sections/SectionRenderer.vue'
+import { computed } from 'vue'
+import { pagePriority } from 'src/utils/priority-image.js'
 
 defineOptions({preFetch: createArchivePreFetch('shop')})
 
@@ -109,6 +111,9 @@ const {
   categoryOptions, paginatedProducts, totalPages, totalProducts,
   sortOptions, onPriceChange, scrollToTop, productsStore, shopSettings
 } = useProductArchive('shop')
+
+// A section above the grid with the page's first image: it loads first, not the grid's first cards.
+const gridPriority = computed(() => (pagePriority(shopSettings.value?.sections, 'shop').any ? 0 : 3))
 
 
 

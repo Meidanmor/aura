@@ -55,7 +55,7 @@
 
           <SectionRenderer :sections="categorySections" page="category" location="before_products_grid"/>
 
-          <ProductResultsGrid :loading="productsStore.productsLoading.value" :products="paginatedProducts" />
+          <ProductResultsGrid :loading="productsStore.productsLoading.value" :products="paginatedProducts" :priority-count="gridPriority" />
 
           <SectionRenderer :sections="categorySections" page="category" location="after_products_grid"/>
 
@@ -77,6 +77,7 @@
 <script setup>
 import { createArchivePreFetch, useProductArchive } from 'src/composables/useProductArchive'
 import { computed } from 'vue'
+import { pagePriority } from 'src/utils/priority-image.js'
 import { categoryMatch, pickSections } from 'src/utils/layouts.js'
 import { matClose } from '@quasar/extras/material-icons'
 import PriceFilterCard from '../components/shop/PriceFilterCard.vue'
@@ -97,6 +98,8 @@ const {
 } = useProductArchive('category')
 // The category's layout (Store builder): one made for this category, else the default.
 const categorySections = computed(() => pickSections(shopSettings.value, categoryMatch(selectedCategoryOBJ.value)))
+// A section above the grid with the page's first image: it loads first, not the grid's first cards.
+const gridPriority = computed(() => (pagePriority(categorySections.value, 'category').any ? 0 : 3))
 
 const safeCategoryName = useSanitizedText(() => selectedCategoryOBJ.value?.name)
 

@@ -16,7 +16,7 @@
             <div v-for="item in group" :key="item.id"
                  class="slide-container"
             >
-              <ProductCard :product="item" />
+              <ProductCard :product="item" :priority="picked && index === 0" />
             </div>
           </div>
         </q-carousel-slide>
@@ -29,6 +29,7 @@ import {computed, onMounted, onServerPrefetch, useSSRContext, watch} from 'vue'
 import {onBeforeRouteLeave} from "vue-router";
 import AppCarousel from '../app/AppCarousel.vue'
 import ProductCard from '../shop/ProductCard.vue'
+import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { useCarousel } from 'src/composables/useCrousel.js'
 import { useSectionData } from 'src/composables/useSectionData.js'
 import productsStore from 'src/stores/products'
@@ -63,6 +64,9 @@ async function resolveFeaturedProducts(ssrContext) {
 
   return items
 }
+
+// The page's first images (src/utils/priority-image.js): the first slide's cards.
+const picked = usePriorityBlock(props.blockId)
 
 const { data: products, resolve } = useSectionData(props.blockId, resolveFeaturedProducts)
 

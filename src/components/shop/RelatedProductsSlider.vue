@@ -28,11 +28,11 @@
             :key="index"
             :name="index"
         >
-          <div class="related-product-wrapper row justify-center">
+          <div class="related-product-wrapper row full-width no-wrap">
             <div
                 v-for="product in group"
                 :key="product.id"
-                :class="[colClass, 'q-mb-md', 'relative-position']"
+                class="slide-container relative-position"
             >
               <ProductCard :product="product" />
             </div>
@@ -72,11 +72,6 @@ const updatePerSlide = () => {
 }
 updatePerSlide()
 
-const colClass = computed(() => {
-  if ($q.screen.lt.sm) return 'col-6'
-  if ($q.screen.lt.md) return 'col-4'
-  return 'col-3'
-})
 
 // useCarousel drives chunking based on its own internal breakpoints (1/2/3 per slide)
 const carousel = useCarousel(async () => products.value, {

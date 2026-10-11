@@ -29,8 +29,8 @@
               :alt="slide.alt || ''"
               :width="slide.width || undefined"
               :height="slide.height || undefined"
-              :loading="idx === 0 ? 'eager' : 'lazy'"
-              :fetchpriority="idx === 0 ? 'high' : undefined"
+              :loading="picked && idx === 0 ? 'eager' : 'lazy'"
+              :fetchpriority="picked && idx === 0 ? 'high' : undefined"
               decoding="async"
           />
         </picture>
@@ -77,7 +77,7 @@
       >
         <div v-for="(item, idx) in items" :key="item.key || idx" class="cb-row__item">
           <!-- Products -->
-          <ProductCard v-if="source === 'products'" :product="item" />
+          <ProductCard v-if="source === 'products'" :product="item" :priority="picked && idx < 3" />
 
           <!-- Categories -->
           <router-link v-else-if="source === 'categories'" :to="`/product-category/${item.slug}`" class="cb-cat">
@@ -98,7 +98,8 @@
                 :alt="item.alt || ''"
                 :width="item.width || undefined"
                 :height="item.height || undefined"
-                loading="lazy"
+                :loading="picked && idx === 0 ? 'eager' : 'lazy'"
+                :fetchpriority="picked && idx === 0 ? 'high' : undefined"
                 decoding="async"
             />
           </component>
@@ -134,6 +135,7 @@ import { matChevronLeft, matChevronRight } from '@quasar/extras/material-icons'
 import ProductCard from '../shop/ProductCard.vue'
 import productsStore from 'src/stores/products'
 import { useBlockQuery } from 'src/composables/useBlockQuery.js'
+import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
@@ -164,6 +166,9 @@ function imageLinkAttrs(item) {
 }
 
 /* ---------- Data ---------- */
+
+// The page's first image (src/utils/priority-image.js): before, every carousel's first slide was high priority.
+const picked = usePriorityBlock(props.blockId)
 
 const slides = computed(() => (d.value.slides || [])
     .map((s) => ({ ...s, src: imgUrl(s.image), mobileSrc: imgUrl(s.mobile_image), width: s.image?.width, height: s.image?.height }))

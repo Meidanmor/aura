@@ -57,7 +57,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { sanitizeBuilderHtml } from 'src/utils/sanitizeHtml.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
-import { asResponsive } from 'src/composables/useSectionStyle.js'
+import { asResponsive, alignToFlex } from 'src/composables/useSectionStyle.js'
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -96,7 +96,6 @@ function onKeydown(e) {
   tabRefs.value[next]?.focus()
 }
 
-const ALIGN = { left: 'flex-start', center: 'center', right: 'flex-end', stretch: 'stretch' }
 const alignClasses = computed(() => {
   const a = asResponsive(d.value.alignment || 'left')
   return { 'tb-stretch-d': a.desktop === 'stretch', 'tb-stretch-t': a.tablet === 'stretch', 'tb-stretch-m': a.mobile === 'stretch' }
@@ -105,9 +104,9 @@ const alignClasses = computed(() => {
 const cssVars = computed(() => {
   const vars = {}
   const a = asResponsive(d.value.alignment || 'left')
-  vars['--tb-justify'] = ALIGN[a.desktop] || 'flex-start'
-  vars['--tb-justify-t'] = ALIGN[a.tablet] || 'flex-start'
-  vars['--tb-justify-m'] = ALIGN[a.mobile] || 'flex-start'
+  vars['--tb-justify'] = alignToFlex(a.desktop) || 'flex-start'
+  vars['--tb-justify-t'] = alignToFlex(a.tablet) || 'flex-start'
+  vars['--tb-justify-m'] = alignToFlex(a.mobile) || 'flex-start'
   const activeColor = resolveGlobalColor(d.value.active_color)
   if (activeColor) vars['--tb-active'] = activeColor
   const text = resolveGlobalColor(d.value.text_color)
