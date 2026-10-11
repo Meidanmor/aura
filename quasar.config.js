@@ -442,6 +442,8 @@ devServer: {
           // the store's published files, never kept from one build to the next.
           'config/**/*.json',
           'data/**/*.json',
+          // Brand fonts: loaded when a page uses them (named by content, cached for a year).
+          'brand-fonts/**',
           'manifest.json',
         ]
       },

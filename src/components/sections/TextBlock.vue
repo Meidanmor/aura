@@ -12,6 +12,7 @@
 import { computed } from 'vue'
 import { sanitizeBuilderHtml } from 'src/utils/sanitizeHtml.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
+import { brandFontVar } from 'src/utils/brand-fonts.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToText } from 'src/composables/useSectionStyle.js'
 
 const props = defineProps({
@@ -30,6 +31,8 @@ const cssVars = computed(() => {
   setResponsiveVar(vars, '--tb-lh', d.value.line_height)
   const color = resolveGlobalColor(d.value.text_color)
   if (color) vars['--tb-color'] = color
+  const font = brandFontVar(d.value.font, 'text')
+  if (font) vars['font-family'] = font
   return vars
 })
 

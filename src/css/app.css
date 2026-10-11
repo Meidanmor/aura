@@ -67,10 +67,30 @@
 html, body {
     touch-action: pan-y;
 }
+/*
+ * Brand fonts (Store builder → Branding): the store's <style id="qwoo-fonts">
+ * sets the ones the owner chose (src/utils/brand-fonts.js). Headings and
+ * buttons follow the text font unless they have their own.
+ */
+:root {
+    --qf-text: Roboto, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --qf-headings: var(--qf-text);
+    --qf-buttons: var(--qf-text);
+}
 body {
+  font-family: var(--qf-text);
   color: var(--q-secondary);
     background-color: var(--q-primary);
   /*scroll-behavior: smooth;*/
+}
+/* Titles: heading tags, and the drawers' and checkout's titles (divs sized as headings;
+   links and paragraphs with a text-h* size, like the menu, stay in the text font). */
+h1,h2,h3,h4,h5,h6,
+div.text-h1,div.text-h2,div.text-h3,div.text-h4,div.text-h5,div.text-h6 {
+    font-family: var(--qf-headings);
+}
+.q-btn {
+    font-family: var(--qf-buttons);
 }
 h1,h2,h3,h4,h5,h6 {
     margin: 0;

@@ -11,7 +11,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const MARKER = path.resolve('.qwoo-content.json')
-const CONTENT = ['config', 'data', 'sections', 'homepage-hero', 'branding', 'icons', 'favicon.ico']
+const CONTENT = ['config', 'data', 'sections', 'homepage-hero', 'branding', 'brand-fonts', 'icons', 'favicon.ico']
 
 let source = ''
 try {

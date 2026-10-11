@@ -6,6 +6,7 @@ import branding from '../../public/config/branding.json' // adjust path as neede
 import { allLangs, isExtraLang, langFromPath, mainLang, stripLang, withLang } from '../../src/i18n/lang.js'
 import { LANGUAGES } from '../../src/i18n/index.js'
 import { clientSite } from '../site-content.js'
+import { brandFontPreloads, brandFontsCss } from '../../src/utils/brand-fonts.js'
 
 /*
  * The language of each page being rendered (an extra language lives under
@@ -209,6 +210,21 @@ function siteHead(site) {
     ].join('')
 }
 
+/*
+ * Brand fonts (src/utils/brand-fonts.js): the @font-face rules and
+ * variables, and the text and headings files preloaded. A store that
+ * publishes on itself has them in the live version; older ones in the build.
+ */
+function fontsHead(site, lang) {
+    const fonts = site ? site.json['config/branding.json']?.fonts : branding.fonts
+    const css = brandFontsCss(fonts)
+    if (!css) return ''
+    const preloads = brandFontPreloads(fonts, lang)
+        .map((href) => `<link rel="preload" as="font" type="font/woff2" href="${attr(href)}" crossorigin>`)
+        .join('')
+    return `${preloads}<style id="qwoo-fonts">${css.replace(/</g, '\\3c ')}</style>`
+}
+
 // *.vercel.app addresses are the deployment's internal address, not the
 // store's: keep them out of search engines (the store's own address is the
 // canonical one anyway).
@@ -385,6 +401,7 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
           </style>
           ${brandDevFixStyle}
           ${siteHead(site)}
+          ${fontsHead(site, pageLang)}
         `
 
                 const bodyBottom = Object.entries(states)

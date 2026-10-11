@@ -29,8 +29,8 @@ import path from 'node:path'
 const { CONTENT_REPO, QWOO_CONTENT_TOKEN_URL, QWOO_CONTENT_KEY, WP_BACKEND_URL, PROXY_SHARED_SECRET } = process.env
 
 /** Folders in public/ that belong to a store's content and are replaced as a whole. */
-const CONTENT_DIRS = ['config', 'data', 'sections', 'homepage-hero', 'branding', 'icons']
-const CONTENT_RE = /^(config|data|sections|homepage-hero|branding|icons)\/[^/].*$|^favicon\.ico$/
+const CONTENT_DIRS = ['config', 'data', 'sections', 'homepage-hero', 'branding', 'brand-fonts', 'icons']
+const CONTENT_RE = /^(config|data|sections|homepage-hero|branding|brand-fonts|icons)\/[^/].*$|^favicon\.ico$/
 /** Where this build's store files came from (read by scripts/after-build.mjs). */
 const MARKER = path.resolve('.qwoo-content.json')
 

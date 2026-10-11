@@ -20,6 +20,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
+import { brandFontVar } from 'src/utils/brand-fonts.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToFlex } from 'src/composables/useSectionStyle.js'
 
 const props = defineProps({
@@ -83,6 +84,8 @@ const btnVars = computed(() => {
   if (txt) vars.color = `${txt} !important`
   const radius = toCssLength(d.value.border_radius)
   if (radius) vars['border-radius'] = radius
+  const font = brandFontVar(d.value.font, 'buttons')
+  if (font) vars['font-family'] = font
   return vars
 })
 </script>

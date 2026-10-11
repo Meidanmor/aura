@@ -17,6 +17,7 @@ export const LIVE_PATH_PREFIXES = [
   '/sections/',
   '/homepage-hero/',
   '/branding/',
+  '/brand-fonts/',
   '/icons/',
 ]
 

@@ -21,6 +21,7 @@
 import { computed } from 'vue'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
+import { brandFontVar } from 'src/utils/brand-fonts.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToText } from 'src/composables/useSectionStyle.js'
 
 const TAGS = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
@@ -55,10 +56,12 @@ const sizeClasses = computed(() => {
 const titleStyle = computed(() => ({
   color: resolveGlobalColor(d.value.title_color) || undefined,
   fontWeight: d.value.font_weight || undefined,
+  fontFamily: brandFontVar(d.value.title_font, 'headings'),
 }))
 
 const subtitleStyle = computed(() => ({
   color: resolveGlobalColor(d.value.subtitle_color) || undefined,
+  fontFamily: brandFontVar(d.value.subtitle_font, 'text'),
 }))
 </script>
 

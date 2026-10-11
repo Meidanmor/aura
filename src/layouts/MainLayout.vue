@@ -96,6 +96,8 @@
 import {ref, computed, watch, onMounted, onUnmounted, useSSRContext} from 'vue'
 import { loadPageConfig, subscribeToLiveConfig } from 'src/utils/config-loader'
 import { resolveHeroImageSrc } from 'src/utils/resolve-hero-image'
+import { applyBrandFonts } from 'src/utils/brand-fonts.js'
+import { isNativeApp, liveUrl } from 'src/utils/native-app'
 import { useQuasar } from 'quasar'
 import cart from 'src/stores/cart'
 import wishlist from 'src/stores/wishlist'
@@ -521,12 +523,17 @@ onMounted(async () => {
     if (freshFooterConfig) footerSettings.value = freshFooterConfig
   }
 
+  // The native app has no server render: its brand fonts are put on the page here.
+  if (isNativeApp()) applyBrandFonts(brandSettings.value?.fonts, { url: liveUrl })
+
   // Live Preview (Shop Builder admin iframe) — no-op everywhere else,
   // since subscribeToLiveConfig() checks for ?qwoo_editor=1 internally.
   liveConfigUnsubscribers.push(
       subscribeToLiveConfig('branding', (data) => {
         brandSettings.value = data
         applyGlobalColors(data?.global_colors)
+        // The preview's fonts come from Google's font server (not published yet).
+        applyBrandFonts(data?.fonts || null, { remote: true })
       }),
       subscribeToLiveConfig('header', (data) => { headerSettings.value = data }),
       subscribeToLiveConfig('footer', (data) => { footerSettings.value = data })

@@ -34,9 +34,12 @@ const TIMEOUT_MS = 5000
 const VERSION_RE = /^[a-f0-9]{20,40}$/
 
 /** Folders and root files of the store's content (the same list as the store's). */
-const CONTENT_RE = /^(config|data|sections|homepage-hero|branding|icons)\/[^?#]+$|^favicon\.ico$/
-/** Named after their attachment ("12-logo.png"): a new image is a new address. */
-const STABLE_RE = /^(sections|branding|homepage-hero)\/\d+-[^/]+$/
+const CONTENT_RE = /^(config|data|sections|homepage-hero|branding|brand-fonts|icons)\/[^?#]+$|^favicon\.ico$/
+/**
+ * Named after their attachment ("12-logo.png") or their content (brand fonts,
+ * "inter-latin-300-800-1a2b3c4d5e.woff2"): a new file is a new address.
+ */
+const STABLE_RE = /^(sections|branding|homepage-hero)\/\d+-[^/]+$|^brand-fonts\/[a-z0-9.-]+-[a-f0-9]{10}\.woff2$/
 /** Requests that never need the published files. */
 const SKIP_RE = /^\/(assets|wp-json|wp-admin|_quasar|js|css|fonts)\/|^\/(sw|service-worker)\.js$/
 
@@ -54,6 +57,7 @@ const TYPES = {
   webm: 'video/webm',
   txt: 'text/plain; charset=utf-8',
   xml: 'application/xml; charset=utf-8',
+  woff2: 'font/woff2',
 }
 
 let pointer = null // { version, manifest, files }; version null: nothing published on the store yet
@@ -229,6 +233,8 @@ async function serveFile(req, res, s, rel, file) {
   res.setHeader('X-Content-Type-Options', 'nosniff')
   // An SVG opened on its own never runs anything (as an <img> nothing changes).
   if (ext === 'svg') res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; img-src data:; sandbox")
+  // Fonts are always fetched with CORS (the native app loads them from this address).
+  if (ext === 'woff2') res.setHeader('Access-Control-Allow-Origin', '*')
   cacheHeaders(res, rel, ext)
 
   if (req.headers['if-none-match'] === etag) return res.status(304).end()
