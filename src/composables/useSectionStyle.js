@@ -87,18 +87,15 @@ export function alignToFlex(v) {
 export const alignToText = (v) => (v === 'default' ? 'start' : ['left', 'center', 'right'].includes(v) ? v : null)
 
 /**
- * A background image: one { url } (older data) or one per screen size
- * ({ desktop, tablet, mobile }, already filled in by the store).
+ * A background image: { url, width, height } for desktop (all screens in
+ * older data), plus `tablet` and `mobile` images when they differ (already
+ * filled in by the store).
  */
 export function bgImageUrls(img) {
-  if (img && typeof img === 'object' && ('desktop' in img || 'tablet' in img || 'mobile' in img)) {
-    const d = img.desktop?.url || ''
-    const t = img.tablet?.url || d
-    const m = img.mobile?.url || t
-    return { desktop: d, tablet: t, mobile: m }
-  }
-  const u = img?.url || ''
-  return { desktop: u, tablet: u, mobile: u }
+  const d = (typeof img === 'string' ? img : img?.url) || ''
+  const t = img?.tablet?.url || d
+  const m = img?.mobile?.url || t
+  return { desktop: d, tablet: t, mobile: m }
 }
 
 /* ------------------------------------------------------------------ */

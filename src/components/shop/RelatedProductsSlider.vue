@@ -44,7 +44,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import ProductCard from 'src/components/shop/ProductCard.vue'
 import AppCarousel from 'src/components/app/AppCarousel.vue'
