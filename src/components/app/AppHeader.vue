@@ -1,6 +1,5 @@
 <template>
   <q-header :class="!stickyHeader ? '' : 'sticky'" style="padding: 5px 0; background-color: var(--q-bg)">
-    {{headerConfig}}
     <SectionRenderer :sections="headerConfig?.sections" page="header"/>
 
     <div class="container">
