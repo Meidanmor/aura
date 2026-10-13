@@ -3,6 +3,7 @@
     <AnnouncementBar v-if="headerSettings?.announcement?.enabled && (typeof headerSettings?.announcement?.text === 'string' && headerSettings.announcement.text.trim().length > 0)" :announcement="headerSettings?.announcement" />
 
     <AppHeader
+        :header-config="headerSettings"
         :is-super-admin="isSuperAdmin"
         @open-menu="mobileMenuDrawer = true"
         @toggle-cart="toggleCart()"

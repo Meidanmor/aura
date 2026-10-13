@@ -1,5 +1,8 @@
 <template>
   <q-header :class="!stickyHeader ? '' : 'sticky'" style="padding: 5px 0; background-color: var(--q-bg)">
+    {{headerConfig}}
+    <SectionRenderer :sections="headerConfig?.sections" page="header"/>
+
     <div class="container">
       <q-toolbar class="flex justify-between q-pa-sm">
         <div class="flex nav-items-el">
@@ -53,10 +56,15 @@ import NavMenu from './NavMenu.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
 import cart from 'src/stores/cart'
 import { storeName as liveStoreName } from 'src/utils/site-info.js'
+import SectionRenderer from "components/sections/SectionRenderer.vue";
 
 const storeName = liveStoreName()
 
 defineProps({
+  headerConfig: {
+    type: Object,
+    required: true
+  },
   isSuperAdmin: {
     type: Boolean,
     required: true

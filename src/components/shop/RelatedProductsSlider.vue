@@ -1,5 +1,5 @@
 <template>
-  <section class="related-products">
+  <section :style="cssVars" class="related-products">
     <div class="container">
       <h2 class="text-h5 q-mb-md text-center">{{ t('Related Products') }}</h2>
 
@@ -44,7 +44,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import {ref, onMounted, watch, computed} from 'vue'
 import { useQuasar } from 'quasar'
 import ProductCard from 'src/components/shop/ProductCard.vue'
 import AppCarousel from 'src/components/app/AppCarousel.vue'
@@ -76,6 +76,12 @@ updatePerSlide()
 // useCarousel drives chunking based on its own internal breakpoints (1/2/3 per slide)
 const carousel = useCarousel(async () => products.value, {
   chunkSizes: { xs: 2, sm: 3, md: 4 }
+})
+
+const cssVars = computed(() => {
+  const vars = {}
+  vars['--slides'] = carousel.activeChunkSize.value
+  return vars
 })
 
 watch(() => $q.screen.name, () => {
