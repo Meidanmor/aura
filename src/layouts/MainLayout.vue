@@ -94,7 +94,7 @@
 </template>
 
 <script setup>
-import {ref, computed, watch, onMounted, onUnmounted, useSSRContext} from 'vue'
+import {ref, computed, watch, onMounted, onUnmounted, useSSRContext, provide} from 'vue'
 import { loadPageConfig, subscribeToLiveConfig } from 'src/utils/config-loader'
 import { resolveHeroImageSrc } from 'src/utils/resolve-hero-image'
 import { applyBrandFonts } from 'src/utils/brand-fonts.js'
@@ -201,6 +201,20 @@ if (process.env.SERVER) {
   headerSettings.value = ssr?.headerConfig || null
   footerSettings.value = ssr?.footerConfig || null
 }
+
+const siteMenus = computed(() => {
+  return headerSettings.value?.menus || footerSettings.value?.menus || {}
+})
+const headerMenu = computed(() => headerSettings.value?.menu || [])
+
+provide('siteMenus', siteMenus)
+provide('headerMenu', headerMenu)
+provide('layoutActions', {
+  openMobileMenu: () => { mobileMenuDrawer.value = true },
+  closeMobileMenu: () => { mobileMenuDrawer.value = false },
+  toggleCart: () => { toggleCart() },
+  toggleWishlist: () => { toggleWishlistDrawer() },
+})
 
 async function hideSplash() {
   if (!Platform.is.capacitor) return

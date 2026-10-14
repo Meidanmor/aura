@@ -34,6 +34,9 @@
             :data="block"
             :block-id="block.id"
             :page="page"
+            @open-menu="layoutActions?.openMobileMenu"
+            @toggle-cart="layoutActions?.toggleCart"
+            @toggle-wishlist="layoutActions?.toggleWishlist"
         />
       </div>
     </div>
@@ -50,7 +53,7 @@
  *
  * To add a block type: register its component in `blockComponents`.
  */
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import CategoryGridSection from './CategoryGridSection.vue'
 import TestimonialsSection from './TestimonialsSection.vue'
 import FeaturedProductsSection from './FeaturedProductsSection.vue'
@@ -92,6 +95,8 @@ const props = defineProps({
   // blocks that talk to the backend (form submissions).
   page: { type: String, default: 'home' },
 })
+
+const layoutActions = inject('layoutActions', null)
 
 const blockComponents = {
   heading: HeadingBlock,
