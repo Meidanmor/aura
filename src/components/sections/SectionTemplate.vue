@@ -80,6 +80,7 @@ import ProductGridBlock from '../blocks/ProductGridBlock.vue'
 import CarouselBlock from '../blocks/CarouselBlock.vue'
 import SocialLinksBlock from '../blocks/SocialLinksBlock.vue'
 import SectionBgVideo from './SectionBgVideo.vue'
+import MenuWidget from '../blocks/MenuWidget.vue'
 import { buildContainerStyle, buildBlockWrapperStyle } from 'src/composables/useSectionStyle.js'
 
 defineOptions({ name: 'SectionTemplate' })
@@ -122,6 +123,7 @@ const blockComponents = {
   product_grid: ProductGridBlock,
   carousel: CarouselBlock,
   social_links: SocialLinksBlock,
+  menu_widget: MenuWidget,
 }
 
 const container = computed(() => buildContainerStyle(props.data.style || {}))

@@ -22,11 +22,6 @@
           <q-btn flat dense :icon="matMenu" :aria-label="t('Open menu')" data-action="menu" class="lt-md" @click="emit('open-menu')" />
 
         </div>
-        <router-link to="/" :aria-label="t('Navigate to home page')" class="flex items-center order-first">
-          <img v-if="appLogo" :alt="storeName ? t('{name} logo', { name: storeName }) : t('Logo')" :src="appLogo" :width="logoWidth || undefined" :height="logoHeight || undefined" class="header-logo" loading="eager" decoding="sync" fetchpriority="high" />
-          <!-- No logo yet: the store's name instead of a broken image. -->
-          <span v-else class="header-store-name">{{ storeName || t('Home') }}</span>
-        </router-link>
         <div class="flex items-center no-wrap">
           <LanguageSwitcher class="gt-sm" />
           <q-btn flat dense :icon="matFavoriteBorder" :aria-label="t('Add to wishlist')" data-action="wishlist" @click="emit('toggle-wishlist')" class="q-ml-sm q-mr-sm">
