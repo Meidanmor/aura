@@ -158,7 +158,7 @@ const css = computed(() => {
       <q-toolbar class="hm-desktop flex justify-between q-pa-sm">
         <div class="flex nav-items-el">
           <!-- Desktop Navigation -->
-          <q-toolbar-title class="nav-bar gt-sm">
+          <q-toolbar-title class="nav-bar">
             <NavMenu v-if="menuItems.length" :items="menuItems" />
           </q-toolbar-title>
         </div>
