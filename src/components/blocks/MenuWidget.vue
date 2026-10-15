@@ -58,10 +58,9 @@ const breakpoint = computed(() => {
 // Class that scopes the generated CSS to this block instance.
 const scope = computed(() => `hm-${(props.blockId || 'x').replace(/[^\w-]/g, '')}`)
 
-// The phone menu's drawer (useDrawers.js): one per menu, shared by every widget
-// showing it, and only while a phone button can show it.
+// This widget's own drawer (useDrawers.js), only while its phone button can show it.
 const drawer = useDrawer(
-  () => (mobileMenuEnabled.value && breakpoint.value !== null ? `menu:${d.value.menu_id || 'default'}` : ''),
+  () => (mobileMenuEnabled.value && breakpoint.value !== null ? `menu:${props.blockId || 'menu'}` : ''),
   () => ({
     kind: 'menu',
     items: menuItems.value,
@@ -70,6 +69,7 @@ const drawer = useDrawer(
     color: colorValue(d.value.drawer_text_color),
     showLanguages: d.value.drawer_show_languages !== false,
     showNotifications: d.value.drawer_show_notifications !== false,
+    swipe: d.value.swipe || 'auto',
   }),
 )
 

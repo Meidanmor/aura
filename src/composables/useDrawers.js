@@ -4,12 +4,11 @@
  * The layout (MainLayout.vue) keeps the list and draws one q-drawer per
  * entry; a widget adds its drawer when it's on the page and takes it back
  * when it leaves (useDrawer). So the cart drawer exists only while a Mini
- * Cart is shown, each Menu widget gets a drawer with its own menu, and two
- * widgets showing the same menu share one drawer.
+ * Cart is shown, and each Menu widget has its own drawer with its own menu.
  *
- *   key    'cart' | 'wishlist' | 'menu:{menu id}'
+ *   key    'cart' | 'wishlist' | 'menu:{block id}'
  *   entry  { kind: 'cart' | 'wishlist' | 'menu', items?, title, bg, color,
- *            showLanguages?, showNotifications? }
+ *            showLanguages?, showNotifications?, swipe: auto | none | left | right }
  *
  * Drawers are drawn in the browser only (after hydration), so widgets add
  * them on mount.

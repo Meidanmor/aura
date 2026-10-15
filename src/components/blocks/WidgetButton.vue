@@ -78,7 +78,7 @@ function onClick(e) {
 
 <style scoped>
 .widget-btn__inner { display: inline-flex; align-items: center; gap: 8px; }
-.widget-btn__icon { position: relative; display: inline-flex; font-size: 24px; line-height: 1; }
+.widget-btn__icon { position: relative; display: inline-flex; font-size: 14px; line-height: 1; }
 .widget-btn__icon.has-color { color: var(--wb-icon-color); }
 .widget-btn__icon.has-color :deep(svg) { fill: var(--wb-icon-color); }
 .widget-btn__img { width: 1em; height: 1em; object-fit: contain; }

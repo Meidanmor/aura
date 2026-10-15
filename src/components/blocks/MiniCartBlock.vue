@@ -32,6 +32,7 @@ const drawer = useDrawer(
     title: d.value.drawer_title ?? t('Cart'),
     bg: resolveGlobalColor(d.value.drawer_bg) || '',
     color: resolveGlobalColor(d.value.drawer_text_color) || '',
+    swipe: d.value.swipe || 'auto',
   }),
 )
 

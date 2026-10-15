@@ -227,31 +227,28 @@ const $q = useQuasar()
 const drawerWidth = computed(() => Math.min(400, $q.screen.width * 0.9))
 
 /*
- * Which drawer a swipe from each edge of the screen opens (Header settings
- * swipe_left / swipe_right: '' automatic, 'none', 'menu' (the first menu on
- * the page), 'menu:{id}', 'cart', 'wishlist'). Automatic: the menu from the
- * start side, the cart from the end side. Only drawers on the page open.
+ * Swipes: each Menu, Mini Cart and Mini Wishlist widget says whether its
+ * drawer opens by swiping in from an edge (its "swipe": auto, none, left,
+ * right). Automatic: menus from the start side of the screen, the cart and
+ * wishlist from the end side. One drawer per edge: the first widget on the
+ * page (header first) wins.
  */
 const rtl = computed(() => !!$q.lang.rtl)
-const swipeTarget = (value, fallback) => {
-  const v = value || fallback
-  if (v === 'none') return ''
-  if (v === 'menu') return drawers.firstMenu()
-  return drawers.has(v) ? v : ''
-}
-const edgeKeys = computed(() => {
-  const settings = headerSettings.value?.settings || {}
-  void drawers.state.order.length // follow drawers coming and going
-  const left = swipeTarget(settings.swipe_left, rtl.value ? 'cart' : 'menu')
-  const right = swipeTarget(settings.swipe_right, rtl.value ? 'menu' : 'cart')
-  return { left, right: right === left ? '' : right }
-})
-// A drawer's side on the screen: its swipe edge, else menus at the start and the cart / wishlist at the end.
+// The side a drawer belongs on: the edge its widget chose, else menus at the start, the rest at the end.
 const screenSide = (key) => {
-  if (edgeKeys.value.left === key) return 'left'
-  if (edgeKeys.value.right === key) return 'right'
+  const swipe = drawers.state.entries[key]?.swipe
+  if (swipe === 'left' || swipe === 'right') return swipe
   return key.startsWith('menu:') !== rtl.value ? 'left' : 'right'
 }
+const edgeKeys = computed(() => {
+  const edges = { left: '', right: '' }
+  for (const key of drawers.state.order) {
+    if ((drawers.state.entries[key]?.swipe || 'auto') === 'none') continue
+    const edge = screenSide(key)
+    if (!edges[edge]) edges[edge] = key
+  }
+  return edges
+})
 // Quasar mirrors a drawer's side on right-to-left pages.
 const qSide = (key) => {
   const side = screenSide(key)
