@@ -23,7 +23,7 @@
  */
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { LANGUAGES } from 'src/i18n/index.js'
+//import { LANGUAGES } from 'src/i18n/index.js'
 import { allLangs, currentLang, prefixOf, withLang } from 'src/i18n/lang.js'
 
 // Small flags drawn here (emoji flags don't show on Windows).
