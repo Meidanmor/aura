@@ -84,6 +84,7 @@ import CarouselBlock from '../blocks/CarouselBlock.vue'
 import SocialLinksBlock from '../blocks/SocialLinksBlock.vue'
 import SectionBgVideo from './SectionBgVideo.vue'
 import MenuWidget from '../blocks/MenuWidget.vue'
+import LanguageSwitcherBlock from '../blocks/LanguageSwitcherBlock.vue'
 import { buildContainerStyle, buildBlockWrapperStyle } from 'src/composables/useSectionStyle.js'
 
 defineOptions({ name: 'SectionTemplate' })
@@ -129,6 +130,7 @@ const blockComponents = {
   carousel: CarouselBlock,
   social_links: SocialLinksBlock,
   menu_widget: MenuWidget,
+  language_switcher: LanguageSwitcherBlock,
 }
 
 const container = computed(() => buildContainerStyle(props.data.style || {}))
