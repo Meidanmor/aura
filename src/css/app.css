@@ -404,7 +404,6 @@ body section {
 @media (min-width: 1024px) {
     .sb-hide-d { display: none !important; }
     .sb-bg-fixed { background-attachment: fixed; }
-    .sb-row-d > .sb-block:not(.sb-has-w) { flex: 1 1 0; }
 }
 
 @media (max-width: 1023px) {
@@ -442,12 +441,10 @@ body section {
 
 @media (min-width: 768px) and (max-width: 1023px) {
     .sb-hide-t { display: none !important; }
-    .sb-row-t > .sb-block:not(.sb-has-w) { flex: 1 1 0; }
 }
 
 @media (max-width: 767px) {
     .sb-hide-m { display: none !important; }
-    .sb-row-m > .sb-block:not(.sb-has-w) { flex: 1 1 0; }
     .sb-pad-small  { padding: 24px 16px; }
     .sb-pad-medium { padding: 48px 16px; }
     .sb-pad-large  { padding: 80px 16px; }
