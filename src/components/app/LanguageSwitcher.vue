@@ -1,5 +1,5 @@
 <template>
-  <nav v-if="others.length" class="lang-switcher" :aria-label="t('Language')">
+  <nav v-if="others.length" class="lang-switcher q-btn--dense" :aria-label="t('Language')">
     <a
       v-for="code in others"
       :key="code"
