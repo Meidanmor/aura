@@ -112,7 +112,6 @@ const css = computed(() => {
 <template>
   <div :class="scope" class="menu-widget-wrap">
     <component :is="'style'" v-if="css">{{ css }}</component>
-
     <!-- Vertical Layout (Lists, Footers, Sidebars) -->
     <ul v-if="isVertical && Array.isArray(menuItems) && menuItems.length" class="menu-vertical" role="list">
       <li v-for="(item, i) in menuItems" :key="item.id || i" class="menu-v-item">
@@ -156,7 +155,14 @@ const css = computed(() => {
 
     <!-- Horizontal Navbar Layout (Dropdowns, Top Bars, Header) -->
     <template v-else-if="Array.isArray(menuItems)">
-      <NavMenu v-if="menuItems.length" class="hm-desktop" :items="menuItems" />
+      <q-toolbar class="hm-desktop flex justify-between q-pa-sm">
+        <div class="flex nav-items-el">
+          <!-- Desktop Navigation -->
+          <q-toolbar-title class="nav-bar gt-sm">
+            <NavMenu v-if="menuItems.length" :items="menuItems" />
+          </q-toolbar-title>
+        </div>
+      </q-toolbar>
       <div v-if="mobileMenuEnabled" class="hm-toggle">
         <q-btn flat dense :icon="matMenu" :aria-label="t('Open menu')" data-action="menu" @click="onToggleMobileMenu" />
       </div>
