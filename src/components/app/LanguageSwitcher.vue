@@ -10,7 +10,7 @@
     >
       <!-- eslint-disable-next-line vue/no-v-html -- fixed flag drawings from FLAGS below -->
       <span class="lang-flag" aria-hidden="true" v-html="FLAGS[flagOf(code)] || ''" />
-      <span>{{ LANGUAGES[code]?.name || code }}</span>
+      <!--<span>{{ LANGUAGES[code]?.name || code }}</span>-->
     </a>
   </nav>
 </template>
@@ -42,7 +42,7 @@ const hrefOf = (code) => withLang(route.fullPath, code)
 </script>
 
 <style scoped>
-.lang-switcher { display: inline-flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.lang-switcher { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
 .lang-link { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: inherit; opacity: .85; }
 .lang-link:hover, .lang-link:focus-visible { opacity: 1; text-decoration: underline; }
 .lang-flag { display: inline-flex; width: 22px; height: 16px; border-radius: 2px; overflow: hidden; box-shadow: 0 0 0 1px rgba(0, 0, 0, .12); }
