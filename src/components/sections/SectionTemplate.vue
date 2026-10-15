@@ -87,6 +87,7 @@ import MenuWidget from '../blocks/MenuWidget.vue'
 import LanguageSwitcherBlock from '../blocks/LanguageSwitcherBlock.vue'
 import { buildContainerStyle, buildBlockWrapperStyle } from 'src/composables/useSectionStyle.js'
 import MiniCartBlock from "components/blocks/MiniCartBlock.vue";
+import MiniWishlistBlock from "components/blocks/MiniWishlistBlock.vue";
 
 defineOptions({ name: 'SectionTemplate' })
 
@@ -133,6 +134,7 @@ const blockComponents = {
   menu_widget: MenuWidget,
   language_switcher: LanguageSwitcherBlock,
   mini_cart: MiniCartBlock,
+  mini_wishlist: MiniWishlistBlock,
 }
 
 const container = computed(() => buildContainerStyle(props.data.style || {}))
