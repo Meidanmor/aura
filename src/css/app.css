@@ -230,9 +230,9 @@ img.q-img__image {
 .nav-bar a:hover:before {
   width: 100%;
 }
-header .nav-items-el {
+/*header .nav-items-el {
     margin-left: auto;
-}
+}*/
 header svg {
     fill: var(--q-secondary);
 }
@@ -857,12 +857,12 @@ footer .footer-bottom {
         margin-top: 20px;
     }
 }
-@media(min-width: 1024px){
+/*@media(min-width: 1024px){
     header .nav-items-el {
         margin-right: auto;
         margin-left: 30px;
     }
-}
+}*/
 
 @media(min-width: 768px){
     .mobile-only {
