@@ -5,68 +5,44 @@
     <AppHeader
         :header-config="headerSettings"
         :is-super-admin="isSuperAdmin"
-        @open-menu="mobileMenuDrawer = true"
-        @toggle-cart="toggleCart()"
-        @toggle-wishlist="toggleWishlistDrawer"
         :app-logo="brandSettings?.logo"
         :logo-width="brandSettings?.logo_width"
         :logo-height="brandSettings?.logo_height"
         :sticky-header="headerSettings?.settings?.sticky"
         :menu="Array.isArray(headerSettings?.menu) ? headerSettings.menu : null"
     />
-    <!-- Mobile Navigation Drawer -->
-    <q-drawer
-        ref="mobileDrawerEl"
-        v-model="mobileMenuDrawer"
-        side="left"
-        overlay
-        behavior="mobile"
-        :width="drawerWidth"
-        transition-show="slide-right"
-        transition-hide="slide-left"
-        :touch-area-width="250"
-        v-if="uiHydrated"
-    >
-      <MobileNavDrawer
-          :menu="Array.isArray(headerSettings?.menu) ? headerSettings.menu : null"
-          :supported="supported"
-          :permission="permission"
-          :is-super-admin="isSuperAdmin"
-          @close="mobileMenuDrawer = false"
-          @subscribe="handleSubscribe"
-      />
-
-    </q-drawer>
-
-    <!-- Wishlist Drawer -->
-    <q-drawer
-        v-model="wishlistDrawerOpen"
-        side="right"
-        overlay
-        :width="drawerWidth"
-        behavior="mobile"
-        v-if="uiHydrated"
-    >
-      <WishlistDrawer
-          @toggle-wishlist="toggleWishlistDrawer"
-      />
-    </q-drawer>
-    <!-------------- ------->
-    <q-drawer
-        ref="cartDrawerEl"
-        v-model="cartDrawer"
-        side="right"
-        overlay
-        behavior="mobile"
-        :width="drawerWidth"
-        class="cart-drawer"
-        :touch-area-width="250"
-        v-if="uiHydrated"
-    >
-      <CartDrawer
-          @toggle-cart="toggleCart()"
-      />
-    </q-drawer>
+    <!-- The drawers the page's widgets asked for (Menu, Mini Cart, Mini Wishlist): src/composables/useDrawers.js. -->
+    <template v-if="uiHydrated">
+      <q-drawer
+          v-for="dr in drawerList"
+          :key="dr.key"
+          :ref="(c) => setDrawerRef(dr.key, c)"
+          :model-value="drawers.state.open === dr.key"
+          :side="qSide(dr.key)"
+          overlay
+          behavior="mobile"
+          no-swipe-open
+          :width="drawerWidth"
+          :class="['widget-drawer', `widget-drawer--${dr.kind}`, { 'cart-drawer': dr.kind === 'cart' }]"
+          :style="{ background: dr.bg || undefined, color: dr.color || undefined }"
+          @update:model-value="(v) => (v ? drawers.open(dr.key) : drawers.close(dr.key))"
+      >
+        <MobileNavDrawer
+            v-if="dr.kind === 'menu'"
+            :menu="Array.isArray(dr.items) ? dr.items : null"
+            :title="dr.title"
+            :show-languages="dr.showLanguages !== false"
+            :show-notifications="dr.showNotifications !== false"
+            :supported="supported"
+            :permission="permission"
+            :is-super-admin="isSuperAdmin"
+            @close="drawers.close()"
+            @subscribe="handleSubscribe"
+        />
+        <CartDrawer v-else-if="dr.kind === 'cart'" :title="dr.title" @toggle-cart="drawers.close()" />
+        <WishlistDrawer v-else :title="dr.title" @toggle-wishlist="drawers.close()" />
+      </q-drawer>
+    </template>
 
     <q-page-container style="padding-top: 0">
       <main>
@@ -98,6 +74,7 @@ import {ref, computed, watch, onMounted, onUnmounted, useSSRContext, provide} fr
 import { loadPageConfig, subscribeToLiveConfig } from 'src/utils/config-loader'
 import { resolveHeroImageSrc } from 'src/utils/resolve-hero-image'
 import { applyBrandFonts } from 'src/utils/brand-fonts.js'
+import { provideDrawers } from 'src/composables/useDrawers.js'
 import { isNativeApp, liveUrl } from 'src/utils/native-app'
 import { useQuasar } from 'quasar'
 import cart from 'src/stores/cart'
@@ -209,11 +186,15 @@ const headerMenu = computed(() => headerSettings.value?.menu || [])
 
 provide('siteMenus', siteMenus)
 provide('headerMenu', headerMenu)
+// The page's drawers: each Menu, Mini Cart and Mini Wishlist widget adds its own.
+const drawers = provideDrawers()
+const drawerList = computed(() => drawers.state.order.map((key) => ({ key, ...drawers.state.entries[key] })))
+// For widgets written before the drawer list (they emit these).
 provide('layoutActions', {
-  openMobileMenu: () => { mobileMenuDrawer.value = true },
-  closeMobileMenu: () => { mobileMenuDrawer.value = false },
-  toggleCart: () => { toggleCart() },
-  toggleWishlist: () => { toggleWishlistDrawer() },
+  openMobileMenu: () => drawers.open(drawers.firstMenu()),
+  closeMobileMenu: () => drawers.close(),
+  toggleCart: () => drawers.toggle('cart'),
+  toggleWishlist: () => drawers.toggle('wishlist'),
 })
 
 async function hideSplash() {
@@ -242,24 +223,53 @@ const notificationSoftAskVisible = computed(() =>
 )
 const isSuperAdmin = isAdmin
 const $q = useQuasar()
-const mobileMenuDrawer = ref(false)
 
-const wishlistDrawerOpen = ref(false)
-const cartDrawer = ref(false)
 const drawerWidth = computed(() => Math.min(400, $q.screen.width * 0.9))
-const toggleCart = () => (cartDrawer.value = !cartDrawer.value)
-const toggleWishlistDrawer = () => (wishlistDrawerOpen.value = !wishlistDrawerOpen.value)
 
-const mobileDrawerEl = ref(null)
-const cartDrawerEl = ref(null)
+/*
+ * Which drawer a swipe from each edge of the screen opens (Header settings
+ * swipe_left / swipe_right: '' automatic, 'none', 'menu' (the first menu on
+ * the page), 'menu:{id}', 'cart', 'wishlist'). Automatic: the menu from the
+ * start side, the cart from the end side. Only drawers on the page open.
+ */
+const rtl = computed(() => !!$q.lang.rtl)
+const swipeTarget = (value, fallback) => {
+  const v = value || fallback
+  if (v === 'none') return ''
+  if (v === 'menu') return drawers.firstMenu()
+  return drawers.has(v) ? v : ''
+}
+const edgeKeys = computed(() => {
+  const settings = headerSettings.value?.settings || {}
+  void drawers.state.order.length // follow drawers coming and going
+  const left = swipeTarget(settings.swipe_left, rtl.value ? 'cart' : 'menu')
+  const right = swipeTarget(settings.swipe_right, rtl.value ? 'menu' : 'cart')
+  return { left, right: right === left ? '' : right }
+})
+// A drawer's side on the screen: its swipe edge, else menus at the start and the cart / wishlist at the end.
+const screenSide = (key) => {
+  if (edgeKeys.value.left === key) return 'left'
+  if (edgeKeys.value.right === key) return 'right'
+  return key.startsWith('menu:') !== rtl.value ? 'left' : 'right'
+}
+// Quasar mirrors a drawer's side on right-to-left pages.
+const qSide = (key) => {
+  const side = screenSide(key)
+  return rtl.value ? (side === 'left' ? 'right' : 'left') : side
+}
+
+const drawerRefs = {}
+const setDrawerRef = (key, component) => {
+  if (component) drawerRefs[key] = component
+  else delete drawerRefs[key]
+}
 
 let startX = 0
 let startY = 0
 let currentX = 0
 let dragging = false
-let activeDrawer = null // 'left' (menu) | 'right' (cart): the drawer's side as written
-// The edge it slides in from on screen: right-to-left pages (Hebrew) show the
-// menu on the right and the cart on the left, so swipes follow the screen.
+let activeDrawer = null // the drawer's key
+// The edge of the screen it slides in from.
 let activeEdge = null // 'left' | 'right'
 let activeEl = null
 let activeAside = null
@@ -270,7 +280,7 @@ const DRAG_ACTIVATION_DISTANCE = 10
 const OPEN_THRESHOLD_RATIO = 0.35
 const MAX_BACKDROP_OPACITY = 0.4 // matches Quasar's own default overlay darkness
 
-const getEl = (r) => r?.value?.$el || null
+const getEl = (key) => drawerRefs[key]?.$el || null
 const getAside = (el) => el?.querySelector('aside') || null
 const getBackdrop = (el) => el?.querySelector('.q-drawer__backdrop') || null
 
@@ -308,7 +318,7 @@ const inSidewaysScroller = (target) => {
 const handlePointerDown = (e) => {
   // Only left mouse button, ignore right-click/middle-click
   if (e.pointerType === 'mouse' && e.button !== 0) return
-  if (mobileMenuDrawer.value || cartDrawer.value || wishlistDrawerOpen.value) return
+  if (drawers.state.open) return
   if (inSidewaysScroller(e.target)) {
     activePointerId = null
     return
@@ -328,7 +338,7 @@ const handlePointerDown = (e) => {
 
 const handlePointerMove = (e) => {
   if (activePointerId === null || e.pointerId !== activePointerId) return
-  if (mobileMenuDrawer.value || cartDrawer.value || wishlistDrawerOpen.value) return
+  if (drawers.state.open) return
 
   const dx = e.clientX - startX
   const dy = e.clientY - startY
@@ -340,8 +350,14 @@ const handlePointerMove = (e) => {
     dragging = true
     // A left-to-right swipe pulls in the drawer on the left edge of the screen.
     activeEdge = dx > 0 ? 'left' : 'right'
-    activeDrawer = (activeEdge === 'left') !== !!$q.lang.rtl ? 'left' : 'right'
-    activeEl = activeDrawer === 'left' ? getEl(mobileDrawerEl) : getEl(cartDrawerEl)
+    activeDrawer = edgeKeys.value[activeEdge]
+    activeEl = activeDrawer ? getEl(activeDrawer) : null
+    if (!activeEl) {
+      // Nothing opens from this edge.
+      dragging = false
+      activePointerId = null
+      return
+    }
     activeAside = getAside(activeEl)
     activeBackdrop = getBackdrop(activeEl)
     if (activeAside) activeAside.style.transition = 'none'
@@ -397,8 +413,7 @@ const handlePointerUp = (e) => {
     // only the cleanup waits for the CSS transition to visually finish
     resetDrag(el)
 
-    if (drawer === 'left') mobileMenuDrawer.value = true
-      else cartDrawer.value = true
+    drawers.open(drawer)
   } else {
     el.querySelector('aside').style.transform = edge === 'left' ? `translateX(-${width}px)` : `translateX(${width}px)`
     if (activeBackdrop) {
@@ -406,7 +421,7 @@ const handlePointerUp = (e) => {
       activeBackdrop.classList.add('hidden')
 
     }
-    setTimeout(() => resetDrag(el, !(drawer === 'left' ? mobileMenuDrawer.value : cartDrawer.value)), 200)
+    setTimeout(() => resetDrag(el, drawers.state.open !== drawer), 200)
   }
 
   dragging = false
@@ -611,20 +626,9 @@ onMounted(async () => {
 
   }
 
-  // Define headerBtnClick after scheduler so it can reference it
-  const headerBtnClick = async (e) => {
-    await scheduler()
-    // data-action, not the (translated) aria-label.
-    const btn = e.target.closest('[data-action]')
-    if (btn) {
-      const action = btn.getAttribute('data-action')
-      requestAnimationFrame(() => {
-        if (action === 'menu') mobileMenuDrawer.value = true
-        else if (action === 'wishlist') wishlistDrawerOpen.value = true
-        else if (action === 'cart') cartDrawer.value = true
-      })
-    }
-  }
+  // A click in the header draws the drawers right away. The widget's own click
+  // already asked for its drawer (useDrawers.js): it opens as soon as it's drawn.
+  const headerBtnClick = () => scheduler()
 
   document.querySelector('header').addEventListener('click', headerBtnClick, { passive: true })
 
@@ -660,7 +664,7 @@ onUnmounted(() => {
 })
 watch(() => cart.state.drawerOpen, val => {
   if(val === true) {
-    cartDrawer.value = val;
+    drawers.open('cart')
     cart.state.drawerOpen = false;
     //cart.fetchCart()
   }

@@ -5,14 +5,17 @@
  * The keys MUST match the plugin's icon lists in class-sb-constants.php:
  *   GENERAL_ICONS   -> generalIcons   (Icon List block)
  *   SOCIAL_NETWORKS -> socialNetworks (Social Links block)
+ *   CART_ICONS / WISHLIST_ICONS / MENU_ICONS -> cartIcons / wishlistIcons / menuIcons
  */
 import {
   matCheck, matCheckCircle, matStar, matFavorite, matLocalShipping, matVerified, matLock,
   matSupportAgent, matPhone, matEmail, matLocationOn, matSchedule, matBolt, matSpa, matRecycling,
   matCardGiftcard, matLoyalty, matSell, matPayments, matCreditCard, matAutorenew, matThumbUp,
   matEmojiEvents, matInventory, matShoppingBag, matInfo, matHelp, matArrowForward, matPublic,
-  matLanguage,
+  matLanguage, matShoppingCart, matShoppingBasket, matLocalMall, matFavoriteBorder,
+  matBookmarkBorder, matStarBorder, matMenu, matMenuOpen, matSegment, matMoreVert, matApps,
 } from '@quasar/extras/material-icons'
+import { outlinedShoppingCart, outlinedShoppingBag } from '@quasar/extras/material-icons-outlined'
 import {
   fabFacebookF, fabInstagram, fabTiktok, fabXTwitter, fabYoutube, fabLinkedinIn, fabPinterestP,
   fabThreads, fabSnapchat, fabWhatsapp, fabTelegram,
@@ -48,6 +51,32 @@ export const generalIcons = {
   help: matHelp,
   arrow: matArrowForward,
   globe: matPublic,
+}
+
+/**
+ * The header widgets' button icons (CART_ICONS, WISHLIST_ICONS, MENU_ICONS
+ * in class-sb-constants.php). "custom" is the owner's own image.
+ */
+export const cartIcons = {
+  cart: matShoppingCart,
+  cart_outline: outlinedShoppingCart,
+  bag: matShoppingBag,
+  bag_outline: outlinedShoppingBag,
+  basket: matShoppingBasket,
+  tote: matLocalMall,
+}
+export const wishlistIcons = {
+  heart_outline: matFavoriteBorder,
+  heart: matFavorite,
+  bookmark: matBookmarkBorder,
+  star: matStarBorder,
+}
+export const menuIcons = {
+  menu: matMenu,
+  menu_open: matMenuOpen,
+  short: matSegment,
+  dots: matMoreVert,
+  grid: matApps,
 }
 
 /** icon + official brand color + how to turn the admin's value into a link. */

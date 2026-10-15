@@ -3,7 +3,7 @@
 
     <div>
       <div class="sticky wishlist-drawer-header flex justify-between q-mb-md">
-        <div class="text-h6">{{ t('Wishlist') }}</div>
+        <div v-if="title !== ''" class="text-h6">{{ title ?? t('Wishlist') }}</div><span v-else />
         <q-btn flat dense :aria-label="t('Close wishlist drawer')" padding="none" :icon="matClose" @click="emit('toggle-wishlist')"/>
       </div>
       <div v-if="wishlist.state.items && wishlist.state.items.length === 0" class="text-center text-grey">
@@ -30,6 +30,11 @@
 import cart from 'src/stores/cart.js'
 import wishlist from 'src/stores/wishlist.js'
 import { matClose } from '@quasar/extras/material-icons'
+
+defineProps({
+  // The widget's drawer title (null: the default; '': no title).
+  title: { type: String, default: null },
+})
 
 const emit = defineEmits([
   'toggle-wishlist',

@@ -1,10 +1,12 @@
 <script setup>
 import { computed, inject } from 'vue'
-import { matMenu } from '@quasar/extras/material-icons'
 import NavMenu from 'components/app/NavMenu.vue'
 import { toCssLength, alignToFlex, alignToText } from 'src/composables/useSectionStyle.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { t } from 'src/i18n/index.js'
+import WidgetButton from './WidgetButton.vue'
+import { menuIcons } from 'src/utils/builder-icons.js'
+import { useDrawer } from 'src/composables/useDrawers.js'
 
 defineOptions({ name: 'MenuWidget' })
 
@@ -15,11 +17,9 @@ const props = defineProps({
   page: { type: String, default: 'home' },
 })
 
-const emit = defineEmits(['open-menu', 'toggle-cart', 'toggle-wishlist'])
 
 const siteMenus = inject('siteMenus', null)
 const headerMenu = inject('headerMenu', null)
-const layoutActions = inject('layoutActions', null)
 
 const d = computed(() => props.data?.data || {})
 const isVertical = computed(() => d.value.layout === 'vertical')
@@ -58,10 +58,20 @@ const breakpoint = computed(() => {
 // Class that scopes the generated CSS to this block instance.
 const scope = computed(() => `hm-${(props.blockId || 'x').replace(/[^\w-]/g, '')}`)
 
-function onToggleMobileMenu() {
-  emit('open-menu')
-  layoutActions?.openMobileMenu?.()
-}
+// The phone menu's drawer (useDrawers.js): one per menu, shared by every widget
+// showing it, and only while a phone button can show it.
+const drawer = useDrawer(
+  () => (mobileMenuEnabled.value && breakpoint.value !== null ? `menu:${d.value.menu_id || 'default'}` : ''),
+  () => ({
+    kind: 'menu',
+    items: menuItems.value,
+    title: d.value.drawer_title ?? t('Menu'),
+    bg: colorValue(d.value.drawer_bg),
+    color: colorValue(d.value.drawer_text_color),
+    showLanguages: d.value.drawer_show_languages !== false,
+    showNotifications: d.value.drawer_show_notifications !== false,
+  }),
+)
 
 const colorValue = (c) => (c ? resolveGlobalColor(c) || c : '')
 
@@ -164,7 +174,7 @@ const css = computed(() => {
         </div>
       </q-toolbar>
       <div v-if="mobileMenuEnabled" class="hm-toggle">
-        <q-btn flat dense :icon="matMenu" :aria-label="t('Open menu')" data-action="menu" @click="onToggleMobileMenu" />
+        <WidgetButton :d="d" :icons="menuIcons" :default-icon="menuIcons.menu" :aria-label="t('Open menu')" action="menu" @click="drawer.toggle()" />
       </div>
     </template>
   </div>

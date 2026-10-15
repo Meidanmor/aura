@@ -2,7 +2,7 @@
   <q-scroll-area class="fit">
     <div class="q-pa-md">
       <div class="mobile-drawer-header flex justify-between q-mb-md">
-        <div class="text-h6">{{ t('Menu') }}</div>
+        <div v-if="title !== ''" class="text-h6">{{ title ?? t('Menu') }}</div><span v-else />
         <q-btn flat dense :aria-label="t('Close menu')" padding="none" :icon="matClose" @click="closeMenu"/>
       </div>
       <!-- The owner's menu (Design → Menus). -->
@@ -47,11 +47,11 @@
         </q-item>
       </q-list>
       <!-- The store's other languages, under the menu. -->
-      <LanguageSwitcher class="q-mt-md q-px-sm" />
+      <LanguageSwitcher v-if="showLanguages" class="q-mt-md q-px-sm" />
     </div>
 
     <q-banner
-        v-if="vapidConfigured && supported && permission !== 'granted' && permission !== 'denied'"
+        v-if="showNotifications && vapidConfigured && supported && permission !== 'granted' && permission !== 'denied'"
         class="bg-secondary text-white q-ma-md rounded-borders shadow-2"
         inline-actions
     >
@@ -105,7 +105,12 @@ defineProps({
   isSuperAdmin: {
     type: Boolean,
     required: true
-  }
+  },
+  // The widget's drawer title (null: the default; '': no title).
+  title: { type: String, default: null },
+  // The Menu widget's switches (Drawer settings).
+  showLanguages: { type: Boolean, default: true },
+  showNotifications: { type: Boolean, default: true },
 })
 
 const emit = defineEmits([

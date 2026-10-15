@@ -1,7 +1,7 @@
 <template>
 <q-scroll-area :visible="false" class="fit">
   <div class="sticky cart-drawer-header flex justify-between q-mb-md">
-    <div class="text-h6">{{ t('Cart') }}</div>
+    <div v-if="title !== ''" class="text-h6">{{ title ?? t('Cart') }}</div><span v-else />
     <q-btn flat dense :aria-label="t('Close cart drawer')" padding="none" :icon="matClose" @click="emit('toggle-cart')"/>
   </div>
 
@@ -109,6 +109,11 @@ import {useCartSummary} from "src/composables/useCartSummary.js";
 import { useI18n } from 'src/i18n/index.js'
 
 const { t } = useI18n()
+
+defineProps({
+  // The widget's drawer title (null: the default; '': no title).
+  title: { type: String, default: null },
+})
 
 const emit = defineEmits([
   'toggle-cart',

@@ -1,18 +1,51 @@
 <script setup>
-import {matFavoriteBorder} from "@quasar/extras/material-icons";
-import wishlist from "stores/wishlist.js";
+/**
+ * Mini Wishlist (header widget): the wishlist button, which opens the wishlist
+ * drawer (it exists only while this widget is on the page, see useDrawers.js).
+ */
+import { computed, onMounted, ref } from 'vue'
+import wishlist from 'stores/wishlist.js'
+import WidgetButton from './WidgetButton.vue'
+import { wishlistIcons } from 'src/utils/builder-icons.js'
+import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
+import { useDrawer } from 'src/composables/useDrawers.js'
+import { useI18n } from 'src/i18n/index.js'
 
-const emit = defineEmits(['toggle-wishlist']);
+const props = defineProps({
+  data: { type: Object, required: true },
+  blockId: { type: String, default: '' },
+  page: { type: String, default: '' },
+})
+
+const { t } = useI18n()
+const d = computed(() => props.data?.data || {})
+
+const drawer = useDrawer(
+  () => 'wishlist',
+  () => ({
+    kind: 'wishlist',
+    title: d.value.drawer_title ?? t('Wishlist'),
+    bg: resolveGlobalColor(d.value.drawer_bg) || '',
+    color: resolveGlobalColor(d.value.drawer_text_color) || '',
+  }),
+)
+
+// Saved in the browser only: the server's page and the first render agree.
+const ready = ref(false)
+onMounted(() => { ready.value = true })
+const count = computed(() => (ready.value ? Object.keys(wishlist.state.items || {}).length : 0))
+const hidden = computed(() => !!d.value.hide_when_empty && count.value === 0)
 </script>
 
 <template>
-  <q-btn flat dense :icon="matFavoriteBorder" :aria-label="t('Add to wishlist')" data-action="wishlist" @click="emit('toggle-wishlist')">
-    <q-no-ssr>
-      <q-badge v-if="wishlist.state.items && Object.keys(wishlist.state.items).length > 0" floating color="red">{{ Object.keys(wishlist.state.items).length }}</q-badge>
-    </q-no-ssr>
-  </q-btn>
+  <WidgetButton
+      v-if="!hidden"
+      :d="d"
+      :icons="wishlistIcons"
+      :default-icon="wishlistIcons.heart_outline"
+      :count="count"
+      :aria-label="t('Wishlist')"
+      action="wishlist"
+      @click="drawer.toggle()"
+  />
 </template>
-
-<style scoped>
-
-</style>
