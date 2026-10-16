@@ -78,7 +78,7 @@ export function useCartSummary() {
             })
 
             if(res.ok){
-                cart.state.cart_array = await res.json();
+                cart.applyCheckoutCart(await res.json())
             } else {
                 await cart.fetchCart(true)
             }

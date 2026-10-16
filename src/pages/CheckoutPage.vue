@@ -471,7 +471,8 @@ const updateShippingAddress = async (differentBilling=null) => {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Failed to update shipping address');
     }
-    await response.json();
+    // The new address can change the shipping rates, payment methods and total.
+    cart.applyCheckoutCart(await response.json())
     shippingUpdateError.value = false
   } catch (error) {
     console.error('Error updating shipping address:', error.message);
@@ -635,10 +636,13 @@ const submitOrder = async (walletOverride = null) => {
     await cart.fetchCart()
   } catch (err) {
     console.error('Checkout error:', err.message)
+    // At the top: at the bottom the cookie notice covered it, so the order just seemed not to go through.
     $q.notify({
       type: 'negative',
       message: t(err.message || "We couldn't place your order. Please try again."),
-      icon: matError
+      icon: matError,
+      position: 'top',
+      timeout: 8000
     })
     if (isWallet) walletOverride.complete('fail')
     isProcessingOrder.value = false

@@ -1477,6 +1477,17 @@ if (typeof window !== 'undefined') {
    ------------------------- */
 const hasItems = computed(() => state.items.length > 0)
 
+/**
+ * The cart the Store API answers after a change at checkout (address,
+ * shipping method): its shipping rates, payment methods and totals. Without
+ * rebuildMergedView() the shown total kept the old one (no shipping).
+ */
+function applyCheckoutCart(data) {
+  if (!data || typeof data !== 'object' || !data.totals) return
+  state.cart_array = data
+  rebuildMergedView()
+}
+
 /* -------------------------
    Exports
    ------------------------- */
@@ -1491,6 +1502,7 @@ export default {
   remove,
   //clear,
   resetCartIdentity,
+  applyCheckoutCart,
   fetchCart,
   applyCoupon,
   removeCoupon,
