@@ -1,5 +1,6 @@
 <template>
-  <section :style="cssVars" class="related-products">
+  <!-- Nothing at all (no title either) when the store has no other product to show. -->
+  <section v-if="products.length" :style="cssVars" class="related-products">
     <div class="container">
       <h2 class="text-h5 q-mb-md text-center">{{ t('Related Products') }}</h2>
 
