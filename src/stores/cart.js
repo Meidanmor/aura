@@ -1482,6 +1482,30 @@ const hasItems = computed(() => state.items.length > 0)
  * shipping method): its shipping rates, payment methods and totals. Without
  * rebuildMergedView() the shown total kept the old one (no shipping).
  */
+/** A copy of the cart's items, to put back if a payment on another site isn't finished. */
+function snapshotLocalCart() {
+  return state.local_cart.items.filter(i => !i._removed).map(i => ({ ...toRaw(i) }))
+}
+
+/**
+ * Puts a snapshot back (only into an empty cart: never over what the shopper added since).
+ * The items are new to the server's cart, which placing the order emptied.
+ */
+function restoreLocalCart(items) {
+  if (!Array.isArray(items) || !items.length || state.local_cart.items.some(i => !i._removed)) return false
+  markCartChanged()
+  state.local_cart.items = items.map((item) => {
+    const copy = { ...item, _local: true, _synced: false }
+    delete copy.remote_key
+    delete copy._syncStatus
+    return copy
+  })
+  persistLocalCart()
+  rebuildMergedView()
+  scheduleSyncLocalToServer()
+  return true
+}
+
 function applyCheckoutCart(data) {
   if (!data || typeof data !== 'object' || !data.totals) return
   state.cart_array = data
@@ -1503,6 +1527,8 @@ export default {
   //clear,
   resetCartIdentity,
   applyCheckoutCart,
+  snapshotLocalCart,
+  restoreLocalCart,
   fetchCart,
   applyCoupon,
   removeCoupon,

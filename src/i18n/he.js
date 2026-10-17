@@ -373,4 +373,9 @@ export default {
   "Your shipping address failed to save. Please re-enter it before placing your order.": "כתובת המשלוח לא נשמרה. יש להזין אותה שוב לפני ביצוע ההזמנה.",
   "Your wishlist is empty.": "רשימת המועדפים ריקה.",
   "YouTube": "יוטיוב",
+  "The payment page couldn't be opened. Please try again or choose another payment method.": "לא הצלחנו לפתוח את דף התשלום. אפשר לנסות שוב או לבחור אמצעי תשלום אחר.",
+  "Your payment wasn't completed, so your cart is back. You can try again or choose another way to pay.": "התשלום לא הושלם, אז העגלה חזרה. אפשר לנסות שוב או לבחור אמצעי תשלום אחר.",
+  "Confirming your payment…": "מאשרים את התשלום…",
+  "We haven't received the payment confirmation yet. If you paid, you'll get an email once it arrives. If not, your order waits for payment.": "עוד לא קיבלנו אישור על התשלום. אם שילמת, יישלח אליך אימייל ברגע שהאישור יגיע. אם לא, ההזמנה ממתינה לתשלום.",
+  "Bit": "ביט",
 }

@@ -254,6 +254,7 @@ import {formatCurrency} from 'src/utils/formatters.js'
 import { getWasLoggedIn } from 'src/composables/useApiFetch.js'
 import { defineAsyncComponent } from 'vue'
 import { getAdapter } from 'src/payments/registry'
+import { rememberGrowPayment, takeGrowPayment, checkGrowPayment } from 'src/payments/grow-return'
 import { loadPaymentConfig, paymentConfig } from 'src/payments/config'
 import { useHoneypot } from 'src/composables/useHoneypot.js'
 import { getStripe, resetStripe } from 'src/payments/adapters/stripe'
@@ -558,6 +559,14 @@ const submitOrder = async (walletOverride = null) => {
   }
   const isWallet = walletOverride && typeof walletOverride === 'object' && 'paymentMethod' in walletOverride
   isProcessingOrder.value = true
+  // The method chosen now. Read it once: placing the order replaces the cart with the order's
+  // answer, which lists no payment methods, and the selection then falls back to the first one
+  // (cash on delivery), so the thank-you page and the adapter got the wrong method.
+  const method = paymentMethod.value
+  // Methods that pay on another site (Grow): placing the order empties the cart, so keep a copy to
+  // put back if the shopper doesn't finish paying there.
+  const redirects = !isWallet && !!getAdapter(method)?.redirects
+  let cartSnapshot = null
 
   if (!cart.state.synced) {
     await syncCart()
@@ -576,7 +585,7 @@ const submitOrder = async (walletOverride = null) => {
         { key: 'wc-stripe-is-deferred-intent', value: true },
       ]
     } else {
-      const adapter = getAdapter(paymentMethod.value)
+      const adapter = getAdapter(method)
       try {
         paymentData = await adapter.getPaymentData({
           controller: paymentController.value,
@@ -615,7 +624,7 @@ const submitOrder = async (walletOverride = null) => {
         phone: form.phone,
         email: form.email,
       },
-      payment_method: paymentMethod.value,
+      payment_method: method,
       payment_data: paymentData,
       // The store checks the agreement (only sent when it asks for one).
       extensions: termsRequired.value ? { qwoo: { terms: agreeTerms.value } } : {},
@@ -623,16 +632,24 @@ const submitOrder = async (walletOverride = null) => {
       ...(allowSignup.value && isLoggedIn.value === false && createAccount.value ? { create_account: true } : {}),
     }
 
+    if (redirects) cartSnapshot = cart.snapshotLocalCart()
     const response = await cart.placeOrder(payload)
 
-    const adapter = getAdapter(paymentMethod.value)
+    const adapter = getAdapter(method)
+    let result = null
     if (adapter?.handlePaymentResult) {
-      await adapter.handlePaymentResult(response, { controller: paymentController.value })
+      result = await adapter.handlePaymentResult(response, { controller: paymentController.value })
+    }
+    if (result?.redirect) {
+      // To the payment page; the checkout form stays filled in for when they come back.
+      rememberGrowPayment({ orderId: response.order_id, key: response.order_key, email: response.billing_address?.email || form.email, pm: method, items: cartSnapshot })
+      window.location.assign(result.redirect)
+      return
     }
 
     if (isWallet) walletOverride.complete('success')
 
-    router.push({ name: 'thank-you', query: { orderId: response.order_id, billing_email: response.billing_address.email, order_key: response.order_key, pm: paymentMethod.value } })
+    router.push({ name: 'thank-you', query: { orderId: response.order_id, billing_email: response.billing_address.email, order_key: response.order_key, pm: method } })
     await cart.fetchCart()
   } catch (err) {
     console.error('Checkout error:', err.message)
@@ -645,6 +662,8 @@ const submitOrder = async (walletOverride = null) => {
       timeout: 8000
     })
     if (isWallet) walletOverride.complete('fail')
+    // The order may have gone through without the payment page opening: the cart comes back.
+    if (cartSnapshot) cart.restoreLocalCart(cartSnapshot)
     isProcessingOrder.value = false
   }
   localStorage.removeItem('checkout_form')
@@ -735,6 +754,20 @@ onMounted(async () => {
   }
 
   unsubscribeConfigUpdates = subscribeToLiveConfig('checkout', (data) => { pageConfig.value = data })
+
+  // Back from Grow's payment page (its "cancel" address is this page): paid after all → the
+  // thank-you page; otherwise the cart comes back (placing the order emptied it).
+  const growBack = takeGrowPayment()
+  if (growBack) {
+    const status = await checkGrowPayment(growBack.orderId, growBack.key)
+    if (status?.paid) {
+      router.replace({ name: 'thank-you', query: { orderId: growBack.orderId, billing_email: growBack.email, order_key: growBack.key, pm: growBack.pm } })
+      return
+    }
+    if (cart.restoreLocalCart(growBack.items)) {
+      $q.notify({ type: 'info', message: t("Your payment wasn't completed, so your cart is back. You can try again or choose another way to pay."), position: 'top', timeout: 8000 })
+    }
+  }
 });
 onBeforeRouteLeave(() => {
   resetStripe()

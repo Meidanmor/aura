@@ -1,8 +1,9 @@
 import stripe from './adapters/stripe'
 import cod from './adapters/cod'
 import bacs from './adapters/bacs'
+import grow from './adapters/grow'
 
-const adapters = [stripe, cod, bacs]
+const adapters = [stripe, cod, bacs, ...grow]
 
 export function getAdapter(id) {
     return adapters.find(a => a.id === id) || null

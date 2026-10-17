@@ -1,8 +1,17 @@
 <template>
   <q-page class="q-pa-md">
     <div class="container">
-      <div v-if="order" class="q-gutter-md">
+      <!-- Grow: waiting for the store to confirm the payment with Grow -->
+      <div v-if="growState === 'checking'" class="text-center q-my-xl">
+        <q-spinner color="secondary" size="lg"/>
+        <div class="q-mt-md">{{ t('Confirming your payment…') }}</div>
+      </div>
+
+      <div v-else-if="order" class="q-gutter-md">
         <div class="text-h4 text-center">{{ t('Thank you!') }}</div>
+        <q-banner v-if="growState === 'waiting'" class="bg-amber-1 text-black rounded-borders">
+          {{ t("We haven't received the payment confirmation yet. If you paid, you'll get an email once it arrives. If not, your order waits for payment.") }}
+        </q-banner>
         <div class="text-subtitle1 text-center">
           {{ t('Hey {first_name}. Your order is being processed and will get to you soon! Please check your email inbox at', { first_name: order.billing_address.first_name }) }} <strong>{{ order.billing_address.email }}</strong> {{ t('for more details.') }}
         </div>
@@ -141,6 +150,7 @@ import {useRoute} from 'vue-router'
 import {fetchWithToken} from 'src/composables/useApiFetch.js';
 import {formatCurrency} from 'src/utils/formatters.js'
 import {loadPaymentConfig, paymentConfig} from 'src/payments/config'
+import {takeGrowPayment, waitForGrowPayment} from 'src/payments/grow-return'
 import { useI18n } from 'src/i18n/index.js'
 
 const { t } = useI18n()
@@ -148,6 +158,8 @@ const { t } = useI18n()
 const route = useRoute()
 useSeoMeta({ noindex: true })
 const order = ref(null)
+// Grow payments: '' (not Grow) | 'checking' | 'paid' | 'waiting' (not confirmed after ~30s).
+const growState = ref('')
 // Bank details for orders paid by transfer (the owner's details from the store).
 const bank = computed(() => order.value && route.query.pm === 'bacs' ? paymentConfig.value?.methods?.bacs || null : null)
 
@@ -163,6 +175,13 @@ onMounted(async () => {
   const orderID = route.query.orderId
   const email = route.query.billing_email
   const order_key = route.query.order_key
+
+  // Back from Grow's payment page: the store asks Grow, which can take a few seconds.
+  if (String(route.query.pm || '').startsWith('grow_') && orderID && order_key) {
+    takeGrowPayment() // paid here: no cart to put back on checkout
+    growState.value = 'checking'
+    waitForGrowPayment(orderID, order_key).then((paid) => { growState.value = paid ? 'paid' : 'waiting' })
+  }
 
   try {
     const res = await fetchWithToken(
