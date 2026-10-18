@@ -1,6 +1,8 @@
 <template>
-  <q-header :class="!stickyHeader ? '' : 'sticky'" style="padding: 5px 0; background-color: var(--q-bg)">
-    <SectionRenderer :sections="headerConfig?.sections" page="header"/>
+  <q-header :class="headerClasses" style="background-color: transparent">
+    <div class="header-inner" :style="headerStyle">
+      <SectionRenderer :sections="headerConfig?.sections" page="header"/>
+    </div>
     <!--<div class="container">
       <q-toolbar class="flex justify-between q-pa-sm">
         <div class="flex nav-items-el">-->
@@ -55,10 +57,14 @@ import LanguageSwitcher from './LanguageSwitcher.vue'
 import cart from 'src/stores/cart'*/
 //import { storeName as liveStoreName } from 'src/utils/site-info.js'
 import SectionRenderer from "components/sections/SectionRenderer.vue";
+import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { stripLang } from 'src/i18n/lang.js'
+import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 
 //const storeName = liveStoreName()
 
-defineProps({
+const props = defineProps({
   headerConfig: {
     type: Object,
     required: true
@@ -91,6 +97,49 @@ defineProps({
     default: null
   }
 })
+
+/**
+ * "Keep the header visible while scrolling": sticky (in the page, stays at
+ * the top) or fixed (floats over the first section, e.g. a hero). A fixed
+ * header only floats on pages built from sections (homepage, own pages);
+ * elsewhere, and once the visitor scrolls, it's "solid": the owner's
+ * after-scrolling colours, else the site's background.
+ */
+const route = useRoute()
+const settings = computed(() => props.headerConfig?.settings || {})
+const fixed = computed(() => props.stickyHeader && settings.value.sticky_mode === 'fixed')
+const sectionPage = computed(() => {
+  const name = String(route.name || '')
+  return stripLang(route.path).replace(/\/+$/, '') === '' || name === 'custom-page' || name.startsWith('custom-page@')
+})
+const overHero = computed(() => fixed.value && sectionPage.value)
+const scrolled = ref(false)
+const solid = computed(() => !overHero.value || scrolled.value)
+
+const solidText = computed(() => (fixed.value && solid.value ? resolveGlobalColor(settings.value.solid_text) : ''))
+const headerClasses = computed(() => ({
+  sticky: props.stickyHeader,
+  'header-fixed': fixed.value,
+  'header-over': overHero.value,
+  'header-solid': fixed.value && solid.value,
+  'header-solid-text': !!solidText.value,
+}))
+// The colours sit on the inner box: a header floating over the hero takes no height itself.
+const headerStyle = computed(() => {
+  const style = { padding: '5px 0' }
+  if (!fixed.value) style.backgroundColor = 'var(--q-bg)'
+  else if (solid.value) style.backgroundColor = resolveGlobalColor(settings.value.solid_bg) || 'var(--q-bg)'
+  else style.backgroundColor = 'transparent'
+  if (solidText.value) style['--header-solid-text'] = solidText.value
+  return style
+})
+
+const onScroll = () => { scrolled.value = window.scrollY > 10 }
+onMounted(() => {
+  onScroll()
+  window.addEventListener('scroll', onScroll, { passive: true })
+})
+onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 /*const emit = defineEmits([
   'open-menu',

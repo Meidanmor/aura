@@ -378,4 +378,6 @@ export default {
   "Confirming your payment…": "מאשרים את התשלום…",
   "We haven't received the payment confirmation yet. If you paid, you'll get an email once it arrives. If not, your order waits for payment.": "עוד לא קיבלנו אישור על התשלום. אם שילמת, יישלח אליך אימייל ברגע שהאישור יגיע. אם לא, ההזמנה ממתינה לתשלום.",
   "Bit": "ביט",
+  "Show {name}": "להציג את {name}",
+  "Show product": "להציג את המוצר",
 }

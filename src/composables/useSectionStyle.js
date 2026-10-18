@@ -148,6 +148,8 @@ export function buildBackground(style = {}) {
   const vars = {}
   const bgType = s.bg_type || 'none'
   let video = null
+  let slideshow = null
+  let tags = null
   let hasImage = false
 
   if (bgType === 'color') {
@@ -160,10 +162,38 @@ export function buildBackground(style = {}) {
     vars['--sb-bg-img'] = `linear-gradient(${angle}deg, ${c1}, ${c2})`
   } else if (bgType === 'image' && Object.values(bgImageUrls(s.bg_image)).some(Boolean)) {
     hasImage = true
+    // Product tags on the background image (ProductTags.vue, drawn over the section).
+    if (Array.isArray(s.bg_tags) && s.bg_tags.length && s.bg_image && typeof s.bg_image === 'object') {
+      tags = { tags: s.bg_tags, image: s.bg_image, mobileImage: s.bg_image.mobile || null, fit: asResponsive(s.bg_image_size || 'cover'), position: bgPosition(s) }
+    }
     // Only the image of the screen size in use is downloaded (CSS picks it).
     setResponsiveVar(vars, '--sb-bg-img', bgImageUrls(s.bg_image), (u) => (u ? cssUrl(u) : 'none'))
     setResponsiveVar(vars, '--sb-bg-size', s.bg_image_size)
     setResponsiveVar(vars, '--sb-bg-pos', bgPosition(s))
+  } else if (bgType === 'slideshow') {
+    // Images that change by themselves (SectionBgSlides.vue draws them as <img> layers).
+    const slides = (Array.isArray(s.bg_slides) ? s.bg_slides : [])
+      .map((x) => ({
+        url: slideUrl(x?.image),
+        mobile: slideUrl(x?.mobile_image),
+        // For product tags: the images' sizes, and the tags themselves.
+        image: typeof x?.image === 'object' ? x.image : null,
+        mobileImage: typeof x?.mobile_image === 'object' ? x.mobile_image : null,
+        tags: Array.isArray(x?.tags) ? x.tags : [],
+      }))
+      .filter((x) => x.url)
+    if (slides.length) {
+      const sec = Number(s.bg_slide_seconds)
+      slideshow = {
+        slides,
+        seconds: Number.isFinite(sec) ? Math.min(30, Math.max(2, sec)) : 6,
+        zoom: s.bg_slide_effect !== 'fade',
+        counter: !!s.bg_slide_counter,
+        position: bgPosition(s),
+      }
+      setResponsiveVar(vars, '--sb-bg-pos', bgPosition(s))
+      vars['--sb-slide-s'] = `${slideshow.seconds}s`
+    }
   } else if (bgType === 'video') {
     // Upload (a <video> file) or a YouTube / Vimeo embed.
     const kind = s.bg_video_source === 'youtube' || s.bg_video_source === 'vimeo' ? s.bg_video_source : 'file'
@@ -184,7 +214,7 @@ export function buildBackground(style = {}) {
     if (src) video = { kind, src, poster, mobile: !s.bg_video_mobile_poster }
   }
 
-  const hasOverlay = (bgType === 'image' || bgType === 'video') && !!s.bg_overlay_color
+  const hasOverlay = (bgType === 'image' || bgType === 'video' || !!slideshow) && !!s.bg_overlay_color
   if (hasOverlay) {
     vars['--sb-overlay'] = resolveGlobalColor(s.bg_overlay_color)
     const o = Number(s.bg_overlay_opacity)
@@ -198,12 +228,32 @@ export function buildBackground(style = {}) {
       'sb-bg-fixed': bgType === 'image' && hasImage && !!s.bg_fixed,
       'sb-has-overlay': hasOverlay,
       'sb-has-bg-video': !!video,
+      'sb-has-bg-slides': !!slideshow,
     },
     video,
+    slideshow,
+    tags,
     hasOverlay,
     // Anything painted at all (decides whether a block gets the box styles)
-    painted: Object.keys(vars).length > 0 || !!video,
+    painted: Object.keys(vars).length > 0 || !!video || !!slideshow,
   }
+}
+
+const slideUrl = (img) => (typeof img === 'string' ? img : img?.url) || ''
+
+/**
+ * Box shadow (SHADOW_FIELDS in the plugin): "x y blur spread color", with
+ * "inset" in front when it sits inside the box. Null when it's off.
+ */
+export function buildShadow(style = {}) {
+  const s = style || {}
+  if (!s.shadow) return null
+  const len = (v, fallback) => toCssLength(v) || fallback
+  const color = resolveGlobalColor(s.shadow_color) || 'rgba(0, 0, 0, 0.12)'
+  const parts = [len(s.shadow_x, '0px'), len(s.shadow_y, '8px'), len(s.shadow_blur, '24px'), len(s.shadow_spread, '0px'), color]
+  // Lengths come from the store's sanitizer; keep anything odd out of the CSS anyway.
+  if (parts.slice(0, 4).some((p) => !/^-?\d+(\.\d+)?(px|rem|em|%)?$/.test(p))) return null
+  return `${s.shadow_inset ? 'inset ' : ''}${parts.join(' ')}`
 }
 
 /* ------------------------------------------------------------------ */
@@ -235,6 +285,8 @@ export function buildContainerStyle(style = {}) {
   if (color) outerVars['--sb-color'] = color
   const radius = toCssLength(s.border_radius)
   if (radius) outerVars['--sb-radius'] = radius
+  const shadow = buildShadow(s)
+  if (shadow) outerVars['--sb-shadow'] = shadow
 
   // Margins (applied by whoever renders the container's outermost box)
   const marginVars = {}
@@ -259,11 +311,17 @@ export function buildContainerStyle(style = {}) {
   const widthVars = {}
   if (widthMode === 'custom') setResponsiveVar(widthVars, '--sbb-w', s.width, toCssLength)
 
+  const hover = HOVER_EFFECTS.has(s.hover_effect) ? s.hover_effect : ''
+  const link = sectionLink(s)
+
   return {
     outerClasses: {
       [`sb-pad-${preset}`]: true,
       ...bg.classes,
       'sb-has-radius': !!radius,
+      'sb-has-shadow': !!shadow,
+      ...(hover ? { [`sb-hover-${hover}`]: true } : {}),
+      'sb-has-link': !!link,
       ...visibilityClasses(s.hide_on),
     },
     outerVars,
@@ -274,8 +332,25 @@ export function buildContainerStyle(style = {}) {
     widthVars,
     hasOverlay: bg.hasOverlay,
     video: bg.video,
+    slideshow: bg.slideshow,
+    tags: bg.tags,
     anchorId: s.anchor_id || undefined,
+    link,
   }
+}
+
+const HOVER_EFFECTS = new Set(['zoom', 'darken', 'lift'])
+
+/**
+ * "Make the whole section a link": { internal, to | href, newTab, label },
+ * or null. Only site paths and http(s) / mailto / tel addresses.
+ */
+export function sectionLink(s = {}) {
+  const url = typeof s.link_url === 'string' ? s.link_url.trim() : ''
+  if (!url) return null
+  const internal = url.startsWith('/') && !url.startsWith('//')
+  if (!internal && !/^(https?:|mailto:|tel:)/i.test(url)) return null
+  return { internal, url, newTab: !!s.link_new_tab, label: typeof s.link_label === 'string' ? s.link_label.trim() : '' }
 }
 
 /* ------------------------------------------------------------------ */
@@ -312,21 +387,29 @@ export function buildBlockWrapperStyle(block) {
   const hasPadding = setSidesVars(vars, s.box_padding)
   const radius = toCssLength(s.box_radius)
   if (radius) vars['--sb-radius'] = radius
+  const shadow = buildShadow(s)
+  if (shadow) vars['--sb-shadow'] = shadow
   const bg = buildBackground(s)
   Object.assign(vars, bg.vars)
+  // Entrance animation's delay (the animation itself: src/utils/entrance.js).
+  const delay = Number(s.animation_delay)
+  if (s.animation && s.animation !== 'none' && delay > 0) vars['--sb-anim-delay'] = `${Math.min(1500, delay)}ms`
 
   return {
     classes: {
       [`sb-block--${block?.type}`]: true,
       'sb-has-w': hasAny(s.width),
       'sb-has-maxw': hasAny(s.max_width),
-      'sb-has-box': hasPadding || !!radius || bg.painted,
+      'sb-has-box': hasPadding || !!radius || !!shadow || bg.painted,
       'sb-has-radius': !!radius,
+      'sb-has-shadow': !!shadow,
       ...bg.classes,
       ...visibilityClasses(s.hide_on),
     },
     vars,
     video: bg.video,
+    slideshow: bg.slideshow,
+    tags: bg.tags,
     anchorId: s.anchor_id || undefined,
   }
 }

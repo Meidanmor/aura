@@ -8,6 +8,15 @@
       :data-section-id="data.id"
   >
     <SectionBgVideo v-if="container.video" :video="container.video" />
+    <SectionBgSlides v-if="container.slideshow" :slideshow="container.slideshow" />
+    <ProductTags v-if="container.tags" v-bind="container.tags" />
+    <!-- "Make the whole section a link": a link covering the section, under its content (app.css .sb-cover-link). -->
+    <component
+        :is="container.link.internal ? RouterLink : 'a'"
+        v-if="container.link"
+        class="sb-cover-link"
+        v-bind="coverLinkAttrs"
+    />
     <div
         class="sb-inner"
         :class="[innerWidthClass, container.innerClasses]"
@@ -16,12 +25,15 @@
       <div
           v-for="block in enabledBlocks"
           :key="block.id"
+          v-entrance="block.type !== 'section' ? block.style?.animation : ''"
           :id="wrappers[block.id].anchorId"
           class="sb-block"
           :class="wrappers[block.id].classes"
           :style="wrappers[block.id].vars"
       >
         <SectionBgVideo v-if="wrappers[block.id].video" :video="wrappers[block.id].video" />
+        <SectionBgSlides v-if="wrappers[block.id].slideshow" :slideshow="wrappers[block.id].slideshow" />
+        <ProductTags v-if="wrappers[block.id].tags" v-bind="wrappers[block.id].tags" />
         <SectionTemplate
             v-if="block.type === 'section'"
             :data="block"
@@ -54,6 +66,8 @@
  * To add a block type: register its component in `blockComponents`.
  */
 import { computed, inject } from 'vue'
+import { RouterLink } from 'vue-router'
+import { vEntrance } from 'src/utils/entrance.js'
 import CategoryGridSection from './CategoryGridSection.vue'
 import TestimonialsSection from './TestimonialsSection.vue'
 import FeaturedProductsSection from './FeaturedProductsSection.vue'
@@ -76,6 +90,7 @@ import ButtonBlock from '../blocks/ButtonBlock.vue'
 import FormBlock from '../blocks/FormBlock.vue'
 import VideoBlock from '../blocks/VideoBlock.vue'
 import IconListBlock from '../blocks/IconListBlock.vue'
+import RunningTextBlock from '../blocks/RunningTextBlock.vue'
 import FaqBlock from '../blocks/FaqBlock.vue'
 import TabsBlock from '../blocks/TabsBlock.vue'
 import CountdownBlock from '../blocks/CountdownBlock.vue'
@@ -83,6 +98,8 @@ import ProductGridBlock from '../blocks/ProductGridBlock.vue'
 import CarouselBlock from '../blocks/CarouselBlock.vue'
 import SocialLinksBlock from '../blocks/SocialLinksBlock.vue'
 import SectionBgVideo from './SectionBgVideo.vue'
+import SectionBgSlides from './SectionBgSlides.vue'
+import ProductTags from './ProductTags.vue'
 import MenuWidget from '../blocks/MenuWidget.vue'
 import LanguageSwitcherBlock from '../blocks/LanguageSwitcherBlock.vue'
 import { buildContainerStyle, buildBlockWrapperStyle } from 'src/composables/useSectionStyle.js'
@@ -125,6 +142,7 @@ const blockComponents = {
   advantages: AdvantagesSection,
   video: VideoBlock,
   icon_list: IconListBlock,
+  running_text: RunningTextBlock,
   faq: FaqBlock,
   tabs: TabsBlock,
   countdown: CountdownBlock,
@@ -138,6 +156,16 @@ const blockComponents = {
 }
 
 const container = computed(() => buildContainerStyle(props.data.style || {}))
+
+const coverLinkAttrs = computed(() => {
+  const link = container.value.link
+  if (!link) return {}
+  const attrs = link.internal ? { to: link.url } : { href: link.url }
+  if (link.newTab) Object.assign(attrs, { target: '_blank', rel: link.internal ? 'noopener' : 'noopener noreferrer' })
+  // Screen readers need a name for a link with no text of its own.
+  attrs['aria-label'] = link.label || undefined
+  return attrs
+})
 
 // A top-level section carries its own margins; a nested one gets them
 // from its .sb-block wrapper in the parent instead.

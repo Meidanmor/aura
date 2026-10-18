@@ -46,6 +46,11 @@ const urlOf = (img) => (typeof img === 'string' ? img : img?.url || '')
 function backgroundOf(style, device) {
   if (style?.bg_type === 'image') return bgImageUrls(style.bg_image)[device] || ''
   if (style?.bg_type === 'video') return urlOf(style.bg_video_poster)
+  if (style?.bg_type === 'slideshow') {
+    // The first image (its phone version on phones): the only one in the first paint.
+    const first = (style.bg_slides || []).find((x) => urlOf(x?.image))
+    if (first) return device === 'mobile' && urlOf(first.mobile_image) ? urlOf(first.mobile_image) : urlOf(first.image)
+  }
   return ''
 }
 

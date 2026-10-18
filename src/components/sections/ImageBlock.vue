@@ -1,10 +1,12 @@
 <template>
-  <div v-if="images.length" class="image-block" :class="layoutClasses" :style="cssVars">
+  <div v-if="images.length" class="image-block" :class="[layoutClasses, hoverClass]" :style="cssVars">
     <figure
         v-for="(img, idx) in images"
         :key="idx"
         class="image-block__item"
     >
+      <!-- The box holds the image (maybe a link) and, beside it, its product tags (links can't nest). -->
+      <div class="image-block__box">
       <component
           :is="img.link_url ? linkTag(img.link_url) : 'div'"
           v-bind="img.link_url ? linkAttrs(img) : {}"
@@ -20,7 +22,24 @@
             :fetchpriority="picked && idx === 0 ? 'high' : undefined"
             decoding="async"
         />
+        <!-- Hover Effect "Show the second image": loaded lazily, never in the page's first paint. -->
+        <img
+            v-if="hover === 'swap' && img.hoverSrc"
+            class="image-block__img image-block__img--hover"
+            :src="img.hoverSrc"
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            decoding="async"
+        />
       </component>
+      <ProductTags
+          v-if="img.tags?.length"
+          :tags="img.tags"
+          :image="img.image"
+          :fit="d.object_fit || 'cover'"
+      />
+      </div>
       <figcaption v-if="img.caption" class="image-block__caption" v-bind="captionText">{{ img.caption }}</figcaption>
     </figure>
   </div>
@@ -30,6 +49,7 @@
 import { computed } from 'vue'
 import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { RouterLink } from 'vue-router'
+import ProductTags from './ProductTags.vue'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToFlex, DEVICES } from 'src/composables/useSectionStyle.js'
 
@@ -54,9 +74,14 @@ const picked = usePriorityBlock(props.blockId)
 const images = computed(() => (d.value.images || [])
     .map((img) => {
       const payload = typeof img.image === 'string' ? { url: img.image } : (img.image || {})
-      return { ...img, src: payload.url, width: payload.width, height: payload.height }
+      const hoverSrc = typeof img.hover_image === 'string' ? img.hover_image : (img.hover_image?.url || '')
+      return { ...img, src: payload.url, width: payload.width, height: payload.height, hoverSrc }
     })
     .filter((img) => img.src))
+
+const HOVERS = new Set(['zoom', 'darken', 'swap'])
+const hover = computed(() => (HOVERS.has(d.value.hover_effect) ? d.value.hover_effect : ''))
+const hoverClass = computed(() => (hover.value ? `ib-hover-${hover.value}` : ''))
 
 const layoutClasses = computed(() => {
   const layout = asResponsive(d.value.layout || 'row')
@@ -115,6 +140,7 @@ function linkAttrs(img) {
   min-width: 0;
   max-width: var(--ib-maxw, 100%);
 }
+.image-block__box { position: relative; }
 .image-block__frame {
   display: block;
   overflow: hidden;
@@ -126,6 +152,38 @@ function linkAttrs(img) {
   height: auto;
   object-fit: var(--ib-fit, cover);
   border-radius: var(--ib-radius, 0);
+}
+/* Hover effects (Style → Hover) */
+.ib-hover-zoom .image-block__img { transition: transform .7s cubic-bezier(.2, .7, .2, 1); }
+.ib-hover-darken .image-block__frame,
+.ib-hover-swap .image-block__frame { position: relative; }
+.ib-hover-darken .image-block__frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  transition: opacity .35s ease;
+  pointer-events: none;
+  border-radius: var(--ib-radius, 0);
+}
+.image-block__img--hover {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity .45s ease;
+}
+@media (hover: hover) {
+  .ib-hover-zoom .image-block__frame:hover .image-block__img { transform: scale(1.06); }
+  .ib-hover-darken .image-block__frame:hover::after { opacity: .18; }
+  .ib-hover-swap .image-block__frame:hover .image-block__img--hover { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ib-hover-zoom .image-block__img, .image-block__img--hover { transition: none; }
+  .ib-hover-zoom .image-block__frame:hover .image-block__img { transform: none; }
 }
 .image-block__caption {
   margin-top: 8px;

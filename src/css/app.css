@@ -297,6 +297,98 @@ body section {
 }
 
 .sb-has-radius { overflow: hidden; }
+.sb-has-shadow { box-shadow: var(--sb-shadow); }
+
+/* "Make the whole section a link": the link covers the section under its
+   content; the content lets clicks through, except its own links,
+   buttons and fields, which keep working. */
+.sb-has-link { position: relative; }
+.sb-container > .sb-cover-link {
+    position: absolute !important;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+}
+.sb-container > .sb-cover-link:focus-visible { outline: 2px solid currentColor; outline-offset: -4px; }
+.sb-has-link > .sb-inner { position: relative; z-index: 2; pointer-events: none; }
+.sb-has-link > .sb-inner :is(a, button, input, select, textarea, label, summary, iframe, video, [role="button"], [tabindex]) { pointer-events: auto; }
+
+/* Entrance animations (src/utils/entrance.js): only blocks still below the
+   screen once the page runs wait hidden, then play once. */
+[data-anim="wait"] { opacity: 0; }
+[data-anim="wait"][data-anim-name="fade_up"] { transform: translateY(28px); }
+[data-anim="wait"][data-anim-name="zoom_in"] { transform: scale(.94); }
+/* Reveal clips the block's content, not the watched box: a fully clipped box never counts as on screen. */
+[data-anim="wait"][data-anim-name="reveal"] { opacity: 1; }
+[data-anim="wait"][data-anim-name="reveal"] > * { clip-path: inset(0 0 100% 0); }
+[data-anim="play"][data-anim-name="fade_up"] { animation: sb-anim-rise .8s cubic-bezier(.2, .7, .2, 1) var(--sb-anim-delay, 0ms) both; }
+[data-anim="play"][data-anim-name="fade"] { animation: sb-anim-fade .8s ease var(--sb-anim-delay, 0ms) both; }
+[data-anim="play"][data-anim-name="zoom_in"] { animation: sb-anim-grow .8s cubic-bezier(.2, .7, .2, 1) var(--sb-anim-delay, 0ms) both; }
+[data-anim="play"][data-anim-name="reveal"] > * { animation: sb-anim-reveal 1s cubic-bezier(.65, 0, .35, 1) var(--sb-anim-delay, 0ms) both; }
+@keyframes sb-anim-rise { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+@keyframes sb-anim-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sb-anim-grow { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
+@keyframes sb-anim-reveal { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+@media (prefers-reduced-motion: reduce) {
+    [data-anim] { opacity: 1 !important; transform: none !important; animation: none !important; }
+    [data-anim-name="reveal"] > * { clip-path: none !important; animation: none !important; }
+}
+
+/* Section hover effects (Style → Link & hover). The zoom moves the
+   background image onto its own layer so only the image grows. */
+.sb-hover-zoom, .sb-hover-darken { overflow: hidden; isolation: isolate; position: relative; }
+.sb-hover-zoom > .sb-inner, .sb-hover-darken > .sb-inner { position: relative; z-index: 2; }
+.sb-hover-zoom.sb-has-bg-img { background-image: none !important; }
+.sb-hover-zoom.sb-has-bg-img::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image: var(--sb-bg-img, none);
+    background-size: var(--sb-bg-size, cover);
+    background-position: var(--sb-bg-pos, center center);
+    background-repeat: no-repeat;
+    transition: transform .7s cubic-bezier(.2, .7, .2, 1);
+    pointer-events: none;
+}
+.sb-hover-zoom .sb-bg-video,
+.sb-hover-zoom .sb-bg-slides { transition: transform .7s cubic-bezier(.2, .7, .2, 1); }
+.sb-hover-darken::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: #000;
+    opacity: 0;
+    transition: opacity .35s ease;
+    pointer-events: none;
+}
+.sb-hover-lift { transition: transform .35s ease, box-shadow .35s ease; }
+@media (hover: hover) {
+    .sb-hover-zoom:hover::after,
+    .sb-hover-zoom:hover .sb-bg-video,
+    .sb-hover-zoom:hover .sb-bg-slides { transform: scale(1.06); }
+    .sb-hover-darken:hover::after { opacity: .18; }
+    .sb-hover-lift:hover { transform: translateY(-4px); }
+}
+@media (max-width: 1023px) {
+    .sb-hover-zoom.sb-has-bg-img::after {
+        background-image: var(--sb-bg-img-t, var(--sb-bg-img, none));
+        background-size: var(--sb-bg-size-t, cover);
+        background-position: var(--sb-bg-pos-t, center center);
+    }
+}
+@media (max-width: 767px) {
+    .sb-hover-zoom.sb-has-bg-img::after {
+        background-image: var(--sb-bg-img-m, var(--sb-bg-img-t, var(--sb-bg-img, none)));
+        background-size: var(--sb-bg-size-m, cover);
+        background-position: var(--sb-bg-pos-m, center center);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .sb-hover-zoom.sb-has-bg-img::after, .sb-hover-zoom .sb-bg-video, .sb-hover-lift { transition: none; }
+    .sb-hover-zoom:hover::after, .sb-hover-zoom:hover .sb-bg-video, .sb-hover-lift:hover { transform: none; }
+}
 
 .sb-pad-none   { padding: 0; }
 .sb-pad-small  { padding: 90px 16px; }
@@ -340,8 +432,11 @@ body section {
     border-radius: inherit;
     pointer-events: none;
 }
-.sb-has-overlay > :not(.sb-bg-video),
-.sb-has-bg-video > :not(.sb-bg-video) { position: relative; z-index: 2; }
+.sb-has-overlay > :not(.sb-bg-video):not(.sb-bg-slides):not(.sb-bg-counter),
+.sb-has-bg-video > :not(.sb-bg-video),
+.sb-has-bg-slides > :not(.sb-bg-slides):not(.sb-bg-counter) { position: relative; z-index: 2; }
+/* Slideshow background (SectionBgSlides.vue): image layers under the overlay and content. */
+.sb-has-bg-slides { isolation: isolate; overflow: hidden; position: relative; }
 
 .sb-inner {
     --sb-dir: initial; --sb-dir-t: initial; --sb-dir-m: initial;
@@ -915,6 +1010,19 @@ header.sticky {
 }
 header:not(.sticky) {
     position: relative;
+}
+/* Fixed header over the first section: the header takes no height (no
+   layout shift, no script needed), its content hangs over the page. */
+header.header-over {
+    height: 0;
+    overflow: visible;
+}
+.header-inner {
+    transition: background-color .25s ease;
+}
+header.header-solid-text .header-inner,
+header.header-solid-text .header-inner :not(.q-badge) {
+    color: var(--header-solid-text) !important;
 }
 .q-drawer .cart-details.sticky {
     position: sticky;

@@ -1,6 +1,6 @@
 <template>
   <!-- ===== Hero slides: one full-width slide at a time ===== -->
-  <div v-if="source === 'slides'" class="carousel-block" :style="cssVars">
+  <div v-if="source === 'slides'" class="carousel-block" :class="{ 'cb-zoom': d.slow_zoom && !reducedMotion }" :style="cssVars">
     <q-carousel
         v-if="slides.length"
         v-model="slideIndex"
@@ -14,8 +14,9 @@
         :navigation="!!d.dots && slides.length > 1"
         :prev-icon="matChevronLeft"
         :next-icon="matChevronRight"
-        transition-prev="slide-right"
-        transition-next="slide-left"
+        :transition-prev="fade ? 'fade' : 'slide-right'"
+        :transition-next="fade ? 'fade' : 'slide-left'"
+        :transition-duration="fade ? 900 : 300"
         @mouseenter="paused = true"
         @mouseleave="paused = false"
         @focusin="paused = true"
@@ -35,6 +36,7 @@
           />
         </picture>
         <div class="cb-slide__overlay" :style="overlayStyle(slide)" />
+        <ProductTags v-if="slide.tags?.length" :tags="slide.tags" :image="slide.image" :mobile-image="slide.mobile_image" @open="paused = $event" />
         <div class="cb-slide__content" :class="`cb-slide__content--${slide.content_align || 'center'}`" :style="{ color: resolveGlobalColor(slide.text_color) || '#fff' }">
           <h2 v-if="slide.title" class="cb-slide__title" v-bind="titleText"><span v-html="sanitizeSectionText(slide.title)" /></h2>
           <p v-if="slide.text" class="cb-slide__text" v-bind="slideText">{{ slide.text }}</p>
@@ -53,6 +55,11 @@
         </div>
       </q-carousel-slide>
     </q-carousel>
+    <!-- "01 / 03" and a line that fills while the slide is shown (with autoplay). -->
+    <div v-if="d.counter && slides.length > 1" class="cb-counter" aria-hidden="true">
+      <span>{{ pad(slideIndex + 1) }} / {{ pad(slides.length) }}</span>
+      <span class="cb-counter__bar"><i :key="slideIndex" :class="{ 'is-running': !!heroAutoplay }" :style="barStyle" /></span>
+    </div>
   </div>
 
   <!-- ===== Multi-item row: images / logos / products / categories ===== -->
@@ -134,6 +141,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { matChevronLeft, matChevronRight } from '@quasar/extras/material-icons'
 import ProductCard from '../shop/ProductCard.vue'
+import ProductTags from '../sections/ProductTags.vue'
 import productsStore from 'src/stores/products'
 import { useBlockQuery } from 'src/composables/useBlockQuery.js'
 import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
@@ -209,6 +217,12 @@ const reducedMotion = ref(false)
 const autoplayMs = computed(() => (d.value.autoplay && !reducedMotion.value ? Math.max(2, Number(d.value.autoplay_seconds) || 5) * 1000 : 0))
 const heroAutoplay = computed(() => (paused.value ? false : autoplayMs.value || false))
 const slideIndex = ref(0)
+const fade = computed(() => d.value.slide_transition === 'fade')
+const pad = (n) => String(n).padStart(2, '0')
+// Without autoplay the line shows how far along the slides are.
+const barStyle = computed(() => (heroAutoplay.value
+  ? { animationDuration: `${autoplayMs.value}ms` }
+  : { transform: `scaleX(${(slideIndex.value + 1) / Math.max(1, slides.value.length)})` }))
 
 /* ---------- Scroll-snap row ---------- */
 
@@ -347,6 +361,54 @@ const cssVars = computed(() => {
 .cb-slide__btn--outline { color: #fff !important; }
 .cb-hero :deep(.q-carousel__arrow .q-btn),
 .cb-hero :deep(.q-carousel__navigation .q-btn) { color: var(--cb-control, #fff); }
+
+/* Slow zoom: the shown slide's photo grows a little while it's on screen. */
+.cb-zoom :deep(.q-carousel__slide) .cb-slide__media img { animation: cb-zoom 9s ease-out forwards; }
+@keyframes cb-zoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+
+/* Counter + progress line, bottom corner on the end side. */
+.carousel-block { position: relative; }
+.cb-counter {
+  position: absolute;
+  inset-inline-end: 24px;
+  bottom: 20px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+  color: var(--cb-control, #fff);
+  pointer-events: none;
+}
+.cb-counter__bar {
+  position: relative;
+  width: 72px;
+  height: 1px;
+  overflow: hidden;
+  background: color-mix(in srgb, currentColor 40%, transparent);
+}
+.cb-counter__bar i {
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 0.4s ease;
+}
+[dir="rtl"] .cb-counter__bar i { transform-origin: right center; }
+.cb-counter__bar i.is-running { animation: cb-progress linear forwards; transition: none; }
+@keyframes cb-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@media (max-width: 767px) {
+  .cb-counter { inset-inline-end: 16px; bottom: 14px; }
+}
 
 /* ---------- Multi-item row ---------- */
 .cb-row { position: relative; }
