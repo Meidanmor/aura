@@ -2,8 +2,12 @@
   <div class="blog-posts" :style="cssVars">
     <p v-if="list && !list.posts?.length" class="blog-posts-empty">{{ t('No posts yet. Check back soon.') }}</p>
     <div v-else-if="list" class="blog-posts-grid">
+      <template v-if="card">
+        <LoopCard v-for="p in list.posts" :key="p.id" :sections="card" type="post" :item="d.show_image === false ? { ...p, image: null } : p" />
+      </template>
       <BlogCard
         v-for="p in list.posts"
+        v-else
         :key="p.id"
         :post="d.show_image === false ? { ...p, image: null } : p"
         :show-excerpt="d.show_excerpt !== false"
@@ -25,6 +29,7 @@ import { computed, inject } from 'vue'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { useRoute } from 'vue-router'
 import BlogCard from 'components/blog/BlogCard.vue'
+import LoopCard from 'components/loops/LoopCard.vue'
 
 /**
  * "Blog Posts Grid" (blog page template): the posts of /blog or a blog
@@ -35,6 +40,8 @@ const props = defineProps({ data: { type: Object, required: true }, blockId: { t
 const list = inject('blogList', null)
 const route = useRoute()
 const d = computed(() => props.data.data || {})
+// A card design chosen for this block (Store builder → Card designs), published with it.
+const card = computed(() => (Array.isArray(props.data.data?.card) && props.data.data.card.length ? props.data.data.card : null))
 const cardTitle = computed(() => textStyle(d.value, tsKeys('card_title'), 'headings'))
 const excerptText = computed(() => textStyle(d.value, tsKeys('excerpt')))
 const pageLink = (n) => ({ path: route.path, query: n > 1 ? { page: n } : {} })

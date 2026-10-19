@@ -1,9 +1,10 @@
 <template>
     <div :style="cssVars" v-if="categories?.length" class="container category-grid-section">
       <h2 v-if="props.data.data.title" class="q-mb-lg text-center" v-html="sanitizeSectionText(props.data.data.title)" />
-      <div class="row q-col-gutter-md">
-        <div v-for="cat in categories" :key="cat.id" class="col-6 col-md-3">
-          <q-btn flat no-caps :to="`/product-category/${cat.slug}`" class="category-grid-card">
+      <div class="category-grid">
+        <div v-for="cat in categories" :key="cat.id" class="category-grid__cell">
+          <LoopCard v-if="card" :sections="card" type="category" :item="cat" />
+          <q-btn v-else flat no-caps :to="`/product-category/${cat.slug}`" class="category-grid-card">
             <div class="absolute-full bg-black" style="opacity: 0.2; z-index: 1"></div>
             <img v-if="cat.image" :src="cat.image" :alt="cat.name" loading="lazy" />
             <span class="category-name text-h6 absolute">{{ cat.name }}</span>
@@ -26,6 +27,8 @@ import {computed, onMounted, onServerPrefetch, useSSRContext, watch} from 'vue'
 import { useSectionData } from 'src/composables/useSectionData.js'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
 import { getApiOrigin } from 'src/utils/server/get-api-origin.js'
+import { setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
+import LoopCard from '../loops/LoopCard.vue'
 
 const props = defineProps({
   data: {
@@ -38,8 +41,15 @@ const props = defineProps({
   }
 })
 
+// A card design chosen for this block (Store builder → Card designs), published with it.
+const card = computed(() => (Array.isArray(props.data.data?.card) && props.data.data.card.length ? props.data.data.card : null))
+
+// Categories per row and the gap between them (columns default to 4 / 2 / 2, as before).
 const cssVars = computed(() => {
   const vars = {}
+  const d = props.data.data || {}
+  setResponsiveVar(vars, '--cg-cols', d.columns || { desktop: 4, tablet: 2, mobile: 2 }, (v) => (v ? Math.max(1, Math.min(6, Number(v))) : null))
+  setResponsiveVar(vars, '--cg-gap', d.gap, toCssLength)
   return vars
 })
 
@@ -58,7 +68,11 @@ async function fetchCategories(ids, ssrContext) {
       id: cat.id,
       name: cat.name,
       slug: cat.slug,
-      image: cat.image?.src || ''
+      image: cat.image?.src || '',
+      // For card designs: the full image (srcset), the number of products and the description.
+      image_data: cat.image || null,
+      count: cat.count ?? null,
+      description: cat.description || ''
     }))
   } catch (err) {
     console.error('[CategoryGridSection] failed to resolve categories', err)
@@ -95,6 +109,18 @@ watch(
 </script>
 
 <style scoped>
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cg-cols, 4), minmax(0, 1fr));
+  gap: var(--cg-gap, 16px);
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .category-grid { grid-template-columns: repeat(var(--cg-cols-t, 2), minmax(0, 1fr)); gap: var(--cg-gap-t, var(--cg-gap, 16px)); }
+}
+@media (max-width: 767px) {
+  .category-grid { grid-template-columns: repeat(var(--cg-cols-m, 2), minmax(0, 1fr)); gap: var(--cg-gap-m, var(--cg-gap, 16px)); }
+}
+.category-grid__cell { min-width: 0; }
 .category-grid-card {
   width: 100%;
   display: flex;

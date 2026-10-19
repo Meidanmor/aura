@@ -18,7 +18,8 @@
 
   <div v-else-if="products.length" class="products-inner row q-col-gutter-md">
     <div v-for="(product, index) in products" :key="product.id" class="col-xs-12 col-sm-6 col-md-4 relative-position">
-      <ProductCard :product="product" :priority="index < priorityCount" :eager="index < 3" />
+      <LoopCard v-if="card?.length" :sections="card" type="product" :item="product" :priority="index < priorityCount" />
+      <ProductCard v-else :product="product" :priority="index < priorityCount" :eager="index < 3" />
     </div>
   </div>
 
@@ -27,6 +28,8 @@
 
 <script setup>
 import ProductCard from './ProductCard.vue'
+import LoopCard from '../loops/LoopCard.vue'
 // priorityCount: 0 when a section above the grid holds the page's first image (it loads first).
-defineProps({ loading: Boolean, products: { type: Array, default: () => [] }, priorityCount: { type: Number, default: 3 } })
+// card: the product card design for these pages (shop.json / category.json product_card).
+defineProps({ loading: Boolean, products: { type: Array, default: () => [] }, priorityCount: { type: Number, default: 3 }, card: { type: Array, default: null } })
 </script>

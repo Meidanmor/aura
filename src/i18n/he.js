@@ -380,4 +380,5 @@ export default {
   "Bit": "ביט",
   "Show {name}": "להציג את {name}",
   "Show product": "להציג את המוצר",
+  "Rated {rating} out of 5": "דירוג {rating} מתוך 5",
 }

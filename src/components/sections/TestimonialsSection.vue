@@ -21,7 +21,8 @@
                 v-for="(testimonial, index) in group"
                 :key="index"
             >
-              <TestimonialCard :testimonial="testimonial" v-bind="cardStyles" />
+              <LoopCard v-if="card" :sections="card" type="review" :item="testimonial" />
+              <TestimonialCard v-else :testimonial="testimonial" v-bind="cardStyles" />
             </div>
           </div>
 
@@ -30,8 +31,12 @@
 
       <!-- Grid: columns per device come from "Items Per Row / Slide" -->
       <div v-else class="testimonials-grid">
+        <template v-if="card">
+          <LoopCard v-for="(testimonial, index) in props.data.data.items" :key="index" :sections="card" type="review" :item="testimonial" />
+        </template>
         <TestimonialCard
             v-for="(testimonial, index) in props.data.data.items"
+            v-else
             :key="index"
             :testimonial="testimonial"
             v-bind="cardStyles"
@@ -44,6 +49,7 @@
 import {computed, onMounted, onServerPrefetch, watch} from 'vue'
 import AppCarousel from '../app/AppCarousel.vue'
 import TestimonialCard from './TestimonialCard.vue'
+import LoopCard from '../loops/LoopCard.vue'
 import { useCarousel } from 'src/composables/useCrousel.js'
 import { setResponsiveVar } from 'src/composables/useSectionStyle.js'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
@@ -65,6 +71,9 @@ const cardStyles = computed(() => ({
   reviewText: textStyle(props.data.data, tsKeys('review')),
   starColor: resolveGlobalColor(props.data.data.star_color) || '',
 }))
+
+// A card design chosen for this block (Store builder → Card designs), published with it.
+const card = computed(() => (Array.isArray(props.data.data?.card) && props.data.data.card.length ? props.data.data.card : null))
 
 const isCarousel = computed(() => props.data.data.display_style === 'carousel')
 

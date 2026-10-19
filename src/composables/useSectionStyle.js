@@ -289,7 +289,29 @@ function setBoxLooks(vars, s, radiusKey, colorKey) {
   if (has.shadow && !vars['--sb-shadow']) vars['--sb-shadow'] = 'none'
   has.radius = setLookVars(vars, '--sb-radius', perScreen(s, (x) => toCssLength(x[radiusKey]) || ''), '0')
   if (colorKey) has.color = setLookVars(vars, '--sb-color', perScreen(s, (x) => resolveGlobalColor(x[colorKey]) || ''), 'inherit')
+  has.border = setBorderVars(vars, s)
   return has
+}
+
+const BORDER_STYLES = new Set(['solid', 'dashed', 'dotted', 'double'])
+
+/** "top right bottom left" widths of a `sides` value, '' when every side is 0 or empty. */
+function borderWidths(sides) {
+  const v = ['top', 'right', 'bottom', 'left'].map((k) => toCssLength(sides?.[k]) || '0')
+  return v.some((x) => parseFloat(x) > 0) ? v.join(' ') : ''
+}
+
+/**
+ * Border (BORDER_FIELDS in the plugin): widths per side and screen size, a
+ * style, and a colour per screen size (the text colour when none is set).
+ */
+function setBorderVars(vars, s) {
+  const w = asResponsive(s.border_width)
+  const any = setLookVars(vars, '--sb-bw', { desktop: borderWidths(w.desktop), tablet: borderWidths(w.tablet), mobile: borderWidths(w.mobile) }, '0')
+  if (!any) return false
+  vars['--sb-bs'] = BORDER_STYLES.has(s.border_style) ? s.border_style : 'solid'
+  setLookVars(vars, '--sb-bc', perScreen(s, (x) => resolveGlobalColor(x.border_color) || ''), 'currentColor')
+  return true
 }
 
 /**
@@ -368,6 +390,7 @@ export function buildContainerStyle(style = {}) {
       ...bg.classes,
       'sb-has-radius': !!radius,
       'sb-has-shadow': !!shadow,
+      'sb-has-border': !!looks.border,
       ...(hover ? { [`sb-hover-${hover}`]: true } : {}),
       'sb-has-link': !!link,
       ...visibilityClasses(s.hide_on),
@@ -450,6 +473,7 @@ export function buildBlockWrapperStyle(block) {
       'sb-has-box': hasPadding || !!radius || !!shadow || bg.painted,
       'sb-has-radius': !!radius,
       'sb-has-shadow': !!shadow,
+      'sb-has-border': !!looks.border,
       ...bg.classes,
       ...visibilityClasses(s.hide_on),
     },

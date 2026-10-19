@@ -11,6 +11,7 @@
           :is="img.link_url ? linkTag(img.link_url) : 'div'"
           v-bind="img.link_url ? linkAttrs(img) : {}"
           class="image-block__frame"
+          :class="{ 'has-solid': !!img.solidSrc }"
       >
         <img
             class="image-block__img"
@@ -20,6 +21,17 @@
             :height="img.height || undefined"
             :loading="picked && idx === 0 ? 'eager' : 'lazy'"
             :fetchpriority="picked && idx === 0 ? 'high' : undefined"
+            decoding="async"
+        />
+        <!-- A fixed header turned solid shows this one instead (a dark logo for a light header). -->
+        <img
+            v-if="img.solidSrc"
+            class="image-block__img image-block__img--solid"
+            :src="img.solidSrc"
+            :alt="img.alt || ''"
+            :width="img.width || undefined"
+            :height="img.height || undefined"
+            loading="lazy"
             decoding="async"
         />
         <!-- Hover Effect "Show the second image": loaded lazily, never in the page's first paint. -->
@@ -75,7 +87,8 @@ const images = computed(() => (d.value.images || [])
     .map((img) => {
       const payload = typeof img.image === 'string' ? { url: img.image } : (img.image || {})
       const hoverSrc = typeof img.hover_image === 'string' ? img.hover_image : (img.hover_image?.url || '')
-      return { ...img, src: payload.url, width: payload.width, height: payload.height, hoverSrc }
+      const solidSrc = typeof img.solid_image === 'string' ? img.solid_image : (img.solid_image?.url || '')
+      return { ...img, src: payload.url, width: payload.width, height: payload.height, hoverSrc, solidSrc }
     })
     .filter((img) => img.src))
 
@@ -157,6 +170,9 @@ function linkAttrs(img) {
 .ib-hover-zoom .image-block__img { transition: transform .7s cubic-bezier(.2, .7, .2, 1); }
 .ib-hover-darken .image-block__frame,
 .ib-hover-swap .image-block__frame { position: relative; }
+.image-block__img--solid { display: none; }
+:global(header.header-solid) .image-block__frame.has-solid > .image-block__img:not(.image-block__img--solid) { display: none; }
+:global(header.header-solid) .image-block__frame.has-solid > .image-block__img--solid { display: block; }
 .ib-hover-darken .image-block__frame::after {
   content: '';
   position: absolute;

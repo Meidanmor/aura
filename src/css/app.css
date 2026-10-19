@@ -92,18 +92,21 @@ div.text-h1,div.text-h2,div.text-h3,div.text-h4,div.text-h5,div.text-h6 {
 .q-btn {
     font-family: var(--qf-buttons);
 }
-/* Text styles (src/utils/text-style.js): a size / line height set for a screen size wins over the block's own. */
+/* Text styles (src/utils/text-style.js): a size / line height / letter spacing set for a screen size wins over the block's own. */
 @media (min-width: 1024px) {
     .ts-sz-d { font-size: var(--ts-size) !important; }
     .ts-lh-d { line-height: var(--ts-lh) !important; }
+    .ts-ls-d { letter-spacing: var(--ts-ls) !important; }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
     .ts-sz-t { font-size: var(--ts-size-t) !important; }
     .ts-lh-t { line-height: var(--ts-lh-t) !important; }
+    .ts-ls-t { letter-spacing: var(--ts-ls-t) !important; }
 }
 @media (max-width: 767px) {
     .ts-sz-m { font-size: var(--ts-size-m) !important; }
     .ts-lh-m { line-height: var(--ts-lh-m) !important; }
+    .ts-ls-m { letter-spacing: var(--ts-ls-m) !important; }
 }
 h1,h2,h3,h4,h5,h6 {
     margin: 0;
@@ -233,8 +236,9 @@ img.q-img__image {
 /*header .nav-items-el {
     margin-left: auto;
 }*/
+/* Header icons follow the text colour (secondary by default, the header's own colours when set). */
 header svg {
-    fill: var(--q-secondary);
+    fill: currentColor;
 }
 /* Header text (widget labels, language names) in the icons' color, not Quasar's white. */
 header.q-header {
@@ -278,6 +282,7 @@ body section {
     --sb-color: initial; --sb-radius: initial;
     --sb-bg-t: initial; --sb-bg-m: initial; --sb-color-t: initial; --sb-color-m: initial;
     --sb-radius-t: initial; --sb-radius-m: initial; --sb-shadow: initial; --sb-shadow-t: initial; --sb-shadow-m: initial;
+    --sb-bw: initial; --sb-bw-t: initial; --sb-bw-m: initial; --sb-bs: initial; --sb-bc: initial; --sb-bc-t: initial; --sb-bc-m: initial;
     --sb-overlay-t: initial; --sb-overlay-m: initial; --sb-overlay-o-t: initial; --sb-overlay-o-m: initial;
 
     position: relative;
@@ -301,6 +306,14 @@ body section {
 
 .sb-has-radius { overflow: hidden; }
 .sb-has-shadow { box-shadow: var(--sb-shadow); }
+/* Border (Style tab > Border): widths and colour may differ per screen size. */
+.sb-has-border { border: 0 var(--sb-bs, solid) var(--sb-bc, currentColor); border-width: var(--sb-bw, 0); }
+@media (min-width: 768px) and (max-width: 1023px) {
+    .sb-has-border { border-width: var(--sb-bw-t, var(--sb-bw, 0)); border-color: var(--sb-bc-t, var(--sb-bc, currentColor)); }
+}
+@media (max-width: 767px) {
+    .sb-has-border { border-width: var(--sb-bw-m, var(--sb-bw-t, var(--sb-bw, 0))); border-color: var(--sb-bc-m, var(--sb-bc-t, var(--sb-bc, currentColor))); }
+}
 
 /* "Make the whole section a link": the link covers the section under its
    content; the content lets clicks through, except its own links,
@@ -480,6 +493,7 @@ body section {
     --sb-overlay: initial; --sb-overlay-o: initial; --sb-radius: initial;
     --sb-bg-t: initial; --sb-bg-m: initial; --sb-radius-t: initial; --sb-radius-m: initial;
     --sb-shadow: initial; --sb-shadow-t: initial; --sb-shadow-m: initial;
+    --sb-bw: initial; --sb-bw-t: initial; --sb-bw-m: initial; --sb-bs: initial; --sb-bc: initial; --sb-bc-t: initial; --sb-bc-m: initial;
     --sb-overlay-t: initial; --sb-overlay-m: initial; --sb-overlay-o-t: initial; --sb-overlay-o-m: initial;
 
     min-width: 0;

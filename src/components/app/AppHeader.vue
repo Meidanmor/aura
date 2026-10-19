@@ -1,6 +1,6 @@
 <template>
-  <q-header :class="headerClasses" style="background-color: transparent">
-    <div class="header-inner" :style="headerStyle">
+  <q-header :class="headerClasses" :style="outerStyle">
+    <div ref="inner" class="header-inner" :style="headerStyle">
       <SectionRenderer :sections="headerConfig?.sections" page="header"/>
     </div>
     <!--<div class="container">
@@ -134,12 +134,44 @@ const headerStyle = computed(() => {
   return style
 })
 
+/**
+ * "Sections that scroll away" (away_rows): the header's first sections (an
+ * announcement bar) leave with the page and the rest stays. The header sticks
+ * at its own distance from the top minus their height, so no script runs
+ * while scrolling: only their height is measured (and again when it changes).
+ */
+const inner = ref(null)
+const awayHeight = ref(0)
+const awayRows = computed(() => (props.stickyHeader ? Math.max(0, Math.min(3, Number(settings.value.away_rows) || 0)) : 0))
+const stickyTop = computed(() => {
+  const v = String(settings.value.sticky_top || '').trim()
+  return /^-?\d+(\.\d+)?(px|rem|em|vh)$/.test(v) ? v : (/^-?\d+(\.\d+)?$/.test(v) ? v + 'px' : '0px')
+})
+const outerStyle = computed(() => {
+  const style = { backgroundColor: 'transparent' }
+  if (props.stickyHeader && (awayHeight.value || stickyTop.value !== '0px')) style.top = `calc(${stickyTop.value} - ${awayHeight.value}px)`
+  return style
+})
+function measureAway() {
+  const sections = inner.value ? [...inner.value.querySelectorAll(':scope > .sb-section')] : []
+  awayHeight.value = Math.round(sections.slice(0, awayRows.value).reduce((h, el) => h + el.getBoundingClientRect().height, 0))
+}
+let resizeObserver = null
+
 const onScroll = () => { scrolled.value = window.scrollY > 10 }
 onMounted(() => {
   onScroll()
   window.addEventListener('scroll', onScroll, { passive: true })
+  measureAway()
+  if (typeof ResizeObserver !== 'undefined' && inner.value) {
+    resizeObserver = new ResizeObserver(measureAway)
+    resizeObserver.observe(inner.value)
+  }
 })
-onUnmounted(() => window.removeEventListener('scroll', onScroll))
+onUnmounted(() => {
+  window.removeEventListener('scroll', onScroll)
+  resizeObserver?.disconnect()
+})
 
 /*const emit = defineEmits([
   'open-menu',

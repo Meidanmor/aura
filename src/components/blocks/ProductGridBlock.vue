@@ -2,7 +2,8 @@
   <div class="product-grid-block" :style="cssVars">
     <div v-if="products?.length" class="product-grid-block__grid">
       <div v-for="(product, index) in products" :key="product.id" class="product-grid-block__cell">
-        <ProductCard :product="product" :priority="picked && index < 3" />
+        <LoopCard v-if="card" :sections="card" type="product" :item="product" :priority="picked && index < 3" />
+        <ProductCard v-else :product="product" :priority="picked && index < 3" />
       </div>
     </div>
     <div v-if="d.show_view_all && d.view_all_url && products?.length" class="product-grid-block__footer">
@@ -21,6 +22,7 @@
 <script setup>
 import { computed } from 'vue'
 import ProductCard from '../shop/ProductCard.vue'
+import LoopCard from '../loops/LoopCard.vue'
 import productsStore from 'src/stores/products'
 import { useBlockQuery } from 'src/composables/useBlockQuery.js'
 import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
@@ -32,6 +34,8 @@ const props = defineProps({
 })
 
 const d = computed(() => props.data.data || {})
+// A card design chosen for this block (Store builder → Card designs), published with it.
+const card = computed(() => (Array.isArray(props.data.data?.card) && props.data.data.card.length ? props.data.data.card : null))
 const isInternal = (url) => String(url).startsWith('/') && !String(url).startsWith('//')
 
 // Everything that changes which products are shown.

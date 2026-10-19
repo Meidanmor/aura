@@ -55,7 +55,7 @@
 
           <SectionRenderer :sections="categorySections" page="category" location="before_products_grid"/>
 
-          <ProductResultsGrid :loading="productsStore.productsLoading.value" :products="paginatedProducts" :priority-count="gridPriority" />
+          <ProductResultsGrid :loading="productsStore.productsLoading.value" :products="paginatedProducts" :priority-count="gridPriority" :card="shopSettings?.product_card" />
 
           <SectionRenderer :sections="categorySections" page="category" location="after_products_grid"/>
 

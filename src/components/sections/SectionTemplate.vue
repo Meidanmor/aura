@@ -103,6 +103,11 @@ import ProductTags from './ProductTags.vue'
 import MenuWidget from '../blocks/MenuWidget.vue'
 import LanguageSwitcherBlock from '../blocks/LanguageSwitcherBlock.vue'
 import { buildContainerStyle, buildBlockWrapperStyle } from 'src/composables/useSectionStyle.js'
+import LoopImage from '../loops/LoopImage.vue'
+import LoopText from '../loops/LoopText.vue'
+import LoopPrice from '../loops/LoopPrice.vue'
+import LoopStars from '../loops/LoopStars.vue'
+import LoopCartButton from '../loops/LoopCartButton.vue'
 import MiniCartBlock from "components/blocks/MiniCartBlock.vue";
 import MiniWishlistBlock from "components/blocks/MiniWishlistBlock.vue";
 
@@ -153,6 +158,15 @@ const blockComponents = {
   language_switcher: LanguageSwitcherBlock,
   mini_cart: MiniCartBlock,
   mini_wishlist: MiniWishlistBlock,
+  // Card designs (src/components/loops): the card's own item.
+  lp_image: LoopImage, lc_image: LoopImage, lpo_image: LoopImage,
+  lp_title: LoopText, lp_excerpt: LoopText, lp_category: LoopText,
+  lc_name: LoopText, lc_count: LoopText, lc_description: LoopText,
+  lpo_title: LoopText, lpo_date: LoopText, lpo_excerpt: LoopText, lpo_category: LoopText,
+  lr_text: LoopText, lr_name: LoopText, lr_verified: LoopText, lr_product: LoopText,
+  lp_price: LoopPrice,
+  lp_rating: LoopStars, lr_stars: LoopStars,
+  lp_cart: LoopCartButton,
 }
 
 const container = computed(() => buildContainerStyle(props.data.style || {}))

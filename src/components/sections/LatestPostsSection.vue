@@ -1,7 +1,10 @@
 <template>
   <div v-if="posts?.length" class="latest-posts" :style="cssVars">
     <div class="latest-posts-grid">
-      <BlogCard v-for="p in posts" :key="p.id" :post="p" :show-excerpt="opts.show_excerpt !== false" :show-date="opts.show_date !== false" :title-text="cardTitle" :excerpt-text="excerptText" />
+      <template v-if="card">
+        <LoopCard v-for="p in posts" :key="p.id" :sections="card" type="post" :item="p" />
+      </template>
+      <BlogCard v-for="p in posts" v-else :key="p.id" :post="p" :show-excerpt="opts.show_excerpt !== false" :show-date="opts.show_date !== false" :title-text="cardTitle" :excerpt-text="excerptText" />
     </div>
     <div v-if="opts.button_label" class="latest-posts-more">
       <q-btn outline color="secondary" :label="opts.button_label" to="/blog" no-caps />
@@ -12,6 +15,7 @@
 <script setup>
 import { computed, onMounted, onServerPrefetch, useSSRContext, watch } from 'vue'
 import BlogCard from 'components/blog/BlogCard.vue'
+import LoopCard from '../loops/LoopCard.vue'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { fetchBlogList } from 'src/api/blog.js'
 import { getApiOrigin } from 'src/utils/server/get-api-origin.js'
@@ -24,6 +28,8 @@ const props = defineProps({
 })
 
 const opts = computed(() => props.data.data || {})
+// A card design chosen for this block (Store builder → Card designs), published with it.
+const card = computed(() => (Array.isArray(props.data.data?.card) && props.data.data.card.length ? props.data.data.card : null))
 const cardTitle = computed(() => textStyle(opts.value, tsKeys('card_title'), 'headings'))
 const excerptText = computed(() => textStyle(opts.value, tsKeys('excerpt')))
 const count = () => Math.max(1, Math.min(12, Number(opts.value.count) || 3))

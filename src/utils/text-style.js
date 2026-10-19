@@ -1,5 +1,6 @@
 /**
- * Text styles (the Store builder's Font / Size / Weight / Line Height / Color
+ * Text styles (the Store builder's Font / Size / Weight / Line Height / Color /
+ * Letter Spacing / Letter Case
  * groups on a block's Style tab). The store publishes them as plain fields:
  * "{prefix}_font", "{prefix}_size"… or older names (a block passes them in
  * `keys`). Only what's set is applied, so a block's own look stays the default.
@@ -19,20 +20,22 @@ import { asResponsive, toCssLength } from 'src/composables/useSectionStyle.js'
 const SUFFIX = { desktop: '', tablet: '-t', mobile: '-m' }
 const DEVICE = { desktop: 'd', tablet: 't', mobile: 'm' }
 const WEIGHT_RE = /^[1-9]00$/
+const CASES = new Set(['uppercase', 'lowercase', 'capitalize'])
 // A line height may be unitless (1.6): numbers stay numbers.
 const lineHeight = (v) => (v === '' || v == null ? null : String(v).trim())
 
 /** The data keys of a text style: "{prefix}_{part}", or the older names in `over`. */
 export function tsKeys(prefix, over = {}) {
-  return { font: `${prefix}_font`, size: `${prefix}_size`, weight: `${prefix}_weight`, lh: `${prefix}_line_height`, color: `${prefix}_color`, ...over }
+  return { font: `${prefix}_font`, size: `${prefix}_size`, weight: `${prefix}_weight`, lh: `${prefix}_line_height`, color: `${prefix}_color`, spacing: `${prefix}_spacing`, textCase: `${prefix}_case`, ...over }
 }
 
 function parts(d, keys, defaultFont) {
-  const out = { sizes: {}, lhs: {} }
+  const out = { sizes: {}, lhs: {}, spacings: {} }
   if (keys.font) out.font = brandFontVar(d[keys.font], defaultFont)
   if (keys.weight && WEIGHT_RE.test(String(d[keys.weight] ?? ''))) out.weight = String(d[keys.weight])
   if (keys.color) out.color = resolveGlobalColor(d[keys.color]) || undefined
-  for (const [part, map, transform] of [['size', 'sizes', toCssLength], ['lh', 'lhs', lineHeight]]) {
+  if (keys.textCase && CASES.has(d[keys.textCase])) out.textCase = d[keys.textCase]
+  for (const [part, map, transform] of [['size', 'sizes', toCssLength], ['lh', 'lhs', lineHeight], ['spacing', 'spacings', toCssLength]]) {
     if (!keys[part]) continue
     const r = asResponsive(d[keys[part]])
     for (const device of Object.keys(SUFFIX)) {
@@ -51,6 +54,7 @@ export function textStyle(d, keys, defaultFont = 'text') {
   if (p.font) style.fontFamily = p.font
   if (p.weight) style.fontWeight = p.weight
   if (p.color) style.color = p.color
+  if (p.textCase) style.textTransform = p.textCase
   for (const [device, v] of Object.entries(p.sizes)) {
     style[`--ts-size${SUFFIX[device]}`] = v
     cls[`ts-sz-${DEVICE[device]}`] = true
@@ -58,6 +62,10 @@ export function textStyle(d, keys, defaultFont = 'text') {
   for (const [device, v] of Object.entries(p.lhs)) {
     style[`--ts-lh${SUFFIX[device]}`] = v
     cls[`ts-lh-${DEVICE[device]}`] = true
+  }
+  for (const [device, v] of Object.entries(p.spacings)) {
+    style[`--ts-ls${SUFFIX[device]}`] = v
+    cls[`ts-ls-${DEVICE[device]}`] = true
   }
   return { class: cls, style }
 }

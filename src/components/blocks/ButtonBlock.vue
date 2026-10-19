@@ -70,8 +70,8 @@ const fullWidthClasses = computed(() => {
   return { 'btn-full-d': a.desktop === 'stretch', 'btn-full-t': a.tablet === 'stretch', 'btn-full-m': a.mobile === 'stretch' }
 })
 
-// Button Text: its size and weight (font and color are set with the button's own).
-const labelText = computed(() => textStyle(d.value, { size: 'text_size', weight: 'font_weight' }))
+// Button Text: its size, weight, letter spacing and case (font and color are set with the button's own).
+const labelText = computed(() => textStyle(d.value, { size: 'text_size', weight: 'font_weight', spacing: 'label_spacing', textCase: 'label_case' }))
 
 const btnVars = computed(() => {
   const vars = {}
