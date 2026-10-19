@@ -5,6 +5,7 @@
         v-if="slides.length"
         v-model="slideIndex"
         class="cb-hero"
+        :class="arrowsShow !== 'both' ? `cb-only-${arrowsShow}` : ''"
         animated
         swipeable
         height="auto"
@@ -67,12 +68,12 @@
        @mouseenter="paused = true" @mouseleave="paused = false" @focusin="paused = true" @focusout="paused = false">
     <!-- Arrows together above the row, at the end. -->
     <div v-if="showArrows && arrowsAt === 'top_end'" class="cb-row__nav cb-row__nav--top">
-      <button type="button" class="cb-row__arrow cb-row__arrow--prev" :aria-label="t('Previous')" @click="go(-1)">
+      <button v-if="showPrev" type="button" class="cb-row__arrow cb-row__arrow--prev" :aria-label="t('Previous')" @click="go(-1)">
         <svg viewBox="8.59 6 7.41 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path fill="currentColor" d="M14.59 6L16 7.41 11.42 12l4.58 4.59L14.59 18 8.59 12z"/>
         </svg>
       </button>
-      <button type="button" class="cb-row__arrow cb-row__arrow--next" :aria-label="t('Next')" @click="go(1)">
+      <button v-if="showNext" type="button" class="cb-row__arrow cb-row__arrow--next" :aria-label="t('Next')" @click="go(1)">
         <svg viewBox="8.59 6 7.41 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
         </svg>
@@ -81,7 +82,7 @@
 
     <div class="cb-row__viewport">
       <!-- At both sides: the same arrows as the product page's related products (AppCarousel). -->
-      <button v-if="showArrows && arrowsAt === 'sides'" type="button" class="cb-row__arrow cb-row__arrow--prev cb-row__arrow--side" :aria-label="t('Previous')" @click="go(-1)">
+      <button v-if="showArrows && showPrev && arrowsAt === 'sides'" type="button" class="cb-row__arrow cb-row__arrow--prev cb-row__arrow--side" :aria-label="t('Previous')" @click="go(-1)">
         <svg viewBox="8.59 6 7.41 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path fill="currentColor" d="M14.59 6L16 7.41 11.42 12l4.58 4.59L14.59 18 8.59 12z"/>
         </svg>
@@ -129,7 +130,7 @@
         </div>
       </div>
 
-      <button v-if="showArrows && arrowsAt === 'sides'" type="button" class="cb-row__arrow cb-row__arrow--next cb-row__arrow--side" :aria-label="t('Next')" @click="go(1)">
+      <button v-if="showArrows && showNext && arrowsAt === 'sides'" type="button" class="cb-row__arrow cb-row__arrow--next cb-row__arrow--side" :aria-label="t('Next')" @click="go(1)">
         <svg viewBox="8.59 6 7.41 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
         </svg>
@@ -138,7 +139,7 @@
 
     <!-- Arrows together below the row (the dots between them in the middle, or before them at the end). -->
     <div v-if="showArrows && (arrowsAt === 'bottom_end' || arrowsAt === 'bottom_center')" class="cb-row__nav" :class="`cb-row__nav--${arrowsAt}`">
-      <button type="button" class="cb-row__arrow cb-row__arrow--prev" :aria-label="t('Previous')" @click="go(-1)">
+      <button v-if="showPrev" type="button" class="cb-row__arrow cb-row__arrow--prev" :aria-label="t('Previous')" @click="go(-1)">
         <svg viewBox="8.59 6 7.41 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path fill="currentColor" d="M14.59 6L16 7.41 11.42 12l4.58 4.59L14.59 18 8.59 12z"/>
         </svg>
@@ -155,14 +156,28 @@
             @click="goTo(p - 1)"
         />
       </div>
-      <button type="button" class="cb-row__arrow cb-row__arrow--next" :aria-label="t('Next')" @click="go(1)">
+      <button v-if="showNext" type="button" class="cb-row__arrow cb-row__arrow--next" :aria-label="t('Next')" @click="go(1)">
         <svg viewBox="8.59 6 7.41 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
         </svg>
       </button>
     </div>
 
-    <div v-if="d.dots && pages > 1 && !dotsInNav" class="cb-row__dots">
+    <!-- Custom position (Style → Previous Arrow / Next Arrow): each arrow on its own. -->
+    <template v-if="showArrows && arrowsAt === 'custom'">
+      <button v-if="showPrev" type="button" class="cb-row__arrow cb-row__arrow--prev cb-pos" :style="prevPos" :aria-label="t('Previous')" @click="go(-1)">
+        <svg viewBox="8.59 6 7.41 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path fill="currentColor" d="M14.59 6L16 7.41 11.42 12l4.58 4.59L14.59 18 8.59 12z"/>
+        </svg>
+      </button>
+      <button v-if="showNext" type="button" class="cb-row__arrow cb-row__arrow--next cb-pos" :style="nextPos" :aria-label="t('Next')" @click="go(1)">
+        <svg viewBox="8.59 6 7.41 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+        </svg>
+      </button>
+    </template>
+
+    <div v-if="d.dots && pages > 1 && !dotsInNav" class="cb-row__dots" :class="{ 'cb-row__dots--custom cb-pos': dotsCustom }" :style="dotsCustom ? dotsPos : undefined">
       <button
           v-for="p in pages"
           :key="p"
@@ -256,14 +271,49 @@ const card = computed(() => (Array.isArray(d.value.card) && d.value.card.length 
 /* ---------- Row look: Carousel Style, arrows ---------- */
 
 const ROW_STYLES = new Set(['whole', 'peek', 'center'])
-const ARROWS_AT = new Set(['sides', 'top_end', 'bottom_end', 'bottom_center'])
+const ARROWS_AT = new Set(['sides', 'top_end', 'bottom_end', 'bottom_center', 'custom'])
 const ARROW_LOOKS = new Set(['plain', 'outline', 'filled', 'square'])
 const SHORT = { desktop: 'd', tablet: 't', mobile: 'm' }
 const arrowsAt = computed(() => (ARROWS_AT.has(d.value.arrows_position) ? d.value.arrows_position : 'sides'))
 const arrowLook = computed(() => (ARROW_LOOKS.has(d.value.arrow_style) ? d.value.arrow_style : 'plain'))
 const showArrows = computed(() => !!d.value.arrows && pages.value > 1)
-// Below the row, the dots sit in the arrows' row.
-const dotsInNav = computed(() => showArrows.value && (arrowsAt.value === 'bottom_end' || arrowsAt.value === 'bottom_center'))
+// "Arrows to Show": both, or only one of them.
+const arrowsShow = computed(() => (d.value.arrows_show === 'next' || d.value.arrows_show === 'prev' ? d.value.arrows_show : 'both'))
+const showPrev = computed(() => arrowsShow.value !== 'next')
+const showNext = computed(() => arrowsShow.value !== 'prev')
+const dotsCustom = computed(() => d.value.dots_position === 'custom')
+// Below the row, the dots sit in the arrows' row (unless they have a place of their own).
+const dotsInNav = computed(() => showArrows.value && !dotsCustom.value && (arrowsAt.value === 'bottom_end' || arrowsAt.value === 'bottom_center'))
+
+// A custom position, per screen size: from the top / middle / bottom and the left / middle /
+// right of the block (as seen on the screen), moved by the distances. CSS: .cb-pos.
+const POS_Y = new Set(['top', 'middle', 'bottom'])
+const POS_X = new Set(['left', 'center', 'right'])
+const VAR_SUFFIX = { desktop: '', tablet: '-t', mobile: '-m' }
+function customPos(prefix, defY, defX) {
+  const fromY = asResponsive(d.value[`${prefix}_from_y`] || defY)
+  const fromX = asResponsive(d.value[`${prefix}_from_x`] || defX)
+  const dy = asResponsive(d.value[`${prefix}_y`] ?? '')
+  const dx = asResponsive(d.value[`${prefix}_x`] ?? '')
+  const vars = {}
+  for (const device of DEVICES) {
+    const sfx = VAR_SUFFIX[device]
+    const y = POS_Y.has(fromY[device]) ? fromY[device] : defY
+    const x = POS_X.has(fromX[device]) ? fromX[device] : defX
+    const oy = toCssLength(dy[device]) || '0px'
+    const ox = toCssLength(dx[device]) || '0px'
+    vars[`--p-top${sfx}`] = y === 'top' ? oy : (y === 'middle' ? `calc(50% + ${oy})` : 'auto')
+    vars[`--p-bottom${sfx}`] = y === 'bottom' ? oy : 'auto'
+    vars[`--p-ty${sfx}`] = y === 'middle' ? '-50%' : '0px'
+    vars[`--p-left${sfx}`] = x === 'left' ? ox : (x === 'center' ? `calc(50% + ${ox})` : 'auto')
+    vars[`--p-right${sfx}`] = x === 'right' ? ox : 'auto'
+    vars[`--p-tx${sfx}`] = x === 'center' ? '-50%' : '0px'
+  }
+  return vars
+}
+const prevPos = computed(() => customPos('prev', 'middle', 'left'))
+const nextPos = computed(() => customPos('next', 'middle', 'right'))
+const dotsPos = computed(() => customPos('dots', 'bottom', 'center'))
 const rowClasses = computed(() => {
   const styles = asResponsive(d.value.row_style || 'whole')
   const cls = {
@@ -448,6 +498,9 @@ const cssVars = computed(() => {
 .cb-slide__btn--outline { color: #fff !important; }
 .cb-hero :deep(.q-carousel__arrow .q-btn),
 .cb-hero :deep(.q-carousel__navigation .q-btn) { color: var(--cb-control, #fff); }
+/* "Arrows to Show": one of them. */
+.cb-only-next :deep(.q-carousel__prev-arrow),
+.cb-only-prev :deep(.q-carousel__next-arrow) { display: none; }
 
 /* Slow zoom: the shown slide's photo grows a little while it's on screen. */
 .cb-zoom :deep(.q-carousel__slide) .cb-slide__media img { animation: cb-zoom 9s ease-out forwards; }
@@ -580,6 +633,26 @@ const cssVars = computed(() => {
 
 .cb-row__dots { display: flex; justify-content: center; gap: 8px; margin-top: 16px; }
 .cb-row__dots.cb-row__dots--inline { margin-top: 0; }
+
+/* Custom position (arrows and dots), on the block as seen on the screen in every language. */
+/* rtl:begin:ignore */
+.cb-pos {
+  position: absolute;
+  z-index: 3;
+  margin: 0;
+  top: var(--p-top);
+  bottom: var(--p-bottom);
+  left: var(--p-left);
+  right: var(--p-right);
+  transform: translate(var(--p-tx), var(--p-ty));
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .cb-pos { top: var(--p-top-t); bottom: var(--p-bottom-t); left: var(--p-left-t); right: var(--p-right-t); transform: translate(var(--p-tx-t), var(--p-ty-t)); }
+}
+@media (max-width: 767px) {
+  .cb-pos { top: var(--p-top-m); bottom: var(--p-bottom-m); left: var(--p-left-m); right: var(--p-right-m); transform: translate(var(--p-tx-m), var(--p-ty-m)); }
+}
+/* rtl:end:ignore */
 .cb-row__dot {
   width: 9px;
   height: 9px;

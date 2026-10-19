@@ -219,9 +219,14 @@ function linkAttrs(img) {
   .ib-hover-darken .image-block__frame:hover::after { opacity: .18; }
   .ib-hover-swap .image-block__frame:hover .image-block__img--hover { opacity: 1; }
 }
+/* Touch screens: while a finger is on it (boot/touch-press.js). */
+.ib-hover-zoom .image-block__frame.is-pressed .image-block__img { transform: scale(1.06); }
+.ib-hover-darken .image-block__frame.is-pressed::after { opacity: .18; }
+.ib-hover-swap .image-block__frame.is-pressed .image-block__img--hover { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   .ib-hover-zoom .image-block__img, .image-block__img--hover { transition: none; }
-  .ib-hover-zoom .image-block__frame:hover .image-block__img { transform: none; }
+  .ib-hover-zoom .image-block__frame:hover .image-block__img,
+  .ib-hover-zoom .image-block__frame.is-pressed .image-block__img { transform: none; }
 }
 .image-block__caption {
   margin-top: 8px;

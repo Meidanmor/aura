@@ -126,6 +126,10 @@ const shape = computed(() => {
   .lt-card:hover .lt-img--darken .lt-img__img { opacity: .82; }
   .lt-card:hover .lt-img--swap .lt-img__second { opacity: 1; }
 }
+/* Touch screens: while a finger is on it (boot/touch-press.js). */
+.lt-card.is-pressed .lt-img--zoom .lt-img__img { transform: scale(1.06); }
+.lt-card.is-pressed .lt-img--darken .lt-img__img { opacity: .82; }
+.lt-card.is-pressed .lt-img--swap .lt-img__second { opacity: 1; }
 .lt-img--darken { background: #000; }
 @media (prefers-reduced-motion: reduce) {
   .lt-img__img { transition: none; }

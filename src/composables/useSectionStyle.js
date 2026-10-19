@@ -154,6 +154,32 @@ function setSidesVars(vars, value) {
 }
 
 /**
+ * Margin (four sides, per screen size) into --sbb-mt/-mr/-mb/-ml. Pages
+ * published before the Margin field have margin_top / margin_bottom only.
+ * Returns true when a left or right margin is set (class sb-has-mx: without
+ * it, a contained section keeps centring itself).
+ */
+function setMarginVars(vars, s) {
+  if (!s.margin || typeof s.margin !== 'object') {
+    setResponsiveVar(vars, '--sbb-mt', s.margin_top, toCssLength)
+    setResponsiveVar(vars, '--sbb-mb', s.margin_bottom, toCssLength)
+    return false
+  }
+  const r = asResponsive(s.margin)
+  let sideways = false
+  for (const device of DEVICES) {
+    const sides = r[device] || {}
+    for (const [side, key] of [['top', 'mt'], ['right', 'mr'], ['bottom', 'mb'], ['left', 'ml']]) {
+      const len = toCssLength(sides[side])
+      if (!len) continue
+      vars[`--sbb-${key}${SUFFIX[device]}`] = len
+      if (key === 'mr' || key === 'ml') sideways = true
+    }
+  }
+  return sideways
+}
+
+/**
  * Background of a container or block (BACKGROUND_FIELDS in the plugin).
  * Returns CSS vars + classes for the element, and `video` ({ src, poster,
  * mobile }) when a video background should be rendered (SectionBgVideo).
@@ -360,8 +386,7 @@ export function buildContainerStyle(style = {}) {
 
   // Margins (applied by whoever renders the container's outermost box)
   const marginVars = {}
-  setResponsiveVar(marginVars, '--sbb-mt', s.margin_top, toCssLength)
-  setResponsiveVar(marginVars, '--sbb-mb', s.margin_bottom, toCssLength)
+  const sideways = setMarginVars(marginVars, s)
 
   // Inner flex layout
   setResponsiveVar(innerVars, '--sb-dir', s.direction)
@@ -393,12 +418,14 @@ export function buildContainerStyle(style = {}) {
       'sb-has-border': !!looks.border,
       ...(hover ? { [`sb-hover-${hover}`]: true } : {}),
       'sb-has-link': !!link,
+      'sb-has-mx': sideways,
       ...visibilityClasses(s.hide_on),
     },
     outerVars,
     innerClasses: rowClasses,
     innerVars,
     marginVars,
+    sideways,
     widthMode,
     widthVars,
     hasOverlay: bg.hasOverlay,
@@ -438,6 +465,7 @@ export function buildBlockWrapperStyle(block) {
     return {
       classes: {
         'sb-block--section': true,
+        'sb-has-mx': c.sideways,
         'sb-has-w': c.widthMode === 'custom' && hasAny(block.style?.width),
         'sb-has-maxw': c.widthMode === 'contained',
         ...visibilityClasses(block.style?.hide_on),
@@ -449,8 +477,7 @@ export function buildBlockWrapperStyle(block) {
 
   const s = block?.style || {}
   const vars = {}
-  setResponsiveVar(vars, '--sbb-mt', s.margin_top, toCssLength)
-  setResponsiveVar(vars, '--sbb-mb', s.margin_bottom, toCssLength)
+  const sideways = setMarginVars(vars, s)
   setResponsiveVar(vars, '--sbb-w', s.width, toCssLength)
   setResponsiveVar(vars, '--sbb-maxw', s.max_width, toCssLength)
 
@@ -470,6 +497,7 @@ export function buildBlockWrapperStyle(block) {
       [`sb-block--${block?.type}`]: true,
       'sb-has-w': hasAny(s.width),
       'sb-has-maxw': hasAny(s.max_width),
+      'sb-has-mx': sideways,
       'sb-has-box': hasPadding || !!radius || !!shadow || bg.painted,
       'sb-has-radius': !!radius,
       'sb-has-shadow': !!shadow,
