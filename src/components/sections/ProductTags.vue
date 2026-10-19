@@ -49,7 +49,7 @@ import { useI18n } from 'src/i18n/index.js'
 const { t } = useI18n()
 
 const props = defineProps({
-  // [{ product, x, y, mx, my }]
+  // [{ product, x, y, tx, ty, mx, my }] (tablet / phone spots: '' = inherit)
   tags: { type: Array, default: () => [] },
   // { url, width, height } of the image as shown on big screens / on phones (null: the same image)
   image: { type: Object, default: null },
@@ -104,9 +104,7 @@ const placed = computed(() => {
   const oy = (ch - dh) * fy
   const out = []
   props.tags.forEach((tag, i) => {
-    const usePhone = phone && props.mobileImage?.url && tag.mx !== '' && tag.mx != null
-    const x = Number(usePhone ? tag.mx : tag.x)
-    const y = Number(usePhone ? tag.my : tag.y)
+    const { x, y } = spotOf(tag)
     if (!Number.isFinite(x) || !Number.isFinite(y)) return
     const left = ox + (x / 100) * dw
     const top = oy + (y / 100) * dh
@@ -117,6 +115,21 @@ const placed = computed(() => {
   })
   return out
 })
+
+/**
+ * A tag's spot on this screen size: tablets have their own (tx / ty) or the
+ * big screens' one; phones have their own (mx / my) or, on the same image,
+ * the tablet's one (a phone image of its own starts from the big screens').
+ */
+function spotOf(tag) {
+  const set = (v) => v !== '' && v != null
+  const big = { x: Number(tag.x), y: Number(tag.y) }
+  const tablet = set(tag.tx) && set(tag.ty) ? { x: Number(tag.tx), y: Number(tag.ty) } : big
+  if (device.value === 'tablet') return tablet
+  if (device.value !== 'mobile') return big
+  if (set(tag.mx) && set(tag.my)) return { x: Number(tag.mx), y: Number(tag.my) }
+  return props.mobileImage?.url ? big : tablet
+}
 
 function priceOf(p) {
   const pr = p?.prices

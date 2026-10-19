@@ -22,8 +22,16 @@
   />
   <div v-if="slideshow.counter && count > 1" class="sb-bg-counter" aria-hidden="true">
     <span class="sb-bg-counter__nums">{{ pad(index + 1) }} / {{ pad(count) }}</span>
-    <span class="sb-bg-counter__bar"><i :key="index" :class="{ 'is-running': moving }" /></span>
+    <span class="sb-bg-counter__bar"><i :key="`${index}-${restarts}`" :class="{ 'is-running': moving && count > 1 }" /></span>
   </div>
+  <template v-if="slideshow.arrows && count > 1">
+    <button type="button" class="sb-bg-arrow sb-bg-arrow--prev" :aria-label="t('Previous image')" @click.stop.prevent="go(-1)">
+      <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+    </button>
+    <button type="button" class="sb-bg-arrow sb-bg-arrow--next" :aria-label="t('Next image')" @click.stop.prevent="go(1)">
+      <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+    </button>
+  </template>
 </template>
 
 <script setup>
@@ -37,9 +45,12 @@
  */
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import ProductTags from './ProductTags.vue'
+import { useI18n } from 'src/i18n/index.js'
+
+const { t } = useI18n()
 
 const props = defineProps({
-  // { slides: [{ url, mobile }], seconds, zoom, counter } from buildBackground()
+  // { slides: [{ url, mobile }], seconds, zoom, counter, arrows } from buildBackground()
   slideshow: { type: Object, required: true },
 })
 
@@ -67,6 +78,15 @@ function start() {
     if (document.hidden || tagOpen.value) return
     index.value = (index.value + 1) % count.value
   }, props.slideshow.seconds * 1000)
+}
+
+// Arrows: show the previous / next image now, and give it its full time.
+const restarts = ref(0)
+function go(step) {
+  loaded.value = true
+  index.value = (index.value + step + count.value) % count.value
+  restarts.value++
+  start()
 }
 
 function whenLoaded(fn) {
@@ -137,13 +157,19 @@ watch(() => [props.slideshow.seconds, count.value], () => {
   color: inherit;
   pointer-events: none;
 }
+/* The line's track is a faint copy of the text colour; the progress fills it in full colour. */
 .sb-bg-counter__bar {
   position: relative;
   width: 72px;
-  height: 1px;
-  background: currentColor;
-  opacity: 0.6;
+  height: 2px;
   overflow: hidden;
+}
+.sb-bg-counter__bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0.25;
 }
 .sb-bg-counter__bar i {
   position: absolute;
@@ -159,12 +185,41 @@ watch(() => [props.slideshow.seconds, count.value], () => {
   to { transform: scaleX(1); }
 }
 
+/* Arrows at the sides, in the section's text colour (previous on the start side). */
+.sb-bg-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+.sb-bg-arrow:hover { opacity: 1; }
+.sb-bg-arrow:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; opacity: 1; }
+.sb-bg-arrow--prev { inset-inline-start: 12px; }
+.sb-bg-arrow--next { inset-inline-end: 12px; }
+[dir="rtl"] .sb-bg-arrow svg { transform: scaleX(-1); }
+
 @media (max-width: 1023px) {
   .sb-bg-slide img { object-position: var(--sb-bg-pos-t, var(--sb-bg-pos, center center)); }
 }
 @media (max-width: 767px) {
   .sb-bg-slide img { object-position: var(--sb-bg-pos-m, var(--sb-bg-pos-t, var(--sb-bg-pos, center center))); }
   .sb-bg-counter { inset-inline-end: 16px; bottom: 14px; }
+  .sb-bg-arrow { width: 36px; height: 36px; }
+  .sb-bg-arrow--prev { inset-inline-start: 4px; }
+  .sb-bg-arrow--next { inset-inline-end: 4px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .sb-bg-slide { transition: none; }

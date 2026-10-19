@@ -43,6 +43,38 @@ export function asResponsive(value) {
   return { desktop: value, tablet: value, mobile: value }
 }
 
+/**
+ * Looks that can differ per screen size (store fields with `screens`: colours,
+ * corner radius, shadow, overlay…) are published as the desktop value, plus
+ * `_screens[key] = { tablet, mobile }` only when another screen size differs,
+ * so older storefronts keep reading the desktop value. styleAt() gives the
+ * style as one screen size sees it.
+ */
+export function styleAt(style, device) {
+  const extra = style?._screens
+  if (!extra || typeof extra !== 'object' || device === 'desktop') return style || {}
+  const out = { ...style }
+  for (const [key, v] of Object.entries(extra)) {
+    if (v && typeof v === 'object' && device in v) out[key] = v[device]
+  }
+  return out
+}
+
+/** One look per screen size: fn(style as that screen size sees it) for each. */
+const perScreen = (style, fn) => Object.fromEntries(DEVICES.map((d) => [d, fn(styleAt(style, d))]))
+
+/**
+ * Writes --name for desktop, and --name-t / --name-m only where they differ
+ * (the CSS falls back to the bigger screen's). `empty`: the CSS value for
+ * "nothing" on a screen size where a bigger one has something.
+ */
+function setLookVars(vars, name, r, empty) {
+  if (r.desktop) vars[name] = r.desktop
+  if (r.tablet !== r.desktop) vars[`${name}-t`] = r.tablet || empty
+  if (r.mobile !== r.tablet) vars[`${name}-m`] = r.mobile || empty
+  return DEVICES.some((d) => !!r[d])
+}
+
 /** Writes --name / --name-t / --name-m for a responsive value. */
 export function setResponsiveVar(vars, name, value, transform = (x) => x) {
   const r = asResponsive(value)
@@ -153,13 +185,14 @@ export function buildBackground(style = {}) {
   let hasImage = false
 
   if (bgType === 'color') {
-    const c = resolveGlobalColor(s.bg_color)
-    if (c) vars['--sb-bg'] = c
+    setLookVars(vars, '--sb-bg', perScreen(s, (x) => resolveGlobalColor(x.bg_color) || ''), 'transparent')
   } else if (bgType === 'gradient') {
-    const c1 = resolveGlobalColor(s.bg_gradient_color1) || 'transparent'
-    const c2 = resolveGlobalColor(s.bg_gradient_color2) || 'transparent'
-    const angle = Number.isFinite(Number(s.bg_gradient_angle)) ? Number(s.bg_gradient_angle) : 180
-    vars['--sb-bg-img'] = `linear-gradient(${angle}deg, ${c1}, ${c2})`
+    setLookVars(vars, '--sb-bg-img', perScreen(s, (x) => {
+      const c1 = resolveGlobalColor(x.bg_gradient_color1) || 'transparent'
+      const c2 = resolveGlobalColor(x.bg_gradient_color2) || 'transparent'
+      const angle = Number.isFinite(Number(x.bg_gradient_angle)) ? Number(x.bg_gradient_angle) : 180
+      return `linear-gradient(${angle}deg, ${c1}, ${c2})`
+    }), 'none')
   } else if (bgType === 'image' && Object.values(bgImageUrls(s.bg_image)).some(Boolean)) {
     hasImage = true
     // Product tags on the background image (ProductTags.vue, drawn over the section).
@@ -189,6 +222,7 @@ export function buildBackground(style = {}) {
         seconds: Number.isFinite(sec) ? Math.min(30, Math.max(2, sec)) : 6,
         zoom: s.bg_slide_effect !== 'fade',
         counter: !!s.bg_slide_counter,
+        arrows: !!s.bg_slide_arrows,
         position: bgPosition(s),
       }
       setResponsiveVar(vars, '--sb-bg-pos', bgPosition(s))
@@ -214,11 +248,17 @@ export function buildBackground(style = {}) {
     if (src) video = { kind, src, poster, mobile: !s.bg_video_mobile_poster }
   }
 
-  const hasOverlay = (bgType === 'image' || bgType === 'video' || !!slideshow) && !!s.bg_overlay_color
+  // Overlay: a screen size without a colour shows none (opacity 0).
+  const overlayColor = perScreen(s, (x) => resolveGlobalColor(x.bg_overlay_color) || '')
+  const hasOverlay = (bgType === 'image' || bgType === 'video' || !!slideshow) && DEVICES.some((d) => !!overlayColor[d])
   if (hasOverlay) {
-    vars['--sb-overlay'] = resolveGlobalColor(s.bg_overlay_color)
-    const o = Number(s.bg_overlay_opacity)
-    vars['--sb-overlay-o'] = String(Number.isFinite(o) ? Math.min(100, Math.max(0, o)) / 100 : 0.5)
+    setLookVars(vars, '--sb-overlay', overlayColor, 'transparent')
+    const opacity = perScreen(s, (x) => {
+      const o = Number(x.bg_overlay_opacity)
+      return String(Number.isFinite(o) ? Math.min(100, Math.max(0, o)) / 100 : 0.5)
+    })
+    for (const d of DEVICES) if (!overlayColor[d]) opacity[d] = '0'
+    setLookVars(vars, '--sb-overlay-o', opacity, '0')
   }
 
   return {
@@ -240,6 +280,16 @@ export function buildBackground(style = {}) {
 }
 
 const slideUrl = (img) => (typeof img === 'string' ? img : img?.url) || ''
+
+/** Shadow, corner radius (and a container's text colour) per screen size, as CSS vars. Returns which are used. */
+function setBoxLooks(vars, s, radiusKey, colorKey) {
+  const has = {}
+  has.shadow = setLookVars(vars, '--sb-shadow', perScreen(s, (x) => buildShadow(x) || ''), 'none')
+  if (has.shadow && !vars['--sb-shadow']) vars['--sb-shadow'] = 'none'
+  has.radius = setLookVars(vars, '--sb-radius', perScreen(s, (x) => toCssLength(x[radiusKey]) || ''), '0')
+  if (colorKey) has.color = setLookVars(vars, '--sb-color', perScreen(s, (x) => resolveGlobalColor(x[colorKey]) || ''), 'inherit')
+  return has
+}
 
 /**
  * Box shadow (SHADOW_FIELDS in the plugin): "x y blur spread color", with
@@ -280,13 +330,10 @@ export function buildContainerStyle(style = {}) {
   const bg = buildBackground(s)
   Object.assign(outerVars, bg.vars)
 
-  // Text color & radius
-  const color = resolveGlobalColor(s.text_color)
-  if (color) outerVars['--sb-color'] = color
-  const radius = toCssLength(s.border_radius)
-  if (radius) outerVars['--sb-radius'] = radius
-  const shadow = buildShadow(s)
-  if (shadow) outerVars['--sb-shadow'] = shadow
+  // Text color, radius and shadow (each may differ per screen size)
+  const looks = setBoxLooks(outerVars, s, 'border_radius', 'text_color')
+  const radius = looks.radius
+  const shadow = looks.shadow
 
   // Margins (applied by whoever renders the container's outermost box)
   const marginVars = {}
@@ -385,10 +432,9 @@ export function buildBlockWrapperStyle(block) {
 
   // Box: inner padding, corner radius and background (Style tab).
   const hasPadding = setSidesVars(vars, s.box_padding)
-  const radius = toCssLength(s.box_radius)
-  if (radius) vars['--sb-radius'] = radius
-  const shadow = buildShadow(s)
-  if (shadow) vars['--sb-shadow'] = shadow
+  const looks = setBoxLooks(vars, s, 'box_radius')
+  const radius = looks.radius
+  const shadow = looks.shadow
   const bg = buildBackground(s)
   Object.assign(vars, bg.vars)
   // Entrance animation's delay (the animation itself: src/utils/entrance.js).

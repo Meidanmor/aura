@@ -276,6 +276,9 @@ body section {
     --sb-bg-pos: initial; --sb-bg-pos-t: initial; --sb-bg-pos-m: initial;
     --sb-overlay: initial; --sb-overlay-o: initial;
     --sb-color: initial; --sb-radius: initial;
+    --sb-bg-t: initial; --sb-bg-m: initial; --sb-color-t: initial; --sb-color-m: initial;
+    --sb-radius-t: initial; --sb-radius-m: initial; --sb-shadow: initial; --sb-shadow-t: initial; --sb-shadow-m: initial;
+    --sb-overlay-t: initial; --sb-overlay-m: initial; --sb-overlay-o-t: initial; --sb-overlay-o-m: initial;
 
     position: relative;
     display: flex;
@@ -432,9 +435,9 @@ body section {
     border-radius: inherit;
     pointer-events: none;
 }
-.sb-has-overlay > :not(.sb-bg-video):not(.sb-bg-slides):not(.sb-bg-counter),
+.sb-has-overlay > :not(.sb-bg-video):not(.sb-bg-slides):not(.sb-bg-counter):not(.sb-bg-arrow),
 .sb-has-bg-video > :not(.sb-bg-video),
-.sb-has-bg-slides > :not(.sb-bg-slides):not(.sb-bg-counter) { position: relative; z-index: 2; }
+.sb-has-bg-slides > :not(.sb-bg-slides):not(.sb-bg-counter):not(.sb-bg-arrow) { position: relative; z-index: 2; }
 /* Slideshow background (SectionBgSlides.vue): image layers under the overlay and content. */
 .sb-has-bg-slides { isolation: isolate; overflow: hidden; position: relative; }
 
@@ -475,6 +478,9 @@ body section {
     --sb-bg-size: initial; --sb-bg-size-t: initial; --sb-bg-size-m: initial;
     --sb-bg-pos: initial; --sb-bg-pos-t: initial; --sb-bg-pos-m: initial;
     --sb-overlay: initial; --sb-overlay-o: initial; --sb-radius: initial;
+    --sb-bg-t: initial; --sb-bg-m: initial; --sb-radius-t: initial; --sb-radius-m: initial;
+    --sb-shadow: initial; --sb-shadow-t: initial; --sb-shadow-m: initial;
+    --sb-overlay-t: initial; --sb-overlay-m: initial; --sb-overlay-o-t: initial; --sb-overlay-o-m: initial;
 
     min-width: 0;
     box-sizing: border-box;
@@ -518,6 +524,15 @@ body section {
         background-image: var(--sb-bg-img-t, var(--sb-bg-img, none));
         background-size: var(--sb-bg-size-t, cover);
         background-position: var(--sb-bg-pos-t, center center);
+        /* Looks per screen size: -t / -m are only set when they differ from desktop. */
+        background-color: var(--sb-bg-t, var(--sb-bg, transparent));
+        border-radius: var(--sb-radius-t, var(--sb-radius, 0));
+    }
+    .sb-container { color: var(--sb-color-t, var(--sb-color, inherit)); }
+    .sb-has-shadow { box-shadow: var(--sb-shadow-t, var(--sb-shadow)); }
+    .sb-has-overlay::before {
+        background: var(--sb-overlay-t, var(--sb-overlay, #000));
+        opacity: var(--sb-overlay-o-t, var(--sb-overlay-o, .5));
     }
     .sb-block.sb-has-box { padding: var(--sb-pt-t, 0) var(--sb-pr-t, 0) var(--sb-pb-t, 0) var(--sb-pl-t, 0); }
     .sb-bg-video { object-position: var(--sb-bg-pos-t, center center); }
@@ -556,6 +571,14 @@ body section {
         background-image: var(--sb-bg-img-m, var(--sb-bg-img-t, var(--sb-bg-img, none)));
         background-size: var(--sb-bg-size-m, cover);
         background-position: var(--sb-bg-pos-m, center center);
+        background-color: var(--sb-bg-m, var(--sb-bg-t, var(--sb-bg, transparent)));
+        border-radius: var(--sb-radius-m, var(--sb-radius-t, var(--sb-radius, 0)));
+    }
+    .sb-container { color: var(--sb-color-m, var(--sb-color-t, var(--sb-color, inherit))); }
+    .sb-has-shadow { box-shadow: var(--sb-shadow-m, var(--sb-shadow-t, var(--sb-shadow))); }
+    .sb-has-overlay::before {
+        background: var(--sb-overlay-m, var(--sb-overlay-t, var(--sb-overlay, #000)));
+        opacity: var(--sb-overlay-o-m, var(--sb-overlay-o-t, var(--sb-overlay-o, .5)));
     }
     .sb-block.sb-has-box { padding: var(--sb-pt-m, 0) var(--sb-pr-m, 0) var(--sb-pb-m, 0) var(--sb-pl-m, 0); }
     .sb-bg-video { object-position: var(--sb-bg-pos-m, center center); }
