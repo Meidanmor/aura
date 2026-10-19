@@ -13,7 +13,17 @@
           class="image-block__frame"
           :class="{ 'has-solid': !!img.solidSrc }"
       >
+        <!-- Style → SVG "Draw SVG images as code": in the page, so it can take a colour. -->
+        <BuilderSvg
+            v-if="img.asSvg"
+            class="image-block__img image-block__svg"
+            :style="img.svgStyle"
+            :image="img.image"
+            :recolor="!!svgColor"
+            :alt="img.alt || ''"
+        />
         <img
+            v-else
             class="image-block__img"
             :src="img.src"
             :alt="img.alt || ''"
@@ -62,6 +72,9 @@ import { computed } from 'vue'
 import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { RouterLink } from 'vue-router'
 import ProductTags from './ProductTags.vue'
+import BuilderSvg from '../blocks/BuilderSvg.vue'
+import { safeSvg } from 'src/utils/inline-svg.js'
+import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToFlex, DEVICES } from 'src/composables/useSectionStyle.js'
 
@@ -76,6 +89,7 @@ const RATIOS = new Set(['1/1', '4/3', '3/2', '16/9', '3/4', '2/3'])
 const FITS = new Set(['cover', 'contain', 'fill', 'none'])
 
 const d = computed(() => props.data.data || {})
+const svgColor = computed(() => (d.value.svg_inline ? resolveGlobalColor(d.value.svg_color) : ''))
 const captionText = computed(() => textStyle(d.value, tsKeys('caption')))
 
 // Image payloads are { url, width, height } (schema v3); older JSON had a
@@ -88,7 +102,12 @@ const images = computed(() => (d.value.images || [])
       const payload = typeof img.image === 'string' ? { url: img.image } : (img.image || {})
       const hoverSrc = typeof img.hover_image === 'string' ? img.hover_image : (img.hover_image?.url || '')
       const solidSrc = typeof img.solid_image === 'string' ? img.solid_image : (img.solid_image?.url || '')
-      return { ...img, src: payload.url, width: payload.width, height: payload.height, hoverSrc, solidSrc }
+      // Drawn as code when the store sent the SVG's code, or (to recolour it) as a mask.
+      const asSvg = !!d.value.svg_inline && (!!safeSvg(payload) || (!!svgColor.value && /\.svg(\?|$)/i.test(payload.url || '')))
+      const svgStyle = asSvg && payload.width && payload.height
+        ? { '--svg-w': `${payload.width}px`, aspectRatio: `${payload.width} / ${payload.height}` }
+        : {}
+      return { ...img, src: payload.url, width: payload.width, height: payload.height, hoverSrc, solidSrc, asSvg, svgStyle }
     })
     .filter((img) => img.src))
 
@@ -124,6 +143,7 @@ const cssVars = computed(() => {
   const radius = toCssLength(d.value.border_radius)
   if (radius) vars['--ib-radius'] = radius
   vars['--ib-fit'] = FITS.has(d.value.object_fit) ? d.value.object_fit : 'cover'
+  if (svgColor.value) vars['--ib-svg-color'] = svgColor.value
   return vars
 })
 
@@ -166,6 +186,8 @@ function linkAttrs(img) {
   object-fit: var(--ib-fit, cover);
   border-radius: var(--ib-radius, 0);
 }
+/* An SVG drawn as code: its own width at most, its own shape. */
+.image-block__svg { width: var(--svg-w, 100%); color: var(--ib-svg-color, inherit); }
 /* Hover effects (Style → Hover) */
 .ib-hover-zoom .image-block__img { transition: transform .7s cubic-bezier(.2, .7, .2, 1); }
 .ib-hover-darken .image-block__frame,

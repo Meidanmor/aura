@@ -1,7 +1,11 @@
 <script setup>
 import { computed, inject } from 'vue'
 import NavMenu from 'components/app/NavMenu.vue'
-import { toCssLength, alignToFlex, alignToText } from 'src/composables/useSectionStyle.js'
+import { asResponsive, toCssLength, alignToFlex, alignToText } from 'src/composables/useSectionStyle.js'
+import { brandFontVar } from 'src/utils/brand-fonts.js'
+
+// A length or a plain number (line height), nothing that could end the CSS rule.
+const LENGTH_RE = /^-?[\d.]+(px|em|rem|%|vw|vh)?$/
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { t } from 'src/i18n/index.js'
 import WidgetButton from './WidgetButton.vue'
@@ -89,6 +93,27 @@ const css = computed(() => {
     const text = alignToText(d.value.alignment)
     if (justify) rules.push(`${s} .nav-top { justify-content: ${justify}; }`)
     if (text) rules.push(`${s} .menu-vertical { text-align: ${text}; }`, `${s} .menu-v-item { text-align: ${text}; }`)
+  }
+
+  // Style → Menu Links: font, weight, letter case, and size / line height / spacing per screen size.
+  const links = `${s} .nav-link, ${s} .menu-v-link`
+  const linkFont = brandFontVar(d.value.link_font, 'text')
+  const own = []
+  if (linkFont) own.push(`font-family: ${linkFont}`)
+  if (/^[1-9]00$/.test(String(d.value.link_weight ?? ''))) own.push(`font-weight: ${d.value.link_weight}`)
+  if (['uppercase', 'lowercase', 'capitalize'].includes(d.value.link_case)) own.push(`text-transform: ${d.value.link_case}`)
+  if (own.length) rules.push(`${links} { ${own.map((x) => `${x} !important`).join('; ')}; }`)
+  const sized = { size: asResponsive(d.value.link_size), lh: asResponsive(d.value.link_line_height), ls: asResponsive(d.value.link_spacing) }
+  const MEDIA = { desktop: '(min-width: 1024px)', tablet: '(min-width: 768px) and (max-width: 1023px)', mobile: '(max-width: 767px)' }
+  for (const device of ['desktop', 'tablet', 'mobile']) {
+    const decl = []
+    const size = toCssLength(sized.size[device])
+    const lh = sized.lh[device] === '' || sized.lh[device] == null ? '' : String(sized.lh[device]).trim()
+    const ls = toCssLength(sized.ls[device])
+    if (size && LENGTH_RE.test(size)) decl.push(`font-size: ${size} !important`)
+    if (lh && LENGTH_RE.test(lh)) decl.push(`line-height: ${lh} !important`)
+    if (ls && LENGTH_RE.test(ls)) decl.push(`letter-spacing: ${ls} !important`)
+    if (decl.length) rules.push(`@media ${MEDIA[device]} { ${links} { ${decl.join('; ')}; } }`)
   }
 
   if (d.value.link_color) {

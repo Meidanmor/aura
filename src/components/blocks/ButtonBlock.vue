@@ -3,7 +3,7 @@
     <q-btn
         v-bind="linkAttrs"
         class="btn-block__btn"
-        :class="[`btn-block__btn--${variant}`, `btn-block__btn--${size}`, labelText.class]"
+        :class="[`btn-block__btn--${variant}`, `btn-block__btn--${size}`, labelText.class, paddingVars.cls]"
         :style="btnVars"
         :label="d.text"
         :outline="variant === 'outline'"
@@ -22,7 +22,7 @@ import { useRoute } from 'vue-router'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { brandFontVar } from 'src/utils/brand-fonts.js'
 import { textStyle } from 'src/utils/text-style.js'
-import { asResponsive, setResponsiveVar, toCssLength, alignToFlex } from 'src/composables/useSectionStyle.js'
+import { asResponsive, setResponsiveVar, toCssLength, alignToFlex, DEVICES } from 'src/composables/useSectionStyle.js'
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -71,7 +71,7 @@ const fullWidthClasses = computed(() => {
 })
 
 // Button Text: its size, weight, letter spacing and case (font and color are set with the button's own).
-const labelText = computed(() => textStyle(d.value, { size: 'text_size', weight: 'font_weight', spacing: 'label_spacing', textCase: 'label_case' }))
+const labelText = computed(() => textStyle(d.value, { size: 'text_size', weight: 'font_weight', lh: 'label_line_height', spacing: 'label_spacing', textCase: 'label_case' }))
 
 const btnVars = computed(() => {
   const vars = {}
@@ -91,7 +91,32 @@ const btnVars = computed(() => {
   const font = brandFontVar(d.value.font, 'buttons')
   if (font) vars['font-family'] = font
   Object.assign(vars, labelText.value.style)
+  Object.assign(vars, paddingVars.value.vars)
   return vars
+})
+
+// Style → Button Padding: { desktop: { top, right, bottom, left }, … }, each side on its own.
+const SIDES = ['top', 'right', 'bottom', 'left']
+const SHORT = { desktop: 'd', tablet: 't', mobile: 'm' }
+const SUFFIX = { desktop: '', tablet: '-t', mobile: '-m' }
+const paddingVars = computed(() => {
+  const vars = {}
+  const cls = {}
+  const r = asResponsive(d.value.btn_padding)
+  const last = {}
+  for (const device of DEVICES) {
+    const box = r[device] && typeof r[device] === 'object' ? r[device] : {}
+    for (const side of SIDES) {
+      // A side left empty on a smaller screen keeps the bigger screen's.
+      let v = toCssLength(box[side])
+      if (v === null || v === undefined || v === '') v = last[side]
+      if (v === null || v === undefined || v === '') continue
+      last[side] = v
+      vars[`--bp-${side}${SUFFIX[device]}`] = v
+      cls[`bp-${side[0]}-${SHORT[device]}`] = true
+    }
+  }
+  return { vars, cls }
 })
 </script>
 
@@ -106,6 +131,25 @@ const btnVars = computed(() => {
 @media (max-width: 767px) { .btn-full-m .btn-block__btn { width: 100%; } }
 
 .btn-block__btn--lg { padding: 10px 30px; }
+/* Button Padding, per side and screen size (beats the size's padding and Quasar's min-height). */
+@media (min-width: 1024px) {
+  .bp-t-d { padding-top: var(--bp-top) !important; min-height: 0; }
+  .bp-r-d { padding-right: var(--bp-right) !important; }
+  .bp-b-d { padding-bottom: var(--bp-bottom) !important; min-height: 0; }
+  .bp-l-d { padding-left: var(--bp-left) !important; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .bp-t-t { padding-top: var(--bp-top-t) !important; min-height: 0; }
+  .bp-r-t { padding-right: var(--bp-right-t) !important; }
+  .bp-b-t { padding-bottom: var(--bp-bottom-t) !important; min-height: 0; }
+  .bp-l-t { padding-left: var(--bp-left-t) !important; }
+}
+@media (max-width: 767px) {
+  .bp-t-m { padding-top: var(--bp-top-m) !important; min-height: 0; }
+  .bp-r-m { padding-right: var(--bp-right-m) !important; }
+  .bp-b-m { padding-bottom: var(--bp-bottom-m) !important; min-height: 0; }
+  .bp-l-m { padding-left: var(--bp-left-m) !important; }
+}
 .btn-block__btn--link { text-decoration: underline; text-underline-offset: 6px; padding-left: 0; padding-right: 0; }
 .btn-block__btn--link :deep(.q-focus-helper) { display: none; }
 </style>

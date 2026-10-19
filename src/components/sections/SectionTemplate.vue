@@ -90,6 +90,7 @@ import ButtonBlock from '../blocks/ButtonBlock.vue'
 import FormBlock from '../blocks/FormBlock.vue'
 import VideoBlock from '../blocks/VideoBlock.vue'
 import IconListBlock from '../blocks/IconListBlock.vue'
+import IconBlock from '../blocks/IconBlock.vue'
 import RunningTextBlock from '../blocks/RunningTextBlock.vue'
 import FaqBlock from '../blocks/FaqBlock.vue'
 import TabsBlock from '../blocks/TabsBlock.vue'
@@ -147,6 +148,7 @@ const blockComponents = {
   advantages: AdvantagesSection,
   video: VideoBlock,
   icon_list: IconListBlock,
+  icon: IconBlock,
   running_text: RunningTextBlock,
   faq: FaqBlock,
   tabs: TabsBlock,

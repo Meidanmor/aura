@@ -63,11 +63,25 @@
   </div>
 
   <!-- ===== Multi-item row: images / logos / products / categories ===== -->
-  <div v-else-if="items.length" class="carousel-block cb-row" :class="[`cb-row--${source}`, { 'cb-row--arrows': d.arrows && pages > 1 }]" :style="cssVars"
+  <div v-else-if="items.length" class="carousel-block cb-row" :class="rowClasses" :style="cssVars"
        @mouseenter="paused = true" @mouseleave="paused = false" @focusin="paused = true" @focusout="paused = false">
+    <!-- Arrows together above the row, at the end. -->
+    <div v-if="showArrows && arrowsAt === 'top_end'" class="cb-row__nav cb-row__nav--top">
+      <button type="button" class="cb-row__arrow cb-row__arrow--prev" :aria-label="t('Previous')" @click="go(-1)">
+        <svg viewBox="8.59 6 7.41 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path fill="currentColor" d="M14.59 6L16 7.41 11.42 12l4.58 4.59L14.59 18 8.59 12z"/>
+        </svg>
+      </button>
+      <button type="button" class="cb-row__arrow cb-row__arrow--next" :aria-label="t('Next')" @click="go(1)">
+        <svg viewBox="8.59 6 7.41 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+        </svg>
+      </button>
+    </div>
+
     <div class="cb-row__viewport">
-      <!-- The same arrows as the product page's related products (AppCarousel). -->
-      <button v-if="d.arrows && pages > 1" type="button" class="cb-row__arrow cb-row__arrow--prev" :aria-label="t('Previous')" @click="go(-1)">
+      <!-- At both sides: the same arrows as the product page's related products (AppCarousel). -->
+      <button v-if="showArrows && arrowsAt === 'sides'" type="button" class="cb-row__arrow cb-row__arrow--prev cb-row__arrow--side" :aria-label="t('Previous')" @click="go(-1)">
         <svg viewBox="8.59 6 7.41 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path fill="currentColor" d="M14.59 6L16 7.41 11.42 12l4.58 4.59L14.59 18 8.59 12z"/>
         </svg>
@@ -85,7 +99,8 @@
       >
         <div v-for="(item, idx) in items" :key="item.key || idx" class="cb-row__item">
           <!-- Products -->
-          <ProductCard v-if="source === 'products'" :product="item" :priority="picked && idx < 3" />
+          <LoopCard v-if="card && (source === 'products' || source === 'categories')" :sections="card" :type="source === 'products' ? 'product' : 'category'" :item="item" :priority="picked && idx < 3" />
+          <ProductCard v-else-if="source === 'products'" :product="item" :priority="picked && idx < 3" />
 
           <!-- Categories -->
           <router-link v-else-if="source === 'categories'" :to="`/product-category/${item.slug}`" class="cb-cat">
@@ -114,14 +129,40 @@
         </div>
       </div>
 
-      <button v-if="d.arrows && pages > 1" type="button" class="cb-row__arrow cb-row__arrow--next" :aria-label="t('Next')" @click="go(1)">
+      <button v-if="showArrows && arrowsAt === 'sides'" type="button" class="cb-row__arrow cb-row__arrow--next cb-row__arrow--side" :aria-label="t('Next')" @click="go(1)">
         <svg viewBox="8.59 6 7.41 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
         </svg>
       </button>
     </div>
 
-    <div v-if="d.dots && pages > 1" class="cb-row__dots">
+    <!-- Arrows together below the row (the dots between them in the middle, or before them at the end). -->
+    <div v-if="showArrows && (arrowsAt === 'bottom_end' || arrowsAt === 'bottom_center')" class="cb-row__nav" :class="`cb-row__nav--${arrowsAt}`">
+      <button type="button" class="cb-row__arrow cb-row__arrow--prev" :aria-label="t('Previous')" @click="go(-1)">
+        <svg viewBox="8.59 6 7.41 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path fill="currentColor" d="M14.59 6L16 7.41 11.42 12l4.58 4.59L14.59 18 8.59 12z"/>
+        </svg>
+      </button>
+      <div v-if="d.dots && pages > 1" class="cb-row__dots cb-row__dots--inline">
+        <button
+            v-for="p in pages"
+            :key="p"
+            type="button"
+            class="cb-row__dot"
+            :class="{ 'is-active': p - 1 === page }"
+            :aria-label="t('Go to slide {n}', { n: p })"
+            :aria-current="p - 1 === page ? 'true' : undefined"
+            @click="goTo(p - 1)"
+        />
+      </div>
+      <button type="button" class="cb-row__arrow cb-row__arrow--next" :aria-label="t('Next')" @click="go(1)">
+        <svg viewBox="8.59 6 7.41 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+        </svg>
+      </button>
+    </div>
+
+    <div v-if="d.dots && pages > 1 && !dotsInNav" class="cb-row__dots">
       <button
           v-for="p in pages"
           :key="p"
@@ -141,13 +182,14 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { matChevronLeft, matChevronRight } from '@quasar/extras/material-icons'
 import ProductCard from '../shop/ProductCard.vue'
+import LoopCard from '../loops/LoopCard.vue'
 import ProductTags from '../sections/ProductTags.vue'
 import productsStore from 'src/stores/products'
 import { useBlockQuery } from 'src/composables/useBlockQuery.js'
 import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
-import { setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
+import { asResponsive, setResponsiveVar, toCssLength, DEVICES } from 'src/composables/useSectionStyle.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { useI18n } from 'src/i18n/index.js'
 
@@ -208,6 +250,33 @@ const items = computed(() => {
   return []
 })
 
+// A card design chosen for the products / categories (Store builder → Card designs), published with it.
+const card = computed(() => (Array.isArray(d.value.card) && d.value.card.length ? d.value.card : null))
+
+/* ---------- Row look: Carousel Style, arrows ---------- */
+
+const ROW_STYLES = new Set(['whole', 'peek', 'center'])
+const ARROWS_AT = new Set(['sides', 'top_end', 'bottom_end', 'bottom_center'])
+const ARROW_LOOKS = new Set(['plain', 'outline', 'filled', 'square'])
+const SHORT = { desktop: 'd', tablet: 't', mobile: 'm' }
+const arrowsAt = computed(() => (ARROWS_AT.has(d.value.arrows_position) ? d.value.arrows_position : 'sides'))
+const arrowLook = computed(() => (ARROW_LOOKS.has(d.value.arrow_style) ? d.value.arrow_style : 'plain'))
+const showArrows = computed(() => !!d.value.arrows && pages.value > 1)
+// Below the row, the dots sit in the arrows' row.
+const dotsInNav = computed(() => showArrows.value && (arrowsAt.value === 'bottom_end' || arrowsAt.value === 'bottom_center'))
+const rowClasses = computed(() => {
+  const styles = asResponsive(d.value.row_style || 'whole')
+  const cls = {
+    [`cb-row--${source.value}`]: true,
+    'cb-row--arrows': showArrows.value && arrowsAt.value === 'sides',
+    [`cb-arrows--${arrowLook.value}`]: true,
+    'cb-noarrows-m': d.value.arrows_mobile === false,
+    'cb-bleed-m': !!d.value.bleed_mobile,
+  }
+  for (const device of DEVICES) cls[`cb-st-${ROW_STYLES.has(styles[device]) ? styles[device] : 'whole'}-${SHORT[device]}`] = true
+  return cls
+})
+
 const ariaLabel = computed(() => t({ images: 'Image carousel', logos: 'Brands', products: 'Products', categories: 'Categories' }[source.value] || 'Carousel'))
 
 /* ---------- Autoplay (paused on hover/focus/touch and for reduced motion) ---------- */
@@ -232,10 +301,23 @@ const page = ref(0)
 let resizeObserver = null
 let timer = null
 
+// The distance one arrow press moves: the items wholly in view.
+function stepOf(el) {
+  const first = el.children[0]
+  if (!first) return el.clientWidth
+  const cs = getComputedStyle(el)
+  const gap = parseFloat(cs.columnGap) || 0
+  const pad = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0)
+  const itemW = first.getBoundingClientRect().width + gap
+  const whole = Math.max(1, Math.floor((el.clientWidth - pad + gap + 1) / itemW))
+  return whole * itemW
+}
+
 function measure() {
   const el = trackRef.value
   if (!el) return
-  pages.value = Math.max(1, Math.round(el.scrollWidth / el.clientWidth))
+  const max = el.scrollWidth - el.clientWidth
+  pages.value = max > 4 ? Math.ceil((max - 4) / stepOf(el)) + 1 : 1
   onScroll()
 }
 
@@ -247,13 +329,14 @@ function onScroll() {
   if (!el) return
   const left = Math.abs(el.scrollLeft)
   const atEnd = left + el.clientWidth >= el.scrollWidth - 4
-  page.value = atEnd ? pages.value - 1 : Math.round(left / el.clientWidth)
+  page.value = atEnd ? pages.value - 1 : Math.round(left / stepOf(el))
 }
 
 function goTo(p) {
   const el = trackRef.value
   if (!el) return
-  el.scrollTo({ left: (rtl(el) ? -1 : 1) * p * el.clientWidth, behavior: reducedMotion.value ? 'auto' : 'smooth' })
+  const left = Math.min(p * stepOf(el), el.scrollWidth - el.clientWidth)
+  el.scrollTo({ left: (rtl(el) ? -1 : 1) * left, behavior: reducedMotion.value ? 'auto' : 'smooth' })
 }
 
 function go(step) {
@@ -317,6 +400,10 @@ const cssVars = computed(() => {
   const control = resolveGlobalColor(d.value.control_color)
   if (control) vars['--cb-control'] = control
   if (d.value.grayscale) vars['--cb-gray'] = '1'
+  const arrowSize = toCssLength(d.value.arrow_size)
+  if (arrowSize) vars['--cb-arrow'] = arrowSize
+  const arrowBg = resolveGlobalColor(d.value.arrow_bg)
+  if (arrowBg) vars['--cb-arrow-bg'] = arrowBg
   return vars
 })
 </script>
@@ -412,13 +499,19 @@ const cssVars = computed(() => {
 
 /* ---------- Multi-item row ---------- */
 .cb-row { position: relative; }
-.cb-row__viewport { position: relative; }
+/* A size container: the centred style measures the row with cqw. */
+.cb-row__viewport { position: relative; container-type: inline-size; }
 .cb-row__track {
   --cb-gap-now: var(--cb-gap, 16px);
+  --cb-n: var(--cb-per, 4);
+  --cb-col: calc((100% - (var(--cb-n) - 1) * var(--cb-gap-now)) / var(--cb-n));
+  --cb-pad: 0px;
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: calc((100% - (var(--cb-per, 4) - 1) * var(--cb-gap-now)) / var(--cb-per, 4));
+  grid-auto-columns: var(--cb-col);
   gap: var(--cb-gap-now);
+  padding-inline: var(--cb-pad);
+  scroll-padding-inline: var(--cb-pad);
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
@@ -428,32 +521,65 @@ const cssVars = computed(() => {
 .cb-row__track:focus-visible { outline: 2px solid var(--cb-control, currentColor); outline-offset: 4px; }
 .cb-row__item { scroll-snap-align: start; min-width: 0; }
 
+/* Carousel Style, per screen size: whole items (above), half of the next one,
+   or centred with a quarter of an item at each side. */
+@media (min-width: 1024px) {
+  .cb-st-peek-d .cb-row__track { --cb-col: calc((100% - var(--cb-n) * var(--cb-gap-now)) / (var(--cb-n) + 0.5)); }
+  .cb-st-center-d .cb-row__track { --cb-col: calc((100cqw - (var(--cb-n) + 1) * var(--cb-gap-now)) / (var(--cb-n) + 0.5)); --cb-pad: calc(var(--cb-col) * 0.25 + var(--cb-gap-now)); }
+}
+
 /* Arrows in a gutter at each side, like the related products carousel. */
 .cb-row--arrows .cb-row__viewport { padding: 0 20px; }
 .cb-row__arrow {
-  position: absolute;
-  top: 38%;
   z-index: 2;
-  transform: translateY(-50%);
-  width: 23px;
+  width: var(--cb-arrow, 23px);
+  height: var(--cb-arrow, auto);
   padding: 4px;
   border: 0;
   border-radius: 4px;
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   background: transparent;
   color: var(--cb-control, var(--q-secondary));
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
-.cb-row__arrow svg { display: block; width: 100%; height: auto; }
+.cb-row__arrow svg { display: block; width: 100%; height: auto; max-height: 100%; }
 [dir="rtl"] .cb-row__arrow svg { transform: scaleX(-1); }
-.cb-row__arrow--prev { left: 0; }
-.cb-row__arrow--next { right: 0; }
+.cb-row__arrow--side { position: absolute; top: 38%; transform: translateY(-50%); }
+.cb-row__arrow--side.cb-row__arrow--prev { left: 0; }
+.cb-row__arrow--side.cb-row__arrow--next { right: 0; }
 .cb-row__arrow:hover { background: rgba(0, 0, 0, 0.05); }
+
+/* Arrow Look: round or square buttons hold a smaller chevron. */
+.cb-arrows--outline .cb-row__arrow,
+.cb-arrows--filled .cb-row__arrow,
+.cb-arrows--square .cb-row__arrow { width: var(--cb-arrow, 40px); height: var(--cb-arrow, 40px); padding: calc(var(--cb-arrow, 40px) * 0.32); }
+.cb-arrows--outline .cb-row__arrow { border: 1px solid currentColor; border-radius: 50%; }
+.cb-arrows--square .cb-row__arrow { border: 1px solid currentColor; border-radius: 0; }
+.cb-arrows--filled .cb-row__arrow { border-radius: 50%; background: var(--cb-arrow-bg, var(--cb-control, var(--q-secondary))); color: #fff; }
+.cb-arrows--outline .cb-row__arrow:hover,
+.cb-arrows--square .cb-row__arrow:hover { background: var(--cb-control, var(--q-secondary)); border-color: var(--cb-control, var(--q-secondary)); color: #fff; }
+.cb-arrows--filled .cb-row__arrow:hover { background: var(--cb-arrow-bg, var(--cb-control, var(--q-secondary))); opacity: 0.85; }
+.cb-arrows--outline.cb-row--arrows .cb-row__viewport,
+.cb-arrows--filled.cb-row--arrows .cb-row__viewport,
+.cb-arrows--square.cb-row--arrows .cb-row__viewport { padding: 0 calc(var(--cb-arrow, 40px) + 8px); }
+
+/* Arrows together, above or below the row. */
+.cb-row__nav { display: flex; align-items: center; gap: 8px; }
+.cb-row__nav--top { justify-content: flex-end; margin-bottom: 16px; }
+.cb-row__nav--bottom_end { justify-content: flex-end; margin-top: 16px; }
+.cb-row__nav--bottom_center { justify-content: center; margin-top: 16px; }
+/* At the end: the dots take the start, the arrows the end. */
+.cb-row__nav--bottom_end .cb-row__dots--inline { order: -1; margin: 0 auto 0 0; }
+[dir="rtl"] .cb-row__nav--bottom_end .cb-row__dots--inline { margin: 0 0 0 auto; }
+.cb-row__dots--inline { margin: 0 8px; }
 .cb-row__arrow:focus-visible { outline: 2px solid var(--cb-control, var(--q-secondary)); outline-offset: 2px; }
 
 .cb-row__dots { display: flex; justify-content: center; gap: 8px; margin-top: 16px; }
+.cb-row__dots.cb-row__dots--inline { margin-top: 0; }
 .cb-row__dot {
   width: 9px;
   height: 9px;
@@ -501,21 +627,31 @@ const cssVars = computed(() => {
 @media (max-width: 1023px) {
   .cb-hero :deep(.q-carousel__slide.cb-slide) { height: var(--cb-h-t, 440px); }
   .cb-slide__title { font-size: var(--cb-title-t, 2.4rem); }
-  .cb-row__track {
-    --cb-gap-now: var(--cb-gap-t, 16px);
-    grid-auto-columns: calc((100% - (var(--cb-per-t, 3) - 1) * var(--cb-gap-now)) / var(--cb-per-t, 3));
-  }
+  .cb-row__track { --cb-gap-now: var(--cb-gap-t, 16px); --cb-n: var(--cb-per-t, 3); }
   .cb-img img { height: var(--cb-img-h-t, auto); }
   .cb-row--logos .cb-img img { height: var(--cb-img-h-t, 60px); }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .cb-st-peek-t .cb-row__track { --cb-col: calc((100% - var(--cb-n) * var(--cb-gap-now)) / (var(--cb-n) + 0.5)); }
+  .cb-st-center-t .cb-row__track { --cb-col: calc((100cqw - (var(--cb-n) + 1) * var(--cb-gap-now)) / (var(--cb-n) + 0.5)); --cb-pad: calc(var(--cb-col) * 0.25 + var(--cb-gap-now)); }
 }
 @media (max-width: 767px) {
   .cb-hero :deep(.q-carousel__slide.cb-slide) { height: var(--cb-h-m, 380px); }
   .cb-slide__content { padding: 32px 24px 48px; }
   .cb-slide__title { font-size: var(--cb-title-m, 1.9rem); }
   .cb-slide__text { font-size: 1rem; }
-  .cb-row__track {
-    --cb-gap-now: var(--cb-gap-m, 12px);
-    grid-auto-columns: calc((100% - (var(--cb-per-m, 2) - 1) * var(--cb-gap-now)) / var(--cb-per-m, 2));
+  .cb-row__track { --cb-gap-now: var(--cb-gap-m, 12px); --cb-n: var(--cb-per-m, 2); }
+  .cb-st-peek-m .cb-row__track { --cb-col: calc((100% - var(--cb-n) * var(--cb-gap-now)) / (var(--cb-n) + 0.5)); }
+  .cb-st-center-m .cb-row__track { --cb-col: calc((100cqw - (var(--cb-n) + 1) * var(--cb-gap-now)) / (var(--cb-n) + 0.5)); --cb-pad: calc(var(--cb-col) * 0.25 + var(--cb-gap-now)); }
+  /* "Show arrows on phones" off: people swipe. */
+  .cb-noarrows-m .cb-row__arrow { display: none; }
+  .cb-noarrows-m.cb-row--arrows .cb-row__viewport { padding: 0; }
+  /* "Run to the screen edge on phones": the row reaches both edges, its first item stays in line. */
+  .cb-bleed-m .cb-row__viewport { padding-inline: 0; }
+  .cb-bleed-m .cb-row__track {
+    margin-inline: calc(50cqw - 50vw);
+    padding-inline: calc(50vw - 50cqw + var(--cb-pad));
+    scroll-padding-inline: calc(50vw - 50cqw + var(--cb-pad));
   }
   .cb-img img { height: var(--cb-img-h-m, auto); }
   .cb-row--logos .cb-img img { height: var(--cb-img-h-m, 48px); }

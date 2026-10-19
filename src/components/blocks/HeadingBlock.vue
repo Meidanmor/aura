@@ -4,14 +4,16 @@
         :is="tag"
         v-if="d.title"
         class="heading-block__title"
-        :style="titleStyle"
+        :class="titleText.class"
+        :style="[titleStyle, titleText.style]"
     >
       <span v-html="sanitizeSectionText(d.title)" />
     </component>
     <p
         v-if="d.subtitle"
         class="heading-block__subtitle"
-        :style="subtitleStyle"
+        :class="subtitleText.class"
+        :style="[subtitleStyle, subtitleText.style]"
         v-html="sanitizeSectionText(d.subtitle)"
     />
   </div>
@@ -22,6 +24,7 @@ import { computed } from 'vue'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { brandFontVar } from 'src/utils/brand-fonts.js'
+import { textStyle } from 'src/utils/text-style.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToText } from 'src/composables/useSectionStyle.js'
 
 const TAGS = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
@@ -52,6 +55,10 @@ const sizeClasses = computed(() => {
     'hb-sub-d': !!sub.desktop, 'hb-sub-t': !!sub.tablet, 'hb-sub-m': !!sub.mobile,
   }
 })
+
+// Line height, letter spacing and case (font, size, weight and colour are set below).
+const titleText = computed(() => textStyle(d.value, { lh: 'title_line_height', spacing: 'title_spacing', textCase: 'title_case' }))
+const subtitleText = computed(() => textStyle(d.value, { lh: 'subtitle_line_height', spacing: 'subtitle_spacing', textCase: 'subtitle_case' }))
 
 const titleStyle = computed(() => ({
   color: resolveGlobalColor(d.value.title_color) || undefined,

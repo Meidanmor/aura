@@ -332,14 +332,20 @@ const cssVars = computed(() => {
 @media (min-width: 1024px) {
   .ts-fl-sz-d :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { font-size: var(--ts-fl-size); }
   .ts-fi-sz-d :deep(:is(.q-field__native, .q-field__input)) { font-size: var(--ts-fi-size); }
+  .ts-fl-lh-d :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { line-height: var(--ts-fl-lh); }
+  .ts-fi-lh-d :deep(:is(.q-field__native, .q-field__input)) { line-height: var(--ts-fi-lh); }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
   .ts-fl-sz-t :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { font-size: var(--ts-fl-size-t); }
   .ts-fi-sz-t :deep(:is(.q-field__native, .q-field__input)) { font-size: var(--ts-fi-size-t); }
+  .ts-fl-lh-t :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { line-height: var(--ts-fl-lh-t); }
+  .ts-fi-lh-t :deep(:is(.q-field__native, .q-field__input)) { line-height: var(--ts-fi-lh-t); }
 }
 @media (max-width: 767px) {
   .ts-fl-sz-m :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { font-size: var(--ts-fl-size-m); }
   .ts-fi-sz-m :deep(:is(.q-field__native, .q-field__input)) { font-size: var(--ts-fi-size-m); }
+  .ts-fl-lh-m :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { line-height: var(--ts-fl-lh-m); }
+  .ts-fi-lh-m :deep(:is(.q-field__native, .q-field__input)) { line-height: var(--ts-fi-lh-m); }
 }
 .form-block__success {
   display: flex;

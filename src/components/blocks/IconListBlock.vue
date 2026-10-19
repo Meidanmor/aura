@@ -5,16 +5,24 @@
           :is="item.link_url ? linkTag(item.link_url) : 'span'"
           v-bind="item.link_url ? linkAttrs(item.link_url) : {}"
           class="icon-list__row"
+          :aria-label="!item.text && item.label ? item.label : undefined"
       >
-        <img
+        <BuilderSvg
             v-if="item.icon === 'custom' && customUrl(item)"
-            :src="customUrl(item)"
-            alt=""
+            :image="item.custom_icon"
+            :recolor="!!d.svg_recolor"
+            :alt="!item.text && !item.link_url ? (item.label || '') : ''"
             class="icon-list__icon icon-list__icon--img"
-            loading="lazy"
         />
-        <q-icon v-else :name="generalIcons[item.icon] || generalIcons.check" class="icon-list__icon" aria-hidden="true" />
-        <span class="icon-list__text" v-bind="itemText">{{ item.text }}</span>
+        <q-icon
+            v-else
+            :name="generalIcons[item.icon] || generalIcons.check"
+            class="icon-list__icon"
+            :role="!item.text && !item.link_url && item.label ? 'img' : undefined"
+            :aria-label="!item.text && !item.link_url && item.label ? item.label : undefined"
+            :aria-hidden="!item.text && !item.link_url && item.label ? undefined : 'true'"
+        />
+        <span v-if="item.text" class="icon-list__text" v-bind="itemText">{{ item.text }}</span>
       </component>
     </li>
   </ul>
@@ -23,6 +31,7 @@
 <script setup>
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
+import BuilderSvg from './BuilderSvg.vue'
 import { generalIcons } from 'src/utils/builder-icons.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToFlex } from 'src/composables/useSectionStyle.js'
@@ -36,7 +45,7 @@ const props = defineProps({
 const d = computed(() => props.data.data || {})
 // Size and color are this block's own variables (older settings); font and weight here.
 const itemText = computed(() => textStyle(d.value, tsKeys('text', { size: null, color: null })))
-const items = computed(() => (d.value.items || []).filter((i) => i.text))
+const items = computed(() => (d.value.items || []).filter((i) => i.text || i.icon))
 
 const customUrl = (item) => (typeof item.custom_icon === 'string' ? item.custom_icon : item.custom_icon?.url) || ''
 
