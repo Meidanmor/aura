@@ -237,7 +237,7 @@ img.q-img__image {
     margin-left: auto;
 }*/
 /* Header icons follow the text colour (secondary by default, the header's own colours when set). */
-header svg {
+header svg, header svg path {
     fill: currentColor;
 }
 /* Header text (widget labels, language names) in the icons' color, not Quasar's white. */
