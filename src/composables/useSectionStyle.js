@@ -223,6 +223,7 @@ export function buildBackground(style = {}) {
         zoom: s.bg_slide_effect !== 'fade',
         counter: !!s.bg_slide_counter,
         arrows: !!s.bg_slide_arrows,
+        side: s.bg_slide_controls_side === 'left' ? 'left' : 'right',
         position: bgPosition(s),
       }
       setResponsiveVar(vars, '--sb-bg-pos', bgPosition(s))

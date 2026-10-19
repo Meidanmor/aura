@@ -20,18 +20,25 @@
       :position="slideshow.position"
       @open="tagOpen = $event"
   />
-  <div v-if="slideshow.counter && count > 1" class="sb-bg-counter" aria-hidden="true">
-    <span class="sb-bg-counter__nums">{{ pad(index + 1) }} / {{ pad(count) }}</span>
-    <span class="sb-bg-counter__bar"><i :key="`${index}-${restarts}`" :class="{ 'is-running': moving && count > 1 }" /></span>
+  <!-- Counter, progress line and arrows in one row at the bottom (bg_slide_controls_side: right | left). -->
+  <div
+      v-if="(slideshow.counter || slideshow.arrows) && count > 1"
+      class="sb-bg-counter"
+      :class="`sb-bg-counter--${slideshow.side === 'left' ? 'left' : 'right'}`"
+  >
+    <template v-if="slideshow.counter">
+      <span class="sb-bg-counter__nums" aria-hidden="true">{{ pad(index + 1) }} / {{ pad(count) }}</span>
+      <span class="sb-bg-counter__bar" aria-hidden="true"><i :key="`${index}-${restarts}`" :class="{ 'is-running': moving && count > 1 }" /></span>
+    </template>
+    <span v-if="slideshow.arrows" class="sb-bg-arrows">
+      <button type="button" class="sb-bg-arrow sb-bg-arrow--prev" :aria-label="t('Previous image')" @click.stop.prevent="go(-1)">
+        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </button>
+      <button type="button" class="sb-bg-arrow sb-bg-arrow--next" :aria-label="t('Next image')" @click.stop.prevent="go(1)">
+        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </button>
+    </span>
   </div>
-  <template v-if="slideshow.arrows && count > 1">
-    <button type="button" class="sb-bg-arrow sb-bg-arrow--prev" :aria-label="t('Previous image')" @click.stop.prevent="go(-1)">
-      <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
-    </button>
-    <button type="button" class="sb-bg-arrow sb-bg-arrow--next" :aria-label="t('Next image')" @click.stop.prevent="go(1)">
-      <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
-    </button>
-  </template>
 </template>
 
 <script setup>
@@ -50,7 +57,7 @@ import { useI18n } from 'src/i18n/index.js'
 const { t } = useI18n()
 
 const props = defineProps({
-  // { slides: [{ url, mobile }], seconds, zoom, counter, arrows } from buildBackground()
+  // { slides: [{ url, mobile }], seconds, zoom, counter, arrows, side } from buildBackground()
   slideshow: { type: Object, required: true },
 })
 
@@ -145,7 +152,6 @@ watch(() => [props.slideshow.seconds, count.value], () => {
 
 .sb-bg-counter {
   position: absolute;
-  inset-inline-end: 24px;
   bottom: 20px;
   z-index: 3;
   display: flex;
@@ -157,6 +163,11 @@ watch(() => [props.slideshow.seconds, count.value], () => {
   color: inherit;
   pointer-events: none;
 }
+/* Bottom right or bottom left of the section, on every page (not flipped on Hebrew pages). */
+/* rtl:begin:ignore */
+.sb-bg-counter--right { right: 24px; }
+.sb-bg-counter--left { left: 24px; }
+/* rtl:end:ignore */
 /* The line's track is a faint copy of the text colour; the progress fills it in full colour. */
 .sb-bg-counter__bar {
   position: relative;
@@ -185,30 +196,24 @@ watch(() => [props.slideshow.seconds, count.value], () => {
   to { transform: scaleX(1); }
 }
 
-/* Arrows at the sides, in the section's text colour (previous on the start side). */
+/* Small round arrows after the counter, in the section's text colour. */
+.sb-bg-arrows { display: inline-flex; gap: 8px; margin-inline-start: 4px; pointer-events: auto; }
 .sb-bg-arrow {
-  position: absolute;
-  top: 50%;
-  z-index: 3;
-  transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 32px;
+  height: 32px;
   padding: 0;
-  border: 0;
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
   border-radius: 50%;
   background: transparent;
   color: inherit;
   cursor: pointer;
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
-.sb-bg-arrow:hover { opacity: 1; }
-.sb-bg-arrow:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; opacity: 1; }
-.sb-bg-arrow--prev { inset-inline-start: 12px; }
-.sb-bg-arrow--next { inset-inline-end: 12px; }
+.sb-bg-arrow:hover { background: color-mix(in srgb, currentColor 18%, transparent); border-color: currentColor; }
+.sb-bg-arrow:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 [dir="rtl"] .sb-bg-arrow svg { transform: scaleX(-1); }
 
 @media (max-width: 1023px) {
@@ -216,10 +221,11 @@ watch(() => [props.slideshow.seconds, count.value], () => {
 }
 @media (max-width: 767px) {
   .sb-bg-slide img { object-position: var(--sb-bg-pos-m, var(--sb-bg-pos-t, var(--sb-bg-pos, center center))); }
-  .sb-bg-counter { inset-inline-end: 16px; bottom: 14px; }
-  .sb-bg-arrow { width: 36px; height: 36px; }
-  .sb-bg-arrow--prev { inset-inline-start: 4px; }
-  .sb-bg-arrow--next { inset-inline-end: 4px; }
+  .sb-bg-counter { bottom: 14px; gap: 10px; }
+  /* rtl:begin:ignore */
+  .sb-bg-counter--right { right: 16px; }
+  .sb-bg-counter--left { left: 16px; }
+  /* rtl:end:ignore */
 }
 @media (prefers-reduced-motion: reduce) {
   .sb-bg-slide { transition: none; }

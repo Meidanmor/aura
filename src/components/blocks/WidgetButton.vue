@@ -16,7 +16,7 @@
         <img v-if="d.icon === 'custom' && customUrl" :src="customUrl" alt="" class="widget-btn__img" decoding="async" />
         <q-icon v-else :name="icons[d.icon] || defaultIcon" />
         <q-no-ssr>
-          <q-badge v-if="count > 0" floating class="widget-btn__badge" :style="badgeStyle">{{ count }}</q-badge>
+          <q-badge v-if="count > 0" class="widget-btn__badge" :class="{ 'widget-btn__badge--beside': d.badge_position === 'beside' }" :style="badgeStyle">{{ count }}</q-badge>
         </q-no-ssr>
       </span>
       <span v-if="d.label || $slots.extra" class="widget-btn__text" v-bind="labelText">
@@ -34,7 +34,8 @@
  * optional text (with its text style), and a count badge.
  *
  * Fields (class-sb-constants.php): icon, custom_icon, label, icon_size,
- * icon_color, badge_bg, badge_color, label_* (text style).
+ * icon_color, badge_bg, badge_color, badge_position (icon: on the icon's top
+ * corner, the default; beside: next to it), label_* (text style).
  */
 import { computed } from 'vue'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
@@ -83,7 +84,26 @@ function onClick(e) {
 .widget-btn__icon.has-color :deep(svg) { fill: var(--wb-icon-color); }
 .widget-btn__img { width: 1em; height: 1em; object-fit: contain; }
 .widget-btn__text { display: inline-flex; align-items: baseline; gap: 6px; white-space: nowrap; }
-.widget-btn__badge { top: -6px; right: -8px; font-size: 11px; }
+/* The count sits on the icon's top corner (positioned here: the build drops Quasar's own
+   floating rule), or next to the icon with badge_position "beside". */
+.widget-btn__badge {
+  position: absolute;
+  top: -7px;
+  inset-inline-end: -9px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+.widget-btn__badge--beside {
+  position: static;
+  margin-inline-start: 4px;
+  align-self: center;
+}
 
 @media (min-width: 1024px) {
   .wb-size-d .widget-btn__icon { font-size: var(--wb-icon); }
