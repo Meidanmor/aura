@@ -113,6 +113,7 @@ import LoopCartButton from '../loops/LoopCartButton.vue'
 import MiniCartBlock from "components/blocks/MiniCartBlock.vue";
 import MiniWishlistBlock from "components/blocks/MiniWishlistBlock.vue";
 import SearchBlock from "components/blocks/SearchBlock.vue";
+import { shopBlocks } from '../blocks/shop/index.js'
 
 defineOptions({ name: 'SectionTemplate' })
 
@@ -125,6 +126,7 @@ const props = defineProps({
 })
 
 const layoutActions = inject('layoutActions', null)
+
 
 const blockComponents = {
   heading: HeadingBlock,
@@ -172,6 +174,7 @@ const blockComponents = {
   lp_price: LoopPrice,
   lp_rating: LoopStars, lr_stars: LoopStars,
   lp_cart: LoopCartButton,
+  ...shopBlocks,
 }
 
 const container = computed(() => buildContainerStyle(props.data.style || {}))

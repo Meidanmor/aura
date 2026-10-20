@@ -90,8 +90,11 @@ function pickIn(node, device) {
       case 'featured_products':
         return { kind: 'products', block: b.id }
       case 'post_featured_image':
-        // The post's cover (its address comes with the post, not the config).
+      case 'product_gallery':
+        // The post's cover / the product's first photo (its address comes with the item, not the config).
         return { kind: 'img', block: b.id }
+      case 'archive_products':
+        return { kind: 'products', block: b.id }
     }
   }
   return null
@@ -104,7 +107,8 @@ function pickIn(node, device) {
 export function pagePriority(sections, page) {
   const list = (sections || []).filter(enabled)
   const slots = TOP_SLOTS[page]
-  const ordered = slots ? slots.flatMap((loc) => list.filter((s) => s.location === loc)) : list
+  // Older slot lists only (shop pages are templates now: src/utils/shop-templates.js).
+  const ordered = slots && list.some((s) => s.location) ? slots.flatMap((loc) => list.filter((s) => s.location === loc)) : list
   const picks = {}
   const blocks = new Set()
   for (const device of DEVICES) {

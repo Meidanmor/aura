@@ -23,7 +23,7 @@
     </div>
   </div>
 
-  <div v-else class="text-center q-mt-lg">{{ t('No products found') }}</div>
+  <div v-else class="text-center q-mt-lg">{{ emptyText || t('No products found') }}</div>
 </template>
 
 <script setup>
@@ -31,5 +31,6 @@ import ProductCard from './ProductCard.vue'
 import LoopCard from '../loops/LoopCard.vue'
 // priorityCount: 0 when a section above the grid holds the page's first image (it loads first).
 // card: the product card design for these pages (shop.json / category.json product_card).
-defineProps({ loading: Boolean, products: { type: Array, default: () => [] }, priorityCount: { type: Number, default: 3 }, card: { type: Array, default: null } })
+// emptyText: the Products Grid block's own "nothing found" text.
+defineProps({ loading: Boolean, products: { type: Array, default: () => [] }, priorityCount: { type: Number, default: 3 }, card: { type: Array, default: null }, emptyText: { type: String, default: '' } })
 </script>

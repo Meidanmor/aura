@@ -392,4 +392,9 @@ export default {
   "Results for “{q}”": "תוצאות עבור „{q}”",
   "Type at least 2 letters.": "הקלידו לפחות 2 אותיות.",
   "See all {n} products": "לכל {n} המוצרים",
+  "{n} review": ["ביקורת אחת","{n} ביקורות"],
+  "{n} reviews": "{n} ביקורות",
+  "Share:": "שיתוף:",
+  "Copy the link": "העתקת הקישור",
+  "SKU:": "מק\"ט:",
 }

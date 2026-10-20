@@ -1,253 +1,8 @@
 <template>
-  <div class="container" v-if="product">
-    <SectionRenderer :sections="productSections" page="product" location="before_breadcrumbs"/>
-
-    <div class="q-pa-md">
-      <q-breadcrumbs>
-          <q-breadcrumbs-el :label="t('Home')" to="/" />
-          <q-breadcrumbs-el :to="`/product-category/${product?.categories[0]?.slug}`"><span v-html="safeCategoryName"></span></q-breadcrumbs-el>
-          <q-breadcrumbs-el :label="product?.name" />
-      </q-breadcrumbs>
-    </div>
-
-    <SectionRenderer :sections="productSections" page="product" location="after_breadcrumbs"/>
-
-    <div class="q-pa-md row q-col-gutter-lg">
-
-      <!-- Product Images -->
-      <div class="col-12 col-md-6">
-
-        <SectionRenderer :sections="productSections" page="product" location="before_product_images"/>
-
-        <div v-if="gallery.length > 1" ref="galleryEl">
-            <AppCarousel
-                v-model="imagesCarousel.slide.value"
-                :carousel-key="imagesCarousel.carouselKey.value"
-                :show-controls="imagesCarousel.showControls.value"
-                :total="imagesCarousel.total.value"
-                :on-keydown="imagesCarousel.onKeydown"
-            >
-            <q-carousel-slide
-              v-for="(img, index) in gallery"
-              :key="index"
-              :name="index"
-              @mousedown="onImageMouseDown"
-              @mousemove="onImageMouseMove"
-              @click="img.kind === 'image' && onImageClick(index)"
-              :style="img.kind === 'image' ? 'cursor: zoom-in;max-height: 400px;object-fit: contain;' : 'max-height: 400px;'"
-              >
-              <video
-                v-if="img.kind === 'video'"
-                :src="img.src"
-                :aria-label="t('{name} video', { name: product.name })"
-                controls
-                playsinline
-                preload="metadata"
-                class="product-video"
-              />
-              <img
-              v-else
-              :src="img.src"
-              :srcset="img.srcset"
-              :sizes="img.sizes"
-              :alt="t('{name} image {n}', { name: product.name, n: index })"
-              :loading="index === 0 ? 'eager' : 'lazy'"
-              :fetchpriority="index === 0 ? 'high' : 'auto'"
-              :decoding="index === 0 ? 'sync' : 'async'"
-              height="400"
-              width="400"
-              style="cursor: zoom-in;max-height: 400px;object-fit: contain;margin:0 auto;"
-            />
-            </q-carousel-slide>
-            </AppCarousel>
-
-        </div>
-
-        <div v-else-if="gallery[0]?.kind === 'video'">
-          <video
-            :src="gallery[0].src"
-            :aria-label="t('{name} video', { name: product.name })"
-            controls
-            playsinline
-            preload="metadata"
-            class="product-video"
-          />
-        </div>
-
-        <div v-else>
-          <img
-            :src="product.images[0]?.src ? product.images[0].src : '/naturaBloom-circle.svg'"
-            :srcset="product.images[0]?.srcset"
-            :sizes="product.images[0]?.sizes"
-            fetchpriority="high"
-            loading="eager"
-            :alt="t('{name} featured image', { name: product.name })"
-            style="cursor: zoom-in; max-height: 500px;margin: 0 auto;"
-            height="400"
-            width="400"
-  @mousedown="onImageMouseDown"
-  @mousemove="onImageMouseMove"
-  @click="onImageClick(0)"
-          />
-        </div>
-
-        <SectionRenderer :sections="productSections" page="product" location="after_product_images"/>
-
-      </div>
-
-
-      <!-- Product Details -->
-      <div class="col-12 col-md-6">
-
-        <h1 class="q-mb-sm">{{ product.name }}</h1>
-        <a v-if="reviewsOn && product.review_count" href="#reviews" class="product-rating q-mb-sm" @click.prevent="scrollToReviews">
-          <q-rating :model-value="Number(product.average_rating)" readonly size="1.1em" color="amber" :icon="matStarBorder" :icon-selected="matStar" :icon-half="matStarHalf" />
-          <span>{{ Number(product.average_rating).toFixed(1) }} · {{ product.review_count }} {{ product.review_count === 1 ? 'review' : 'reviews' }}</span>
-        </a>
-
-        <!-- Categories -->
-        <div class="q-mb-md">
-          <router-link
-              v-for="cat in product.categories"
-              :key="cat.id"
-              :to="`/product-category/${cat.slug}`"
-          class="no-decoration"
-          >
-          <q-chip
-            color="secondary"
-            text-color="white"
-            class="category-chip"
-            dense
-            clickable
-          >
-              <span>{{cat.name}}</span>
-          </q-chip>
-          </router-link>
-        </div>
-
-        <!-- Price -->
-        <div class="q-mb-md">
-
-          <q-skeleton
-              v-if="variationLoading"
-              type="text"
-              width="120px"
-          />
-
-          <div v-else-if="selectedVariation">
-            <div v-html="safeVariationPrice"></div>
-          </div>
-
-          <div v-else-if="product" v-html="safePrice"></div>
-
-        </div>
-
-        <div class="q-mb-md" v-html="safeDescription"></div>
-
-        <!-- Variations Selection for Variable Product -->
-        <div v-if="isVariable" class="q-mb-md">
-          <div
-            v-for="(attribute) in availableAttributes"
-            :key="attribute.id"
-            class="q-mb-sm"
-          >
-            <label class="text-subtitle2 q-mb-xs">{{ attribute.name }}</label>
-<q-select
-  v-model="selectedVariations[attribute.name]"
-  :options="getOptionsWithDisabled(attribute)"
-  dense
-  :dropdown-icon="matArrowDropDown"
-  :clear-icon="matCancel"
-  clearable
-  :placeholder="t('Select a {name}', { name: attribute.name })"
-  :label="t('Select a {name}', { name: attribute.name })"
-  emit-value
-  map-options
-  @update:model-value="onVariationChange"
-/>
-          </div>
-          <div v-if="variationError" class="text-negative text-caption q-mt-xs">
-            {{ variationError }}
-          </div>
-        </div>
-
-        <div v-if="product.status && product.status === 'draft'"><b>{{ t('This is a draft product. It\'s shown for admins only!') }}</b></div>
-
-        <div v-else-if="product.is_in_stock">
-          <div style="color:red" v-if="Number(product.add_to_cart?.maximum) != 0 && Number(product.add_to_cart?.maximum) < 10">
-            <span v-if="Number(product.add_to_cart?.maximum) === 1">{{ t('Only 1 left in stock!') }}</span>
-            <span v-else>{{ t('Only {n} left in stock!', { n: product.add_to_cart?.maximum }) }}</span>
-          </div>
-
-          <SectionRenderer :sections="productSections" page="product" location="before_add_to_cart_form"/>
-
-          <!-- Quantity Selector -->
-        <div class="row items-center q-mb-md">
-          <q-btn :aria-label="t('Decrease quantity')" flat round :icon="matRemove" @click="decreaseQty" />
-          <q-input
-            v-model.number="quantity"
-            type="number"
-            :min="product?.add_to_cart?.minimum"
-            :max="product?.add_to_cart?.maximum"
-            dense
-            style="width: 60px; text-align: center"
-            :aria-label="t('Quantity for {name}', { name: product.name })"
-          />
-          <q-btn :aria-label="t('Increase quantity')" flat round :icon="matAdd" @click="increaseQty(product.add_to_cart?.maximum)" />
-        </div>
-
-        <q-btn
-          :label="t('Add to Cart')"
-          class="q-mr-sm"
-          color="secondary"
-          :disable="shouldDisableCartButtons"
-          @click="addToCartHandler"
-          :loading="cart.state.loading.cart"
-        >
-          <q-tooltip v-if="shouldDisableCartButtons">
-            {{ t('Please select a variation first.') }}
-          </q-tooltip>
-        </q-btn>
-
-        <q-btn
-          :label="t('Quick Checkout')"
-          data-quick-checkout
-          color="black"
-          to="/checkout"
-          class="quick-checkout-btn"
-          :disable="shouldDisableCartButtons"
-          @click="addToCartHandler"
-          :loading="cart.state.loading.quickbuy"
-        >
-          <q-tooltip v-if="shouldDisableCartButtons">
-            {{ t('Please select a variation first.') }}
-          </q-tooltip>
-        </q-btn>
-
-          <SectionRenderer :sections="productSections" page="product" location="after_add_to_cart_form"/>
-
-        </div>
-
-        <div v-else> {{ t('Out of stock') }} </div>
-
-       <div class="full-width">
-        <q-btn class="text-black q-pa-none text-caption q-mt-sm" flat :loading="wishlist.isLoading(product.id)" v-if="wishlist.state.items && Object.values(wishlist.state.items).find(obj => selectedVariation ? selectedVariation.id : product.id === obj.id)" @click="addToWishlist" color="accent" :label="t('Remove from wishlist')" :icon="matFavorite" />
-        <q-btn class="text-black q-pa-none text-caption q-mt-sm" flat :loading="wishlist.isLoading(product.id)" v-else @click="addToWishlist" color="accent" :label="t('Add to wishlist')" :icon="matFavoriteBorder" />
-        </div>
-        <SectionRenderer :sections="productSections" page="product" location="after_product_summary"/>
-
-      </div>
-    </div>
-
-    <ProductReviews v-if="reviewsOn" :key="product.id" :product-id="product.id" />
-    <SectionRenderer :sections="productSections" page="product" location="before_related_products"/>
-    <RelatedProductsSlider
-      :productId="product.id"
-      :categoryId="product.categories[0]?.id"
-      :maxVisible="4"
-    />
-    <SectionRenderer :sections="productSections" page="product" location="after_related_products"/>
-
+  <!-- Built from the product page template (Store builder → Shop pages → Product page):
+       the blocks read the product from this page (provide 'productPage'). -->
+  <div v-if="product" class="product-page">
+    <SectionRenderer :sections="productSections" page="product" />
   </div>
 
   <ErrorNotFound v-else-if="notFound" />
@@ -258,29 +13,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed, useSSRContext, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, useSSRContext, watch, provide, reactive, markRaw } from 'vue'
 import { useRoute, useRouter, onBeforeRouteUpdate } from 'vue-router'
 import { fetchProductById } from 'src/api/woocommerce.js'
 import cart from 'src/stores/cart.js'
 import wishlist from 'src/stores/wishlist.js'
-import RelatedProductsSlider from '../components/shop/RelatedProductsSlider.vue'
-import ProductReviews from 'components/shop/ProductReviews.vue'
-import { pickSections, productMatch } from 'src/utils/layouts.js'
+import { productMatch } from 'src/utils/layouts.js'
+import { shopSections } from 'src/utils/shop-templates.js'
 import { useQuasar } from 'quasar'
 import { fetchSeoForPath } from 'src/composables/useSeo'
 import productsStore from 'src/stores/products'
-import {
-  matFavoriteBorder,
-  matFavorite,
-  matAdd,
-  matRemove,
-  matArrowDropDown,
-  matCancel, matError,
-  matStar, matStarBorder, matStarHalf
-} from '@quasar/extras/material-icons'
+import { matError } from '@quasar/extras/material-icons'
 import { useSanitizedDescription, useSanitizedPrice, useSanitizedText } from 'src/composables/useSanitizedHtml'
 import LightboxGallery from 'src/components/LightboxGallery.vue'
-import AppCarousel from '../components/app/AppCarousel.vue'
 import {useCarousel} from '/src/composables/useCrousel.js'
 import {useSeoMeta} from "src/composables/useSeo.js";
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
@@ -306,7 +51,7 @@ const productSettings = ref(
         : null
 )
 // The product's layout (Store builder): one made for this product or its category, else the default.
-const productSections = computed(() => pickSections(productSettings.value, productMatch(product.value)))
+const productSections = computed(() => shopSections('product', productSettings.value, productMatch(product.value)))
 const getSlugFromPermalink = (permalink) => {
   const match = permalink.match(/product\/([^/]+)\/?$/)
   return match ? match[1] : ''
@@ -346,7 +91,6 @@ const gallery = computed(() => {
   }
   return list
 })
-const galleryEl = ref(null)
 
 const imagesCarousel = useCarousel(
   async () => gallery.value,
@@ -488,10 +232,6 @@ function openLightbox(index) {
   lightboxRef.value.open(product.value?.images.length ? product.value?.images :  [{ src: '/naturaBloom-circle.svg' }], photoIndex)
 }
 
-// A video stops when the shopper moves to another slide.
-watch(() => imagesCarousel.slide.value, () => {
-  galleryEl.value?.querySelectorAll('video').forEach((video) => video.pause())
-})
 
 const openDrawer = ref(true);
 function addToCart(e) {
@@ -819,35 +559,20 @@ function onImageClick(index) {
   openLightbox(index)
 }
 
+
+// What the template's blocks show and do (src/components/blocks/shop/Product*Block.vue).
+// Objects holding refs of their own (the carousel, the stores) stay raw: a reactive
+// wrapper would unwrap their refs.
+provide('productPage', reactive({
+  product, gallery, imagesCarousel: markRaw(imagesCarousel), cart: markRaw(cart), wishlist: markRaw(wishlist),
+  reviewsOn, scrollToReviews, safeCategoryName, safePrice, safeVariationPrice, safeDescription,
+  variationLoading, selectedVariation, selectedVariations, availableAttributes, getOptionsWithDisabled,
+  onVariationChange, variationError, isVariable, quantity, decreaseQty, increaseQty,
+  shouldDisableCartButtons, addToCartHandler, addToWishlist,
+  onImageMouseDown, onImageMouseMove, onImageClick,
+}))
 </script>
 
 <style scoped>
-img {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
-  height: 100%;
-}
-.product-video {
-  display: block;
-  width: 100%;
-  max-height: 400px;
-  margin: 0 auto;
-  background: #000;
-  border-radius: 8px;
-}
-.category-chip {
-  display: inline-flex;
-}
-.product-rating {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: inherit;
-  text-decoration: none;
-  font-size: 14px;
-}
-.product-rating:hover span {
-  text-decoration: underline;
-}
+.product-page { padding-bottom: 8px; }
 </style>

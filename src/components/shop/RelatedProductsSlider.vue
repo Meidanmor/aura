@@ -2,7 +2,7 @@
   <!-- Nothing at all (no title either) when the store has no other product to show. -->
   <section v-if="products.length" :style="cssVars" class="related-products">
     <div class="container">
-      <h2 class="text-h5 q-mb-md text-center">{{ t('Related Products') }}</h2>
+      <h2 class="text-h5 q-mb-md text-center">{{ title || t('Related Products') }}</h2>
 
       <!-- GRID MODE (for few products) -->
       <div v-if="products.length <= perSlide" class="related-product-wrapper row justify-center">
@@ -11,7 +11,8 @@
             :key="product.id"
             class="col-xs-6 col-md-3 q-mb-md relative-position"
         >
-          <ProductCard :product="product" />
+          <LoopCard v-if="card" :sections="card" type="product" :item="product" />
+          <ProductCard v-else :product="product" />
         </div>
       </div>
 
@@ -35,7 +36,8 @@
                 :key="product.id"
                 class="slide-container relative-position"
             >
-              <ProductCard :product="product" />
+              <LoopCard v-if="card" :sections="card" type="product" :item="product" />
+              <ProductCard v-else :product="product" />
             </div>
           </div>
         </q-carousel-slide>
@@ -48,13 +50,17 @@
 import {ref, onMounted, watch, computed} from 'vue'
 import { useQuasar } from 'quasar'
 import ProductCard from 'src/components/shop/ProductCard.vue'
+import LoopCard from 'src/components/loops/LoopCard.vue'
 import AppCarousel from 'src/components/app/AppCarousel.vue'
 import { useCarousel } from 'src/composables/useCrousel.js'
 import { preFetchProducts } from 'src/stores/products.js'
 
 const props = defineProps({
   productId: Number,
-  categoryId: Number
+  categoryId: Number,
+  // "Related Products" block (product page template): its own heading and loop template.
+  title: { type: String, default: '' },
+  card: { type: Array, default: null },
 })
 
 const $q = useQuasar()

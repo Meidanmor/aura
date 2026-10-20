@@ -1,110 +1,22 @@
 <template>
-  <div class="container q-pa-md">
-    <h2>{{ t('Your Cart') }}</h2>
-    <SectionRenderer :sections="cartConfig?.sections" page="cart" location="before_cart"/>
-    <div v-if="cartItems.length === 0" class="empty-cart-msg">
-      {{ t('Your cart is empty.') }} <router-link to="/products/">{{ t('Go to shop') }}</router-link>
-    </div>
-        <div v-else-if="cart.hasItems.value && isHydrated" class="cart-items-wrap">
-        <SectionRenderer :sections="cartConfig?.sections" page="cart" location="before_cart_items"/>
-        <div v-for="item in cart.state.items" :key="item.id" class="q-pa-sm row items-center" :class="[item.key.includes('offline') ? 'offline-item' : '']">
-          <div class="flex">
-          <img v-if="item.images" :src="cart.state.offline === true ? item?.images[0]?.src : item.images[0]?.thumbnail" style="width: 70px; height: 70px; object-fit: cover" />
-            <div class="product-meta">
-            <div>
-              <router-link
-                :to="{ path: `/product/${getSlugFromPermalink(item?.permalink)}`, query: getVariationQuery(item) }"
-                class="no-decoration">
-              {{ item.name }}
-              </router-link>
-            </div>
-           <div v-if="item.variation && item.variation.length > 0">
-             <div
-             v-for="(variation, index) in item.variation"
-             :key="index"
-             >
-             {{variation.attribute}}: {{variation.value}}
-             </div>
-          </div>
-            <div v-if="item.prices">
-              {{formatCurrency(item.prices.price)}}
-            </div>
-            </div>
-          </div>
-            <div class="row items-center">
-              <div class="qty-wrap">
-              <q-btn size="xs" padding="xs" :flat="true" :icon="matRemove" @click="decrease(item.key)" :disable="item.quantity === 1" />
-              <span class="q-mx-sm">{{ item.quantity }}</span>
-              <q-btn size="xs" padding="xs" :flat="true" :icon="matAdd" @click="increase(item.id)" />
-              </div>
-              <q-btn :outline="true" size="xs" padding="xs" :icon="matClose" @click="remove(item.key, item.remote_key)" class="q-ml-sm" />
-            </div>
-        </div>
-
-        </div>
-    <SectionRenderer v-if="cart.hasItems.value && isHydrated" :sections="cartConfig?.sections" page="cart" location="after_cart_items"/>
-    <SectionRenderer v-if="cart.hasItems.value && isHydrated" :sections="cartConfig?.sections" page="cart" location="before_cart_totals"/>
-    <q-card v-if="!cart.state.offline && cart.hasItems.value && isHydrated" flat bordered class="q-mt-md q-pa-md relative-position">
-      <div class="blockUi" v-if="cart.state.loading.cart"></div>
-      <div class="text-subtitle1">{{ t('Coupon') }}</div>
-      <div class="row items-center q-col-gutter-sm q-mb-sm">
-        <div class="col"><q-input v-model="couponCode" :label="t('Coupon code')" dense filled @keydown.enter.stop.prevent="applyCoupon(couponCode)"/></div>
-        <div class="col-auto"><q-btn :label="t('Apply')" color="secondary" :loading="loadingCoupon" @click="applyCoupon(couponCode)" /></div>
-      </div>
-      <div v-if="couponError" class="text-negative">{{ couponError }}</div>
-      <div v-if="couponApplied" class="text-positive q-mt-sm">
-        {{ t('Coupon applied successfully!') }}
-      </div>
-      <div v-if="couponApplied">
-        <div v-for="coupon in displayCart.coupons" :key="coupon.code" class="row items-center q-mb-sm">
-        <q-chip color="secondary" text-color="white">{{ coupon.code }}</q-chip>
-        <q-btn flat color="negative" :label="t('Remove')" @click="removeCoupon(coupon.code)" />
-      </div>
-      </div>
-      <div class="text-subtitle1 q-mt-md">{{ t('Shipping') }}</div>
-      <q-option-group
-          v-if="shippingOptions.length"
-          v-model="selectedShippingRateId"
-          :options="shippingOptions"
-          type="radio"
-          color="secondary"
-          @update:model-value="onShippingMethodChange"
-      />
-      <div v-else class="text-caption">{{ t('Enter your address at checkout to see shipping options') }}</div>
-      <div class="q-mt-md">
-      <div v-if="couponApplied">{{ t('Total discount: {amount}', { amount: formatCurrency(cartTotalDiscount) }) }}</div>
-      <div class="text-h6">{{ t('Total: {amount}', { amount: formatCurrency(cartTotal) }) }}</div>
-      </div>
-      <router-link to="/checkout/">
-        <q-btn
-            color="secondary"
-            :label="t('Checkout')"
-        />
-      </router-link>
-
-    </q-card>
-    <SectionRenderer v-if="cart.hasItems.value && isHydrated" :sections="cartConfig?.sections" page="cart" location="after_cart_totals"/>
-    <SectionRenderer :sections="cartConfig?.sections" page="cart" location="after_cart"/>
-    </div>
+  <!-- Built from the cart template (Store builder → Shop pages → Cart): the blocks read
+       the cart from this page (provide 'cartPage'). -->
+  <div class="cart-page">
+    <SectionRenderer :sections="sections" page="cart" />
+  </div>
 </template>
 
 <script setup>
 import cart from 'src/stores/cart';
-import {onMounted, ref} from 'vue';
-import {
-  matAdd,
-  matClose,
-  matRemove} from '@quasar/extras/material-icons'
-import {formatCurrency} from 'src/utils/formatters.js'
+import { computed, markRaw, onMounted, provide, reactive, ref } from 'vue';
 import { useCartSummary } from 'src/composables/useCartSummary'
 import {useSeoMeta} from "src/composables/useSeo.js";
 import SectionRenderer from 'components/sections/SectionRenderer.vue'
 import { loadPageConfig } from 'src/utils/config-loader.js'
 import { getApiOrigin } from 'src/utils/server/get-api-origin.js'
 import { usePageConfig } from 'src/composables/usePageConfig.js'
-import { t as i18nT, useI18n } from 'src/i18n/index.js'
-
-const { t } = useI18n()
+import { shopSections } from 'src/utils/shop-templates.js'
+import { t as i18nT } from 'src/i18n/index.js'
 
 const {
   displayCart, cartTotal, cartItems, cartTotalDiscount, couponApplied, shippingOptions,
@@ -143,8 +55,9 @@ defineOptions({
   }
 })
 useSeoMeta({ noindex: true })
-// Store builder → Cart: sections in the cart's slots.
+// Store builder → Shop pages → Cart.
 const cartConfig = usePageConfig('cart')
+const sections = computed(() => shopSections('cart', cartConfig.value))
 const increase = (id) => cart.increase(id)
 const decrease = (id) => cart.decrease(id)
 const remove = (itemKey=null, itemAPIkey=null) => cart.remove(itemKey,itemAPIkey)
@@ -166,6 +79,13 @@ onMounted(() => {
   isHydrated.value = true
   fetchShippingRates()
 })
+
+// What the template's blocks show and do (src/components/blocks/shop/Cart*Block.vue).
+provide('cartPage', reactive({
+  cart: markRaw(cart), displayCart, cartTotal, cartItems, cartTotalDiscount, couponApplied, shippingOptions,
+  selectedShippingRateId, couponCode, couponError, onShippingMethodChange, applyCoupon, removeCoupon, loadingCoupon,
+  increase, decrease, remove, getSlugFromPermalink, getVariationQuery, isHydrated,
+}))
 </script>
 
 <style>

@@ -11,9 +11,10 @@
 import { fetchBlogList } from 'src/api/blog.js'
 import { fetchSeoForPath } from 'src/composables/useSeo.js'
 import { getApiOrigin } from 'src/utils/server/get-api-origin.js'
-import { loadPageConfig } from 'src/utils/config-loader.js'
+import { isEditorMode, loadPageConfig } from 'src/utils/config-loader.js'
 import { blogCategoryMatch, pickSections } from 'src/utils/layouts.js'
 import { DEFAULT_BLOG_SECTIONS, localizeDefaults, postsPerPage } from 'src/utils/blog-templates.js'
+import { t as translate } from 'src/i18n/index.js'
 
 const keyOf = (category, page) => `list|${category}|${page}`
 const pathOf = (category) => (category ? `blog/category/${category}` : 'blog')
@@ -21,8 +22,11 @@ const pathOf = (category) => (category ? `blog/category/${category}` : 'blog')
 /** The template's sections for a category ('' = /blog): its layout, the default, or the built-in one. */
 export function blogSections(config, category) {
   const own = config && ((config.sections || []).length || (config.layouts || []).length || config.preview_layout !== undefined)
-  return own ? pickSections(config, blogCategoryMatch(category)) : localizeDefaults(DEFAULT_BLOG_SECTIONS, t)
+  return own ? pickSections(config, blogCategoryMatch(category)) : localizeDefaults(DEFAULT_BLOG_SECTIONS, translate)
 }
+
+/** Not found: no such category, or a store with no posts at all (no blog), except in the Store builder's preview. */
+const isMissing = (blog) => !!blog.missing && !(blog.empty && isEditorMode())
 
 /** The posts (as many per page as the template's posts grid shows), the search listing and the template. */
 export async function loadBlogList(route, origin = '') {
@@ -34,7 +38,9 @@ export async function loadBlogList(route, origin = '') {
     fetchSeoForPath(pathOf(category), origin),
   ])
   // null: the category doesn't exist (404); undefined: the store didn't answer.
-  return { blog: { key: keyOf(category, page), data: data ?? null, missing: data === null, config: config || null }, seo }
+  // No published posts anywhere: the store has no blog (404 too).
+  const empty = !!data && !category && !Number(data.total)
+  return { blog: { key: keyOf(category, page), data: data ?? null, missing: data === null || empty, empty, config: config || null }, seo }
 }
 </script>
 
@@ -80,7 +86,7 @@ function adopt(blog) {
   if (!blog || blog.key !== keyOf(category.value, page.value)) return false
   data.value = blog.data
   config.value = blog.config
-  notFound.value = !!blog.missing
+  notFound.value = isMissing(blog)
   return !!blog.data || !!blog.missing
 }
 if (process.env.SERVER) adopt(useSSRContext()?.blogData)
@@ -92,7 +98,7 @@ async function load() {
   if (blog.key !== keyOf(category.value, page.value)) return // the visitor moved on
   data.value = blog.data
   config.value = blog.config || config.value
-  notFound.value = blog.missing
+  notFound.value = isMissing(blog)
   seoData.value = seo
   if (!blog.data && !blog.missing) error.value = t('The blog could not be loaded. Try again in a moment.')
 }

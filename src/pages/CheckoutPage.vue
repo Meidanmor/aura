@@ -1,30 +1,12 @@
 <template>
-    <div class="container q-pa-md">
+    <!-- Built from the checkout template (Store builder → Shop pages → Checkout): the blocks
+         read the cart and the form from this page (provide 'checkoutPage'). -->
+    <div class="checkout-page">
       <div v-if="isProcessingOrder" class="processing-overlay">
         <q-spinner color="secondary" size="3em" />
         <div class="q-mt-md text-h6">{{ t('Processing your order…') }}</div>
       </div>
-      <h1>{{ t('Checkout') }}</h1>
-      <SectionRenderer :sections="pageConfig?.sections" page="checkout" location="before_checkout"/>
-      <div v-if="isLoggedIn === false && checkoutReady && itemsCount !== '0'">
-        <q-expansion-item
-            :label="t('Have an account?')"
-            header-class="text-bold cursor-pointer"
-            class="q-mb-sm"
-            :expand-icon="matKeyboardArrowDown"
-            expand-separator
-        >
 
-          <div class="account-login-container q-mb-md">
-            <LoginForm @login-success="onLogin" />
-            <span class="flex q-mb-sm q-mt-sm text-h6" v-if="googleLoginEnabled">{{ t('OR') }}</span>
-            <GoogleLoginButton @login-success="onLogin"/>
-          </div>
-
-        </q-expansion-item>
-      </div>
-
-      <q-form class="flex" v-if="displayCart && itemsCount !== '0'" @submit.prevent="submitOrder" @validation-error="onValidationError">
       <!-- Honeypot: real users never see or fill this. -->
       <div class="hp-field" aria-hidden="true">
         <label for="checkout-website">{{ t('Website') }}</label>
@@ -38,200 +20,14 @@
         />
       </div>
 
-      <div class="float-left">
-      <SectionRenderer :sections="pageConfig?.sections" page="checkout" location="before_customer_details"/>
-      <!-- Personal Info -->
-      <q-card class="q-mb-md">
-        <q-card-section class="q-pa-md">
-          <div class="text-h6">{{ t('Personal Details') }}</div>
-          <q-input @blur="handleInputBlur" v-model="form.first_name" :label="t('First Name *')" filled class="q-mb-sm" :rules="[val => !!val || t('First Name is required')]"/>
-          <q-input @blur="handleInputBlur" v-model="form.last_name" :label="t('Last Name *')" filled class="q-mb-sm" :rules="[val => !!val || t('Last Name is required')]"/>
-          <q-input
-              @blur="handleInputBlur" v-model="form.email"
-              :label="t('Email *')" filled class="q-mb-sm"
-              type="text"
-              :rules="[
-                  val => !!val || t('Email is required'),
-    val => /^\S+@\S+\.\S+$/.test(val) || t('Please enter a valid email')
-  ]"
-          />
-          <q-input @blur="handleInputBlur" v-model="form.phone" :label="t('Phone *')" filled :rules="[val => !!val || t('Phone is required')]"/>
-        </q-card-section>
-      </q-card>
-
-      <!-- Shipping Address -->
-      <q-card class="q-mb-md">
-        <q-card-section class="q-pa-md">
-          <div class="text-h6">{{ t('Shipping Address') }}</div>
-          <q-input @blur="handleInputBlur" v-model="form.shipping.address_1" :label="t('Address *')" filled class="q-mb-sm" :rules="[val => !!val || t('Address is required')]"/>
-          <q-input @blur="handleInputBlur" v-model="form.shipping.city" :label="t('City *')" filled class="q-mb-sm" :rules="[val => !!val || t('City is required')]"/>
-          <q-input @blur="handleInputBlur" v-model="form.shipping.postcode" :label="t('Postcode')" filled class="q-mb-sm" :rules="[val => !!val || t('Postcode is required')]"/>
-          <q-input readonly @blur="handleInputBlur" v-model="form.shipping.country" :label="t('Country')" filled />
-        </q-card-section>
-
-        <q-card-section>
-          <q-checkbox @update:model-value="handleCheckboxBlur" v-model="differentBillingAddress" :label="t('Different billing address?')" color="secondary" />
-        </q-card-section>
-      </q-card>
-
-      <!-- Billing Address (conditional) -->
-      <q-card v-if="differentBillingAddress" class="q-mb-md">
-        <q-card-section class="q-pa-md">
-          <div class="text-h6">{{ t('Billing Address') }}</div>
-          <q-input @blur="handleInputBlur" v-model="form.billing.address_1" :label="t('Billing Address *')" filled class="q-mb-sm" />
-          <q-input @blur="handleInputBlur" v-model="form.billing.city" :label="t('City *')" filled class="q-mb-sm" />
-          <q-input @blur="handleInputBlur" v-model="form.billing.postcode" :label="t('Postcode')" filled class="q-mb-sm" />
-          <q-input @blur="handleInputBlur" v-model="form.billing.country" :label="t('Country')" filled />
-        </q-card-section>
-      </q-card>
-
-      <!-- Coupon Section -->
-      <q-card class="q-mb-md">
-        <q-card-section class="q-pa-md">
-          <div class="text-h6">{{ t('Coupon') }}</div>
-          <div class="row items-center q-col-gutter-md">
-            <div class="col">
-              <q-input v-model="couponCode" :label="t('Coupon code')" filled @keydown.enter.stop.prevent="applyCoupon(couponCode)"/>
-            </div>
-            <div class="col-auto">
-              <q-btn :label="t('Apply')" color="secondary" :loading="loadingCoupon" @click="applyCoupon(couponCode)" />
-            </div>
-          </div>
-          <div v-if="couponApplied" class="text-positive q-mt-sm">
-            {{ t('Coupon applied successfully!') }}
-          </div>
-          <div v-if="couponError" class="text-negative q-mt-sm">
-            {{ couponError }}
-          </div>
-          <div v-if="cart.state?.cart_array?.coupons.length">
-            <div v-for="coupon in cart.state.cart_array.coupons" :key="coupon.code" class="q-mb-sm row items-center">
-              <q-chip color="secondary" text-color="white" class="q-mr-sm">
-                {{ coupon.code }}
-              </q-chip>
-              <q-btn flat color="negative" :label="t('Remove')" @click="removeCoupon(coupon.code)" />
-            </div>
-          </div>
-        </q-card-section>
-      </q-card>
-      <SectionRenderer :sections="pageConfig?.sections" page="checkout" location="after_customer_details"/>
-      </div>
-      <div class="float-right relative-position">
-        <div class="blockUi" v-if="cart.state.loading.cart === true"></div>
-        <SectionRenderer :sections="pageConfig?.sections" page="checkout" location="before_order_review"/>
-      <!-- Cart Items -->
-      <q-card class="q-mb-md">
-        <q-card-section class="q-pa-md">
-          <div class="text-h6">{{ t('Your Cart') }}</div>
-          <div v-for="item in cartItems" :key="item.key" class="checkout-items q-my-sm flex items-center no-wrap">
-            <div>
-             <q-img
-              v-if="item?.images?.length"
-              :src="item.images[0].src"
-              :alt="item.name"
-              height="100px"
-              width="100px"
-              class="rounded-borders"
-            />
-            </div>
-            <div class="flex">
-            <div class="item-name">
-              {{ item.name }}
-             <div v-if="item.variation && item.variation.length > 0">
-             <div
-             v-for="(variation, index) in item.variation"
-             :key="index"
-             >
-             {{variation.attribute}}: {{variation.value}}
-             </div>
-          </div>
-         </div>
-              × {{ item.quantity }} - {{formatCurrency(item.totals?.line_total ?? (parseInt(toRaw(item.prices)?.price || 0) * item.quantity).toString()) }}
-            </div>
-          </div>
-        </q-card-section>
-      </q-card>
-
-    <!-- Shipping Method -->
-    <q-card class="q-mb-md">
-      <q-card-section class="q-pa-md">
-        <div class="text-h6">{{ t('Choose Shipping Method') }}</div>
-        <q-option-group
-          v-model="selectedShippingRateId"
-          :options="shippingOptions"
-          type="radio"
-          color="secondary"
-          @update:model-value="onShippingMethodChange"
-        />
-      </q-card-section>
-    </q-card>
-
-      <!-- Payment -->
-      <q-card class="q-mb-md">
-        <q-card-section class="q-pa-md">
-          <div class="text-h6">{{ t('Payment Method') }}</div>
-          <q-option-group
-            v-model="paymentMethod"
-            :options="paymentMethods"
-            type="radio"
-            color="secondary"
-          />
-          <div v-if="paymentNote" class="text-caption text-grey-8 q-my-sm" style="white-space: pre-line">{{ paymentNote }}</div>
-          <component
-              :is="paymentComponent"
-              v-if="paymentComponent"
-              :amount="Number(displayCart.totals.total_price)"
-              :currency="(displayCart.totals.currency_code || 'ILS').toLowerCase()"
-              @ready="onCardReady"
-              @wallet-payment="submitOrder"
-          />
-
-        </q-card-section>
-      </q-card>
-
-      <SectionRenderer :sections="pageConfig?.sections" page="checkout" location="before_place_order"/>
-      <!-- Total & Place Order -->
-      <q-card class="q-pa-md">
-        <q-card-section>
-          <div v-if="couponApplied">{{ t('Total discount: {amount}', { amount: formatCurrency(cartTotalDiscount) }) }}</div>
-          <div class="text-h6">{{ t('Total:') }} <span v-if="couponApplied"><del>{{formatCurrency((Number(cartTotalDiscount)+Number(cartTotal)))}}</del></span> {{ formatCurrency(cartTotal) }}</div>
-        </q-card-section>
-        <q-card-section v-if="(allowSignup && isLoggedIn === false) || termsRequired" class="q-pt-none checkout-agree">
-          <q-checkbox v-if="allowSignup && isLoggedIn === false" v-model="createAccount" color="secondary" :label="t('Create an account (we\'ll email you a link to set your password)')" />
-          <q-checkbox v-if="termsRequired" v-model="agreeTerms" color="secondary">
-            <span>
-              {{ t('I have read and agree to the') }}
-              <template v-if="legal.terms"><router-link :to="legal.terms" target="_blank" @click.stop>{{ t('terms and conditions') }}</router-link></template>
-              <template v-if="legal.terms && legal.privacy"> {{ t('and the') }} </template>
-              <template v-if="legal.privacy"><router-link :to="legal.privacy" target="_blank" @click.stop>{{ t('privacy policy') }}</router-link></template>
-              {{ t('of this store. *') }}
-            </span>
-          </q-checkbox>
-        </q-card-section>
-        <q-card-actions>
-          <q-btn :label="t('Place Order')" type="submit" color="secondary" />
-        </q-card-actions>
-      </q-card>
-        </div>
-    </q-form>
-
-      <div v-else-if="displayCart && itemsCount === '0'">
-        {{ t('Your cart is empty!') }}
-        <router-link to="/products/">{{ t('Go to shop') }}</router-link>
-      </div>
-
-      <!-- Render loader and sync retry state -->
-      <div v-else class="centered">
-        <q-spinner color="secondary" size="2em" />
-        <div>{{ t('Synchronizing cart, please wait...') }}</div>
-      </div>
-
-      <!-- Offline banner inside the form, at the top -->
-      <div v-if="displayCart?._offline" class="bg-warning text-dark q-pa-sm q-mb-md rounded-borders">
+      <!-- Offline banner, at the top -->
+      <div v-if="displayCart?._offline" class="bg-warning text-dark q-pa-sm q-ma-md rounded-borders">
         {{ t('You\'re offline. Your form data is being saved locally and your order will be submitted when you reconnect.') }}
       </div>
 
-      <SectionRenderer :sections="pageConfig?.sections" page="checkout" location="after_checkout"/>
-      <div v-if="syncError" class="text-negative q-mt-md text-center">
+      <SectionRenderer :sections="sections" page="checkout" />
+
+      <div v-if="syncError" class="text-negative q-my-md text-center">
         {{ syncError }}
         <q-btn :label="t('Retry Sync')" color="secondary" @click="syncCart" class="q-ml-md" />
       </div>
@@ -239,18 +35,17 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, watch, onMounted, onUnmounted, useSSRContext, toRaw } from 'vue';
+import { ref, computed, reactive, watch, onMounted, onUnmounted, useSSRContext, provide, markRaw } from 'vue';
 import cart from 'src/stores/cart';
 import { useRouter, onBeforeRouteLeave } from 'vue-router';
 import { useQuasar } from 'quasar';
 import {fetchWithToken, setLoggedIn} from 'src/composables/useApiFetch.js';
-import GoogleLoginButton from '../components/account/GoogleLoginButton.vue';
 import SectionRenderer from 'components/sections/SectionRenderer.vue';
 import { loadPageConfig, subscribeToLiveConfig } from 'src/utils/config-loader'
 
 let unsubscribeConfigUpdates = () => {}
-import {matError, matKeyboardArrowDown} from '@quasar/extras/material-icons'
-import {formatCurrency} from 'src/utils/formatters.js'
+import { matError } from '@quasar/extras/material-icons'
+import { shopSections } from 'src/utils/shop-templates.js'
 import { getWasLoggedIn } from 'src/composables/useApiFetch.js'
 import { defineAsyncComponent } from 'vue'
 import { getAdapter } from 'src/payments/registry'
@@ -261,7 +56,6 @@ import { getStripe, resetStripe } from 'src/payments/adapters/stripe'
 import { useCartSummary } from 'src/composables/useCartSummary'
 import {useSeoMeta} from "src/composables/useSeo.js";
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
-import LoginForm from 'src/components/account/LoginForm.vue'
 import {setUser} from "stores/user.js";
 import { t as i18nT, useI18n } from 'src/i18n/index.js'
 
@@ -334,6 +128,7 @@ if (process.env.CLIENT && window.__PAGE_CONFIG__ && Object.keys(window.__PAGE_CO
 
 // Store builder → Checkout: the terms checkbox (once a terms or privacy page is
 // published) and "Create an account" for guests.
+const sections = computed(() => shopSections('checkout', pageConfig.value || null))
 const legal = computed(() => pageConfig.value?.legal || {})
 const termsRequired = computed(() => pageConfig.value?.require_terms !== false && !!(legal.value.terms || legal.value.privacy))
 const allowSignup = computed(() => !!pageConfig.value && pageConfig.value.allow_signup !== false)
@@ -381,7 +176,8 @@ const paymentComponent = computed(() => {
   if (!adapter?.component) return null
 
   if (!asyncComponentCache.has(adapter.id)) {
-    asyncComponentCache.set(adapter.id, defineAsyncComponent(adapter.component))
+    // Raw: the blocks read it through a reactive object, which must not wrap a component.
+    asyncComponentCache.set(adapter.id, markRaw(defineAsyncComponent(adapter.component)))
   }
   return asyncComponentCache.get(adapter.id)
 })
@@ -516,19 +312,6 @@ const handleCheckboxBlur = (newVal) => {
   }
 }
 
-const onValidationError = async(ref) => {
-  const valid = await ref.validate()
-  if (!valid) {
-    // Wait a tick for Quasar to focus the first invalid field
-    requestAnimationFrame(() => {
-      const el = document.activeElement
-      if (el && typeof el.scrollIntoView === 'function') {
-        el.scrollIntoView({behavior: 'smooth', block: 'center'})
-      }
-    })
-    return
-  }
-}
 const submitOrder = async (walletOverride = null) => {
   // Bot trap — only for the manually-typed form path. Apple/Google
   // Pay submit via @wallet-payment without touching the visible
@@ -773,35 +556,55 @@ onBeforeRouteLeave(() => {
   resetStripe()
 })
 onUnmounted(() => unsubscribeConfigUpdates())
+
+// The template's forms (the Customer Details block): every one must be valid before the order goes.
+const forms = new Set()
+function registerForm(form) {
+  forms.add(form)
+  return () => forms.delete(form)
+}
+const ready = computed(() => !!displayCart.value && itemsCount.value !== '0')
+async function placeOrder() {
+  for (const form of forms) {
+    const valid = await form.validate(true)
+    if (!valid) {
+      // Quasar focuses the first field that needs fixing: bring it into view.
+      requestAnimationFrame(() => {
+        const el = document.activeElement
+        if (el && typeof el.scrollIntoView === 'function') el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      })
+      return
+    }
+  }
+  return submitOrder()
+}
+
+// What the template's blocks show and do (src/components/blocks/shop/Checkout*Block.vue).
+provide('checkoutPage', reactive({
+  cart: markRaw(cart), ready, displayCart, itemsCount, cartItems, cartTotal, cartTotalDiscount, couponApplied,
+  shippingOptions, selectedShippingRateId, couponCode, couponError, loadingCoupon,
+  onShippingMethodChange, applyCoupon, removeCoupon,
+  isLoggedIn, checkoutReady, onLogin, googleLoginEnabled,
+  form, handleInputBlur, handleCheckboxBlur, differentBillingAddress,
+  paymentMethod, paymentMethods, paymentNote, paymentComponent, onCardReady,
+  termsRequired, allowSignup, agreeTerms, createAccount, legal,
+  submitOrder, placeOrder, registerForm,
+}))
 </script>
 
-<style scoped>
+<style>
+/* Shared by the checkout blocks (not scoped: they're in child components). */
 /* purgecss start ignore */
-.q-field__label {
+.checkout-page .q-field__label {
     transition: 0.3s ease;
 }
-.q-field--focused .q-field__label
-.q-field--float .q-field__label{
+.checkout-page .q-field--focused .q-field__label
+.checkout-page .q-field--float .q-field__label{
   font-size: 10px;
   transform: translateY(-5px);
 }
 /* purgecss end ignore */
-.checkout-items {
-  gap: 10px;
-}
-.q-form .float-left,
-.q-form .float-right {
-  width: 100%;
-}
-@media(min-width: 768px) {
-  .q-form .float-left {
-    width: 57%;
-  }
-
-  .q-form .float-right {
-    width: 41%;
-  }
-}
+.checkout-empty { padding: 20px 0; }
 .blockUi{
   position: absolute;
   height: 100%;
