@@ -120,13 +120,17 @@ const layoutClasses = computed(() => {
   const w = asResponsive(d.value.image_width)
   const h = asResponsive(d.value.image_height)
   const r = asResponsive(d.value.aspect_ratio)
+  const fill = asResponsive(d.value.fill_height)
   const classes = {}
   for (const device of DEVICES) {
     const s = SHORT[device]
+    // "Match the Row Height": the row sets the height; Image Height is only the stacked fallback.
+    const fills = fill[device] === 'yes'
     classes[`ib-${LAYOUTS.has(layout[device]) ? layout[device] : 'row'}-${s}`] = true
     classes[`ib-w-${s}`] = !!w[device]
-    classes[`ib-h-${s}`] = !!h[device]
-    classes[`ib-r-${s}`] = !h[device] && RATIOS.has(r[device])
+    classes[`ib-h-${s}`] = !fills && !!h[device]
+    classes[`ib-r-${s}`] = !fills && !h[device] && RATIOS.has(r[device])
+    classes[`ib-fill-${s}`] = fills
   }
   return classes
 })
@@ -245,6 +249,15 @@ function linkAttrs(img) {
   .ib-w-d .image-block__img { width: 100%; }
   .ib-h-d .image-block__img { height: var(--ib-h); width: 100%; }
   .ib-r-d .image-block__img { aspect-ratio: var(--ib-ratio); width: 100%; height: auto; }
+  /* Match the Row Height: the block stretches to the row and the image fills it, adding no height of its own. */
+  .ib-fill-d { height: 100%; align-items: stretch; }
+  .ib-fill-d .image-block__item { flex: 1 1 0; display: flex; flex-direction: column; }
+  .ib-fill-d.ib-w-d .image-block__item { flex: 0 1 auto; }
+  .ib-fill-d .image-block__box { flex: 1 1 auto; min-height: var(--ib-h, 240px); }
+  .ib-fill-d .image-block__frame { position: absolute; inset: 0; }
+  .ib-fill-d .image-block__img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; aspect-ratio: auto; }
+  :global(.sb-block:has(> .ib-fill-d)) { align-self: stretch; }
+  :global(.sb-block:not(.sb-has-w):has(> .ib-fill-d)) { flex: 1 1 0; }
   .image-block { gap: var(--ib-gap, 16px); }
 }
 
@@ -259,6 +272,15 @@ function linkAttrs(img) {
   .ib-w-t .image-block__img { width: 100%; }
   .ib-h-t .image-block__img { height: var(--ib-h-t); width: 100%; }
   .ib-r-t .image-block__img { aspect-ratio: var(--ib-ratio-t); width: 100%; height: auto; }
+  /* Match the Row Height: the block stretches to the row and the image fills it, adding no height of its own. */
+  .ib-fill-t { height: 100%; align-items: stretch; }
+  .ib-fill-t .image-block__item { flex: 1 1 0; display: flex; flex-direction: column; }
+  .ib-fill-t.ib-w-t .image-block__item { flex: 0 1 auto; }
+  .ib-fill-t .image-block__box { flex: 1 1 auto; min-height: var(--ib-h-t, var(--ib-h, 240px)); }
+  .ib-fill-t .image-block__frame { position: absolute; inset: 0; }
+  .ib-fill-t .image-block__img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; aspect-ratio: auto; }
+  :global(.sb-block:has(> .ib-fill-t)) { align-self: stretch; }
+  :global(.sb-block:not(.sb-has-w):has(> .ib-fill-t)) { flex: 1 1 0; }
   .image-block { gap: var(--ib-gap-t, 16px); }
   .image-block__item { max-width: var(--ib-maxw-t, 100%); }
 }
@@ -274,6 +296,15 @@ function linkAttrs(img) {
   .ib-w-m .image-block__img { width: 100%; }
   .ib-h-m .image-block__img { height: var(--ib-h-m); width: 100%; }
   .ib-r-m .image-block__img { aspect-ratio: var(--ib-ratio-m); width: 100%; height: auto; }
+  /* Match the Row Height: the block stretches to the row and the image fills it, adding no height of its own. */
+  .ib-fill-m { height: 100%; align-items: stretch; }
+  .ib-fill-m .image-block__item { flex: 1 1 0; display: flex; flex-direction: column; }
+  .ib-fill-m.ib-w-m .image-block__item { flex: 0 1 auto; }
+  .ib-fill-m .image-block__box { flex: 1 1 auto; min-height: var(--ib-h-m, var(--ib-h-t, var(--ib-h, 240px))); }
+  .ib-fill-m .image-block__frame { position: absolute; inset: 0; }
+  .ib-fill-m .image-block__img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; aspect-ratio: auto; }
+  :global(.sb-block:has(> .ib-fill-m)) { align-self: stretch; }
+  :global(.sb-block:not(.sb-has-w):has(> .ib-fill-m)) { flex: 1 1 0; }
   .image-block { gap: var(--ib-gap-m, 16px); }
   .image-block__item { max-width: var(--ib-maxw-m, 100%); }
 }

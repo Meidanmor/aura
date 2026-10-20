@@ -224,7 +224,7 @@ img.q-img__image {
     bottom: 0;
     transition: 0.3s ease;
 }
-.nav-bar a.router-link-exact-active,
+/* The current page's menu link: underlined (below); the Menu block can give it its own colours. */
 .q-drawer a.q-router-link--exact-active {
     color: var(--q-primary);
     background: var(--q-secondary);

@@ -125,11 +125,21 @@ const headerClasses = computed(() => ({
   'header-solid-text': !!solidText.value,
 }))
 // The colours sit on the inner box: a header floating over the hero takes no height itself.
+// The header's own background (settings.bg) fills it all; a fixed header over the hero
+// stays clear unless the owner gave it one, and takes its after-scrolling colour once solid.
+const PADDING_RE = /^\d+(\.\d+)?(px|rem|em|vh|vw|%)$/
 const headerStyle = computed(() => {
-  const style = { padding: '5px 0' }
-  if (!fixed.value) style.backgroundColor = 'var(--q-bg)'
-  else if (solid.value) style.backgroundColor = resolveGlobalColor(settings.value.solid_bg) || 'var(--q-bg)'
-  else style.backgroundColor = 'transparent'
+  const style = {}
+  const pad = settings.value.padding && typeof settings.value.padding === 'object' ? settings.value.padding : {}
+  const sides = ['top', 'right', 'bottom', 'left'].map((side) => {
+    const v = String(pad[side] ?? '').trim()
+    return PADDING_RE.test(v) ? v : (/^\d+(\.\d+)?$/.test(v) ? v + 'px' : '0')
+  })
+  if (sides.some((v) => v !== '0')) style.padding = sides.join(' ')
+  const own = resolveGlobalColor(settings.value.bg)
+  if (!fixed.value) style.backgroundColor = own || 'var(--q-bg)'
+  else if (solid.value) style.backgroundColor = resolveGlobalColor(settings.value.solid_bg) || own || 'var(--q-bg)'
+  else style.backgroundColor = own || 'transparent'
   if (solidText.value) style['--header-solid-text'] = solidText.value
   return style
 })

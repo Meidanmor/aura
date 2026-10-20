@@ -83,9 +83,14 @@ const css = computed(() => {
   const s = `.${scope.value}`
   const rules = []
 
-  if (d.value.gap) {
-    const g = toCssLength(d.value.gap)
-    if (g) rules.push(`${s} .nav-top { gap: ${g}; }`, `${s} .menu-vertical { gap: ${g}; }`)
+  // Space Between Links: per screen size (a smaller screen without its own value keeps the bigger one's).
+  const gaps = asResponsive(d.value.gap)
+  const GAP_MEDIA = { desktop: '', tablet: '(max-width: 1023px)', mobile: '(max-width: 767px)' }
+  for (const device of ['desktop', 'tablet', 'mobile']) {
+    const g = toCssLength(gaps[device])
+    if (!g || !LENGTH_RE.test(g)) continue
+    const rule = `${s} .nav-top, ${s} .menu-vertical { gap: ${g}; }`
+    rules.push(GAP_MEDIA[device] ? `@media ${GAP_MEDIA[device]} { ${rule} }` : rule)
   }
 
   if (d.value.alignment) {
@@ -124,6 +129,17 @@ const css = computed(() => {
   if (d.value.link_hover_color) {
     const c = colorValue(d.value.link_hover_color)
     if (c) rules.push(`${s} .nav-link:hover, ${s} .menu-v-link:hover { color: ${c} !important; }`)
+  }
+
+  // The link of the page the visitor is on.
+  const current = `${s} .nav-link.router-link-exact-active, ${s} .menu-v-link.router-link-exact-active`
+  if (d.value.active_link_color) {
+    const c = colorValue(d.value.active_link_color)
+    if (c) rules.push(`${current} { color: ${c} !important; }`)
+  }
+  if (d.value.active_link_bg) {
+    const c = colorValue(d.value.active_link_bg)
+    if (c) rules.push(`${current} { background: ${c} !important; }`)
   }
 
   if (d.value.dropdown_bg_color) {
