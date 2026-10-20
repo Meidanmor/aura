@@ -101,12 +101,67 @@ export function subscribeToLiveConfig(page, callback, options = {}) {
   }
 
   window.addEventListener('message', handler)
+  installEditorFocus(trustedOrigin)
 
   // Handshake — tells the admin panel to (re)send state right now instead
   // of waiting for the next field edit.
   window.parent.postMessage({ source: 'qwoo-frontend', type: 'ready' }, trustedOrigin)
 
   return () => window.removeEventListener('message', handler)
+}
+
+/**
+ * The Live Preview's "you're editing this" mark: the dashboard sends
+ * { type: 'focus', id, scroll } for the section or block being edited. It's
+ * outlined by a style rule on its data-section-id / data-block-id (so the
+ * outline survives re-renders), and scrolled into view when asked (once it
+ * exists: a new section shows up with the next state).
+ */
+let focusInstalled = false
+function installEditorFocus(trustedOrigin) {
+  if (focusInstalled) return
+  focusInstalled = true
+  const style = document.createElement('style')
+  style.id = 'qwoo-editor-focus'
+  document.head.appendChild(style)
+  let pending = ''
+  let tries = 0
+  const find = (id) => document.querySelector(`[data-section-id="${id}"], [data-block-id="${id}"]`)
+  const scrollTo = (el) => {
+    const r = el.getBoundingClientRect()
+    const header = document.querySelector('header')
+    const top = header && getComputedStyle(header).position !== 'static' ? Math.max(0, header.getBoundingClientRect().bottom) : 0
+    const room = window.innerHeight - top
+    // Already fully in view: stay put.
+    if (r.top >= top && r.bottom <= window.innerHeight) return
+    const y = window.scrollY + r.top - top - (r.height < room ? (room - r.height) / 2 : 16)
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' })
+  }
+  const tryScroll = () => {
+    if (!pending) return
+    const el = find(pending)
+    if (el) {
+      pending = ''
+      scrollTo(el)
+    } else if (++tries < 20) {
+      setTimeout(tryScroll, 150)
+    }
+  }
+  window.addEventListener('message', (event) => {
+    if (event.origin !== trustedOrigin || event.source !== window.parent) return
+    const data = event.data
+    if (!data || data.source !== 'qwoo-admin' || data.type !== 'focus') return
+    const id = typeof data.id === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(data.id) ? data.id : ''
+    const sel = `[data-section-id="${id}"], [data-block-id="${id}"]`
+    style.textContent = id
+      ? `${sel} { outline: 2px solid #2563eb !important; outline-offset: -2px; }`
+      : ''
+    if (id && data.scroll) {
+      pending = id
+      tries = 0
+      tryScroll()
+    }
+  })
 }
 
 /**

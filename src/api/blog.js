@@ -3,10 +3,11 @@ import { currentLocale } from 'src/i18n/index.js'
 // origin: the storefront's own address during SSR (its /wp-json proxy), '' in the browser.
 
 /** { posts, page, pages, total, categories, category } or null when the category doesn't exist. */
-export async function fetchBlogList({ page = 1, category = '', perPage = 9 } = {}, origin = '') {
+export async function fetchBlogList({ page = 1, category = '', perPage = 9, search = '' } = {}, origin = '', options = {}) {
   const q = new URLSearchParams({ page: String(page), per_page: String(perPage) })
   if (category) q.set('category', category)
-  const res = await fetch(`${origin}/wp-json/qwoo/v1/blog?${q}`)
+  if (search) q.set('search', search)
+  const res = await fetch(`${origin}/wp-json/qwoo/v1/blog?${q}`, { signal: options.signal })
   if (res.status === 404) return null
   if (!res.ok) throw new Error('The blog could not be loaded.')
   return res.json()

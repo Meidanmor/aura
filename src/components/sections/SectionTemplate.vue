@@ -28,6 +28,7 @@
           v-entrance="block.type !== 'section' ? block.style?.animation : ''"
           :id="wrappers[block.id].anchorId"
           class="sb-block"
+          :data-block-id="block.type !== 'section' ? block.id : undefined"
           :class="wrappers[block.id].classes"
           :style="wrappers[block.id].vars"
       >
@@ -111,6 +112,7 @@ import LoopStars from '../loops/LoopStars.vue'
 import LoopCartButton from '../loops/LoopCartButton.vue'
 import MiniCartBlock from "components/blocks/MiniCartBlock.vue";
 import MiniWishlistBlock from "components/blocks/MiniWishlistBlock.vue";
+import SearchBlock from "components/blocks/SearchBlock.vue";
 
 defineOptions({ name: 'SectionTemplate' })
 
@@ -160,6 +162,7 @@ const blockComponents = {
   language_switcher: LanguageSwitcherBlock,
   mini_cart: MiniCartBlock,
   mini_wishlist: MiniWishlistBlock,
+  search: SearchBlock,
   // Card designs (src/components/loops): the card's own item.
   lp_image: LoopImage, lc_image: LoopImage, lpo_image: LoopImage,
   lp_title: LoopText, lp_excerpt: LoopText, lp_category: LoopText,

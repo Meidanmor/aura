@@ -3,12 +3,12 @@
     <AnnouncementBar v-if="headerSettings?.announcement?.enabled && (typeof headerSettings?.announcement?.text === 'string' && headerSettings.announcement.text.trim().length > 0)" :announcement="headerSettings?.announcement" />
 
     <AppHeader
-        :header-config="headerSettings"
+        :header-config="shownHeader"
         :is-super-admin="isSuperAdmin"
         :app-logo="brandSettings?.logo"
         :logo-width="brandSettings?.logo_width"
         :logo-height="brandSettings?.logo_height"
-        :sticky-header="headerSettings?.settings?.sticky"
+        :sticky-header="shownHeader?.settings?.sticky"
         :menu="Array.isArray(headerSettings?.menu) ? headerSettings.menu : null"
     />
     <!-- The drawers the page's widgets asked for (Menu, Mini Cart, Mini Wishlist): src/composables/useDrawers.js. -->
@@ -51,6 +51,7 @@
     </q-page-container>
 
     <AppFooter
+        :sections="Array.isArray(shownFooter?.sections) ? shownFooter.sections : []"
         :app-logo="brandSettings?.logo"
         :footer-text="footerSettings?.footer_text"
         :columns="Array.isArray(footerSettings?.columns) ? footerSettings.columns : null"
@@ -87,6 +88,7 @@ import AppHeader from '../components/app/AppHeader.vue'
 import AppFooter from '../components/app/AppFooter.vue'
 import AnnouncementBar from '../components/app/AnnouncementBar.vue'
 import { stripLang } from 'src/i18n/lang.js'
+import { pickChrome } from 'src/utils/layouts.js'
 import { useRoute, useRouter } from 'vue-router'
 import { Platform } from 'quasar';
 import CookieBanner from "../components/app/CookieBanner.vue";
@@ -469,6 +471,9 @@ async function handleSoftAskEnable() {
 const uiHydrated = ref(false)              // Deferred functional UI
 const route = useRoute()
 const router = useRouter()
+// Header / footer templates: the one chosen for this page, else the main one.
+const shownHeader = computed(() => pickChrome(headerSettings.value, route))
+const shownFooter = computed(() => pickChrome(footerSettings.value, route))
 
 const noDelayRoutes = ['/checkout/', '/cart/', '/my-account/']
 

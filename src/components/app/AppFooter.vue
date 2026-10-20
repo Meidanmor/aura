@@ -1,5 +1,9 @@
 <template>
-  <footer>
+  <!-- Built in the Store builder (Header & footer → Footer), when it has sections. -->
+  <footer v-if="sections.length" class="sb-footer">
+    <SectionRenderer :sections="sections" page="footer" />
+  </footer>
+  <footer v-else>
     <div class="container flex justify-between">
       <div class="footer-column first">
         <!-- The store's own logo, or its name when it has none. -->
@@ -53,6 +57,7 @@
 </template>
 <script setup>
 import FooterLinks from "./FooterLinks.vue"
+import SectionRenderer from "components/sections/SectionRenderer.vue"
 import { useI18n } from 'src/i18n/index.js'
 import { storeName as liveStoreName } from 'src/utils/site-info.js'
 
@@ -61,6 +66,11 @@ const { t } = useI18n()
 const copyright = `© ${new Date().getFullYear()}${storeName ? ` ${storeName}` : ''}. ${t('All rights reserved.')}`
 
 defineProps({
+  // The footer's sections (the chosen footer template's, or the main footer's).
+  sections: {
+    type: Array,
+    default: () => []
+  },
   // The store's logo (Design → Branding).
   appLogo: {
     type: String,

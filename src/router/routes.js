@@ -34,6 +34,8 @@ const pages = (suffix = '') => {
     { path: 'blog', name: named('blog'), component: () => import('pages/BlogPage.vue') },
     { path: 'blog/category/:category', name: named('blog-category'), component: () => import('pages/BlogPage.vue') },
     { path: 'blog/:slug', name: named('blog-post'), component: () => import('pages/BlogPostPage.vue') },
+    // Search results (?q=…&in=products,categories,posts), from the Search block.
+    { path: 'search', name: named('search'), component: () => import('pages/SearchPage.vue') },
 
     // The store owner's own pages (/about, /shipping…, built in the dashboard).
     // The app's own routes above are static, so they always win over this one.

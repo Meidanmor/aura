@@ -14,6 +14,7 @@ import {
   matEmojiEvents, matInventory, matShoppingBag, matInfo, matHelp, matArrowForward, matPublic,
   matLanguage, matShoppingCart, matShoppingBasket, matLocalMall, matFavoriteBorder,
   matBookmarkBorder, matStarBorder, matMenu, matMenuOpen, matSegment, matMoreVert, matApps,
+  matSearch, matManageSearch, matTravelExplore,
 } from '@quasar/extras/material-icons'
 import { outlinedShoppingCart, outlinedShoppingBag } from '@quasar/extras/material-icons-outlined'
 import {
@@ -70,6 +71,11 @@ export const wishlistIcons = {
   heart: matFavorite,
   bookmark: matBookmarkBorder,
   star: matStarBorder,
+}
+export const searchIcons = {
+  search: matSearch,
+  manage_search: matManageSearch,
+  travel: matTravelExplore,
 }
 export const menuIcons = {
   menu: matMenu,
