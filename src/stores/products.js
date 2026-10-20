@@ -193,9 +193,31 @@ async function queryCategories(ids = [], ssrContext = null) {
   }
 }
 
+// Decimals the store's prices use (WooCommerce's "Number of decimals"). The
+// Store API's min_price / max_price are in the smallest unit: ₪180 is 18000
+// with 2 decimals but 180 with 0, so a fixed ×100 matched nothing on stores
+// with 0 decimals. Learned from product answers (one store per deployment).
+let minorUnit = null
+function learnMinorUnit(list) {
+  const u = Number(Array.isArray(list) ? list[0]?.prices?.currency_minor_unit : NaN)
+  if (Number.isInteger(u) && u >= 0) minorUnit = u
+}
+async function priceMinorUnit(ssrContext) {
+  if (minorUnit === null) {
+    try {
+      const res = await fetch(`${storeApiBase(ssrContext)}/products?per_page=1`)
+      if (res.ok) learnMinorUnit(await res.json())
+    } catch {
+      // offline: the products.json fallback has the same units as the API
+    }
+  }
+  return minorUnit ?? 2
+}
+
 // --- core fetchers ---
 // ctx.ssrContext carries the per-request context when this runs inside a
 // preFetch hook. Leave it undefined/null for client-triggered calls.
+// min_amount / max_amount are in whole currency (₪180), like the price filter.
 export async function preFetchProducts(ctx = {}) {
   try {
     if (!ctx.dryRun) {
@@ -205,8 +227,8 @@ export async function preFetchProducts(ctx = {}) {
     const {
       page = 1,
       per_page = 6,
-      min_price,
-      max_price,
+      min_amount,
+      max_amount,
       category,
       search,
       orderby,
@@ -218,11 +240,17 @@ export async function preFetchProducts(ctx = {}) {
     // -------------------------
     // PRIMARY: store/v1 live API
     // -------------------------
+    const hasMin = min_amount != null && !isNaN(min_amount)
+    const hasMax = max_amount != null && !isNaN(max_amount)
+    const scale = (hasMin || hasMax) ? 10 ** await priceMinorUnit(ssrContext) : 1
+    const min_price = hasMin ? Math.floor(Number(min_amount) * scale) : undefined
+    const max_price = hasMax ? Math.ceil(Number(max_amount) * scale) : undefined
+
     const query = new URLSearchParams()
     query.append('page', page)
     query.append('per_page', per_page)
-    if (min_price !== undefined && !isNaN(min_price)) query.append('min_price', Math.round(min_price))
-    if (max_price !== undefined && !isNaN(max_price)) query.append('max_price', Math.round(max_price))
+    if (min_price !== undefined) query.append('min_price', min_price)
+    if (max_price !== undefined) query.append('max_price', max_price)
     if (category)  query.append('category', category)
     if (search)    query.append('search', search)
     if (orderby && orderby !== 'menu_order') query.append('orderby', orderby)
@@ -237,6 +265,7 @@ export async function preFetchProducts(ctx = {}) {
       const data        = await res.json()
       const total       = res.headers.get('X-WP-Total')
       const totalPagesH = res.headers.get('X-WP-TotalPages')
+      learnMinorUnit(data)
 
       if (ctx.dryRun) {
         return {

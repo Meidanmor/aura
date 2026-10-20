@@ -70,8 +70,6 @@ export function createArchivePreFetch(mode) {
 
         const urlFilters = parseQueryFilters(currentRoute.query)
         const sortParams = getSortParams(urlFilters.sortBy || 'menu_order')
-        const minPriceCents = urlFilters.priceRange?.min != null ? Math.floor(urlFilters.priceRange.min * 100) : undefined
-        const maxPriceCents = urlFilters.priceRange?.max != null ? Math.ceil(urlFilters.priceRange.max * 100) : undefined
 
         const categoryParam = mode === 'category'
             ? (currentCat?.id ?? undefined)
@@ -90,8 +88,8 @@ export function createArchivePreFetch(mode) {
             dryRun: true,
             search: urlFilters.search || undefined,
             category: categoryParam,
-            min_price: minPriceCents,
-            max_price: maxPriceCents,
+            min_amount: urlFilters.priceRange?.min ?? undefined,
+            max_amount: urlFilters.priceRange?.max ?? undefined,
             ssrContext,
             ...sortParams
         })
@@ -313,8 +311,6 @@ export function useProductArchive(mode) {
             if (currentRequest !== requestId) return
             if (shouldResetPage && currentPage.value !== 1) { currentPage.value = 1; return }
 
-            const min = Math.floor(priceRange.value.min * 100)
-            const max = Math.ceil(priceRange.value.max * 100)
             const sortParams = getSortParams(filters.sort)
 
             const categoryArg = mode === 'category'
@@ -323,7 +319,7 @@ export function useProductArchive(mode) {
 
             await productsStore.preFetchProducts({
                 api: true, page: currentPage.value, per_page: perPage,
-                min_price: min, max_price: max, category: categoryArg,
+                min_amount: priceRange.value.min, max_amount: priceRange.value.max, category: categoryArg,
                 search: filters.search, ...sortParams
             })
 
