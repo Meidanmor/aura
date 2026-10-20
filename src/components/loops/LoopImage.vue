@@ -4,7 +4,8 @@
         class="lt-img__img"
         :src="image.src"
         :srcset="image.srcset || undefined"
-        :sizes="image.srcset ? (image.sizes || '(max-width: 767px) 50vw, 33vw') : undefined"
+        :sizes="image.srcset ? CARD_SIZES : undefined"
+        v-fit-sizes
         :alt="image.alt || ''"
         :width="image.width || undefined"
         :height="image.height || undefined"
@@ -12,7 +13,18 @@
         :fetchpriority="ctx.priority ? 'high' : undefined"
         decoding="async"
     />
-    <img v-if="hover === 'swap' && image.second" class="lt-img__img lt-img__second" :src="image.second" alt="" aria-hidden="true" loading="lazy" decoding="async" />
+    <img
+        v-if="hover === 'swap' && image.second"
+        class="lt-img__img lt-img__second"
+        :src="image.second"
+        :srcset="image.secondSrcset || undefined"
+        :sizes="image.secondSrcset ? CARD_SIZES : undefined"
+        v-fit-sizes
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+    />
     <span v-if="shade" class="lt-img__shade" :class="`lt-img__shade--${shade}`" aria-hidden="true" />
     <template v-if="isProduct">
       <span v-if="d.show_badge !== false && badge" class="lt-img__badge" :class="`lt-img__badge--${badgePosition}`">{{ badge === 'sold' ? t('Sold out') : t('Sale!') }}</span>
@@ -46,6 +58,10 @@ import wishlist from 'src/stores/wishlist.js'
 import { useLoopItem, loopImage } from './loop-item.js'
 import { asResponsive, toCssLength, DEVICES } from 'src/composables/useSectionStyle.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
+import { vFitSizes } from 'src/utils/responsive-image.js'
+
+// WordPress's own `sizes` says the full screen width: a card is a column of a grid.
+const CARD_SIZES = '(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 25vw'
 
 const props = defineProps({
   data: { type: Object, required: true },

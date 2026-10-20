@@ -26,6 +26,9 @@
             v-else
             class="image-block__img"
             :src="img.src"
+            :srcset="picked && idx === 0 ? undefined : img.srcset"
+            :sizes="picked && idx === 0 || !img.srcset ? undefined : LAZY_SIZES"
+            v-fit-sizes
             :alt="img.alt || ''"
             :width="img.width || undefined"
             :height="img.height || undefined"
@@ -49,6 +52,9 @@
             v-if="hover === 'swap' && img.hoverSrc"
             class="image-block__img image-block__img--hover"
             :src="img.hoverSrc"
+            :srcset="img.hoverSrcset"
+            :sizes="img.hoverSrcset ? LAZY_SIZES : undefined"
+            v-fit-sizes
             alt=""
             aria-hidden="true"
             loading="lazy"
@@ -74,6 +80,7 @@ import { RouterLink } from 'vue-router'
 import ProductTags from './ProductTags.vue'
 import BuilderSvg from '../blocks/BuilderSvg.vue'
 import { safeSvg } from 'src/utils/inline-svg.js'
+import { srcsetOf, LAZY_SIZES, vFitSizes } from 'src/utils/responsive-image.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToFlex, DEVICES } from 'src/composables/useSectionStyle.js'
@@ -107,7 +114,7 @@ const images = computed(() => (d.value.images || [])
       const svgStyle = asSvg && payload.width && payload.height
         ? { '--svg-w': `${payload.width}px`, aspectRatio: `${payload.width} / ${payload.height}` }
         : {}
-      return { ...img, src: payload.url, width: payload.width, height: payload.height, hoverSrc, solidSrc, asSvg, svgStyle }
+      return { ...img, src: payload.url, srcset: srcsetOf(payload), width: payload.width, height: payload.height, hoverSrc, hoverSrcset: srcsetOf(img.hover_image), solidSrc, asSvg, svgStyle }
     })
     .filter((img) => img.src))
 

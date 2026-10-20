@@ -28,6 +28,9 @@
           <source v-if="slide.mobileSrc" media="(max-width: 767px)" :srcset="slide.mobileSrc" />
           <img
               :src="slide.src"
+              :srcset="picked && idx === 0 ? undefined : slide.srcset"
+              :sizes="picked && idx === 0 || !slide.srcset ? undefined : LAZY_SIZES"
+              v-fit-sizes
               :alt="slide.alt || ''"
               :width="slide.width || undefined"
               :height="slide.height || undefined"
@@ -119,6 +122,9 @@
           >
             <img
                 :src="item.src"
+                :srcset="picked && idx === 0 ? undefined : item.srcset"
+                :sizes="picked && idx === 0 || !item.srcset ? undefined : LAZY_SIZES"
+                v-fit-sizes
                 :alt="item.alt || ''"
                 :width="item.width || undefined"
                 :height="item.height || undefined"
@@ -206,6 +212,7 @@ import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { asResponsive, setResponsiveVar, toCssLength, DEVICES } from 'src/composables/useSectionStyle.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
+import { srcsetOf, LAZY_SIZES, vFitSizes } from 'src/utils/responsive-image.js'
 import { useI18n } from 'src/i18n/index.js'
 
 const { t } = useI18n()
@@ -242,7 +249,7 @@ function imageLinkAttrs(item) {
 const picked = usePriorityBlock(props.blockId)
 
 const slides = computed(() => (d.value.slides || [])
-    .map((s) => ({ ...s, src: imgUrl(s.image), mobileSrc: imgUrl(s.mobile_image), width: s.image?.width, height: s.image?.height }))
+    .map((s) => ({ ...s, src: imgUrl(s.image), srcset: srcsetOf(s.image), mobileSrc: imgUrl(s.mobile_image), width: s.image?.width, height: s.image?.height }))
     .filter((s) => s.src))
 
 const queryKey = () => JSON.stringify([
@@ -258,7 +265,7 @@ const { data: fetched } = useBlockQuery(props.blockId, queryKey, (ssrContext) =>
 const items = computed(() => {
   if (source.value === 'images' || source.value === 'logos') {
     return (d.value.images || [])
-        .map((img, i) => ({ ...img, key: i, src: imgUrl(img.image), width: img.image?.width, height: img.image?.height }))
+        .map((img, i) => ({ ...img, key: i, src: imgUrl(img.image), srcset: srcsetOf(img.image), width: img.image?.width, height: img.image?.height }))
         .filter((img) => img.src)
   }
   if (source.value === 'products' || source.value === 'categories') return fetched.value || []

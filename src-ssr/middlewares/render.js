@@ -225,6 +225,12 @@ function fontsHead(site, lang) {
     return `${preloads}<style id="qwoo-fonts">${css.replace(/</g, '\\3c ')}</style>`
 }
 
+/** Whether the store's brand fonts set the text font (then app.css's Roboto is never used). */
+function usesOwnTextFont(site) {
+    const fonts = site ? site.json['config/branding.json']?.fonts : branding.fonts
+    return !!brandFontsCss(fonts) && typeof fonts?.vars?.text === 'string' && /^[A-Za-z0-9 ]{1,60}$/.test(fonts.vars.text)
+}
+
 // *.vercel.app addresses are the deployment's internal address, not the
 // store's: keep them out of search engines (the store's own address is the
 // canonical one anyway).
@@ -429,7 +435,12 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
                 const withLogo = ssrContext.sectionPriority
                     ? page.replace(/<img\b[^>]*\bheader-logo\b[^>]*>/, (tag) => tag.replace('fetchpriority="high"', 'fetchpriority="auto"'))
                     : page
-                const output = withLogo
+                // Roboto (app.css) is only drawn while the store has no text font of its own:
+                // otherwise its preloads compete with the page's first image for nothing.
+                const withFonts = usesOwnTextFont(site)
+                    ? withLogo.replace(/<link rel="preload" href="[^"]*\/roboto-[^"]*\.woff2" as="font"[^>]*>/g, '')
+                    : withLogo
+                const output = withFonts
                     .replace(/<html\b([^>]*)>/, (tag, attrs) => `<html ${attrs.replace(/\s(lang|dir)=("[^"]*"|\S+)/g, '').trim()} ${langAttrs}>`.replace('<html  ', '<html '))
                     .replace('</head>', `${criticalHeadExtra}</head>`)
                     .replace('</body>', `${bodyBottom}</body>`)

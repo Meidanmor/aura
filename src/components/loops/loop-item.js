@@ -52,13 +52,13 @@ export function loopItemName(type, item) {
   return plainText(type === 'post' ? item.title : item.name)
 }
 
-/** The card's image: { src, srcset, sizes, alt, width, height, second } or null. */
+/** The card's image: { src, srcset, sizes, alt, width, height, second, secondSrcset } or null. */
 export function loopImage(type, item) {
   if (!item) return null
   if (type === 'product') {
     const [first, second] = item.images || []
     if (!first?.src) return null
-    return { src: first.src, srcset: first.srcset, sizes: first.sizes, alt: first.alt || plainText(item.name), second: second?.src || '' }
+    return { src: first.src, srcset: first.srcset, sizes: first.sizes, alt: first.alt || plainText(item.name), second: second?.src || '', secondSrcset: second?.srcset || '' }
   }
   if (type === 'category') {
     const img = item.image_data || item.image

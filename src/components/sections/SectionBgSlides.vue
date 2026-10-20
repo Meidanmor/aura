@@ -7,7 +7,18 @@
         :class="{ 'is-active': idx === index }"
     >
       <source v-if="slide.mobile" media="(max-width: 767px)" :srcset="slide.mobile" />
-      <img :src="slide.url" alt="" :loading="idx === 0 ? 'eager' : 'lazy'" decoding="async" />
+      <!-- Smaller copies for the later images only: the first one may be the page's preloaded image. -->
+      <img
+          :src="slide.url"
+          :srcset="idx === 0 ? undefined : srcsetOf(slide.image)"
+          :sizes="idx === 0 || !srcsetOf(slide.image) ? undefined : LAZY_SIZES"
+          v-fit-sizes
+          :width="slide.image?.width || undefined"
+          :height="slide.image?.height || undefined"
+          alt=""
+          :loading="idx === 0 ? 'eager' : 'lazy'"
+          decoding="async"
+      />
     </picture>
   </div>
   <!-- The shown image's product tags (over the section's content layer, so they can be clicked). -->
@@ -52,6 +63,7 @@
  */
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import ProductTags from './ProductTags.vue'
+import { srcsetOf, LAZY_SIZES, vFitSizes } from 'src/utils/responsive-image.js'
 import { useI18n } from 'src/i18n/index.js'
 
 const { t } = useI18n()

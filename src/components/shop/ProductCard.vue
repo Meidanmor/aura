@@ -32,7 +32,8 @@
             :img-src="product.images[0]?.src"
             :src="product.images[0]?.src ? product.images[0].src : '/naturaBloom-circle.svg'"
             :srcset="product.images[0]?.srcset"
-            :sizes="product.images[0]?.sizes"
+            :sizes="product.images[0]?.srcset ? CARD_SIZES : undefined"
+            v-fit-sizes
             :alt="product.name"
             :loading="priority || eager ? 'eager' : 'lazy'"
             :fetchpriority="priority ? 'high' : 'auto'"
@@ -60,6 +61,10 @@ import cart from 'src/stores/cart.js'
 import wishlist from 'src/stores/wishlist.js'
 import { useSanitizedPrice } from 'src/composables/useSanitizedHtml.js'
 import { useQuasar } from 'quasar'
+import { vFitSizes } from 'src/utils/responsive-image.js'
+
+// WordPress's own `sizes` says the full screen width: a card is a column of a grid.
+const CARD_SIZES = '(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 25vw'
 
 const $q = useQuasar()
 
