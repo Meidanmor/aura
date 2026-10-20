@@ -76,6 +76,8 @@ export function pickChrome(config, route) {
   if (!config) return config
   const layouts = Array.isArray(config.layouts) ? config.layouts : []
   let chosen = null
+  // The live preview while the owner edits the main header / footer: that one, on every page.
+  if (config.preview_layout === ':main') return config
   if (config.preview_layout) chosen = layouts.find((l) => l.id === config.preview_layout) || null
   if (!chosen) {
     const where = chromeTarget(route)
