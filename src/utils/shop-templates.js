@@ -34,6 +34,15 @@ export function shopTemplateSections(page, old = []) {
   let n = 0
   const id = (prefix) => `${prefix}_dflt${page.slice(0, 3)}${++n}`
   const block = (type) => ({ id: id('blk'), type, enabled: true, style: {}, data: {} })
+  // The blocks have no spacing of their own: the old pages' spacing, as block settings (same as the store).
+  const sides = (top, right, bottom, left) => ({ top, right, bottom, left })
+  const spaced = (b) => ({ ...b, style: { margin: { desktop: sides('20px', '', '20px', ''), tablet: sides('20px', '', '20px', ''), mobile: sides('20px', '', '20px', '') } } })
+  const SORT_STYLE = {
+    position: { desktop: 'static', tablet: 'static', mobile: 'sticky' },
+    box_padding: { mobile: sides('10px', '10px', '10px', '10px') },
+    bg_type: 'color',
+    bg_color: 'global:primary',
+  }
   const sec = (blocks, style = {}) => ({ id: id('sec'), enabled: true, style: { width_mode: 'contained', ...style }, blocks })
   const col = (blocks, width, style = {}) => ({ id: id('blk'), type: 'section', enabled: true, style: { width_mode: 'custom', width, padding_preset: 'none', ...style }, blocks })
   const top = (loc) => slots[loc] || []
@@ -73,15 +82,15 @@ export function shopTemplateSections(page, old = []) {
     case 'category':
       return [
         ...top('before_breadcrumbs'),
-        sec([block('archive_breadcrumbs')], pad('0', '16', '0', '16')),
+        sec([spaced(block('archive_breadcrumbs'))], pad('0', '16', '0', '16')),
         ...top('after_breadcrumbs'),
-        sec([block('archive_title')], pad('0', '16', '0', '16')),
+        sec([spaced(block('archive_title'))], pad('0', '16', '0', '16')),
         sec([
           col([...inside('before_filters'), block('archive_filters')], rwd('25%', '25%', '100%'), { gap: rwd('25px') }),
           col([
             block('archive_count'),
-            // Sticky on phones only, below the header (as the old Sort bar was).
-            { ...block('archive_sort'), style: { position: 'sticky', sticky_off: { desktop: true, tablet: true } } },
+            // Sticky on phones only, below the header, on the page's colour (as the old Sort bar was).
+            { ...block('archive_sort'), style: SORT_STYLE },
             ...inside('before_products_grid'),
             block('archive_products'),
             ...inside('after_products_grid'),

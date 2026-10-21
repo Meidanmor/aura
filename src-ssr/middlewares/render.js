@@ -275,7 +275,10 @@ function fasterFirstPaint(html, publicDir) {
                 if (css && /<\/style/i.test(css)) css = null
                 inlinedCss.set(href, css)
             }
-            return css ? `<style data-href="${href}">${css}</style>` : tag
+            // The disabled <link> stays for Vite's chunk loader: a route chunk that lists this
+            // stylesheet looks for link[href][rel=stylesheet], and without it added the file again
+            // at the end of <head>, after the store's colours (Quasar's defaults won: 2026-10-21).
+            return css ? `<style data-href="${href}">${css}</style><link rel="stylesheet" href="${href}" disabled>` : tag
         })
 }
 

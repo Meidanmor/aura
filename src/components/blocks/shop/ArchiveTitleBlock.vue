@@ -23,8 +23,9 @@ const description = useSanitizedDescription(() => (a?.mode === 'category' ? a.se
 </script>
 
 <style scoped>
-.archive-title h1, .archive-title h2 { margin: 20px 0; }
-.archive-title-intro { margin: -8px 0 20px; max-width: 65ch; opacity: .85; }
+/* No outer spacing of its own (the block's Margin is the owner's). */
+.archive-title h1, .archive-title h2 { margin: 0; }
+.archive-title-intro { margin: 12px 0 0; max-width: 65ch; opacity: .85; }
 .archive-title.is-center .archive-title-intro { margin-inline: auto; }
 /* rtl:begin:ignore */
 .archive-title.is-right .archive-title-intro { margin-left: auto; }

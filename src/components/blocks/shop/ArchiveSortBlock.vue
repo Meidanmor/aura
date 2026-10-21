@@ -16,9 +16,7 @@ const d = computed(() => props.data.data || {})
 
 <style scoped>
 .archive-sort :deep(.q-select) { min-width: 160px; }
+/* No spacing or background of its own: the block's Inner Padding, Margin and Background are the owner's. */
 .archive-sort :deep(> .flex) { margin-bottom: 0; }
 .no-filters-btn :deep(.filters-toggle) { display: none !important; }
-@media (max-width: 767px) {
-  .archive-sort { background: var(--q-primary); padding: 10px; }
-}
 </style>

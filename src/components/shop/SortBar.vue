@@ -1,6 +1,6 @@
 <!-- src/components/shop/SortBar.vue -->
 <template>
-  <div class="flex justify-between q-mb-md sticky">
+  <div class="flex justify-between">
     <q-select
         filled
         :model-value="sortBy"

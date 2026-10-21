@@ -6,6 +6,8 @@
         :priority-count="priorityCount"
         :card="card"
         :empty-text="d.empty_text || ''"
+        :columns="d.columns"
+        :gap="d.gap"
     />
   </div>
 </template>
@@ -28,13 +30,3 @@ const priorityCount = computed(() => {
 })
 </script>
 
-<style scoped>
-/* The grid's look from the old page (src/css/product-archive.css). */
-.archive-products :deep(.my-card) { display: flex; flex-direction: column; justify-content: flex-start; }
-.archive-products :deep(.products-inner) { flex: 100%; }
-@media (max-width: 767px) {
-  .archive-products :deep(.products-inner) { padding: 20px 16px 0; }
-  .archive-products :deep(.products-inner > div) { width: 50%; }
-  .archive-products :deep(.products-inner .q-card) { padding: 0; }
-}
-</style>

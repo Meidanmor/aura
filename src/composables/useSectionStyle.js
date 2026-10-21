@@ -90,15 +90,18 @@ function hasAny(value) {
 }
 
 /**
- * Advanced → Position "Sticky" (sections and blocks): classes sb-sticky-d/-t/-m
- * per screen size (none where "Not Sticky On" says so) and their distance from
- * the top, set for every size (no inherited values from a sticky parent).
+ * Advanced → Position "Sticky" (sections and blocks), per screen size: classes
+ * sb-sticky-d/-t/-m where it's sticky (an empty size takes the bigger one's), and
+ * the distance from the top, set for every size (no inherited values from a sticky
+ * parent). The first build had one value plus "Not Sticky On" (sticky_off).
  * "Stay below the header" adds the header's height on screen
  * (--qwoo-header-stuck, measured by AppHeader). CSS: app.css .sb-sticky-*.
  */
 export function setStickyVars(vars, s = {}) {
-  if (s.position !== 'sticky') return {}
+  const pos = asResponsive(s.position)
   const off = s.sticky_off || {}
+  const on = Object.fromEntries(DEVICES.map((device) => [device, pos[device] === 'sticky' && !off[device]]))
+  if (!DEVICES.some((device) => on[device])) return {}
   const top = asResponsive(s.sticky_top)
   let last = '0px'
   for (const device of DEVICES) {
@@ -107,7 +110,7 @@ export function setStickyVars(vars, s = {}) {
     vars[`--sb-st${device === 'desktop' ? '' : '-' + DEVICE_SHORT[device]}`] = last
   }
   vars['--sb-sth'] = s.sticky_below_header === false ? '0px' : 'var(--qwoo-header-stuck, 0px)'
-  return { 'sb-sticky-d': !off.desktop, 'sb-sticky-t': !off.tablet, 'sb-sticky-m': !off.mobile }
+  return { 'sb-sticky-d': on.desktop, 'sb-sticky-t': on.tablet, 'sb-sticky-m': on.mobile }
 }
 
 /** hide-on-device classes shared by containers and blocks. */

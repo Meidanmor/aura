@@ -20,5 +20,6 @@ const linkText = computed(() => textStyle(props.data.data || {}, tsKeys('link'))
 </script>
 
 <style scoped>
-.shop-crumbs { margin: 20px 0; }
+/* No outer spacing of its own (the block's Margin is the owner's). */
+.shop-crumbs { margin: 0; }
 </style>

@@ -677,61 +677,6 @@ body section {
     left: 0;
     top: 0;
 }
-/* AI chat assistant */
-.chat-message {
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: 8px;
-}
-
-.chat-message.user {
-  flex-direction: row-reverse;
-  justify-content: flex-end;
-}
-
-.bubble {
-  background-color: #e0f7fa;
-  padding: 8px 12px;
-  border-radius: 16px;
-  max-width: 75%;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-}
-
-.chat-message.bot .bubble {
-  background-color: #f1f1f1;
-}
-
-.chat-container {
-  width: 70vw;
-  max-width: 400px;
-  max-height: 500px;
-  display: flex;
-  flex-direction: column;
-}
-
-.chat-scroll-area {
-  height: 100%;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.rotate-fade-enter-active,
-.rotate-fade-leave-active {
-  transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-.rotate-fade-enter-from,
-.rotate-fade-leave-to {
-  transform: rotate(-90deg);
-  opacity: 0;
-}
-
-.rotate-fade-enter-to,
-.rotate-fade-leave-from {
-  transform: rotate(0deg);
-  opacity: 1;
-}
 /********/
 
 i.q-icon.on-left.notranslate.material-icons {
