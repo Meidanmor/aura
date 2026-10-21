@@ -89,6 +89,27 @@ function hasAny(value) {
   return DEVICES.some((d) => r[d] !== '' && r[d] != null)
 }
 
+/**
+ * Advanced → Position "Sticky" (sections and blocks): classes sb-sticky-d/-t/-m
+ * per screen size (none where "Not Sticky On" says so) and their distance from
+ * the top, set for every size (no inherited values from a sticky parent).
+ * "Stay below the header" adds the header's height on screen
+ * (--qwoo-header-stuck, measured by AppHeader). CSS: app.css .sb-sticky-*.
+ */
+export function setStickyVars(vars, s = {}) {
+  if (s.position !== 'sticky') return {}
+  const off = s.sticky_off || {}
+  const top = asResponsive(s.sticky_top)
+  let last = '0px'
+  for (const device of DEVICES) {
+    const v = toCssLength(top[device])
+    if (v) last = v
+    vars[`--sb-st${device === 'desktop' ? '' : '-' + DEVICE_SHORT[device]}`] = last
+  }
+  vars['--sb-sth'] = s.sticky_below_header === false ? '0px' : 'var(--qwoo-header-stuck, 0px)'
+  return { 'sb-sticky-d': !off.desktop, 'sb-sticky-t': !off.tablet, 'sb-sticky-m': !off.mobile }
+}
+
 /** hide-on-device classes shared by containers and blocks. */
 export function visibilityClasses(hideOn) {
   const h = hideOn || {}
@@ -409,6 +430,10 @@ export function buildContainerStyle(style = {}) {
   const hover = HOVER_EFFECTS.has(s.hover_effect) ? s.hover_effect : ''
   const link = sectionLink(s)
 
+  // Sticky: on the section itself (top level) or its wrapper (nested), like margins.
+  const stickyVars = {}
+  const stickyClasses = setStickyVars(stickyVars, s)
+
   return {
     outerClasses: {
       [`sb-pad-${preset}`]: true,
@@ -426,6 +451,8 @@ export function buildContainerStyle(style = {}) {
     innerVars,
     marginVars,
     sideways,
+    stickyVars,
+    stickyClasses,
     widthMode,
     widthVars,
     hasOverlay: bg.hasOverlay,
@@ -460,7 +487,7 @@ export function buildBlockWrapperStyle(block) {
     // A nested section's own style drives its wrapper: margins, width
     // (custom → fixed width, contained → 1200px max), visibility, anchor.
     const c = buildContainerStyle(block.style)
-    const vars = { ...c.marginVars, ...c.widthVars }
+    const vars = { ...c.marginVars, ...c.widthVars, ...c.stickyVars }
     if (c.widthMode === 'contained') vars['--sbb-maxw'] = '1200px'
     return {
       classes: {
@@ -468,6 +495,7 @@ export function buildBlockWrapperStyle(block) {
         'sb-has-mx': c.sideways,
         'sb-has-w': c.widthMode === 'custom' && hasAny(block.style?.width),
         'sb-has-maxw': c.widthMode === 'contained',
+        ...c.stickyClasses,
         ...visibilityClasses(block.style?.hide_on),
       },
       vars,
@@ -491,6 +519,7 @@ export function buildBlockWrapperStyle(block) {
   // Entrance animation's delay (the animation itself: src/utils/entrance.js).
   const delay = Number(s.animation_delay)
   if (s.animation && s.animation !== 'none' && delay > 0) vars['--sb-anim-delay'] = `${Math.min(1500, delay)}ms`
+  const sticky = setStickyVars(vars, s)
 
   return {
     classes: {
@@ -503,6 +532,7 @@ export function buildBlockWrapperStyle(block) {
       'sb-has-shadow': !!shadow,
       'sb-has-border': !!looks.border,
       ...bg.classes,
+      ...sticky,
       ...visibilityClasses(s.hide_on),
     },
     vars,

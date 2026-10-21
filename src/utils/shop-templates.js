@@ -79,7 +79,9 @@ export function shopTemplateSections(page, old = []) {
         sec([
           col([...inside('before_filters'), block('archive_filters')], rwd('25%', '25%', '100%'), { gap: rwd('25px') }),
           col([
-            ...types(['archive_count', 'archive_sort']),
+            block('archive_count'),
+            // Sticky on phones only, below the header (as the old Sort bar was).
+            { ...block('archive_sort'), style: { position: 'sticky', sticky_off: { desktop: true, tablet: true } } },
             ...inside('before_products_grid'),
             block('archive_products'),
             ...inside('after_products_grid'),

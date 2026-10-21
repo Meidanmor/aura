@@ -1,7 +1,11 @@
 <template>
-  <div v-if="d.text && d.url" class="btn-block" :class="fullWidthClasses" :style="wrapVars">
+  <div v-if="d.text && (d.url || action)" class="btn-block" :class="fullWidthClasses" :style="wrapVars">
     <q-btn
-        v-bind="linkAttrs"
+        v-bind="action ? {} : linkAttrs"
+        :icon="icon && !iconRight ? icon : undefined"
+        :icon-right="icon && iconRight ? icon : undefined"
+        :aria-label="ariaLabel || undefined"
+        @click="action && action()"
         class="btn-block__btn"
         :class="[`btn-block__btn--${variant}`, `btn-block__btn--${size}`, labelText.class, paddingVars.cls]"
         :style="btnVars"
@@ -27,6 +31,11 @@ import { asResponsive, setResponsiveVar, toCssLength, alignToFlex, DEVICES } fro
 const props = defineProps({
   data: { type: Object, required: true },
   blockId: { type: String, default: '' },
+  // A button that runs this instead of following a link (the Filters Button block).
+  action: { type: Function, default: null },
+  icon: { type: String, default: '' },
+  iconRight: { type: Boolean, default: false },
+  ariaLabel: { type: String, default: '' },
 })
 
 const route = useRoute()
@@ -92,6 +101,10 @@ const btnVars = computed(() => {
   if (font) vars['font-family'] = font
   Object.assign(vars, labelText.value.style)
   Object.assign(vars, paddingVars.value.vars)
+  const iconSize = toCssLength(d.value.icon_size)
+  if (iconSize) vars['--btn-icon-size'] = iconSize
+  const iconColor = resolveGlobalColor(d.value.icon_color)
+  if (iconColor) vars['--btn-icon-color'] = iconColor
   return vars
 })
 
@@ -152,4 +165,5 @@ const paddingVars = computed(() => {
 }
 .btn-block__btn--link { text-decoration: underline; text-underline-offset: 6px; padding-left: 0; padding-right: 0; }
 .btn-block__btn--link :deep(.q-focus-helper) { display: none; }
+.btn-block__btn :deep(.q-icon) { font-size: var(--btn-icon-size, 1.4em); color: var(--btn-icon-color, inherit); }
 </style>

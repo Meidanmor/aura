@@ -1,5 +1,6 @@
 import { JSON_UPDATED_EVENT } from 'src/services/sw-updates'
 import { currentLang, isExtraLang } from 'src/i18n/lang.js'
+import { slimConfig } from 'src/utils/slim-config.js'
 
 // Files each extra language has its own copy of (in /config/{lang}/); the
 // rest (branding, app, icons…) are shared by every language.
@@ -214,12 +215,12 @@ if (import.meta.env.SSR) {
       const filePath = resolve(process.cwd(), 'public', 'config', `${name}.json`)
 
       const raw = await readFile(filePath, 'utf-8')
-      return JSON.parse(raw)
+      return slimConfig(JSON.parse(raw))
     } else {
       const url = `${API_BASE}/config/${name}.json`
 
       const response = await fetch(url, { cache: 'no-store' })
-      if (response.ok) return await response.json()
+      if (response.ok) return slimConfig(await response.json())
       throw new Error(`Config fetch responded with ${response.status}`)
     }
 
@@ -237,7 +238,8 @@ if (import.meta.env.SSR) {
         cache: 'no-store'
       });
       if (!response.ok) return {};
-      return await response.json();
+      // Already slim when it comes from the live version; files from the build aren't.
+      return slimConfig(await response.json());
     } catch (err) {
       console.error('[Client] loadPageConfig Error:', err);
       return {};

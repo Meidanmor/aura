@@ -3,7 +3,7 @@
       :is="nested ? 'div' : 'section'"
       :id="nested ? undefined : container.anchorId"
       class="sb-container"
-      :class="[nested ? 'sb-nested' : 'sb-section', container.outerClasses]"
+      :class="[nested ? 'sb-nested' : 'sb-section', container.outerClasses, nested ? null : container.stickyClasses]"
       :style="outerStyle"
       :data-section-id="data.id"
   >
@@ -189,11 +189,11 @@ const coverLinkAttrs = computed(() => {
   return attrs
 })
 
-// A top-level section carries its own margins; a nested one gets them
-// from its .sb-block wrapper in the parent instead.
+// A top-level section carries its own margins (and sticky position); a nested
+// one gets them from its .sb-block wrapper in the parent instead.
 const outerStyle = computed(() => props.nested
     ? container.value.outerVars
-    : { ...container.value.outerVars, ...container.value.marginVars })
+    : { ...container.value.outerVars, ...container.value.marginVars, ...container.value.stickyVars })
 
 // Content width applies to a top-level section's inner box (so its
 // background stays full-bleed). A nested section's width is applied to its

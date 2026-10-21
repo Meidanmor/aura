@@ -17,8 +17,8 @@ const d = computed(() => props.data.data || {})
 <style scoped>
 .archive-sort :deep(.q-select) { min-width: 160px; }
 .archive-sort :deep(> .flex) { margin-bottom: 0; }
-.no-filters-btn :deep(.mobile-only) { display: none !important; }
+.no-filters-btn :deep(.filters-toggle) { display: none !important; }
 @media (max-width: 767px) {
-  .archive-sort { position: sticky; top: 58px; z-index: 9; background: var(--q-primary); padding: 10px; }
+  .archive-sort { background: var(--q-primary); padding: 10px; }
 }
 </style>

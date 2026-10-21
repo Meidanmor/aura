@@ -2,6 +2,8 @@
 import { defineSsrMiddleware } from '#q-app/wrappers'
 import { randomBytes } from 'crypto'
 import { AsyncLocalStorage } from 'node:async_hooks'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import branding from '../../public/config/branding.json' // adjust path as needed
 import { allLangs, isExtraLang, langFromPath, mainLang, stripLang, withLang } from '../../src/i18n/lang.js'
 import { LANGUAGES } from '../../src/i18n/index.js'
@@ -236,7 +238,48 @@ function usesOwnTextFont(site) {
 // canonical one anyway).
 const isInternalHost = (host = '') => /\.vercel\.app$/i.test(host.split(':')[0])
 
-export default defineSsrMiddleware(({ app, resolve, render }) => {
+/** Section data without the Store API's _links (never shown): a smaller page. */
+function withoutLinks(data) {
+    const out = {}
+    for (const [key, list] of Object.entries(data)) {
+        out[key] = Array.isArray(list) ? list.map((item) => {
+            if (!item || typeof item !== 'object' || !('_links' in item)) return item
+            const { _links, ...rest } = item // eslint-disable-line no-unused-vars
+            return rest
+        }) : list
+    }
+    return out
+}
+
+/**
+ * Phones, slow networks: what the first paint waits for.
+ * - The app's main stylesheet goes inside the page (read once per server): the
+ *   page can draw as soon as it arrives, without one more request first.
+ * - No <link rel=modulepreload> for every script chunk: they were all fetched at
+ *   high priority at once, sharing the connection with the stylesheet, the first
+ *   image and the fonts. The entry script still loads them (a little later).
+ * Measured on yf-test-ceramics' homepage (phone Lighthouse, a local copy of the
+ * page): ~60 → ~85.
+ */
+const inlinedCss = new Map()
+function fasterFirstPaint(html, publicDir) {
+    return html
+        .replace(/<link rel="?modulepreload"?[^>]*>/g, '')
+        // The entry script after the page's first image and fonts (it only makes the page interactive).
+        .replace(/<script type="?module"?(?=[^>]*\ssrc="?\/assets\/index-)/, '<script type=module fetchpriority=low')
+        .replace(/<link rel="?stylesheet"?\s+crossorigin\s+href="?(\/assets\/index-[\w-]+\.css)"?>/, (tag, href) => {
+            if (!publicDir) return tag
+            let css = inlinedCss.get(href)
+            if (css === undefined) {
+                try { css = readFileSync(join(publicDir, href)).toString() } catch { css = null }
+                if (css && /<\/style/i.test(css)) css = null
+                inlinedCss.set(href, css)
+            }
+            return css ? `<style data-href="${href}">${css}</style>` : tag
+        })
+}
+
+export default defineSsrMiddleware(({ app, resolve, render, folders }) => {
     app.get(resolve.urlPath('*'), (req, res) => {
         if (isIgnoredRequest(req.url)) {
             return res.status(404).end()
@@ -354,7 +397,7 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
                     footerConfig: ssrContext.footerConfig || null,
                     productsData: ssrContext.productsData || [],
                     categoriesData: ssrContext.categoriesData || [],
-                    sectionsData: ssrContext.sectionsData || {},
+                    sectionsData: withoutLinks(ssrContext.sectionsData || {}),
                     cartArray: ssrContext.cartArray || null,
                     productsTotal: ssrContext.productsTotal || 0,
                     pagesTotal: ssrContext.pagesTotal || 1,
@@ -440,7 +483,7 @@ export default defineSsrMiddleware(({ app, resolve, render }) => {
                 const withFonts = usesOwnTextFont(site)
                     ? withLogo.replace(/<link rel="preload" href="[^"]*\/roboto-[^"]*\.woff2" as="font"[^>]*>/g, '')
                     : withLogo
-                const output = withFonts
+                const output = fasterFirstPaint(withFonts, process.env.PROD ? folders?.public : '')
                     .replace(/<html\b([^>]*)>/, (tag, attrs) => `<html ${attrs.replace(/\s(lang|dir)=("[^"]*"|\S+)/g, '').trim()} ${langAttrs}>`.replace('<html  ', '<html '))
                     .replace('</head>', `${criticalHeadExtra}</head>`)
                     .replace('</body>', `${bodyBottom}</body>`)

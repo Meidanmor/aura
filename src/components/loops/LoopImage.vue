@@ -4,7 +4,7 @@
         class="lt-img__img"
         :src="image.src"
         :srcset="image.srcset || undefined"
-        :sizes="image.srcset ? CARD_SIZES : undefined"
+        :sizes="image.srcset ? sizes : undefined"
         v-fit-sizes
         :alt="image.alt || ''"
         :width="image.width || undefined"
@@ -18,7 +18,7 @@
         class="lt-img__img lt-img__second"
         :src="image.second"
         :srcset="image.secondSrcset || undefined"
-        :sizes="image.secondSrcset ? CARD_SIZES : undefined"
+        :sizes="image.secondSrcset ? sizes : undefined"
         v-fit-sizes
         alt=""
         aria-hidden="true"
@@ -58,10 +58,10 @@ import wishlist from 'src/stores/wishlist.js'
 import { useLoopItem, loopImage } from './loop-item.js'
 import { asResponsive, toCssLength, DEVICES } from 'src/composables/useSectionStyle.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
-import { vFitSizes } from 'src/utils/responsive-image.js'
+import { vFitSizes, croppedSizes, ratioFromSrcset } from 'src/utils/responsive-image.js'
 
 // WordPress's own `sizes` says the full screen width: a card is a column of a grid.
-const CARD_SIZES = '(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 25vw'
+const CARD_COLS = { desktop: 25, tablet: 33, mobile: 50 }
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -89,6 +89,21 @@ const badge = computed(() => {
   if (!p || !isProduct.value) return ''
   if (p.is_in_stock === false) return 'sold'
   return p.on_sale ? 'sale' : ''
+})
+
+// The card's photo box per screen size, so a cropped photo loads a file wide enough at once.
+const sizes = computed(() => {
+  const box = {}
+  if (!background.value) {
+    const ratio = asResponsive(d.value.aspect_ratio || '1/1')
+    const height = asResponsive(d.value.image_height)
+    for (const device of DEVICES) {
+      const h = toCssLength(height[device])
+      if (h) box[device] = { height: h }
+      else if (RATIOS.has(ratio[device])) { const [a, b] = ratio[device].split('/').map(Number); box[device] = { ratio: a / b } }
+    }
+  }
+  return croppedSizes(CARD_COLS, box, ratioFromSrcset(image.value?.srcset))
 })
 
 const classes = computed(() => {

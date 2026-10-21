@@ -20,6 +20,7 @@
  */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { slimConfig } from '../src/utils/slim-config.js'
 
 const BACKEND = (process.env.WP_BACKEND_URL || '').replace(/\/+$/, '')
 const SECRET = process.env.PROXY_SHARED_SECRET || ''
@@ -90,7 +91,9 @@ async function pointerFromStore() {
 }
 
 function build(data, p) {
-  const json = data.json && typeof data.json === 'object' ? data.json : {}
+  const json = data.json && typeof data.json === 'object' ? { ...data.json } : {}
+  // Store builder configs without their empty style fields (slim-config.js): smaller pages.
+  for (const key of Object.keys(json)) if (key.startsWith('config/')) json[key] = slimConfig(json[key])
   const pwa = json['config/pwa.json'] || {}
   const languages = json['config/languages.json']
   return {

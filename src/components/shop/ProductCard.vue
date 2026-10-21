@@ -32,7 +32,7 @@
             :img-src="product.images[0]?.src"
             :src="product.images[0]?.src ? product.images[0].src : '/naturaBloom-circle.svg'"
             :srcset="product.images[0]?.srcset"
-            :sizes="product.images[0]?.srcset ? CARD_SIZES : undefined"
+            :sizes="product.images[0]?.srcset ? cardSizes : undefined"
             v-fit-sizes
             :alt="product.name"
             :loading="priority || eager ? 'eager' : 'lazy'"
@@ -61,10 +61,13 @@ import cart from 'src/stores/cart.js'
 import wishlist from 'src/stores/wishlist.js'
 import { useSanitizedPrice } from 'src/composables/useSanitizedHtml.js'
 import { useQuasar } from 'quasar'
-import { vFitSizes } from 'src/utils/responsive-image.js'
+import { computed } from 'vue'
+import { vFitSizes, croppedSizes, ratioFromSrcset } from 'src/utils/responsive-image.js'
 
 // WordPress's own `sizes` says the full screen width: a card is a column of a grid.
-const CARD_SIZES = '(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 25vw'
+// The photo is cropped to a 350px-high box: a wide photo needs a wider file.
+const CARD_COLS = { desktop: 25, tablet: 33, mobile: 50 }
+const BOX = { desktop: { height: '350px' }, tablet: { height: '350px' }, mobile: { height: '350px' } }
 
 const $q = useQuasar()
 
@@ -78,6 +81,7 @@ const props = defineProps({
   eager: Boolean
 })
 
+const cardSizes = computed(() => croppedSizes(CARD_COLS, BOX, ratioFromSrcset(props.product.images?.[0]?.srcset)))
 const sanitizedPrice = useSanitizedPrice(() => props.product.price_html)
 
 /*const isWishlisted = computed(() => {

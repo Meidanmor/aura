@@ -57,7 +57,7 @@ import LanguageSwitcher from './LanguageSwitcher.vue'
 import cart from 'src/stores/cart'*/
 //import { storeName as liveStoreName } from 'src/utils/site-info.js'
 import SectionRenderer from "components/sections/SectionRenderer.vue";
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { stripLang } from 'src/i18n/lang.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
@@ -165,8 +165,17 @@ const outerStyle = computed(() => {
 function measureAway() {
   const sections = inner.value ? [...inner.value.querySelectorAll(':scope > .sb-section')] : []
   awayHeight.value = Math.round(sections.slice(0, awayRows.value).reduce((h, el) => h + el.getBoundingClientRect().height, 0))
+  // What stays on screen once scrolled, for sticky sections and blocks set to
+  // stay "below the header" (app.css .sb-sticky-*: --qwoo-header-stuck).
+  let stuck = 0
+  if (props.stickyHeader && inner.value) {
+    const top = parseFloat(stickyTop.value) || 0
+    stuck = Math.max(0, Math.round(inner.value.getBoundingClientRect().height - awayHeight.value + (stickyTop.value.endsWith('px') ? top : 0)))
+  }
+  document.documentElement.style.setProperty('--qwoo-header-stuck', `${stuck}px`)
 }
 let resizeObserver = null
+watch(() => [props.stickyHeader, awayRows.value, stickyTop.value], () => nextTick(measureAway))
 
 const onScroll = () => { scrolled.value = window.scrollY > 10 }
 onMounted(() => {

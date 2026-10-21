@@ -1,9 +1,11 @@
 <template>
+  <!-- Phones: a tap beside the open drawer closes it. -->
+  <div v-if="a" class="filters-backdrop" :class="{ shown: a.filtersOpen }" aria-hidden="true" @click="a.filtersOpen = false" />
   <div v-if="a" class="filters-wrap flex" :class="{ shown: a.filtersOpen, 'is-sticky': d.sticky !== false }" @pointerdown.stop>
     <q-scroll-area class="fit">
       <div class="sticky filters-drawer-header flex justify-between q-mb-md">
         <div class="text-h6" :class="headingText.class" :style="headingText.style">{{ d.title || t('Filters') }}</div>
-        <q-btn class="mobile-only" :icon="matClose" flat dense :aria-label="t('Close filters drawer')" @click="a.filtersOpen = false" />
+        <q-btn class="filters-close" :icon="matClose" flat dense :aria-label="t('Close filters drawer')" @click="a.filtersOpen = false" />
       </div>
 
       <div v-if="d.show_search !== false" class="q-mb-md">
@@ -59,6 +61,8 @@ const headingText = computed(() => textStyle(d.value, tsKeys('heading')))
   width: 100%;
   box-shadow: 0 0 15px #00000011;
 }
+.filters-close { display: none; }
+.filters-backdrop { display: none; }
 :deep(.q-checkbox[aria-checked="true"] .q-checkbox__label) { font-weight: 600; }
 
 @media (max-width: 767px) {
@@ -79,11 +83,24 @@ const headingText = computed(() => textStyle(d.value, tsKeys('heading')))
     transform: translateX(-100%);
     transition: 0.3s ease;
   }
-  .filters-wrap.shown {
+  /* [dir] matches the direction-specific rules postcss-rtlcss makes from the closed state. */
+  [dir] .filters-wrap.shown {
     transform: translateX(0);
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
   }
+  .filters-close { display: inline-flex; }
+  .filters-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .filters-backdrop.shown { opacity: 1; pointer-events: auto; }
 }
 </style>

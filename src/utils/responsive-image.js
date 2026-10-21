@@ -35,6 +35,37 @@ export function srcsetOf(img) {
  */
 export const LAZY_SIZES = '(max-width: 767px) 100vw, 50vw'
 
+/** width / height from a WordPress file name in a srcset ("…-600x327.jpg 600w"), else 0. */
+export function ratioFromSrcset(srcset) {
+  const m = /-(\d+)x(\d+)\.\w+\s/.exec(String(srcset || ''))
+  return m && +m[2] > 0 ? +m[1] / +m[2] : 0
+}
+
+const round2 = (n) => Math.round(n * 100) / 100
+
+/**
+ * `sizes` for a cropped image, known before anything is measured (images in the
+ * first screen start loading before the page runs, so v-fit-sizes comes too
+ * late for them). A photo cropped to fill a box is drawn wider than the box:
+ * a wide photo in a tall card needs a file as wide as the card's height times
+ * the photo's ratio, or it's stretched and blurry.
+ *
+ *   cols:   the box's width per screen size, in vw ({ desktop: 25, tablet: 33, mobile: 50 })
+ *   box:    per screen size, { ratio } (box width / height) or { height } (a CSS length), or nothing
+ *   ratio:  the photo's width / height (0: unknown, no crop is assumed)
+ */
+export function croppedSizes(cols, box, ratio) {
+  const at = (device) => {
+    const vw = cols[device]
+    const b = box[device] || {}
+    if (!(ratio > 0)) return `${vw}vw`
+    if (b.height) return `max(${vw}vw, ${round2(ratio)} * ${b.height})`
+    if (b.ratio > 0 && ratio > b.ratio) return `${Math.ceil(vw * ratio / b.ratio)}vw`
+    return `${vw}vw`
+  }
+  return `(max-width: 767px) ${at('mobile')}, (max-width: 1023px) ${at('tablet')}, ${at('desktop')}`
+}
+
 let observer = null
 const boxes = new WeakMap()
 

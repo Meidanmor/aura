@@ -304,7 +304,8 @@ body section {
     margin-bottom: var(--sbb-mb, 0);
 }
 
-.sb-has-radius { overflow: hidden; }
+/* clip, not hidden: hidden would make the box a scroll container and stop sticky items inside it. */
+.sb-has-radius { overflow: hidden; overflow: clip; }
 .sb-has-shadow { box-shadow: var(--sb-shadow); }
 /* Border (Style tab > Border): widths and colour may differ per screen size. */
 .sb-has-border { border: 0 var(--sb-bs, solid) var(--sb-bc, currentColor); border-width: var(--sb-bw, 0); }
@@ -531,6 +532,24 @@ body section {
     background-size: var(--sb-bg-size, cover);
     background-position: var(--sb-bg-pos, center center);
     background-repeat: no-repeat;
+}
+
+/* Advanced > Position "Sticky" (setStickyVars()): per screen size. In a row the
+   item keeps its own height, else it would fill the row and have nowhere to move. */
+.sb-container.sb-sticky-d, .sb-block.sb-sticky-d,
+.sb-container.sb-sticky-t, .sb-block.sb-sticky-t,
+.sb-container.sb-sticky-m, .sb-block.sb-sticky-m { z-index: 5; }
+@media (min-width: 1024px) {
+    .sb-container.sb-sticky-d, .sb-block.sb-sticky-d { position: sticky; top: calc(var(--sb-st, 0px) + var(--sb-sth, 0px)); }
+    .sb-row-d > .sb-block.sb-sticky-d { align-self: flex-start; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+    .sb-container.sb-sticky-t, .sb-block.sb-sticky-t { position: sticky; top: calc(var(--sb-st-t, 0px) + var(--sb-sth, 0px)); }
+    .sb-row-t > .sb-block.sb-sticky-t { align-self: flex-start; }
+}
+@media (max-width: 767px) {
+    .sb-container.sb-sticky-m, .sb-block.sb-sticky-m { position: sticky; top: calc(var(--sb-st-m, 0px) + var(--sb-sth, 0px)); }
+    .sb-row-m > .sb-block.sb-sticky-m { align-self: flex-start; }
 }
 
 @media (min-width: 1024px) {
@@ -1023,6 +1042,10 @@ footer .footer-bottom {
 
 @media(min-width: 768px){
     .mobile-only {
+        display: none;
+    }
+    /* The Filters Button block shows on phones only: hide its box (spacing) too. */
+    .sb-block:has(> .filters-btn-block) {
         display: none;
     }
 }
