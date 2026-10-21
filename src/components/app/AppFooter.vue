@@ -3,7 +3,7 @@
   <footer v-if="sections.length" class="sb-footer">
     <SectionRenderer :sections="sections" page="footer" />
   </footer>
-  <footer v-else>
+  <footer v-else class="app-footer">
     <div class="container flex justify-between">
       <div class="footer-column first">
         <!-- The store's own logo, or its name when it has none. -->

@@ -860,31 +860,35 @@ div#q-portal--dialog--1 {
     font-weight: 600;
 }
 
-footer {
-    background-color: #F5F5F4;
-    padding: 120px 16px;
+/* Both footers sit at the bottom of short pages; only the built-in one has its own box. */
+footer.app-footer,
+footer.sb-footer {
     position: sticky;
     top: 100%;
 }
-footer .container {
+footer.app-footer {
+    background-color: #F5F5F4;
+    padding: 120px 16px;
+}
+footer.app-footer .container {
     column-gap: 20px;
 }
-footer .footer-column {
+footer.app-footer .footer-column {
     width: 25%;
     flex: 1;
 }
-footer .footer-column.first {
+footer.app-footer .footer-column.first {
     padding-top: 3px;
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
-footer .footer-brand {
+footer.app-footer .footer-brand {
     display: inline-flex;
     text-decoration: none;
     color: inherit;
 }
-footer .footer-brand img {
+footer.app-footer .footer-brand img {
     max-height: 40px;
     max-width: 160px;
     width: auto;
@@ -913,28 +917,28 @@ footer .footer-brand img {
     color: var(--q-text, #111);
     text-decoration: none;
 }
-footer .footer-column:not(.first) {
+footer.app-footer .footer-column:not(.first) {
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
 }
-footer .footer-column .links-title {
+footer.app-footer .footer-column .links-title {
     margin-bottom: 20px;
     font-weight: 400;
     font-size: 16px;
 }
-footer .footer-column nav {
+footer.app-footer .footer-column nav {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
-footer .footer-column nav a {
+footer.app-footer .footer-column nav a {
     text-decoration: none;
     color: #57534E;
     font-size: 14px;
 }
-footer .footer-bottom {
+footer.app-footer .footer-bottom {
     width: 100%;
     padding-top: 30px;
     margin-top: 30px;
@@ -956,24 +960,24 @@ footer .footer-bottom {
     .btn-big.loop-add-to-cart-btn {
         padding: 7px 15px;
     }
-    footer .container {
+    footer.app-footer .container {
         flex-direction: column;
         align-items: center;
         text-align: center;
     }
-    footer .container svg{
+    footer.app-footer .container svg{
         margin: auto;
     }
-    footer .footer-column {
+    footer.app-footer .footer-column {
         width: 100%;
     }
-    footer .footer-column nav {
+    footer.app-footer .footer-column nav {
         gap: 5px;
     }
-    footer .footer-column:not(:last-child) {
+    footer.app-footer .footer-column:not(:last-child) {
         margin-bottom: 20px;
     }
-    footer .footer-column .links-title {
+    footer.app-footer .footer-column .links-title {
         margin-bottom: 10px;
         margin-top: 20px;
     }

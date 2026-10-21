@@ -1,7 +1,7 @@
 <template>
   <!-- Phones: a tap beside the open drawer closes it. -->
   <div v-if="a" class="filters-backdrop" :class="{ shown: a.filtersOpen }" aria-hidden="true" @click="a.filtersOpen = false" />
-  <div v-if="a" class="filters-wrap flex" :class="{ shown: a.filtersOpen, 'is-sticky': d.sticky !== false }" @pointerdown.stop>
+  <div v-if="a" class="filters-wrap flex" :class="{ shown: a.filtersOpen }" @pointerdown.stop>
     <q-scroll-area class="fit">
       <div class="sticky filters-drawer-header flex justify-between q-mb-md">
         <div class="text-h6" :class="headingText.class" :style="headingText.style">{{ d.title || t('Filters') }}</div>
@@ -52,7 +52,6 @@ const headingText = computed(() => textStyle(d.value, tsKeys('heading')))
   flex-wrap: nowrap;
   height: 70vh;
 }
-.filters-wrap.is-sticky { position: sticky; top: 70px; }
 .sticky.filters-drawer-header {
   position: sticky;
   top: 0;
@@ -66,8 +65,7 @@ const headingText = computed(() => textStyle(d.value, tsKeys('heading')))
 :deep(.q-checkbox[aria-checked="true"] .q-checkbox__label) { font-weight: 600; }
 
 @media (max-width: 767px) {
-  .filters-wrap,
-  .filters-wrap.is-sticky {
+  .filters-wrap {
     position: fixed;
     top: 0;
     left: 0;
@@ -102,5 +100,19 @@ const headingText = computed(() => textStyle(d.value, tsKeys('heading')))
     transition: opacity 0.3s ease;
   }
   .filters-backdrop.shown { opacity: 1; pointer-events: auto; }
+}
+</style>
+
+<style>
+/* Phones: a parent with its own layer (a sticky block or section has z-index 5, an entrance
+   animation a transform) would keep the open drawer under the header and other sticky blocks:
+   lift every such parent while it's open. */
+@media (max-width: 767px) {
+  .sb-block:has(.filters-wrap.shown),
+  .sb-container:has(.filters-wrap.shown),
+  .sb-inner:has(.filters-wrap.shown) {
+    z-index: 9999 !important;
+    transform: none !important;
+  }
 }
 </style>
