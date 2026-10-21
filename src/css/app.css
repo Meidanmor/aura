@@ -212,7 +212,6 @@ img.q-img__image {
   color: var(--q-secondary);
   transition: 0.3s ease;
     position: relative;
-    padding: 0 10px;
 }
 .nav-bar a:before {
     content: '';
