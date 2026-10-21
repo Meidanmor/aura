@@ -26,7 +26,16 @@ const siteMenus = inject('siteMenus', null)
 const headerMenu = inject('headerMenu', null)
 
 const d = computed(() => props.data?.data || {})
-const isVertical = computed(() => d.value.layout === 'vertical')
+// Layout is per screen size ({ desktop, tablet, mobile }; older data: one value).
+// Sizes that differ get both lists, and CSS shows each one where it's chosen.
+const DEVICES = ['desktop', 'tablet', 'mobile']
+const DEVICE_MEDIA = { desktop: '(min-width: 1024px)', tablet: '(min-width: 768px) and (max-width: 1023px)', mobile: '(max-width: 767px)' }
+const layouts = computed(() => {
+  const r = asResponsive(d.value.layout)
+  return Object.fromEntries(DEVICES.map((device) => [device, r[device] === 'vertical' ? 'vertical' : 'horizontal']))
+})
+const showsVertical = computed(() => DEVICES.some((device) => layouts.value[device] === 'vertical'))
+const showsHorizontal = computed(() => DEVICES.some((device) => layouts.value[device] === 'horizontal'))
 
 // Resolved menu items
 const menuItems = computed(() => {
@@ -48,7 +57,7 @@ const menuItems = computed(() => {
   return []
 })
 
-const mobileMenuEnabled = computed(() => !isVertical.value && !!d.value.enable_mobile_menu)
+const mobileMenuEnabled = computed(() => showsHorizontal.value && !!d.value.enable_mobile_menu)
 
 // null = no mobile menu breakpoint (always desktop or vertical)
 const breakpoint = computed(() => {
@@ -83,6 +92,13 @@ const css = computed(() => {
   const s = `.${scope.value}`
   const rules = []
 
+  if (showsVertical.value && showsHorizontal.value) {
+    for (const device of DEVICES) {
+      const hidden = layouts.value[device] === 'vertical' ? '.hm-horizontal' : '.menu-vertical'
+      rules.push(`@media ${DEVICE_MEDIA[device]} { ${s} ${hidden} { display: none !important; } }`)
+    }
+  }
+
   // Space Between Links: per screen size (a smaller screen without its own value keeps the bigger one's).
   const gaps = asResponsive(d.value.gap)
   const GAP_MEDIA = { desktop: '', tablet: '(max-width: 1023px)', mobile: '(max-width: 767px)' }
@@ -93,11 +109,16 @@ const css = computed(() => {
     rules.push(GAP_MEDIA[device] ? `@media ${GAP_MEDIA[device]} { ${rule} }` : rule)
   }
 
-  if (d.value.alignment) {
-    const justify = alignToFlex(d.value.alignment)
-    const text = alignToText(d.value.alignment)
-    if (justify) rules.push(`${s} .nav-top { justify-content: ${justify}; }`)
-    if (text) rules.push(`${s} .menu-vertical { text-align: ${text}; }`, `${s} .menu-v-item { text-align: ${text}; }`)
+  // Alignment: per screen size too.
+  const aligns = asResponsive(d.value.alignment)
+  for (const device of DEVICES) {
+    if (!aligns[device]) continue
+    const justify = alignToFlex(aligns[device])
+    const text = alignToText(aligns[device])
+    const decl = []
+    if (justify) decl.push(`${s} .nav-top { justify-content: ${justify}; }`)
+    if (text) decl.push(`${s} .menu-vertical { text-align: ${text}; }`, `${s} .menu-v-item { text-align: ${text}; }`)
+    if (decl.length) rules.push(`@media ${DEVICE_MEDIA[device]} { ${decl.join(' ')} }`)
   }
 
   // Style → Menu Links: font, weight, letter case, and size / line height / spacing per screen size.
@@ -164,7 +185,7 @@ const css = computed(() => {
   <div :class="scope" class="menu-widget-wrap">
     <component :is="'style'" v-if="css">{{ css }}</component>
     <!-- Vertical Layout (Lists, Footers, Sidebars) -->
-    <ul v-if="isVertical && Array.isArray(menuItems) && menuItems.length" class="menu-vertical" role="list">
+    <ul v-if="showsVertical && Array.isArray(menuItems) && menuItems.length" class="menu-vertical" role="list">
       <li v-for="(item, i) in menuItems" :key="item.id || i" class="menu-v-item">
         <a
           v-if="item.external"
@@ -205,8 +226,8 @@ const css = computed(() => {
     </ul>
 
     <!-- Horizontal Navbar Layout (Dropdowns, Top Bars, Header) -->
-    <template v-else-if="Array.isArray(menuItems)">
-      <q-toolbar class="hm-desktop flex justify-between q-pa-sm">
+    <div v-if="showsHorizontal && Array.isArray(menuItems)" class="hm-horizontal">
+      <q-toolbar class="hm-desktop flex justify-between">
         <div class="flex nav-items-el">
           <!-- Desktop Navigation -->
           <q-toolbar-title class="nav-bar">
@@ -217,13 +238,17 @@ const css = computed(() => {
       <div v-if="mobileMenuEnabled" class="hm-toggle">
         <WidgetButton :d="d" :icons="menuIcons" :default-icon="menuIcons.menu" :aria-label="t('Open menu')" action="menu" @click="drawer.toggle()" />
       </div>
-    </template>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .menu-widget-wrap {
   width: 100%;
+}
+/* Only a hook for the per-screen layout: it adds no box of its own. */
+.hm-horizontal {
+  display: contents;
 }
 .menu-vertical {
   list-style: none;

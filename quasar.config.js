@@ -444,6 +444,8 @@ devServer: {
           'data/**/*.json',
           // Brand fonts: loaded when a page uses them (named by content, cached for a year).
           'brand-fonts/**',
+          // Roboto too: only stores without their own text font use it.
+          'fonts/roboto/**',
           'manifest.json',
         ]
       },

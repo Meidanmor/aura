@@ -1,48 +1,7 @@
 /* purgecss start ignore */
 /* app global css */
-@font-face {
-  font-family: Roboto;
-  font-display: optional;
-  src: url(../assets/fonts/roboto/roboto-v50-latin-regular.woff2);
-  font-style: normal;
-  font-weight: 400;
-}
-@font-face {
-  font-family: Roboto;
-  font-display: optional;
-  src: url(../assets/fonts/roboto/roboto-v50-latin-200.woff2);
-  font-style: normal;
-  font-weight: 200;
-}
-@font-face {
-  font-family: Roboto;
-  font-display: optional;
-  src: url(../assets/fonts/roboto/roboto-v50-latin-500.woff2);
-  font-style: normal;
-  font-weight: 500;
-}
-@font-face {
-  font-family: Roboto;
-  font-display: optional;
-  src: url(../assets/fonts/roboto/roboto-v50-latin-600.woff2);
-  font-style: normal;
-  font-weight: 600;
-}
-/*@font-face {
-  font-family: Roboto;
-  font-display: optional;
-  src: url(../assets/fonts/roboto/roboto-v50-latin-700.woff2);
-  font-style: normal;
-  font-weight: 700;
-}*/
-/*@font-face {
-  font-family: Roboto;
-  font-display: optional;
-  src: url(../assets/fonts/roboto/roboto-v50-latin-800.woff2);
-  font-style: normal;
-  font-weight: 800;
-}*/
-
+/* Roboto, the text font of a store without its own, is added by the store's
+ * <style id="qwoo-fonts"> (src/utils/brand-fonts.js, files in public/fonts/roboto/). */
 :root * {
  /* --bg: #faf9f7;
   --bg-alt: #ffffff;
@@ -531,6 +490,15 @@ body section {
     background-size: var(--sb-bg-size, cover);
     background-position: var(--sb-bg-pos, center center);
     background-repeat: no-repeat;
+}
+
+/* Advanced > Order (setOrderVars()): the item's place in its section, per screen size. */
+.sb-block.sb-has-order { order: var(--sbb-ord, 0); }
+@media (min-width: 768px) and (max-width: 1023px) {
+    .sb-block.sb-has-order { order: var(--sbb-ord-t, 0); }
+}
+@media (max-width: 767px) {
+    .sb-block.sb-has-order { order: var(--sbb-ord-m, 0); }
 }
 
 /* Advanced > Position "Sticky" (setStickyVars()): per screen size. In a row the

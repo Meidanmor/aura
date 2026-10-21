@@ -24,7 +24,18 @@ const LOCAL_SRC_RE = /^\/brand-fonts\/[a-z0-9._-]+\.woff2$/
 const REMOTE_SRC_RE = /^https:\/\/fonts\.gstatic\.com\/[A-Za-z0-9/._-]+\.woff2$/
 const GENERICS = new Set(['serif', 'sans-serif', 'cursive', 'monospace'])
 
+// The text font of a store without its own (app.css's --qf-text). The app's own
+// files, only put on the page when something can use them.
+const ROBOTO = { 400: 'regular', 200: '200', 500: '500', 600: '600' }
+const robotoSrc = (weight) => `/fonts/roboto/roboto-v50-latin-${ROBOTO[weight]}.woff2`
+const ROBOTO_CSS = Object.keys(ROBOTO)
+  .map((weight) => `@font-face{font-family:Roboto;font-style:normal;font-weight:${weight};font-display:optional;src:url(${robotoSrc(weight)}) format("woff2")}`)
+  .join('')
+
 const quote = (family) => `"${family}"`
+
+/** Whether the store chose a text font (then Roboto is never drawn). */
+const hasOwnTextFont = (fonts) => FAMILY_RE.test(fonts?.vars?.text || '')
 
 /** The font stack for a family: it, then its Hebrew fallback, then the generic. */
 function stack(family, families) {
@@ -36,12 +47,14 @@ function stack(family, families) {
 }
 
 /**
- * The CSS for a branding.json `fonts`: @font-face rules and the variables.
+ * The CSS for a branding.json `fonts`: @font-face rules and the variables,
+ * and Roboto's rules while no text font is chosen (also with no `fonts`).
  * `remote`: files may come from fonts.gstatic.com (the live preview only).
  * `url`: maps a published path to where it's loaded from (the native app).
  */
 export function brandFontsCss(fonts, { remote = false, url = (src) => src } = {}) {
-  if (!fonts || typeof fonts !== 'object') return ''
+  const roboto = hasOwnTextFont(fonts) ? '' : ROBOTO_CSS
+  if (!fonts || typeof fonts !== 'object') return roboto
   const vars = fonts.vars && typeof fonts.vars === 'object' ? fonts.vars : {}
   const families = fonts.families && typeof fonts.families === 'object' ? fonts.families : {}
 
@@ -63,15 +76,25 @@ export function brandFontsCss(fonts, { remote = false, url = (src) => src } = {}
   }
 
   // html:root outranks app.css's defaults wherever this ends up in the page.
-  return faces.join('') + (decls.length ? `html:root{${decls.join('')}}` : '')
+  return roboto + faces.join('') + (decls.length ? `html:root{${decls.join('')}}` : '')
 }
 
 /**
  * The files worth preloading: the text and headings fonts, in the page's
- * alphabet (Hebrew pages: hebrew; others: latin). At most two.
+ * alphabet (Hebrew pages: hebrew; others: latin). At most two. Without a
+ * text font: Roboto's regular and medium on pages that aren't Hebrew (it has
+ * no Hebrew letters; an "optional" font that comes late isn't drawn at all).
  */
 export function brandFontPreloads(fonts, lang) {
-  if (!fonts || !Array.isArray(fonts.faces) || !fonts.vars) return []
+  const out = []
+  const roboto = !hasOwnTextFont(fonts) && lang !== 'he'
+  if (roboto) out.push(robotoSrc(400))
+  if (fonts && Array.isArray(fonts.faces) && fonts.vars) addBrandPreloads(fonts, lang, out)
+  if (roboto && out.length < 2) out.push(robotoSrc(500))
+  return out
+}
+
+function addBrandPreloads(fonts, lang, out) {
   const subset = lang === 'he' ? /\bU\+0590/i : /^U\+0000-00FF/i
   // Whether a face draws this weight ("300 800" is a variable font's range).
   const covers = (face, weight) => {
@@ -79,7 +102,6 @@ export function brandFontPreloads(fonts, lang) {
     return weight >= lo && weight <= hi
   }
   const fileFor = (family, weight) => fonts.faces.find((f) => f.family === family && subset.test(f.range || '') && LOCAL_SRC_RE.test(f.src || '') && covers(f, weight))
-  const out = []
   for (const [key, weight] of [['text', 400], ['headings', 600]]) {
     const family = fonts.vars[key] || (key === 'headings' ? fonts.vars.text : '')
     if (!family) continue
@@ -87,7 +109,6 @@ export function brandFontPreloads(fonts, lang) {
     const face = fileFor(family, weight) || fileFor(fonts.families?.[family]?.fallback, weight)
     if (face && !out.includes(face.src)) out.push(face.src)
   }
-  return out
 }
 
 /** A block's "Font": the brand font's variable, falling back to the item's default. */

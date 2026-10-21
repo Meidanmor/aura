@@ -113,6 +113,23 @@ export function setStickyVars(vars, s = {}) {
   return { 'sb-sticky-d': on.desktop, 'sb-sticky-t': on.tablet, 'sb-sticky-m': on.mobile }
 }
 
+/**
+ * Advanced → Order (blocks and nested sections): the item's place in its
+ * section's flex box per screen size, without changing the saved order (an
+ * empty size takes the bigger one's). Every size is set once any isn't 0, so
+ * a nested item never inherits its parent's. CSS: app.css .sb-has-order.
+ */
+export function setOrderVars(vars, s = {}) {
+  const r = asResponsive(s.order)
+  const order = Object.fromEntries(DEVICES.map((device) => {
+    const n = Math.round(Number(r[device]))
+    return [device, Number.isFinite(n) ? Math.max(-99, Math.min(99, n)) : 0]
+  }))
+  if (!DEVICES.some((device) => order[device] !== 0)) return false
+  for (const device of DEVICES) vars[`--sbb-ord${SUFFIX[device]}`] = String(order[device])
+  return true
+}
+
 /** hide-on-device classes shared by containers and blocks. */
 export function visibilityClasses(hideOn) {
   const h = hideOn || {}
@@ -492,9 +509,11 @@ export function buildBlockWrapperStyle(block) {
     const c = buildContainerStyle(block.style)
     const vars = { ...c.marginVars, ...c.widthVars, ...c.stickyVars }
     if (c.widthMode === 'contained') vars['--sbb-maxw'] = '1200px'
+    const ordered = setOrderVars(vars, block.style)
     return {
       classes: {
         'sb-block--section': true,
+        'sb-has-order': ordered,
         'sb-has-mx': c.sideways,
         'sb-has-w': c.widthMode === 'custom' && hasAny(block.style?.width),
         'sb-has-maxw': c.widthMode === 'contained',
@@ -523,10 +542,12 @@ export function buildBlockWrapperStyle(block) {
   const delay = Number(s.animation_delay)
   if (s.animation && s.animation !== 'none' && delay > 0) vars['--sb-anim-delay'] = `${Math.min(1500, delay)}ms`
   const sticky = setStickyVars(vars, s)
+  const ordered = setOrderVars(vars, s)
 
   return {
     classes: {
       [`sb-block--${block?.type}`]: true,
+      'sb-has-order': ordered,
       'sb-has-w': hasAny(s.width),
       'sb-has-maxw': hasAny(s.max_width),
       'sb-has-mx': sideways,
