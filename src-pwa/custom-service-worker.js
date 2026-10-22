@@ -5,11 +5,12 @@
  */
 
 import { clientsClaim } from 'workbox-core'
-import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching'
+import { precacheAndRoute, cleanupOutdatedCaches, matchPrecache } from 'workbox-precaching'
 import { registerRoute } from 'workbox-routing'
 import { NetworkFirst, NetworkOnly, StaleWhileRevalidate } from 'workbox-strategies'
 import { ExpirationPlugin } from 'workbox-expiration'
 import { enable as enableNavigationPreload } from 'workbox-navigation-preload';
+import { slimConfig } from '../src/utils/slim-config.js'
 
 enableNavigationPreload();
 self.skipWaiting()
@@ -38,7 +39,7 @@ const JSON_REVISIONS = Object.fromEntries(
 // footer and page content refresh in place) and the worker checks for a new
 // version of itself, since changed JSON means a new deploy.
 const PUBLISHED_JSON_CACHE = 'published-json-v1'
-const PUBLISHED_JSON = /^\/(config|data)\/[^/]+\.json$/
+const PUBLISHED_JSON = /^\/(config|data)\/(?:[a-z]{2,3}(?:-[a-z0-9]+)?\/)?[^/]+\.json$/i
 const PUBLISHED_JSON_TIMEOUT_MS = 3000
 
 async function refreshPublishedJson(path) {
@@ -76,8 +77,52 @@ function revalidatePublishedJson() {
 }
 
 self.addEventListener('message', event => {
-  if (event.data?.type === 'REVALIDATE_JSON') event.waitUntil(revalidatePublishedJson())
+  if (event.data?.type === 'REVALIDATE_JSON') event.waitUntil(Promise.all([revalidatePublishedJson(), saveForOffline()]))
 })
+
+// ─── Every published page, kept for offline ──────────────────────────────────
+// A store that publishes on itself (site-content.js) has one download with all
+// its configs per version (/__site/m/{version}, kept by the CDN for good). Once
+// per new version it goes into the cache above, so offline every page opens
+// with the latest content, not only the pages visited before. Configs are
+// slimmed the same way the server does, so the text matches its answers and
+// nothing is announced as changed. Older stores answer { version: null }.
+const OFFLINE_META_CACHE = 'offline-meta-v1'
+const SAVED_VERSION_KEY = '/__qwoo-offline/version'
+const VERSION_RE = /^[a-f0-9]{20,40}$/
+let saving = null
+let savedAt = 0
+
+function saveForOffline() {
+  if (saving || Date.now() - savedAt < 60 * 1000) return saving || Promise.resolve()
+  saving = (async () => {
+    const current = await fetch('/__site/current', { cache: 'no-store' }).then(r => (r.ok ? r.json() : null))
+    const version = current?.version
+    if (!VERSION_RE.test(version || '')) return
+    const meta = await caches.open(OFFLINE_META_CACHE)
+    const saved = await meta.match(SAVED_VERSION_KEY)
+    if (saved && (await saved.text()) === version) return
+    const data = await fetch(`/__site/m/${version}`).then(r => (r.ok ? r.json() : null))
+    if (data?.version !== version || !data.json || typeof data.json !== 'object') return
+    const cache = await caches.open(PUBLISHED_JSON_CACHE)
+    const json = { 'Content-Type': 'application/json; charset=utf-8' }
+    await Promise.all(Object.entries(data.json).map(([key, value]) => {
+      if (!PUBLISHED_JSON.test('/' + key)) return null
+      const body = JSON.stringify(key.startsWith('config/') ? slimConfig(value) : value)
+      return cache.put('/' + key, new Response(body, { headers: json }))
+    }))
+    // Published JSON that isn't inline (the products backup and such): fetched once.
+    const others = Object.keys(data.files || {}).filter(key => PUBLISHED_JSON.test('/' + key) && !(key in data.json))
+    await Promise.all(others.map(key => refreshPublishedJson('/' + key).catch(() => {})))
+    await meta.put(SAVED_VERSION_KEY, new Response(version))
+  })()
+    .catch(() => {})
+    .finally(() => {
+      saving = null
+      savedAt = Date.now()
+    })
+  return saving
+}
 
 registerRoute(
   ({ url }) => url.origin === self.location.origin && PUBLISHED_JSON.test(url.pathname),
@@ -99,7 +144,8 @@ registerRoute(
 )
 
 // Runtime caches from older versions that are no longer used.
-const LEGACY_CACHES = ['static-data-v1', 'page-config-v1']
+// ssr-pages-v1: pages saved as the server drew them, which showed old content offline.
+const LEGACY_CACHES = ['static-data-v1', 'page-config-v1', 'ssr-pages-v1']
 
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
@@ -109,6 +155,7 @@ self.addEventListener('activate', event => {
     await self.clients.claim()
     const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
     windows.forEach(client => client.postMessage({ type: 'SW_ACTIVATED', revisions: JSON_REVISIONS }))
+    await saveForOffline()
   })())
 })
 
@@ -148,6 +195,23 @@ registerRoute(
     ]
   })
 )
+
+// Everything else about products, categories, posts and reviews: from the
+// server, the last answer kept for offline (no timeout: online it always waits
+// for the server, so nothing old shows while there's a connection).
+registerRoute(
+  ({ url, request }) => url.origin === self.location.origin && request.method === 'GET' && (
+    url.pathname.startsWith('/wp-json/wc/store/v1/products') ||
+    /^\/wp-json\/qwoo\/v1\/(blog|reviews|products-meta|payment-config)(\/|$)/.test(url.pathname)
+  ),
+  new NetworkFirst({
+    cacheName: 'store-reads-v1',
+    fetchOptions: { cache: 'no-cache' },
+    plugins: [
+      new ExpirationPlugin({ maxEntries: 200, maxAgeSeconds: 7 * 24 * 60 * 60 })
+    ]
+  })
+);
 
 // ─── SEO API ──────────────────────────────────────────────────────────────────
 registerRoute(
@@ -226,36 +290,19 @@ self.addEventListener('notificationclick', function (event) {
   );
 });
 
-// ─── Navigation: Offline-first SSR pages ─────────────────────────────────────
+// ─── Navigation: the server's page, else the app drawn from saved files ──────
+// Offline, every address opens the app shell (offline.html, precached), which
+// draws the page in the browser from the saved configs and API answers above:
+// the latest saved content for any page, not an old copy of one page.
 registerRoute(
   ({ request }) => request.mode === 'navigate',
   async ({ event }) => {
-    const url = new URL(event.request.url)
-
     try {
       const preloadResponse = await event.preloadResponse
-      const networkResponse = preloadResponse || await fetch(event.request)
-
-      if (networkResponse.ok &&
-          networkResponse.headers.get('content-type')?.includes('text/html')) {
-        const cache = await caches.open('ssr-pages-v1')
-        event.waitUntil(cache.put(url.pathname, networkResponse.clone()))
-      }
-
-      return networkResponse
-
-    } catch (err) {
-      console.warn('[SW] Navigation offline fallback for', url.pathname, err)  // log the error
-
-      const cache = await caches.open('ssr-pages-v1')
-      const cachedPage =
-        await cache.match(url.pathname) ||
-        await cache.match('/') ||
-        await cache.match('/index.html')
-
-      if (cachedPage) return cachedPage
-
-      return new Response('Offline', { status: 503 })
+      return preloadResponse || await fetch(event.request)
+    } catch {
+      const shell = await matchPrecache('offline.html')
+      return shell || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } })
     }
   }
 )

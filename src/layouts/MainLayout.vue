@@ -157,6 +157,9 @@ defineOptions({
   }
 })
 let liveConfigUnsubscribers = []
+// No server render (the native app, or the offline app shell): nothing came with the page.
+// (render.js always writes <style id="qwoo-fonts">.)
+const drawnHere = process.env.CLIENT && !document.getElementById('qwoo-fonts')
 const brandSettings = ref(
     process.env.CLIENT && window.__BRAND_CONFIG__
         ? window.__BRAND_CONFIG__
@@ -555,8 +558,8 @@ onMounted(async () => {
     if (freshFooterConfig) footerSettings.value = freshFooterConfig
   }
 
-  // The native app has no server render: its brand fonts are put on the page here.
-  if (isNativeApp()) applyBrandFonts(brandSettings.value?.fonts, { url: liveUrl })
+  // The native app and the offline app shell have no server render: brand fonts are put on the page here.
+  if (isNativeApp() || drawnHere) applyBrandFonts(brandSettings.value?.fonts, { url: liveUrl })
 
   // Live Preview (Shop Builder admin iframe) — no-op everywhere else,
   // since subscribeToLiveConfig() checks for ?qwoo_editor=1 internally.

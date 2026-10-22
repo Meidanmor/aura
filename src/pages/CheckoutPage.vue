@@ -22,7 +22,7 @@
 
       <!-- Offline banner, at the top -->
       <div v-if="displayCart?._offline" class="bg-warning text-dark q-pa-sm q-ma-md rounded-borders">
-        {{ t('You\'re offline. Your form data is being saved locally and your order will be submitted when you reconnect.') }}
+        {{ t('You\'re offline. Your details are kept on this device. Connect to the internet to choose delivery and place your order.') }}
       </div>
 
       <SectionRenderer :sections="sections" page="checkout" />
@@ -313,6 +313,11 @@ const handleCheckboxBlur = (newVal) => {
 }
 
 const submitOrder = async (walletOverride = null) => {
+  if (cart.isOffline()) {
+    $q.notify({ type: 'warning', message: t("You're offline. Connect to the internet to place your order."), icon: matError, position: 'top', timeout: 6000 })
+    if (walletOverride) walletOverride.complete('fail')
+    return
+  }
   // Bot trap — only for the manually-typed form path. Apple/Google
   // Pay submit via @wallet-payment without touching the visible
   // fields at all, so they can legitimately be near-instant and
@@ -436,10 +441,12 @@ const submitOrder = async (walletOverride = null) => {
     await cart.fetchCart()
   } catch (err) {
     console.error('Checkout error:', err.message)
+    // fetch() itself failed: the connection, not the order.
+    const shown = err instanceof TypeError ? t('No connection to the store. Check your internet and try again.') : err.message
     // At the top: at the bottom the cookie notice covered it, so the order just seemed not to go through.
     $q.notify({
       type: 'negative',
-      message: t(err.message || "We couldn't place your order. Please try again."),
+      message: t(shown || "We couldn't place your order. Please try again."),
       icon: matError,
       position: 'top',
       timeout: 8000

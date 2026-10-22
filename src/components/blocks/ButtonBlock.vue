@@ -1,5 +1,5 @@
 <template>
-  <div v-if="d.text && (d.url || action)" class="btn-block" :class="fullWidthClasses" :style="wrapVars">
+  <div v-if="(d.text || (action && icon)) && (d.url || action)" class="btn-block" :class="fullWidthClasses" :style="wrapVars">
     <q-btn
         v-bind="action ? {} : linkAttrs"
         :icon="icon && !iconRight ? icon : undefined"
@@ -9,7 +9,7 @@
         class="btn-block__btn"
         :class="[`btn-block__btn--${variant}`, `btn-block__btn--${size}`, labelText.class, paddingVars.cls]"
         :style="btnVars"
-        :label="d.text"
+        :label="d.text || undefined"
         :outline="variant === 'outline'"
         :flat="variant === 'flat' || variant === 'link'"
         :unelevated="variant === 'primary' || variant === 'secondary'"

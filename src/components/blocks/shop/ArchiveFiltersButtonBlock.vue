@@ -30,7 +30,9 @@ const d = computed(() => props.data.data || {})
 // Keys match FILTER_ICONS in class-sb-constants.php.
 const ICONS = { filter_list: matFilterList, tune: matTune, filter_alt: matFilterAlt }
 const icon = computed(() => (d.value.icon === 'none' ? '' : ICONS[d.value.icon] || matFilterList))
-const btnData = computed(() => ({ data: { ...d.value, style: d.value.style || 'secondary', text: d.value.text || t('Filters') } }))
+// "Show text" off = an icon-only button (older saves have no show_text: text shown).
+const showText = computed(() => d.value.show_text !== false || !icon.value)
+const btnData = computed(() => ({ data: { ...d.value, style: d.value.style || 'secondary', text: showText.value ? (d.value.text || t('Filters')) : '' } }))
 const toggle = () => { a.filtersOpen = !a.filtersOpen }
 </script>
 

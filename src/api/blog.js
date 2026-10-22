@@ -2,14 +2,23 @@ import { currentLocale } from 'src/i18n/index.js'
 // The store's blog (qwoo/v1/blog), read live like products.
 // origin: the storefront's own address during SSR (its /wp-json proxy), '' in the browser.
 
-/** { posts, page, pages, total, categories, category } or null when the category doesn't exist. */
-export async function fetchBlogList({ page = 1, category = '', perPage = 9, search = '' } = {}, origin = '', options = {}) {
+/** { posts, page, pages, total, categories, category, author } or null when the category (or author) doesn't exist. */
+export async function fetchBlogList({ page = 1, category = '', author = '', perPage = 9, search = '' } = {}, origin = '', options = {}) {
   const q = new URLSearchParams({ page: String(page), per_page: String(perPage) })
   if (category) q.set('category', category)
+  if (author) q.set('author', author)
   if (search) q.set('search', search)
   const res = await fetch(`${origin}/wp-json/qwoo/v1/blog?${q}`, { signal: options.signal })
   if (res.status === 404) return null
   if (!res.ok) throw new Error('The blog could not be loaded.')
+  return res.json()
+}
+
+/** { authors: [ { id, name, slug, url, image, bio, count } ] }, or null while author profiles are off. */
+export async function fetchAuthors(origin = '') {
+  const res = await fetch(`${origin}/wp-json/qwoo/v1/blog/authors`)
+  if (res.status === 404) return null
+  if (!res.ok) throw new Error('The authors could not be loaded.')
   return res.json()
 }
 

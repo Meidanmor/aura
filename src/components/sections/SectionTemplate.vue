@@ -79,6 +79,9 @@ import PostImageBlock from '../blocks/blog/PostImageBlock.vue'
 import PostContentBlock from '../blocks/blog/PostContentBlock.vue'
 import PostMoreBlock from '../blocks/blog/PostMoreBlock.vue'
 import PostBackBlock from '../blocks/blog/PostBackBlock.vue'
+import PostAuthorBlock from '../blocks/blog/PostAuthorBlock.vue'
+import AuthorProfileBlock from '../blocks/blog/AuthorProfileBlock.vue'
+import AuthorsListBlock from '../blocks/blog/AuthorsListBlock.vue'
 import BlogTitleBlock from '../blocks/blog/BlogTitleBlock.vue'
 import BlogCategoriesBlock from '../blocks/blog/BlogCategoriesBlock.vue'
 import BlogPostsBlock from '../blocks/blog/BlogPostsBlock.vue'
@@ -144,6 +147,9 @@ const blockComponents = {
   post_content: PostContentBlock,
   post_more: PostMoreBlock,
   post_back: PostBackBlock,
+  post_author: PostAuthorBlock,
+  author_profile: AuthorProfileBlock,
+  authors_list: AuthorsListBlock,
   blog_title: BlogTitleBlock,
   blog_categories: BlogCategoriesBlock,
   blog_posts: BlogPostsBlock,

@@ -42,7 +42,7 @@ const CONTENT_RE = /^(config|data|sections|homepage-hero|branding|brand-fonts|ic
  */
 const STABLE_RE = /^(sections|branding|homepage-hero)\/\d+-[^/]+$|^brand-fonts\/[a-z0-9.-]+-[a-f0-9]{10}\.woff2$/
 /** Requests that never need the published files. */
-const SKIP_RE = /^\/(assets|wp-json|wp-admin|_quasar|js|css|fonts)\/|^\/(sw|service-worker)\.js$/
+const SKIP_RE = /^\/(assets|wp-json|wp-admin|wp-content|_quasar|js|css|fonts)\/|^\/(sw|service-worker)\.js$/
 
 const TYPES = {
   json: 'application/json; charset=utf-8',

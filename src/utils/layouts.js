@@ -48,7 +48,7 @@ export function chromeTarget(route) {
   if (name === 'custom-page') return { target: 'page', path: path.replace(/^\//, '') }
   if (name === 'products') return { target: 'shop' }
   if (name === 'search') return { target: 'search' }
-  if (name === 'blog' || name === 'blog-category') return { target: 'blog' }
+  if (name === 'blog' || name === 'blog-category' || name === 'blog-author' || name === 'blog-authors') return { target: 'blog' }
   if (name === 'blog-post') return { target: 'blog_post' }
   if (['my-account', 'forgot-password', 'reset-password'].includes(name)) return { target: 'account' }
   if (/^\/product\//.test(path)) return { target: 'product' }

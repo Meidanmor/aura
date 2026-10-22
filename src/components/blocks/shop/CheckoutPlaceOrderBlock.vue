@@ -17,7 +17,7 @@
       </q-checkbox>
     </q-card-section>
     <q-card-actions>
-      <q-btn class="place-order-btn" :label="d.button_label || t('Place Order')" :color="buttonBg ? undefined : 'secondary'" :style="buttonColors" @click="c.placeOrder" />
+      <q-btn class="place-order-btn" :label="d.button_label || t('Place Order')" :color="buttonBg ? undefined : 'secondary'" :style="buttonColors" :disable="c.cart.state.offline" @click="c.placeOrder" />
     </q-card-actions>
   </q-card>
 </template>

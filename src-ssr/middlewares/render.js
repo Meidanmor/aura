@@ -21,14 +21,14 @@ if (!globalThis.__QWOO_FETCH_LANG) {
     globalThis.__QWOO_FETCH_LANG = true
     const original = globalThis.fetch
     globalThis.fetch = (input, init) => {
-        const lang = langStore.getStore()?.lang
-        if (isExtraLang(lang)) {
-            const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input?.url || ''
-            if (url.includes('/wp-json/')) {
-                const headers = new Headers(init?.headers || (input instanceof Request ? input.headers : undefined))
-                headers.set('X-Qwoo-Lang', lang)
-                return original(input, { ...init, headers })
-            }
+        const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input?.url || ''
+        if (url.includes('/wp-json/')) {
+            const headers = new Headers(init?.headers || (input instanceof Request ? input.headers : undefined))
+            const lang = langStore.getStore()?.lang
+            if (isExtraLang(lang)) headers.set('X-Qwoo-Lang', lang)
+            // Photo addresses on this domain (server.js serves /wp-content/uploads).
+            headers.set('X-Qwoo-Uploads', '1')
+            return original(input, { ...init, headers })
         }
         return original(input, init)
     }

@@ -70,6 +70,8 @@ export function useCartSummary() {
     }
 
     const onShippingMethodChange = async (newRateId) => {
+        // Delivery prices come from the store: offline the choice stays as it was.
+        if (cart.isOffline()) return
         cart.state.loading.cart = true
         try {
             const res = await fetchWithToken('/wp-json/wc/store/v1/cart/select-shipping-rate', {

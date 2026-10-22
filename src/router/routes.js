@@ -33,6 +33,9 @@ const pages = (suffix = '') => {
     // The store's blog (posts read live from the store).
     { path: 'blog', name: named('blog'), component: () => import('pages/BlogPage.vue') },
     { path: 'blog/category/:category', name: named('blog-category'), component: () => import('pages/BlogPage.vue') },
+    // Author profiles (while the owner has them on): one author's posts, and the list of authors.
+    { path: 'blog/author/:author', name: named('blog-author'), component: () => import('pages/BlogPage.vue') },
+    { path: 'blog/authors', name: named('blog-authors'), component: () => import('pages/AuthorsPage.vue') },
     { path: 'blog/:slug', name: named('blog-post'), component: () => import('pages/BlogPostPage.vue') },
     // Search results (?q=…&in=products,categories,posts), from the Search block.
     { path: 'search', name: named('search'), component: () => import('pages/SearchPage.vue') },

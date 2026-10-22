@@ -1356,7 +1356,11 @@ async function resetCartIdentity() {
 /* -------------------------
    Coupons
    ------------------------- */
+/** Codes, sign-in and orders need the store: offline they say so instead of failing. */
+const isOffline = () => state.offline || (typeof navigator !== 'undefined' && navigator.onLine === false)
+
 async function applyCoupon(code) {
+  if (isOffline()) throw new Error(t("You're offline. Connect to the internet to use a code."))
   try {
     const res = await fetchWithToken(`${storeApiBase(null)}/cart/apply-coupon`, {
       method: 'POST',
@@ -1383,6 +1387,7 @@ async function applyCoupon(code) {
 }
 
 async function removeCoupon(code) {
+  if (isOffline()) throw new Error(t("You're offline. Connect to the internet to change the code."))
   try {
     const res = await fetchWithToken(`${storeApiBase(null)}/cart/remove-coupon`, {
       method: 'POST',
@@ -1531,6 +1536,7 @@ export default {
   restoreLocalCart,
   fetchCart,
   applyCoupon,
+  isOffline,
   removeCoupon,
   placeOrder,
   syncLocalCartWithServer,

@@ -40,60 +40,12 @@
             <div><strong>{{ t('Order Number:') }}</strong> {{ order.id }}</div>
 
             <div v-if="order.totals.total_items === 0 || order.totals.total_items !== order.totals.subtotal"><strong>{{ t('Subtotal:') }}</strong>
-              <span style="text-decoration:line-through;">{{
-                  formatCurrency(order.totals.subtotal, {
-                    minorUnit: parseInt(order.totals.currency_minor_unit),
-                    symbol: order.totals.currency_symbol,
-                    prefix: order.totals.currency_prefix,
-                    suffix: order.totals.currency_suffix,
-                    decimalSeparator: order.totals.currency_decimal_separator,
-                    thousandSeparator: order.totals.currency_thousand_separator,
-                  })
-                }} </span>
-              {{
-                formatCurrency(order.totals.total_items, {
-                  minorUnit: parseInt(order.totals.currency_minor_unit),
-                  symbol: order.totals.currency_symbol,
-                  prefix: order.totals.currency_prefix,
-                  suffix: order.totals.currency_suffix,
-                  decimalSeparator: order.totals.currency_decimal_separator,
-                  thousandSeparator: order.totals.currency_thousand_separator,
-                })
-              }}
+              <span style="text-decoration:line-through;">{{ money(order.totals.subtotal, totalsUnit) }} </span>
+              {{ money(order.totals.total_items, totalsUnit) }}
             </div>
-            <div v-else><strong>{{ t('Subtotal:') }}</strong> {{
-                formatCurrency(order.totals.subtotal, {
-                  minorUnit: parseInt(order.totals.currency_minor_unit),
-                  symbol: order.totals.currency_symbol,
-                  prefix: order.totals.currency_prefix,
-                  suffix: order.totals.currency_suffix,
-                  decimalSeparator: order.totals.currency_decimal_separator,
-                  thousandSeparator: order.totals.currency_thousand_separator,
-                })
-              }}
-            </div>
-            <div><strong>{{ t('Shipping:') }}</strong> {{
-                formatCurrency(order.totals.total_shipping, {
-                  minorUnit: parseInt(order.totals.currency_minor_unit),
-                  symbol: order.totals.currency_symbol,
-                  prefix: order.totals.currency_prefix,
-                  suffix: order.totals.currency_suffix,
-                  decimalSeparator: order.totals.currency_decimal_separator,
-                  thousandSeparator: order.totals.currency_thousand_separator,
-                })
-              }}
-            </div>
-            <div><strong>{{ t('Total:') }}</strong> {{
-                formatCurrency(order.totals.total_price, {
-                  minorUnit: parseInt(order.totals.currency_minor_unit),
-                  symbol: order.totals.currency_symbol,
-                  prefix: order.totals.currency_prefix,
-                  suffix: order.totals.currency_suffix,
-                  decimalSeparator: order.totals.currency_decimal_separator,
-                  thousandSeparator: order.totals.currency_thousand_separator,
-                })
-              }}
-            </div>
+            <div v-else><strong>{{ t('Subtotal:') }}</strong> {{ money(order.totals.subtotal, totalsUnit) }}</div>
+            <div><strong>{{ t('Shipping:') }}</strong> {{ money(order.totals.total_shipping, totalsUnit) }}</div>
+            <div><strong>{{ t('Total:') }}</strong> {{ money(order.totals.total_price, totalsUnit) }}</div>
           </q-card-section>
 
           <q-card-section>
@@ -118,16 +70,7 @@
               </template>
               <template v-slot:body-cell-total="props">
                 <q-td class="text-center">
-                  {{
-                    formatCurrency(props.row.totals?.line_total, {
-                      minorUnit: parseInt(order.totals.currency_minor_unit),
-                      symbol: order.totals.currency_symbol,
-                      prefix: order.totals.currency_prefix,
-                      suffix: order.totals.currency_suffix,
-                      decimalSeparator: order.totals.currency_decimal_separator,
-                      thousandSeparator: order.totals.currency_thousand_separator,
-                    })
-                  }}
+                  {{ money(props.row.totals?.line_total, storeUnit) }}
                 </q-td>
               </template>
             </q-table>
@@ -162,6 +105,31 @@ const order = ref(null)
 const growState = ref('')
 // Bank details for orders paid by transfer (the owner's details from the store).
 const bank = computed(() => order.value && route.query.pm === 'bacs' ? paymentConfig.value?.methods?.bacs || null : null)
+
+// WooCommerce's order answer gives line items in the store's decimals but the order totals always
+// with 2 (a ₪380 order on a 0-decimal store came out as ₪38,000). The items tell which one the
+// totals use, so this keeps working if WooCommerce fixes it.
+const storeUnit = computed(() => parseInt(order.value?.totals?.currency_minor_unit, 10) || 0)
+const totalsUnit = computed(() => {
+  const items = order.value?.items || []
+  const sum = items.reduce((n, it) => n + (parseInt(it.totals?.line_subtotal, 10) || 0), 0)
+  const sub = parseInt(order.value?.totals?.subtotal, 10) || 0
+  if (sum > 0 && sub > 0) {
+    const extra = Math.round(Math.log10(sub / sum))
+    if (extra >= -4 && extra <= 4) return Math.max(0, storeUnit.value + extra)
+  }
+  return storeUnit.value
+})
+
+function money (amount, minorUnit) {
+  const tot = order.value.totals
+  return formatCurrency(amount, {
+    minorUnit,
+    prefix: tot.currency_prefix,
+    suffix: tot.currency_suffix,
+    decimalSeparator: tot.currency_decimal_separator,
+  })
+}
 
 const columns = [
   {name: 'thumbnail', label: '', align: 'left', field: 'thumbnail'},

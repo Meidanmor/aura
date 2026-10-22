@@ -84,6 +84,11 @@ function apiFetch(path, options = {}) {
 async function login() {
   error.value   = ''
 
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    error.value = t("You're offline. Connect to the internet to sign in.")
+    return
+  }
+
   // Bot trap — same generic message a real failed login would show,
   // so an automated submission gets no signal it was caught by a
   // different check than a wrong password.

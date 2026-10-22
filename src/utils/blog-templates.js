@@ -20,6 +20,7 @@ export const DEFAULT_BLOG_POST_SECTIONS = [{
     block('blk_dpback', 'post_back', { label: '← Blog' }),
     block('blk_dpmeta', 'post_meta', { show_date: true, show_categories: true, align: 'left' }),
     block('blk_dptitle', 'post_title', { tag: 'h1', align: 'left' }),
+    block('blk_dpauthor', 'post_author', { show_image: true, link: true }),
     block('blk_dpimage', 'post_featured_image', { ratio: '', rounded: true }),
     block('blk_dpcontent', 'post_content'),
     block('blk_dpmore', 'post_more', { title: 'More to read', count: 3 }),
@@ -34,6 +35,27 @@ export const DEFAULT_BLOG_SECTIONS = [{
     block('blk_dbtitle', 'blog_title', { title: 'Blog', show_description: true, align: 'left' }),
     block('blk_dbcats', 'blog_categories', { all_label: 'All' }),
     block('blk_dbposts', 'blog_posts', { per_page: 9, columns: { desktop: 3, tablet: 2, mobile: 1 }, show_excerpt: true, show_date: true, show_image: true }),
+  ],
+}]
+
+/** An author's page (author profiles on): their profile, then their posts. */
+export const DEFAULT_BLOG_AUTHOR_SECTIONS = [{
+  id: 'sec_defaultauthor',
+  enabled: true,
+  style: { width_mode: 'contained', padding_preset: 'small', gap: { desktop: '28px' }, direction: { desktop: 'column' } },
+  blocks: [
+    block('blk_daprofile', 'author_profile', { show_image: true, show_name: true, show_bio: true, show_count: true }),
+    block('blk_daposts', 'blog_posts', { per_page: 9, columns: { desktop: 3, tablet: 2, mobile: 1 }, show_excerpt: true, show_date: true, show_image: true }),
+  ],
+}]
+
+/** The authors' list. */
+export const DEFAULT_BLOG_AUTHORS_SECTIONS = [{
+  id: 'sec_defaultauthors',
+  enabled: true,
+  style: { width_mode: 'contained', padding_preset: 'small', direction: { desktop: 'column' } },
+  blocks: [
+    block('blk_dalist', 'authors_list', { columns: { desktop: 3, tablet: 2, mobile: 1 }, show_image: true, show_bio: true, show_count: true, align: 'center' }),
   ],
 }]
 

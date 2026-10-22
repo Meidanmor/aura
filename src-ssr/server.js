@@ -29,6 +29,9 @@ import {
  * Can be async: defineSsrCreate(async ({ ... }) => { ... })
  */
 
+// The store's uploads folder, served through this domain (see the proxy below).
+const UPLOADS_RE = /^\/wp-content\/uploads\/[^?#]+\.(jpe?g|png|gif|webp|avif|svg|mp4|webm|pdf|woff2?)(\?|$)/i
+
 export const create = defineSsrCreate(({ folders }) => {
   const app = express()
   app.disable('x-powered-by')
@@ -67,6 +70,7 @@ export const create = defineSsrCreate(({ folders }) => {
         return (
             pathname.startsWith('/wp-json') ||
             pathname.startsWith('/wp-admin') ||
+            (UPLOADS_RE.test(pathname) && (req.method === 'GET' || req.method === 'HEAD')) ||
             req.query['wc-ajax'] !== undefined
         )
       },
@@ -74,14 +78,35 @@ export const create = defineSsrCreate(({ folders }) => {
         [new URL(backendTarget).hostname]: ''
       },
       on: {
-        proxyReq: (proxyReq) => {
+        proxyReq: (proxyReq, req) => {
           proxyReq.setHeader('X-Proxy-Secret', proxySecret)
+          // This storefront serves the uploads folder (below): the store's
+          // answers then give photo addresses on this domain.
+          if (req.url?.startsWith('/wp-json')) proxyReq.setHeader('X-Qwoo-Uploads', '1')
+          else if (UPLOADS_RE.test(req.url || '')) proxyReq.removeHeader('cookie')
         },
         // Hosts like Hostinger stamp every response with a week-long public
         // cache (Cache-Control: public, max-age=604800) — REST answers
         // included, errors too — so browsers kept serving old products.
         // API answers must always be asked for again.
         proxyRes: (proxyRes, req) => {
+          // Uploads (photos, videos): Vercel's CDN keeps a file a year
+          // (WordPress gives a replaced file a new name); a missing one a minute.
+          if (UPLOADS_RE.test(req.url || '')) {
+            delete proxyRes.headers['set-cookie']
+            delete proxyRes.headers['expires']
+            // Now on the storefront's own domain: a file opened by itself (an SVG
+            // with a script, say) can't run anything here.
+            proxyRes.headers['content-security-policy'] = "default-src 'none'; img-src data:; style-src 'unsafe-inline'; sandbox"
+            proxyRes.headers['x-content-type-options'] = 'nosniff'
+            if (proxyRes.statusCode === 200) {
+              proxyRes.headers['cache-control'] = 'public, max-age=31536000, immutable'
+              proxyRes.headers['vercel-cdn-cache-control'] = 'max-age=31536000'
+            } else if (proxyRes.statusCode !== 206) {
+              proxyRes.headers['cache-control'] = 'public, max-age=60'
+            }
+            return
+          }
           if (!req.url?.startsWith('/wp-json')) return
           proxyRes.headers['cache-control'] = 'private, no-cache, max-age=0'
           delete proxyRes.headers['expires']
