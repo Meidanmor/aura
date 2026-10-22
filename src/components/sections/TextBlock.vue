@@ -2,8 +2,8 @@
   <div
       v-if="d.text"
       class="text-block sb-text-align"
-      :class="typographyClasses"
-      :style="cssVars"
+      :class="[typographyClasses, spacingCase.class]"
+      :style="[cssVars, spacingCase.style]"
       v-html="sanitizeBuilderHtml(d.text)"
   />
 </template>
@@ -14,6 +14,7 @@ import { sanitizeBuilderHtml } from 'src/utils/sanitizeHtml.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { brandFontVar } from 'src/utils/brand-fonts.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToText } from 'src/composables/useSectionStyle.js'
+import { textStyle } from 'src/utils/text-style.js'
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -36,6 +37,9 @@ const cssVars = computed(() => {
   if (/^[1-9]00$/.test(String(d.value.font_weight ?? ''))) vars['font-weight'] = d.value.font_weight
   return vars
 })
+
+// Letter Spacing (per screen size) and Letter Case: the shared text-style helper.
+const spacingCase = computed(() => textStyle(d.value, { spacing: 'text_spacing', textCase: 'text_case' }))
 
 const typographyClasses = computed(() => {
   const size = asResponsive(d.value.font_size)
