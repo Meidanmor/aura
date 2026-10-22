@@ -103,7 +103,8 @@ const props = defineProps({
  * the top) or fixed (floats over the first section, e.g. a hero). A fixed
  * header only floats on pages built from sections (homepage, own pages);
  * elsewhere, and once the visitor scrolls, it's "solid": the owner's
- * after-scrolling colours, else the site's background.
+ * after-scrolling colours, else the site's background. A sticky header
+ * takes the after-scrolling colours once the visitor scrolls.
  */
 const route = useRoute()
 const settings = computed(() => props.headerConfig?.settings || {})
@@ -114,14 +115,15 @@ const sectionPage = computed(() => {
 })
 const overHero = computed(() => fixed.value && sectionPage.value)
 const scrolled = ref(false)
-const solid = computed(() => !overHero.value || scrolled.value)
+// Fixed: solid unless it floats over the hero; sticky: solid once scrolled.
+const solid = computed(() => props.stickyHeader && (fixed.value ? !overHero.value || scrolled.value : scrolled.value))
 
-const solidText = computed(() => (fixed.value && solid.value ? resolveGlobalColor(settings.value.solid_text) : ''))
+const solidText = computed(() => (solid.value ? resolveGlobalColor(settings.value.solid_text) : ''))
 const headerClasses = computed(() => ({
   sticky: props.stickyHeader,
   'header-fixed': fixed.value,
   'header-over': overHero.value,
-  'header-solid': fixed.value && solid.value,
+  'header-solid': solid.value,
   'header-solid-text': !!solidText.value,
 }))
 // The colours sit on the inner box: a header floating over the hero takes no height itself.
@@ -137,53 +139,47 @@ const headerStyle = computed(() => {
   })
   if (sides.some((v) => v !== '0')) style.padding = sides.join(' ')
   const own = resolveGlobalColor(settings.value.bg)
-  if (!fixed.value) style.backgroundColor = own || 'var(--q-bg)'
-  else if (solid.value) style.backgroundColor = resolveGlobalColor(settings.value.solid_bg) || own || 'var(--q-bg)'
+  if (solid.value) style.backgroundColor = resolveGlobalColor(settings.value.solid_bg) || own || 'var(--q-bg)'
+  else if (!fixed.value) style.backgroundColor = own || 'var(--q-bg)'
   else style.backgroundColor = own || 'transparent'
   if (solidText.value) style['--header-solid-text'] = solidText.value
   return style
 })
 
 /**
- * "Sections that scroll away" (away_rows): the header's first sections (an
- * announcement bar) leave with the page and the rest stays. The header sticks
- * at its own distance from the top minus their height, so no script runs
- * while scrolling: only their height is measured (and again when it changes).
+ * "Distance from the top" (sticky_top): where the header stays while
+ * scrolling. Its height is measured (and again when it changes) for sticky
+ * sections and blocks set to stay "below the header".
  */
 const inner = ref(null)
-const awayHeight = ref(0)
-const awayRows = computed(() => (props.stickyHeader ? Math.max(0, Math.min(3, Number(settings.value.away_rows) || 0)) : 0))
 const stickyTop = computed(() => {
   const v = String(settings.value.sticky_top || '').trim()
   return /^-?\d+(\.\d+)?(px|rem|em|vh)$/.test(v) ? v : (/^-?\d+(\.\d+)?$/.test(v) ? v + 'px' : '0px')
 })
 const outerStyle = computed(() => {
   const style = { backgroundColor: 'transparent' }
-  if (props.stickyHeader && (awayHeight.value || stickyTop.value !== '0px')) style.top = `calc(${stickyTop.value} - ${awayHeight.value}px)`
+  if (props.stickyHeader && stickyTop.value !== '0px') style.top = stickyTop.value
   return style
 })
-function measureAway() {
-  const sections = inner.value ? [...inner.value.querySelectorAll(':scope > .sb-section')] : []
-  awayHeight.value = Math.round(sections.slice(0, awayRows.value).reduce((h, el) => h + el.getBoundingClientRect().height, 0))
-  // What stays on screen once scrolled, for sticky sections and blocks set to
-  // stay "below the header" (app.css .sb-sticky-*: --qwoo-header-stuck).
+function measureStuck() {
+  // What stays on screen once scrolled (app.css .sb-sticky-*: --qwoo-header-stuck).
   let stuck = 0
   if (props.stickyHeader && inner.value) {
     const top = parseFloat(stickyTop.value) || 0
-    stuck = Math.max(0, Math.round(inner.value.getBoundingClientRect().height - awayHeight.value + (stickyTop.value.endsWith('px') ? top : 0)))
+    stuck = Math.max(0, Math.round(inner.value.getBoundingClientRect().height + (stickyTop.value.endsWith('px') ? top : 0)))
   }
   document.documentElement.style.setProperty('--qwoo-header-stuck', `${stuck}px`)
 }
 let resizeObserver = null
-watch(() => [props.stickyHeader, awayRows.value, stickyTop.value], () => nextTick(measureAway))
+watch(() => [props.stickyHeader, stickyTop.value], () => nextTick(measureStuck))
 
 const onScroll = () => { scrolled.value = window.scrollY > 10 }
 onMounted(() => {
   onScroll()
   window.addEventListener('scroll', onScroll, { passive: true })
-  measureAway()
+  measureStuck()
   if (typeof ResizeObserver !== 'undefined' && inner.value) {
-    resizeObserver = new ResizeObserver(measureAway)
+    resizeObserver = new ResizeObserver(measureStuck)
     resizeObserver.observe(inner.value)
   }
 })
