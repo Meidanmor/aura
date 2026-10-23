@@ -175,8 +175,9 @@ function getOptionsWithDisabled(attribute) {
 const availableAttributes = computed(() => {
   if (!product.value?.attributes) return []
 
+  // Only the attributes shoppers choose (options); the others (taste, material…) are product details.
   const attrMap = {}
-  for (const attr of product.value.attributes) {
+  for (const attr of product.value.attributes.filter(a => a.has_variations !== false)) {
     if (!attrMap[attr.name]) {
       attrMap[attr.name] = {
         name: attr.name,

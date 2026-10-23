@@ -214,6 +214,31 @@ async function priceMinorUnit(ssrContext) {
   return minorUnit ?? 2
 }
 
+/**
+ * The shop's product attributes for the Filters block: [{ taxonomy, name, terms: [{ label, value }] }],
+ * only values some product uses. [] when the store has none or can't be reached.
+ */
+export async function fetchAttributeOptions() {
+  try {
+    const base = storeApiBase(null)
+    const res = await fetch(`${base}/products/attributes`)
+    if (!res.ok) return []
+    const list = await res.json()
+    const out = await Promise.all((Array.isArray(list) ? list : []).map(async (attr) => {
+      const r = await fetch(`${base}/products/attributes/${attr.id}/terms?hide_empty=true&orderby=menu_order`)
+      const terms = r.ok ? await r.json() : []
+      return {
+        taxonomy: attr.taxonomy,
+        name: attr.name,
+        terms: (Array.isArray(terms) ? terms : []).filter(t => t.count !== 0).map(t => ({ label: t.name, value: Number(t.id) })),
+      }
+    }))
+    return out.filter(a => a.taxonomy && a.terms.length)
+  } catch {
+    return []
+  }
+}
+
 // --- core fetchers ---
 // ctx.ssrContext carries the per-request context when this runs inside a
 // preFetch hook. Leave it undefined/null for client-triggered calls.
@@ -233,8 +258,12 @@ export async function preFetchProducts(ctx = {}) {
       search,
       orderby,
       order,
+      attributes,
+      in_stock,
       ssrContext = null,
     } = ctx
+    // Attribute filters { pa_taste: [termId…] } (any of a list's values, every list).
+    const attrFilters = Object.entries(attributes || {}).filter(([, ids]) => Array.isArray(ids) && ids.length)
 
 
     // -------------------------
@@ -255,6 +284,13 @@ export async function preFetchProducts(ctx = {}) {
     if (search)    query.append('search', search)
     if (orderby && orderby !== 'menu_order') query.append('orderby', orderby)
     if (order)     query.append('order', order)
+    attrFilters.forEach(([tax, ids], i) => {
+      query.append(`attributes[${i}][attribute]`, tax)
+      ids.forEach((id) => query.append(`attributes[${i}][term_id][]`, id))
+      query.append(`attributes[${i}][operator]`, 'in')
+    })
+    if (attrFilters.length > 1) query.append('attribute_relation', 'and')
+    if (in_stock) query.append('stock_status[]', 'instock')
 
     const url = `${storeApiBase(ssrContext)}/products?${query.toString()}`
 
@@ -318,6 +354,12 @@ export async function preFetchProducts(ctx = {}) {
           return p.name?.toLowerCase().includes(term) || pSlug === term
         })
       }
+
+      for (const [tax, ids] of attrFilters) {
+        localProducts = localProducts.filter(p => (p.attributes || []).some(a => a.taxonomy === tax && (a.terms || []).some(t => ids.includes(Number(t.id)))))
+      }
+
+      if (in_stock) localProducts = localProducts.filter(p => p.is_in_stock !== false)
 
       if (min_price !== undefined) {
         localProducts = localProducts.filter(p => parseFloat(p.prices?.price || 0) >= min_price)
@@ -544,6 +586,7 @@ export default {
   productsLoading,
   initialized,
   preFetchProducts,
+  fetchAttributeOptions,
   fetchProductsIfNeeded,
   getById,
   fetchById,

@@ -2,6 +2,24 @@
 
 import { watch } from 'vue'
 
+// Attribute filters in the address: attr=pa_taste:12.13,pa_heat:5 (taxonomy: term ids).
+export function parseAttr(value) {
+  const out = {}
+  for (const part of String(value || '').split(',')) {
+    const [tax, ids] = part.split(':')
+    if (!/^pa_[a-z0-9_-]+$/i.test(tax || '')) continue
+    const list = String(ids || '').split('.').map(Number).filter((n) => Number.isInteger(n) && n > 0)
+    if (list.length) out[tax] = list
+  }
+  return out
+}
+export function attrToString(attrs) {
+  return Object.keys(attrs || {}).sort()
+    .filter((tax) => Array.isArray(attrs[tax]) && attrs[tax].length)
+    .map((tax) => `${tax}:${[...attrs[tax]].sort((a, b) => a - b).join('.')}`)
+    .join(',')
+}
+
 export function parseQueryFilters(query) {
   const filters = {}
 
@@ -19,6 +37,13 @@ export function parseQueryFilters(query) {
   if (query.sort) {
     filters.sortBy = String(query.sort)
   }
+
+  if (query.attr) {
+    const attrs = parseAttr(query.attr)
+    if (Object.keys(attrs).length) filters.attributes = attrs
+  }
+
+  if (query.stock === '1') filters.inStock = true
 
   if (query.page) {
     const p = parseInt(query.page, 10)
@@ -38,11 +63,14 @@ export function parseQueryFilters(query) {
   return filters
 }
 
-function buildQuery({ search, selectedCategory, priceRange, priceMin, priceMax, sortBy, currentPage }) {
+function buildQuery({ search, selectedCategory, priceRange, priceMin, priceMax, sortBy, currentPage, attributes, inStock }) {
   const q = {}
 
   if (search.value) q.q = search.value
   if (selectedCategory?.value?.length) q.cat = selectedCategory.value.join(',')
+  const attr = attributes ? attrToString(attributes.value) : ''
+  if (attr) q.attr = attr
+  if (inStock?.value) q.stock = '1'
   if (sortBy.value && sortBy.value !== 'menu_order') q.sort = sortBy.value
   if (currentPage.value && currentPage.value > 1) q.page = currentPage.value
 
@@ -88,7 +116,7 @@ function getUrlQuery() {
  * @param {object} options
  */
 export function useFilterSync(refs, _router, _route, options = {}) {
-  const { search, selectedCategory, priceRange, priceMin, priceMax, sortBy, currentPage } = refs
+  const { search, selectedCategory, priceRange, priceMin, priceMax, sortBy, currentPage, attributes, inStock } = refs
 
   function initFromQuery() {
     const filters = parseQueryFilters(getUrlQuery()) // ✅ reads from window.location
@@ -97,6 +125,8 @@ export function useFilterSync(refs, _router, _route, options = {}) {
     if (filters.selectedCategory !== undefined) selectedCategory.value  = filters.selectedCategory
     if (filters.sortBy !== undefined)           sortBy.value            = filters.sortBy
     if (filters.currentPage !== undefined)      currentPage.value       = filters.currentPage
+    if (filters.attributes !== undefined && attributes) attributes.value = filters.attributes
+    if (filters.inStock !== undefined && inStock)       inStock.value    = filters.inStock
 
     if (filters.priceRange && options.syncPrice !== false) {
       const clampedMin = filters.priceRange.min !== null
@@ -120,9 +150,11 @@ export function useFilterSync(refs, _router, _route, options = {}) {
         priceMax:         priceRange.value?.max,
         sortBy:           sortBy.value,
         currentPage:      currentPage.value,
+        attributes:       attributes ? attrToString(attributes.value) : '',
+        inStock:          !!inStock?.value,
       }),
       () => {
-        const newQuery    = buildQuery({ search, selectedCategory, priceRange, priceMin, priceMax, sortBy, currentPage })
+        const newQuery    = buildQuery({ search, selectedCategory, priceRange, priceMin, priceMax, sortBy, currentPage, attributes, inStock })
         const currentQuery = getUrlQuery()                              // ✅ reads from window.location
 
         const isSame = JSON.stringify(newQuery) === JSON.stringify(currentQuery)

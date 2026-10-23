@@ -1,7 +1,7 @@
 // src/composables/useProductArchive.js
 import {ref, computed, onMounted, watch, useSSRContext, nextTick, onUnmounted} from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useFilterSync, parseQueryFilters } from 'src/composables/useFilterSync'
+import { useFilterSync, parseQueryFilters, attrToString } from 'src/composables/useFilterSync'
 import { scroll } from 'quasar'
 import { fetchSeoForPath, useSeoMeta } from 'src/composables/useSeo'
 import productsStore from 'src/stores/products'
@@ -90,6 +90,8 @@ export function createArchivePreFetch(mode) {
             category: categoryParam,
             min_amount: urlFilters.priceRange?.min ?? undefined,
             max_amount: urlFilters.priceRange?.max ?? undefined,
+            attributes: urlFilters.attributes,
+            in_stock: !!urlFilters.inStock,
             ssrContext,
             ...sortParams
         })
@@ -155,6 +157,16 @@ export function useProductArchive(mode) {
     const priceRange          = ref({ min: 0, max: 1000 })
     const priceChanged        = ref(0)
     const pendingPriceRange   = ref(null)
+    // Filters block: product attributes ({ pa_taste: [termId…] }) and "in stock only".
+    const selectedAttributes  = ref({})
+    const inStock             = ref(false)
+    const attributeOptions    = ref([])
+    let attributesLoading     = null
+    function loadAttributeOptions() {
+        if (!process.env.CLIENT) return
+        attributesLoading ||= productsStore.fetchAttributeOptions().then((list) => { attributeOptions.value = list })
+        return attributesLoading
+    }
     const shopSettings = ref(
         process.env.CLIENT && window.__PAGE_CONFIG__
             ? window.__PAGE_CONFIG__
@@ -187,6 +199,8 @@ export function useProductArchive(mode) {
                     : { min: priceMin.value, max: priceMax.value }
             }
 
+            if (ssr.urlFilters?.attributes) selectedAttributes.value = ssr.urlFilters.attributes
+            if (ssr.urlFilters?.inStock) inStock.value = true
             if (ssr.urlFilters?.sortBy) sortBy.value = ssr.urlFilters.sortBy
             if (ssr.urlFilters?.currentPage) currentPage.value = ssr.urlFilters.currentPage
         }
@@ -194,8 +208,8 @@ export function useProductArchive(mode) {
 
     const { initFromQuery, startWatching } = useFilterSync(
         mode === 'category'
-            ? { search, priceRange, priceMin, priceMax, sortBy, currentPage }
-            : { search, selectedCategory, priceRange, priceMin, priceMax, sortBy, currentPage },
+            ? { search, priceRange, priceMin, priceMax, sortBy, currentPage, attributes: selectedAttributes, inStock }
+            : { search, selectedCategory, priceRange, priceMin, priceMax, sortBy, currentPage, attributes: selectedAttributes, inStock },
         router, route
     )
 
@@ -286,7 +300,9 @@ export function useProductArchive(mode) {
             search: search.value,
             page: currentPage.value,
             sort: sortBy.value,
-            priceTrigger: priceChanged.value
+            priceTrigger: priceChanged.value,
+            attributes: attrToString(selectedAttributes.value),
+            inStock: inStock.value,
         }),
         async (filters, prev) => {
             if (isInitialising.value || !isReady.value || priceRange.value.min === null || priceRange.value.max === null) return
@@ -297,7 +313,8 @@ export function useProductArchive(mode) {
                 JSON.stringify([...filters.category].sort()) !== JSON.stringify([...prev.category].sort())
 
             const shouldResetPage = prev && (
-                filters.search !== prev.search || filters.priceTrigger !== prev.priceTrigger || categoryChanged
+                filters.search !== prev.search || filters.priceTrigger !== prev.priceTrigger || categoryChanged ||
+                filters.attributes !== prev.attributes || filters.inStock !== prev.inStock
             )
 
             if (categoryChanged) {
@@ -320,7 +337,7 @@ export function useProductArchive(mode) {
             await productsStore.preFetchProducts({
                 api: true, page: currentPage.value, per_page: perPage,
                 min_amount: priceRange.value.min, max_amount: priceRange.value.max, category: categoryArg,
-                search: filters.search, ...sortParams
+                search: filters.search, attributes: selectedAttributes.value, in_stock: inStock.value, ...sortParams
             })
 
             if (currentRequest !== requestId) return
@@ -430,6 +447,7 @@ export function useProductArchive(mode) {
     return {
         search, selectedCategory, selectedCategoryOBJ, currentPage, sortBy, filtersOpen,
         priceMin, priceMax, priceRange, isHydrated,
+        selectedAttributes, inStock, attributeOptions, loadAttributeOptions,
         categoryOptions, paginatedProducts, totalPages, totalProducts,
         sortOptions, onPriceChange, scrollToTop, productsStore, shopSettings, notFound
     }

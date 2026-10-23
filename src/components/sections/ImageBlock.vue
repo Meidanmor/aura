@@ -151,6 +151,8 @@ const cssVars = computed(() => {
   setResponsiveVar(vars, '--ib-h', d.value.image_height, toCssLength)
   setResponsiveVar(vars, '--ib-ratio', d.value.aspect_ratio, (v) => (RATIOS.has(v) ? v.replace('/', ' / ') : null))
   setResponsiveVar(vars, '--ib-align', d.value.alignment, alignToFlex)
+  // Style → Size → Rotate: the image and its product tags tilt together.
+  setResponsiveVar(vars, '--ib-rot', d.value.rotate, (v) => (Number(v) ? `${Math.max(-45, Math.min(45, Number(v)))}deg` : null))
   const radius = toCssLength(d.value.border_radius)
   if (radius) vars['--ib-radius'] = radius
   vars['--ib-fit'] = FITS.has(d.value.object_fit) ? d.value.object_fit : 'cover'
@@ -184,7 +186,7 @@ function linkAttrs(img) {
   min-width: 0;
   max-width: var(--ib-maxw, 100%);
 }
-.image-block__box { position: relative; }
+.image-block__box { position: relative; transform: rotate(var(--ib-rot, 0deg)); }
 .image-block__frame {
   display: block;
   overflow: hidden;
@@ -290,6 +292,7 @@ function linkAttrs(img) {
   :global(.sb-block:not(.sb-has-w):has(> .ib-fill-t)) { flex: 1 1 0; }
   .image-block { gap: var(--ib-gap-t, 16px); }
   .image-block__item { max-width: var(--ib-maxw-t, 100%); }
+  .image-block__box { transform: rotate(var(--ib-rot-t, 0deg)); }
 }
 
 /* ---- Mobile (<= 767px) ---- */
@@ -314,5 +317,6 @@ function linkAttrs(img) {
   :global(.sb-block:not(.sb-has-w):has(> .ib-fill-m)) { flex: 1 1 0; }
   .image-block { gap: var(--ib-gap-m, 16px); }
   .image-block__item { max-width: var(--ib-maxw-m, 100%); }
+  .image-block__box { transform: rotate(var(--ib-rot-m, 0deg)); }
 }
 </style>

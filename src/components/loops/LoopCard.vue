@@ -176,4 +176,7 @@ const shape = computed(() => {
 
 .lt-cart-btn.lt-cart-btn--full { width: 100%; }
 .lt-cart-btn { border-radius: var(--lt-btn-radius, 4px); }
+.lt-cart-btn.lt-cart-btn--round { width: var(--lt-btn-round, 44px); height: var(--lt-btn-round, 44px); min-height: 0; padding: 0; border-radius: 50%; }
+.lt-cart-btn .q-icon { font-size: var(--lt-btn-icon, 20px); }
+.lt-cart-btn.q-btn--outline::before { border-color: var(--lt-btn-border, currentColor); border-width: 2px; }
 </style>

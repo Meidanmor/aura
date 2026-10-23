@@ -18,7 +18,7 @@ import ErrorNotFound from "pages/ErrorNotFound.vue";
 
 defineOptions({ preFetch: createArchivePreFetch('category') })
 
-const {
+const { selectedAttributes, inStock, attributeOptions, loadAttributeOptions,
   search, selectedCategoryOBJ, currentPage, sortBy, filtersOpen,
   priceMin, priceMax, priceRange, isHydrated,
   paginatedProducts, totalPages, totalProducts,
@@ -34,5 +34,6 @@ provide('productArchive', reactive({
   mode: 'category', search, selectedCategory: [], selectedCategoryOBJ, safeCategoryName, currentPage, sortBy, filtersOpen,
   priceMin, priceMax, priceRange, isHydrated, categoryOptions: [], paginatedProducts, totalPages, totalProducts,
   sortOptions, onPriceChange, scrollToTop, productsStore: markRaw(productsStore), shopSettings,
+  selectedAttributes, inStock, attributeOptions, loadAttributeOptions,
 }))
 </script>

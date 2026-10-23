@@ -13,22 +13,28 @@
     <q-btn
         v-else-if="hasOptions"
         class="lt-cart-btn"
-        :class="{ 'lt-cart-btn--full': !!d.full_width }"
+        :class="btnClass"
         v-bind="look"
         :style="btnVars"
         :to="url"
+        :icon="icon"
+        :round="iconOnly"
+        :aria-label="iconOnly ? (d.options_text || t('Choose options')) : undefined"
         no-caps
-    ><span v-bind="labelBind">{{ d.options_text || t('Choose options') }}</span></q-btn>
+    ><span v-if="!iconOnly" v-bind="labelBind">{{ d.options_text || t('Choose options') }}</span></q-btn>
     <q-btn
         v-else
         class="lt-cart-btn"
-        :class="{ 'lt-cart-btn--full': !!d.full_width }"
+        :class="btnClass"
         v-bind="look"
         :style="btnVars"
         :loading="adding"
+        :icon="icon"
+        :round="iconOnly"
+        :aria-label="iconOnly ? (d.text || t('Add to cart')) : undefined"
         no-caps
         @click.prevent.stop="add"
-    ><span v-bind="labelBind">{{ d.text || t('Add to cart') }}</span></q-btn>
+    ><span v-if="!iconOnly" v-bind="labelBind">{{ d.text || t('Add to cart') }}</span></q-btn>
   </div>
 </template>
 
@@ -39,7 +45,9 @@
  * Styles: LoopCard.vue.
  */
 import { computed, ref } from 'vue'
+import { matAdd, matShoppingBag, matShoppingCart } from '@quasar/extras/material-icons'
 import cart from 'src/stores/cart.js'
+import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { useLoopItem, loopItemUrl } from './loop-item.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { alignToText, setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
@@ -66,9 +74,24 @@ const alignVars = computed(() => {
   setResponsiveVar(v, '--lt-ta', d.value.align, alignToText)
   return v
 })
+// Content → Icon (and "Icon only": a round button, its text kept for screen readers).
+const ICONS = { add: matAdd, bag: matShoppingBag, cart: matShoppingCart }
+const icon = computed(() => ICONS[d.value.icon] || undefined)
+const iconOnly = computed(() => !!icon.value && !!d.value.icon_only)
+const btnClass = computed(() => ({ 'lt-cart-btn--full': !!d.value.full_width && !iconOnly.value, 'lt-cart-btn--round': iconOnly.value }))
 const btnVars = computed(() => {
+  const v = {}
   const r = toCssLength(d.value.radius)
-  return r ? { '--lt-btn-radius': r } : {}
+  if (r) v['--lt-btn-radius'] = r
+  const size = toCssLength(d.value.round_size)
+  if (size) v['--lt-btn-round'] = size
+  const iconSize = toCssLength(d.value.icon_size)
+  if (iconSize) v['--lt-btn-icon'] = iconSize
+  const bg = resolveGlobalColor(d.value.btn_bg)
+  if (bg) v[d.value.button_style === 'outline' || d.value.button_style === 'link' ? 'color' : 'background'] = `${bg} !important`
+  const border = resolveGlobalColor(d.value.btn_border)
+  if (border) v['--lt-btn-border'] = border
+  return v
 })
 const adding = ref(false)
 async function add() {

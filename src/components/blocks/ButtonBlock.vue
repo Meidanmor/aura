@@ -1,11 +1,12 @@
 <template>
-  <div v-if="(d.text || (action && icon)) && (d.url || action)" class="btn-block" :class="fullWidthClasses" :style="wrapVars">
+  <div v-if="(d.text || (run && icon)) && (d.url || run)" class="btn-block" :class="fullWidthClasses" :style="wrapVars">
     <q-btn
-        v-bind="action ? {} : linkAttrs"
+        v-bind="run ? {} : linkAttrs"
         :icon="icon && !iconRight ? icon : undefined"
         :icon-right="icon && iconRight ? icon : undefined"
         :aria-label="ariaLabel || undefined"
-        @click="action && action()"
+        :loading="adding"
+        @click="run && run()"
         class="btn-block__btn"
         :class="[`btn-block__btn--${variant}`, `btn-block__btn--${size}`, labelText.class, paddingVars.cls]"
         :style="btnVars"
@@ -21,8 +22,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import cart from 'src/stores/cart.js'
+import { fetchProductById } from 'src/api/woocommerce.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { brandFontVar } from 'src/utils/brand-fonts.js'
 import { textStyle } from 'src/utils/text-style.js'
@@ -39,7 +42,30 @@ const props = defineProps({
 })
 
 const route = useRoute()
+const router = useRouter()
 const d = computed(() => props.data.data || {})
+
+// "When Clicked: Add a product to the cart": simple products go in the cart,
+// products with options (sizes, colours) open their page to choose.
+const cartProductId = computed(() => (d.value.click_action === 'add_to_cart' ? Number(d.value.product_ids?.[0]) || 0 : 0))
+const adding = ref(false)
+async function addProduct() {
+  if (adding.value) return
+  adding.value = true
+  try {
+    const product = await fetchProductById(cartProductId.value).catch(() => null)
+    const hasOptions = ['variable', 'grouped', 'external'].includes(product?.type) || product?.has_options === true
+    if (product && hasOptions) {
+      const path = product.permalink ? new URL(product.permalink, 'http://x').pathname : ''
+      if (path) await router.push(path)
+      return
+    }
+    await cart.add(cartProductId.value, 1, null, {}, null, product || null)
+  } finally {
+    adding.value = false
+  }
+}
+const run = computed(() => props.action || (cartProductId.value ? addProduct : null))
 
 const VARIANTS = new Set(['primary', 'secondary', 'outline', 'flat', 'link'])
 const variant = computed(() => (VARIANTS.has(d.value.style) ? d.value.style : 'primary'))

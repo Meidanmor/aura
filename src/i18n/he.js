@@ -1,5 +1,7 @@
 // Hebrew: English text → Hebrew (see i18n/index.js). Arrays are [one, many].
 export default {
+  "In stock only": "רק מה שבמלאי",
+  "From {price}": "החל מ־{price}",
   "— or pay with card —": "— או תשלום בכרטיס —",
   "· ✓ Verified buyer": "· ✓ קנייה מאומתת",
   "\"{name}\" was removed — no longer available": "\"{name}\" הוסר — כבר לא זמין",
