@@ -206,6 +206,8 @@ async function fromRepo() {
   }
   fs.rmSync(tmp, { recursive: true, force: true })
 
+  // scripts/after-build.mjs takes them out of public/ again after the build.
+  fs.writeFileSync(MARKER, JSON.stringify({ source: 'repo' }))
   console.log(`[content] Using ${CONTENT_REPO}@${branch}.`)
 }
 
