@@ -4,6 +4,13 @@
 import { Readable } from 'node:stream'
 
 // The store's uploads folder, served through this domain (see the proxy below).
+// What this server calls itself when it asks the store for something.
+// Hostinger's server limits how fast "a browser" may ask from one address,
+// and every shopper's request reaches the store from a few Vercel addresses:
+// passing on the shopper's browser name got all of them refused (empty 429s)
+// after a few page visits. A name of its own isn't limited that way.
+export const BACKEND_USER_AGENT = 'YallaFlow-Storefront/1.0'
+
 export const UPLOADS_RE = /^\/wp-content\/uploads\/[^?#]+\.(jpe?g|png|gif|webp|avif|svg|mp4|webm|pdf|woff2?)(\?|$)/i
 
 // Hostinger's server sometimes refuses a burst of photo requests (an empty
@@ -27,8 +34,8 @@ export function uploadsHandler (backendTarget) {
 
     // No cookies: only what a file answer needs. Unpacked files, so the
     // length passed on matches the body.
-    const headers = { 'accept-encoding': 'identity' }
-    for (const name of ['range', 'if-none-match', 'if-modified-since', 'accept', 'user-agent']) {
+    const headers = { 'accept-encoding': 'identity', 'user-agent': BACKEND_USER_AGENT }
+    for (const name of ['range', 'if-none-match', 'if-modified-since', 'accept']) {
       if (req.headers[name]) headers[name] = req.headers[name]
     }
 

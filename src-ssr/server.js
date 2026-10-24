@@ -13,7 +13,7 @@ import express from 'express'
 import compression from 'compression'
 import { createProxyMiddleware } from 'http-proxy-middleware'
 import { siteContentMiddleware } from './site-content.js'
-import { uploadsHandler } from './uploads.js'
+import { uploadsHandler, BACKEND_USER_AGENT } from './uploads.js'
 import {
   defineSsrCreate,
   defineSsrListen,
@@ -79,6 +79,7 @@ export const create = defineSsrCreate(({ folders }) => {
       on: {
         proxyReq: (proxyReq, req) => {
           proxyReq.setHeader('X-Proxy-Secret', proxySecret)
+          proxyReq.setHeader('User-Agent', BACKEND_USER_AGENT) // see uploads.js
           // This storefront serves the uploads folder (below): the store's
           // answers then give photo addresses on this domain.
           if (req.url?.startsWith('/wp-json')) proxyReq.setHeader('X-Qwoo-Uploads', '1')

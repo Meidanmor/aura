@@ -1,5 +1,6 @@
 // ssr-src/middlewares/render.js
 import { defineSsrMiddleware } from '#q-app/wrappers'
+import { BACKEND_USER_AGENT } from '../uploads.js'
 import { randomBytes } from 'crypto'
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { readFileSync } from 'node:fs'
@@ -28,6 +29,7 @@ if (!globalThis.__QWOO_FETCH_LANG) {
             if (isExtraLang(lang)) headers.set('X-Qwoo-Lang', lang)
             // Photo addresses on this domain (server.js serves /wp-content/uploads).
             headers.set('X-Qwoo-Uploads', '1')
+            headers.set('User-Agent', BACKEND_USER_AGENT)
             return original(input, { ...init, headers })
         }
         return original(input, init)
