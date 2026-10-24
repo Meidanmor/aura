@@ -33,6 +33,7 @@ import SectionRenderer from "components/sections/SectionRenderer.vue";
 import ErrorNotFound from "pages/ErrorNotFound.vue";
 import {loadPageConfig, subscribeToLiveConfig} from "src/utils/config-loader.js";
 import { useI18n } from 'src/i18n/index.js'
+import { formatStoreAmount } from 'src/utils/formatters.js'
 
 const { t } = useI18n()
 
@@ -224,6 +225,67 @@ const availableAttributes = computed(() => {
 })
 
 
+// Each variation's prices (extensions.qwoo.variation_prices: only in the store's
+// single product answers, missing on older stores): id → { price, regular_price }.
+const variationPrices = computed(() => {
+  const map = new Map()
+  for (const v of product.value?.extensions?.qwoo?.variation_prices || []) map.set(Number(v.id), v)
+  return map
+})
+
+// The price shown on a choice: what the product costs with this option and the
+// options already chosen. One price (with the old one when on sale), else
+// "From" the lowest; '' when unknown or the same for every option.
+function choicePrice(attrName, value) {
+  if (!variationPrices.value.size || value == null) return ''
+  const hypothetical = { ...selectedVariations.value, [attrName]: value }
+  const found = []
+  for (const variation of product.value.variations || []) {
+    const fits = Object.entries(hypothetical).every(([name, selected]) => {
+      if (!selected) return true
+      const attr = variation.attributes.find(a => a.name === name)
+      if (!attr) return false
+      if (attr.value === null) return true
+      return sameChoice(name, attr.value, selected)
+    })
+    const prices = fits && variationPrices.value.get(Number(variation.id))
+    if (prices) found.push(prices)
+  }
+  if (!found.length) return ''
+  const amounts = found.map(p => Number(p.price))
+  const low = Math.min(...amounts)
+  const pr = product.value.prices
+  if (low !== Math.max(...amounts)) return t('From {price}', { price: formatStoreAmount(pr, low) })
+  const regular = Number(found[0].regular_price)
+  const now = formatStoreAmount(pr, low)
+  return found.every(p => Number(p.regular_price) === regular) && regular > low
+    ? `<del>${formatStoreAmount(pr, regular)}</del> ${now}`
+    : now
+}
+// Whether the choices are worth a price each: some option costs something else.
+const choicePricesDiffer = computed(() => new Set([...variationPrices.value.values()].map(p => `${p.price}/${p.regular_price}`)).size > 1)
+
+// A product that came from a list (the shop page) has no variation prices:
+// ask the store for the single product once, then keep them on the listed copy too.
+const pricesAsked = new Set()
+async function loadVariationPrices() {
+  const current = product.value
+  if (!current?.id || current.type !== 'variable' || pricesAsked.has(current.id)) return
+  if (Array.isArray(current.extensions?.qwoo?.variation_prices)) return
+  pricesAsked.add(current.id)
+  try {
+    const full = await fetchProductById(current.id)
+    const list = full?.extensions?.qwoo?.variation_prices
+    if (!Array.isArray(list)) return
+    for (const p of [product.value, productsStore.products.value.find(x => x.id === current.id)]) {
+      if (p?.id !== current.id) continue
+      p.extensions = { ...(p.extensions || {}), qwoo: { ...(p.extensions?.qwoo || {}), variation_prices: list } }
+    }
+  } catch (e) {
+    console.error(e)
+  }
+}
+
 const lightboxRef = ref(null)
 
 // replace your openLightbox function with:
@@ -318,6 +380,7 @@ async function enhanceProduct() {
   quantity.value = 1
 
   await resetVariations()
+  loadVariationPrices()
 
   // Auto-select from URL query params if present and valid
   const query = route.query
@@ -568,6 +631,7 @@ provide('productPage', reactive({
   product, gallery, imagesCarousel: markRaw(imagesCarousel), cart: markRaw(cart), wishlist: markRaw(wishlist),
   reviewsOn, scrollToReviews, safeCategoryName, safePrice, safeVariationPrice, safeDescription,
   variationLoading, selectedVariation, selectedVariations, availableAttributes, getOptionsWithDisabled,
+  choicePrice, choicePricesDiffer,
   onVariationChange, variationError, isVariable, quantity, decreaseQty, increaseQty,
   shouldDisableCartButtons, addToCartHandler, addToWishlist,
   onImageMouseDown, onImageMouseMove, onImageClick,

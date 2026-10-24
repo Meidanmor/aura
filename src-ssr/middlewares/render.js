@@ -25,8 +25,10 @@ if (!globalThis.__QWOO_FETCH_LANG) {
         const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input?.url || ''
         if (url.includes('/wp-json/')) {
             const headers = new Headers(init?.headers || (input instanceof Request ? input.headers : undefined))
-            const lang = langStore.getStore()?.lang
+            const { lang, ua } = langStore.getStore() || {}
             if (isExtraLang(lang)) headers.set('X-Qwoo-Lang', lang)
+            // The visitor's own browser name, for the store (see server.js).
+            if (ua) headers.set('X-Qwoo-Client-UA', ua)
             // Photo addresses on this domain (server.js serves /wp-content/uploads).
             headers.set('X-Qwoo-Uploads', '1')
             headers.set('User-Agent', BACKEND_USER_AGENT)
@@ -377,7 +379,8 @@ export default defineSsrMiddleware(({ app, resolve, render, folders }) => {
         const site = globalThis.__QWOO_SITE || null
         const pageLang = langFromPath(req.path || req.url)
 
-        langStore.run({ lang: pageLang }, () => render(ssrContext))
+        const ua = String(req.headers['user-agent'] || '').slice(0, 512)
+        langStore.run({ lang: pageLang, ua }, () => render(ssrContext))
             .then(html => {
                 // NOTE: html already contains the correct <title>/<meta>/<link>/<script>
                 // tags from every useMeta() call in the rendered component tree,

@@ -26,11 +26,8 @@
           >
             <span v-if="choiceStyle === 'cards'" class="pb-choice__dot" aria-hidden="true" />
             <span class="pb-choice__label">{{ opt.label }}</span>
-            <span
-                v-if="choiceStyle === 'cards' && p.selectedVariations[attribute.name] === opt.value && p.selectedVariation && !p.variationLoading"
-                class="pb-choice__price"
-                v-html="p.safeVariationPrice"
-            />
+            <!-- eslint-disable-next-line vue/no-v-html -- built from the store's numbers, escaped -->
+            <span v-if="!opt.disable && choicePriceOf(attribute.name, opt.value)" class="pb-choice__price" v-html="choicePriceOf(attribute.name, opt.value)" />
           </button>
         </div>
         <q-select
@@ -132,6 +129,15 @@ const choiceVars = computed(() => {
   if (r) v['--pb-radius'] = r
   return v
 })
+// A price on each choice when the options cost different amounts (from the
+// store's variation prices). Otherwise only the chosen card shows the price;
+// older stores send no variation prices, so it waits for the chosen variation.
+function choicePriceOf(name, value) {
+  const chosen = p.selectedVariations[name] === value
+  if (p.choicePricesDiffer) return p.choicePrice(name, value)
+  if (choiceStyle.value !== 'cards' || !chosen) return ''
+  return p.choicePrice(name, value) || (p.selectedVariation && !p.variationLoading ? p.safeVariationPrice : '')
+}
 function choose(name, value) {
   p.selectedVariations[name] = p.selectedVariations[name] === value ? null : value
   p.onVariationChange()
@@ -152,5 +158,7 @@ function choose(name, value) {
 .pb-choice__dot { width: 18px; height: 18px; flex: none; border-radius: 50%; border: 2px solid rgba(0, 0, 0, .3); }
 .pb-choice.is-on .pb-choice__dot { border-color: var(--pb-on, var(--q-secondary)); background: radial-gradient(circle, var(--pb-on, var(--q-secondary)) 0 45%, transparent 50%); }
 .pb-choice__price { margin-inline-start: auto; font-weight: 700; }
+.pb-choices--buttons .pb-choice { flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; }
+.pb-choices--buttons .pb-choice__price { margin-inline-start: 0; font-size: .85em; font-weight: 400; opacity: .8; }
 .pb-choice__price :deep(del) { opacity: .55; font-weight: 400; margin-inline-end: 6px; }
 </style>

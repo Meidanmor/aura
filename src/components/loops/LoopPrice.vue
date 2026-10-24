@@ -18,6 +18,7 @@ import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { alignToText, setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
 import { brandFontVar } from 'src/utils/brand-fonts.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
+import { formatStoreAmount } from 'src/utils/formatters.js'
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -26,16 +27,10 @@ const loop = useLoopItem()
 const d = computed(() => props.data.data || {})
 const storePrice = useSanitizedPrice(() => (loop?.value?.type === 'product' ? loop.value.item?.price_html || '' : ''))
 
-// The lowest price as the store writes prices (no locale formatting: the server and browser must match).
+// The lowest price as the store writes prices.
 function formatAmount(prices, minor) {
-  const unit = Number(prices.currency_minor_unit) || 0
-  const n = Number(minor) / 10 ** unit
-  if (!Number.isFinite(n)) return ''
-  const [whole, frac] = n.toFixed(unit).split('.')
-  const grouped = whole.replace(/B(?=(d{3})+(?!d))/g, prices.currency_thousand_separator ?? ',')
-  const num = frac ? `${grouped}${prices.currency_decimal_separator ?? '.'}${frac}` : grouped
-  const esc = (s) => String(s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
-  return `<span class="lt-price__amount">${esc(prices.currency_prefix)}${num}${esc(prices.currency_suffix)}</span>`
+  const amount = formatStoreAmount(prices, minor)
+  return amount ? `<span class="lt-price__amount">${amount}</span>` : ''
 }
 const price = computed(() => {
   const item = loop?.value?.type === 'product' ? loop.value.item : null

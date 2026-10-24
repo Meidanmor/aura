@@ -80,6 +80,12 @@ export const create = defineSsrCreate(({ folders }) => {
         proxyReq: (proxyReq, req) => {
           proxyReq.setHeader('X-Proxy-Secret', proxySecret)
           proxyReq.setHeader('User-Agent', BACKEND_USER_AGENT) // see uploads.js
+          // The shopper's own browser name, for the store (orders, trackers):
+          // it puts it back only on requests carrying the proxy secret. A page
+          // render's own calls already carry the visitor's (render.js).
+          const clientUa = req.headers['x-qwoo-client-ua'] || req.headers['user-agent']
+          if (clientUa) proxyReq.setHeader('X-Qwoo-Client-UA', String(clientUa).slice(0, 512))
+          else proxyReq.removeHeader('X-Qwoo-Client-UA')
           // This storefront serves the uploads folder (below): the store's
           // answers then give photo addresses on this domain.
           if (req.url?.startsWith('/wp-json')) proxyReq.setHeader('X-Qwoo-Uploads', '1')
