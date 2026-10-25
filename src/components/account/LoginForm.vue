@@ -1,5 +1,5 @@
 <template>
-  <div class="account-login-wrap">
+  <div class="account-login-wrap" :class="{ 'account-login-wrap--plain': plain }">
   <q-form @submit.prevent="login">
     <!-- Honeypot: real users never see or fill this. -->
     <div class="hp-field" aria-hidden="true">
@@ -17,26 +17,31 @@
     <q-input
         v-model="username"
         :label="t('Username or Email')"
-        filled
+        v-bind="look"
+        autocomplete="username"
         :disable="loading"
     />
     <q-input
         v-model="password"
         type="password"
         :label="t('Password')"
-        filled
+        v-bind="look"
+        autocomplete="current-password"
         :disable="loading"
     />
 
-    <div class="login-row">
-      <q-checkbox v-model="remember" :label="t('Remember me')" :disable="loading" color="secondary" dense />
-      <router-link to="/forgot-password" class="forgot-link">{{ t('Forgot password?') }}</router-link>
+    <div v-if="showRemember || showForgot" class="login-row">
+      <q-checkbox v-if="showRemember" v-model="remember" :label="t('Remember me')" :disable="loading" color="secondary" dense />
+      <router-link v-if="showForgot" to="/forgot-password" class="forgot-link">{{ t('Forgot password?') }}</router-link>
     </div>
 
     <q-btn
-        :label="t('Login')"
+        :label="buttonLabel || t('Login')"
         type="submit"
-        color="secondary"
+        :color="buttonBg ? undefined : 'secondary'"
+        :style="buttonStyle"
+        no-caps
+        unelevated
         :loading="loading"
     />
 
@@ -46,7 +51,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import cart from 'src/stores/cart.js'
 import wishlist from 'src/stores/wishlist.js'
 import { setUser } from 'src/stores/user.js'
@@ -63,6 +68,25 @@ const loading  = ref(false)
 const { honeypotField, isLikelyBot } = useHoneypot()
 
 const emit = defineEmits(['login-success'])
+
+/**
+ * Also used by the Sign In Form block, which sets the look:
+ * fieldLook filled | outlined | standard | borderless, and plain (no frame of its own).
+ */
+const props = defineProps({
+  plain: { type: Boolean, default: false },
+  fieldLook: { type: String, default: 'filled' },
+  showRemember: { type: Boolean, default: true },
+  showForgot: { type: Boolean, default: true },
+  buttonLabel: { type: String, default: '' },
+  buttonBg: { type: String, default: '' },
+  buttonText: { type: String, default: '' },
+})
+const look = computed(() => (['filled', 'outlined', 'standard', 'borderless'].includes(props.fieldLook) && props.fieldLook !== 'standard' ? { [props.fieldLook]: true } : {}))
+const buttonStyle = computed(() => ({
+  ...(props.buttonBg ? { background: props.buttonBg } : {}),
+  ...(props.buttonText ? { color: props.buttonText } : {}),
+}))
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -167,6 +191,11 @@ div.q-tab-panels {
   border: 1px solid var(--q-text);
   border-radius: 4px;
   margin-top: 20px;
+}
+.account-login-wrap--plain {
+  padding: 0;
+  border: 0;
+  margin-top: 0;
 }
 .account-login-wrap :deep(.q-input) {
   margin-bottom: 10px;

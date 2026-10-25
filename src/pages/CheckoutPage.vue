@@ -39,7 +39,7 @@ import { ref, computed, reactive, watch, onMounted, onUnmounted, useSSRContext, 
 import cart from 'src/stores/cart';
 import { useRouter, onBeforeRouteLeave } from 'vue-router';
 import { useQuasar } from 'quasar';
-import {fetchWithToken, setLoggedIn} from 'src/composables/useApiFetch.js';
+import {fetchWithToken} from 'src/composables/useApiFetch.js';
 import SectionRenderer from 'components/sections/SectionRenderer.vue';
 import { loadPageConfig, subscribeToLiveConfig } from 'src/utils/config-loader'
 
@@ -56,7 +56,7 @@ import { getStripe, resetStripe } from 'src/payments/adapters/stripe'
 import { useCartSummary } from 'src/composables/useCartSummary'
 import {useSeoMeta} from "src/composables/useSeo.js";
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
-import {setUser} from "stores/user.js";
+import { signedIn } from 'src/composables/useAccount.js'
 import { t as i18nT, useI18n } from 'src/i18n/index.js'
 
 const { t } = useI18n()
@@ -102,8 +102,7 @@ const userData = ref(null);
 
 function onLogin(user) {
   userData.value  = user
-  setUser(user)
-  setLoggedIn(true)
+  signedIn(user)
   isLoggedIn.value = true
 }
 

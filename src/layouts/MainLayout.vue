@@ -117,6 +117,7 @@ import {
   matError } from '@quasar/extras/material-icons'
 import { setCssVar } from 'quasar'
 import { useI18n } from 'src/i18n/index.js'
+import { checkSession } from 'src/composables/useAccount.js'
 
 const { t } = useI18n()
 
@@ -197,6 +198,8 @@ const siteMenus = computed(() => {
 const headerMenu = computed(() => headerSettings.value?.menu || [])
 
 provide('siteMenus', siteMenus)
+// Branding (colours, fonts, the store's sign-in settings: Sign In / Sign Up forms read `account`).
+provide('brandSettings', brandSettings)
 provide('headerMenu', headerMenu)
 // The page's drawers: each Menu, Mini Cart and Mini Wishlist widget adds its own.
 const drawers = provideDrawers()
@@ -548,6 +551,8 @@ const initConnectivityListeners = () => {
 }
 
 onMounted(async () => {
+  // Signed in or not: the Account widget, the forms and "Show To" sections wait for it.
+  checkSession()
   initSessionWatcher()
 
   const isPreview = route.query.preview === 'true'

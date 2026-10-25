@@ -22,7 +22,7 @@ const pad = (t, r, b, l) => ({ padding_preset: 'custom', padding: rwd({ top: t, 
 
 /** The default template of a shop page, with an older page's sections in their slots. */
 export function shopTemplateSections(page, old = []) {
-  const locations = LOCATIONS[page]
+  const locations = LOCATIONS[page] || (page === 'account' ? [] : null)
   if (!locations) return []
   const slots = {}
   for (const s of old || []) {
@@ -127,6 +127,19 @@ export function shopTemplateSections(page, old = []) {
           },
         ], { ...pad('16', '16', '16', '16'), gap: rwd('8px') }),
         ...top('after_checkout'),
+      ]
+    case 'account':
+      // Visitors: sign in and sign up side by side; customers: the menu beside the parts (same as the store).
+      return [
+        sec([block('account_title')], pad('16', '16', '0', '16')),
+        sec([
+          col([block('login_form')], rwd('50%', '50%', '100%')),
+          col([block('signup_form')], rwd('50%', '50%', '100%')),
+        ], { ...pad('16', '16', '24', '16'), audience: 'guests', direction: rwd('row', 'row', 'column'), align_items: rwd('flex-start'), gap: rwd('24px') }),
+        sec([
+          col([block('account_menu')], rwd('25%', '30%', '100%')),
+          col(types(['account_welcome', 'account_orders', 'account_details']), rwd('75%', '70%', '100%'), { gap: rwd('16px') }),
+        ], { ...pad('16', '16', '24', '16'), audience: 'customers', direction: rwd('row', 'row', 'column'), align_items: rwd('flex-start'), gap: rwd('24px') }),
       ]
   }
   return []

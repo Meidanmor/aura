@@ -131,12 +131,15 @@ export function setOrderVars(vars, s = {}) {
 }
 
 /** hide-on-device classes shared by containers and blocks. */
-export function visibilityClasses(hideOn) {
+export function visibilityClasses(hideOn, audience = '') {
   const h = hideOn || {}
   return {
     'sb-hide-d': !!h.desktop,
     'sb-hide-t': !!h.tablet,
     'sb-hide-m': !!h.mobile,
+    // "Show To" (visitors / signed-in customers): app.css shows them once html has qa-out / qa-in.
+    'sb-aud-guests': audience === 'guests',
+    'sb-aud-customers': audience === 'customers',
   }
 }
 
@@ -464,7 +467,7 @@ export function buildContainerStyle(style = {}) {
       ...(hover ? { [`sb-hover-${hover}`]: true } : {}),
       'sb-has-link': !!link,
       'sb-has-mx': sideways,
-      ...visibilityClasses(s.hide_on),
+      ...visibilityClasses(s.hide_on, s.audience),
     },
     outerVars,
     innerClasses: rowClasses,
@@ -518,7 +521,7 @@ export function buildBlockWrapperStyle(block) {
         'sb-has-w': c.widthMode === 'custom' && hasAny(block.style?.width),
         'sb-has-maxw': c.widthMode === 'contained',
         ...c.stickyClasses,
-        ...visibilityClasses(block.style?.hide_on),
+        ...visibilityClasses(block.style?.hide_on, block.style?.audience),
       },
       vars,
       anchorId: block.style?.anchor_id || undefined,
@@ -557,7 +560,7 @@ export function buildBlockWrapperStyle(block) {
       'sb-has-border': !!looks.border,
       ...bg.classes,
       ...sticky,
-      ...visibilityClasses(s.hide_on),
+      ...visibilityClasses(s.hide_on, s.audience),
     },
     vars,
     video: bg.video,

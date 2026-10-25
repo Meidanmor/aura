@@ -14,9 +14,9 @@ import {
   matEmojiEvents, matInventory, matShoppingBag, matInfo, matHelp, matArrowForward, matPublic,
   matLanguage, matShoppingCart, matShoppingBasket, matLocalMall, matFavoriteBorder,
   matBookmarkBorder, matStarBorder, matMenu, matMenuOpen, matSegment, matMoreVert, matApps,
-  matSearch, matManageSearch, matTravelExplore,
+  matSearch, matManageSearch, matTravelExplore, matPerson, matAccountCircle, matLogin,
 } from '@quasar/extras/material-icons'
-import { outlinedShoppingCart, outlinedShoppingBag } from '@quasar/extras/material-icons-outlined'
+import { outlinedShoppingCart, outlinedShoppingBag, outlinedPerson } from '@quasar/extras/material-icons-outlined'
 import {
   fabFacebookF, fabInstagram, fabTiktok, fabXTwitter, fabYoutube, fabLinkedinIn, fabPinterestP,
   fabThreads, fabSnapchat, fabWhatsapp, fabTelegram,
@@ -71,6 +71,13 @@ export const wishlistIcons = {
   heart: matFavorite,
   bookmark: matBookmarkBorder,
   star: matStarBorder,
+}
+/** The Account widget (ACCOUNT_ICONS). */
+export const accountIcons = {
+  person_outline: outlinedPerson,
+  person: matPerson,
+  account_circle: matAccountCircle,
+  login: matLogin,
 }
 export const searchIcons = {
   search: matSearch,

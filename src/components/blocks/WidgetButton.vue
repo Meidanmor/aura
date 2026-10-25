@@ -13,8 +13,10 @@
   >
     <span class="widget-btn__inner">
       <span class="widget-btn__icon" :class="{ 'has-color': !!iconColor }">
-        <img v-if="d.icon === 'custom' && customUrl" :src="customUrl" alt="" class="widget-btn__img" decoding="async" />
-        <q-icon v-else :name="icons[d.icon] || defaultIcon" />
+        <slot name="icon">
+          <img v-if="d.icon === 'custom' && customUrl" :src="customUrl" alt="" class="widget-btn__img" decoding="async" />
+          <q-icon v-else :name="icons[d.icon] || defaultIcon" />
+        </slot>
         <q-no-ssr>
           <q-badge v-if="count > 0" class="widget-btn__badge" :class="{ 'widget-btn__badge--beside': d.badge_position === 'beside' }" :style="badgeStyle">{{ count }}</q-badge>
         </q-no-ssr>
@@ -24,6 +26,8 @@
         <slot name="extra" />
       </span>
     </span>
+    <!-- A menu that opens from the button (the Account widget's). -->
+    <slot />
   </q-btn>
 </template>
 

@@ -120,6 +120,8 @@ import MiniCartBlock from "components/blocks/MiniCartBlock.vue";
 import MiniWishlistBlock from "components/blocks/MiniWishlistBlock.vue";
 import SearchBlock from "components/blocks/SearchBlock.vue";
 import { shopBlocks } from '../blocks/shop/index.js'
+import { accountBlocks } from '../blocks/account/index.js'
+import AccountWidgetBlock from 'components/blocks/AccountWidgetBlock.vue'
 
 defineOptions({ name: 'SectionTemplate' })
 
@@ -176,6 +178,7 @@ const blockComponents = {
   mini_cart: MiniCartBlock,
   mini_wishlist: MiniWishlistBlock,
   search: SearchBlock,
+  account_widget: AccountWidgetBlock,
   // Card designs (src/components/loops): the card's own item.
   lp_image: LoopImage, lc_image: LoopImage, lpo_image: LoopImage,
   lp_title: LoopText, lp_excerpt: LoopText, lp_category: LoopText,
@@ -187,6 +190,7 @@ const blockComponents = {
   lp_cart: LoopCartButton,
   lp_attribute: LoopAttribute,
   ...shopBlocks,
+  ...accountBlocks,
 }
 
 const container = computed(() => buildContainerStyle(props.data.style || {}))

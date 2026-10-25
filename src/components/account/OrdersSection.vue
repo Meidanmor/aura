@@ -1,6 +1,5 @@
 <template>
   <div>
-    <h2 class="text-h4">{{ t('My Orders') }}</h2>
 
     <div v-if="orders && orders.length > 0">
     <q-card dense>
@@ -49,6 +48,7 @@
     </q-card>
 
     </div>
+    <div v-else-if="orders && orders.length === 0 && emptyText">{{ emptyText }}</div>
     <div v-else-if="orders && orders.length === 0">{{ t('No orders yet.') }} <router-link to="/products/">{{ t('explore our products') }}</router-link> {{ t('to start your first order!') }}</div>
     <div v-else> <q-spinner color="secondary" size="2em" /> </div>
   </div>
@@ -61,6 +61,8 @@ import { fetchWithToken } from 'src/composables/useApiFetch.js'
 import { useI18n } from 'src/i18n/index.js'
 
 const { t } = useI18n()
+// The Account Orders block's own text for no orders ('' = the built-in one).
+defineProps({ emptyText: { type: String, default: '' } })
 
 
 const orders = ref(null)
@@ -93,7 +95,8 @@ const columns = [
 
 onMounted(async () => {
   const res = await fetchWithToken('/wp-json/qwoo/v1/my-orders');
-  orders.value = await res.json();
+  const list = await res.json().catch(() => [])
+  orders.value = Array.isArray(list) ? list : []
 })
 </script>
 <style>

@@ -19,16 +19,24 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { Platform } from 'quasar';
 import { setLoggedIn, refreshNonce } from 'src/composables/useApiFetch.js'
 import cart from 'src/stores/cart.js'
 import wishlist from 'src/stores/wishlist.js'
 
-const emit = defineEmits(['login-success'])
+import { useSiteAccount } from 'src/composables/useAccount.js'
+import { useI18n } from 'src/i18n/index.js'
 
-// This is the "Web Application" Client ID from Google Console
-const GOOGLE_WEB_CLIENT_ID = import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID;
+const { t } = useI18n()
+const emit = defineEmits(['login-success'])
+// returnTo: where Google's sign-in page sends the customer back (a path on this store; '' = this page).
+const props = defineProps({ returnTo: { type: String, default: '' } })
+
+// The "Web Application" Client ID from Google Console: the store's own (published in
+// branding.json), else the one this storefront was built with (older stores).
+const site = useSiteAccount()
+const GOOGLE_WEB_CLIENT_ID = computed(() => site.value.google)
 
 const loading = ref(false);
 async function handleLogin() {
@@ -64,7 +72,7 @@ async function handleNativeLogin() {
   // 2. Initialize (Must use WEB Client ID even on Android)
   await SocialLogin.initialize({
     google: {
-      webClientId: GOOGLE_WEB_CLIENT_ID,
+      webClientId: GOOGLE_WEB_CLIENT_ID.value,
     },
   });
 
@@ -108,10 +116,10 @@ async function sendTokenToBackend(idToken) {
 // Redirect fallback to Google OAuth
 function redirectToGoogleLogin() {
   const redirectUri = `${window.location.origin}/auth/callback`; // must match Google app redirect URI
-  const state = encodeURIComponent(window.location.href); // save current page
+  const state = encodeURIComponent(props.returnTo ? window.location.origin + props.returnTo : window.location.href); // where to come back to
 
   const url = `https://accounts.google.com/o/oauth2/v2/auth?` +
-              `client_id=${GOOGLE_WEB_CLIENT_ID}` +
+              `client_id=${encodeURIComponent(GOOGLE_WEB_CLIENT_ID.value)}` +
               `&redirect_uri=${encodeURIComponent(redirectUri)}` +
               `&response_type=code` +
               `&scope=openid%20email%20profile` +

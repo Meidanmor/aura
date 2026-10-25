@@ -1,6 +1,5 @@
 <template>
   <div>
-    <h1 class="text-h4">{{ t('Account Details') }}</h1>
 
     <!-- Loading state -->
     <div v-if="loading">
@@ -18,17 +17,23 @@
         <q-input
           v-model="account.first_name"
           :label="t('First Name')"
+          v-bind="look"
+          class="q-mb-sm"
           :disable="saving"
         />
         <q-input
           v-model="account.last_name"
           :label="t('Last Name')"
+          v-bind="look"
+          class="q-mb-sm"
           :disable="saving"
         />
         <q-input
           v-model="account.email"
           :label="t('Email')"
           type="email"
+          v-bind="look"
+          class="q-mb-md"
           disable
           readonly
         />
@@ -36,7 +41,10 @@
         <q-btn
           type="submit"
           :label="t('Save Changes')"
-          color="secondary"
+          :color="buttonBg ? undefined : 'secondary'"
+          :style="buttonStyle"
+          no-caps
+          unelevated
           :loading="saving"
         />
 
@@ -49,8 +57,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { fetchWithToken } from 'src/composables/useApiFetch.js'
+import { setUser } from 'src/stores/user.js'
 import { useI18n } from 'src/i18n/index.js'
 
 const { t } = useI18n()
@@ -58,8 +67,17 @@ const props = defineProps({
   user: {
     type: Object,
     required: true
-  }
+  },
+  // The Account Details block's look.
+  fieldLook: { type: String, default: 'filled' },
+  buttonBg: { type: String, default: '' },
+  buttonText: { type: String, default: '' },
 })
+const look = computed(() => (['filled', 'outlined', 'borderless'].includes(props.fieldLook) ? { [props.fieldLook]: true } : {}))
+const buttonStyle = computed(() => ({
+  ...(props.buttonBg ? { background: props.buttonBg } : {}),
+  ...(props.buttonText ? { color: props.buttonText } : {}),
+}))
 
 const account = ref({
   first_name: props?.user?.first_name,
@@ -75,6 +93,7 @@ const saveSuccess = ref(false)
 // ─── Save changes ─────────────────────────────────────────────────────────────
 
 async function updateDetails() {
+  if (props.user?.sample) return // the Store builder's preview
   saveError.value   = ''
   saveSuccess.value = false
   saving.value      = true
@@ -101,6 +120,8 @@ async function updateDetails() {
       email:      data.user.email,
     }
 
+    // The welcome line and the header's Account widget show the new name too.
+    setUser(data.user)
     saveSuccess.value = true
 
   } catch (err) {

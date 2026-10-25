@@ -4,7 +4,7 @@ import { slimConfig } from 'src/utils/slim-config.js'
 
 // Files each extra language has its own copy of (in /config/{lang}/); the
 // rest (branding, app, icons…) are shared by every language.
-const OWN_COPY = /^(header|footer|home|checkout|contact|shop|category|product|cart|blog|blog_post|pages|page-[\w-]+)$/
+const OWN_COPY = /^(header|footer|home|checkout|contact|shop|category|product|cart|account|blog|blog_post|pages|page-[\w-]+)$/
 
 /** Where a page's published config lives for the page's language: 'home' → 'en/home'. */
 export function configName(page) {
