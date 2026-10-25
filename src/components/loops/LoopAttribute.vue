@@ -1,7 +1,7 @@
 <template>
   <div v-if="value" class="lt-align lt-attr-wrap" :style="alignVars">
     <span class="lt-attr" :class="textBind.class" :style="[textBind.style, chipVars]">
-      <template v-if="d.show_name !== false">{{ attr.name }}{{ d.separator ?? ': ' }}</template>{{ value }}
+      <template v-if="d.show_name !== false">{{ attr.name }}{{ separator }}</template>{{ value }}
     </span>
   </div>
 </template>
@@ -28,6 +28,8 @@ const attr = computed(() => {
   if (!want || !item) return null
   return (item.attributes || []).find((a) => norm(a.name) === want) || null
 })
+// The saved separator loses its trailing space: one goes after it again.
+const separator = computed(() => { const s = String(d.value.separator ?? ':').trim(); return s ? `${s} ` : ' ' })
 const value = computed(() => (attr.value?.terms || []).map((t) => t.name).join(', '))
 const textBind = computed(() => textStyle(d.value, tsKeys('text')))
 const alignVars = computed(() => {

@@ -410,4 +410,10 @@ export default {
   "You're offline. Your details are kept on this device. Connect to the internet to choose delivery and place your order.": "אין חיבור לאינטרנט. הפרטים שלכם נשמרים במכשיר. התחברו כדי לבחור משלוח ולבצע את ההזמנה.",
   "You're offline. Connect to the internet to place your order.": "אין חיבור לאינטרנט. התחברו כדי לבצע את ההזמנה.",
   "No connection to the store. Check your internet and try again.": "אין חיבור לחנות. בדקו את החיבור לאינטרנט ונסו שוב.",
+  "{percent}% off": "{percent}% הנחה",
+  "Share": "שיתוף",
+  "Link copied": "הקישור הועתק",
+  "This item:": "המוצר הזה:",
+  "Choose options on its page": "בוחרים אפשרויות בעמוד שלו",
+  "Add all to cart": "הוספת הכול לסל",
 }

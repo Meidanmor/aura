@@ -17,3 +17,9 @@ const d = computed(() => props.data.data || {})
 const priceText = computed(() => textStyle(d.value, tsKeys('price')))
 const align = computed(() => (['left', 'center', 'right'].includes(d.value.align) ? d.value.align : 'start'))
 </script>
+
+<style scoped>
+/* The sale price (WooCommerce <ins>) is not a link: no underline; the old price is struck and quieter. */
+.product-price :deep(ins) { text-decoration: none; }
+.product-price :deep(del) { opacity: .5; font-weight: 400; font-size: .75em; margin-inline-end: 8px; }
+</style>

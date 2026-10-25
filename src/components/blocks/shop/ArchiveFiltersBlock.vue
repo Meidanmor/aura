@@ -24,7 +24,7 @@
 
       <!-- Product attributes (taste, size…): after hydration only, the server doesn't list them. -->
       <template v-if="d.show_attributes && a.isHydrated">
-        <q-card v-for="attr in a.attributeOptions" :key="attr.taxonomy" class="filters-inner-wrap q-pa-md q-mb-md">
+        <q-card v-for="attr in shownAttributes" :key="attr.taxonomy" class="filters-inner-wrap q-pa-md q-mb-md">
           <div class="text-subtitle1 q-mb-sm">{{ attr.name }}</div>
           <div v-if="d.attributes_style === 'chips'" class="filters-chips" role="group" :aria-label="attr.name">
             <button
@@ -83,6 +83,13 @@ function toggle(tax, id) {
   setTerms(tax, now.includes(id) ? now.filter((x) => x !== id) : [...now, id])
 }
 onMounted(() => { if (d.value.show_attributes) a?.loadAttributeOptions?.() })
+// Content → Filter By These Details: some attributes, in that order (empty: all of them).
+const shownAttributes = computed(() => {
+  const all = a?.attributeOptions || []
+  const only = String(d.value.attributes_only || '').split('\n').map((n) => n.trim().toLowerCase()).filter(Boolean)
+  if (!only.length) return all
+  return only.map((n) => all.find((x) => String(x.name || '').trim().toLowerCase() === n)).filter(Boolean)
+})
 </script>
 
 <style scoped>

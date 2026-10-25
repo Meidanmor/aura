@@ -124,7 +124,7 @@ const vars = computed(() => {
   .tl-d-horizontal .tl__marker { top: 0; inset-inline-start: 0; }
 }
 
-@media (max-width: 1023px) {
+@media (min-width: 768px) and (max-width: 1023px) {
   .tl { gap: var(--tl-gap-t, var(--tl-gap, 32px)); }
   .tl::before { inset: auto; width: auto; height: auto; transform: none; }
   .tl__step { width: auto; margin: 0; padding: 0; }

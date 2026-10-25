@@ -15,3 +15,12 @@ const text = computed(() => textStyle(d.value, tsKeys('text')))
 const short = useSanitizedDescription(() => p?.product?.short_description)
 const html = computed(() => (d.value.source === 'short' ? short.value : p?.safeDescription))
 </script>
+
+<style scoped>
+/* Headings inside the owner's text: sized to the text around them, not the page title's. */
+.product-description :deep(h2) { font-size: 1.5em; line-height: 1.3; font-weight: 700; margin: 1.4em 0 .4em; color: var(--q-text, inherit); }
+.product-description :deep(h3) { font-size: 1.25em; line-height: 1.35; font-weight: 700; margin: 1.3em 0 .35em; color: var(--q-text, inherit); }
+.product-description :deep(h4) { font-size: 1.1em; line-height: 1.4; font-weight: 700; margin: 1.2em 0 .3em; color: var(--q-text, inherit); }
+.product-description :deep(:is(h2, h3, h4):first-child) { margin-top: 0; }
+.product-description :deep(p) { margin: 0 0 .8em; }
+</style>
