@@ -14,6 +14,7 @@
           :button-label="f.d.value.button_label || ''"
           :button-bg="f.buttonBg.value"
           :button-text="f.buttonText.value"
+          @busy="f.setWorking"
           @login-success="f.done"
       />
       <template v-if="f.google.value">

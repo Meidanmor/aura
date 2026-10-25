@@ -62,6 +62,7 @@ import { computed, inject, onMounted } from 'vue'
 import { matClose } from '@quasar/extras/material-icons'
 import PriceFilterCard from 'components/shop/PriceFilterCard.vue'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
+import { detailKeys, pickDetails } from 'src/utils/product-details.js'
 
 /**
  * "Filters" (All products / category page template): search, categories
@@ -86,9 +87,8 @@ onMounted(() => { if (d.value.show_attributes) a?.loadAttributeOptions?.() })
 // Content → Filter By These Details: some attributes, in that order (empty: all of them).
 const shownAttributes = computed(() => {
   const all = a?.attributeOptions || []
-  const only = String(d.value.attributes_only || '').split('\n').map((n) => n.trim().toLowerCase()).filter(Boolean)
-  if (!only.length) return all
-  return only.map((n) => all.find((x) => String(x.name || '').trim().toLowerCase() === n)).filter(Boolean)
+  const only = detailKeys(d.value.attributes_only)
+  return only.length ? pickDetails(all, only) : all
 })
 </script>
 

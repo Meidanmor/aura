@@ -17,6 +17,7 @@ import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { toCssLength } from 'src/composables/useSectionStyle.js'
 import { signOut, useAccount } from 'src/composables/useAccount.js'
 import { partPath } from './account/account-parts.js'
+import { openPopup, popupIdOf } from 'src/utils/popups.js'
 import { useI18n } from 'src/i18n/index.js'
 
 const props = defineProps({
@@ -30,8 +31,10 @@ const router = useRouter()
 const d = computed(() => props.data?.data || {})
 const { user, signedIn: isIn } = useAccount()
 
-// Only this store's own addresses (never another site).
+// Only this store's own addresses (never another site), or one of its popups ("#popup:{id}").
+const guestPopup = computed(() => popupIdOf(d.value.guest_url))
 const guestTo = computed(() => {
+  if (guestPopup.value) return ''
   const url = String(d.value.guest_url || '').trim()
   return /^\/(?!\/)/.test(url) ? url : '/my-account'
 })
@@ -84,6 +87,7 @@ async function logout() {
       :aria-label="isIn ? t('My account') : t('Sign in')"
       :to="isIn ? partPath('dashboard') : guestTo"
       action="account"
+      @click="openPopup(guestPopup)"
   >
     <template v-if="look === 'initials'" #icon><span class="account-widget__initials" :style="initialsStyle">{{ initials }}</span></template>
   </WidgetButton>

@@ -79,4 +79,7 @@ const slide = defineModel()
    The transitions are named above on purpose: Quasar's own defaults swap them on RTL pages,
    and postcss-rtlcss mirrors the slide CSS again, which made slides move the wrong way. */
 [dir="rtl"] .q-carousel__control svg { transform: scaleX(-1); }
+/* Quasar's panels scroll (overflow: auto): a slide a few pixels too wide (cards' side padding, RTL
+   screen-reader text) scrolled sideways on phones and took the swipe from the carousel. */
+.q-carousel :deep(.q-panel.scroll) { overflow-x: hidden; }
 </style>

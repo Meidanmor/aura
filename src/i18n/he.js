@@ -432,4 +432,5 @@ export default {
   "This store doesn't take new accounts here.": "החנות לא פותחת כאן חשבונות חדשים.",
   "An account with this email already exists. Please sign in.": "כבר יש חשבון עם האימייל הזה. אפשר להתחבר.",
   "That password is too long.": "הסיסמה ארוכה מדי.",
+  "Close": "סגירה",
 }

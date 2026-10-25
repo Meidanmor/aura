@@ -67,7 +67,8 @@ const error    = ref('')
 const loading  = ref(false)
 const { honeypotField, isLikelyBot } = useHoneypot()
 
-const emit = defineEmits(['login-success'])
+// busy: true while signing in (the customer is marked signed in before login-success comes).
+const emit = defineEmits(['login-success', 'busy'])
 
 /**
  * Also used by the Sign In Form block, which sets the look:
@@ -122,6 +123,7 @@ async function login() {
   }
 
   loading.value = true
+  emit('busy', true)
 
   try {
     // 1. Call our custom login endpoint
@@ -170,6 +172,7 @@ async function login() {
     error.value = t('A server error occurred. Please try again later.')
   } finally {
     loading.value = false
+    emit('busy', false)
   }
 }
 </script>

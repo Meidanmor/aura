@@ -497,7 +497,8 @@ export function sectionLink(s = {}) {
   const url = typeof s.link_url === 'string' ? s.link_url.trim() : ''
   if (!url) return null
   const internal = url.startsWith('/') && !url.startsWith('//')
-  if (!internal && !/^(https?:|mailto:|tel:)/i.test(url)) return null
+  // "#popup:{id}" opens a popup (PopupHost catches the click).
+  if (!internal && !/^(https?:|mailto:|tel:|#popup:pp_)/i.test(url)) return null
   return { internal, url, newTab: !!s.link_new_tab, label: typeof s.link_label === 'string' ? s.link_label.trim() : '' }
 }
 

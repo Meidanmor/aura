@@ -4,7 +4,7 @@
       ref="listEl"
       class="tl"
       :class="[layoutClasses, liveClasses]"
-      :style="[vars, liveVars]"
+      :style="[vars, lineVars, liveVars]"
       @mouseenter="hovering = true"
       @mouseleave="hovering = false"
       @focusin="hovering = true"
@@ -106,7 +106,9 @@ const clickable = computed(() => mode.value === 'click' || mode.value === 'auto'
 const seconds = computed(() => Math.min(20, Math.max(2, Number(d.value.step_seconds) || 5)))
 
 const liveClasses = computed(() => (live.value ? { 'tl--live': true, 'tl--collapse': clickable.value && !!d.value.collapse, 'tl--pick': clickable.value } : {}))
-const geo = ref({ vertical: true, rtl: false, marks: [] }) // marker centres, 0..1 along the line
+// The line runs from the first marker's centre to the last one's; marks = marker centres, 0..1 along it.
+const geo = ref({ vertical: true, rtl: false, from: null, end: 0, len: 0, marks: [] })
+const lineVars = computed(() => (geo.value.from === null ? {} : { '--tl-from': geo.value.from + 'px', '--tl-end': geo.value.end + 'px' }))
 const liveVars = computed(() => {
   if (!live.value) return {}
   const rest = ((1 - Math.min(1, Math.max(0, progress.value))) * 100).toFixed(2) + '%'
@@ -124,20 +126,25 @@ const liveVars = computed(() => {
   return v
 })
 
-/** Where each marker's centre sits along the line (the list's ::before), 0..1. */
+/** Where the markers' centres sit (px from the list's start edge): the line spans first to last. */
 function measure() {
   const el = listEl.value
   if (!el) return
   const box = el.getBoundingClientRect()
-  const vertical = getComputedStyle(el).gridAutoFlow.indexOf('column') === -1
-  const rtl = getComputedStyle(el).direction === 'rtl'
-  const marks = [...el.querySelectorAll(':scope > .tl__step > .tl__marker')].map((m) => {
+  const cs = getComputedStyle(el)
+  const vertical = cs.gridAutoFlow.indexOf('column') === -1
+  const rtl = cs.direction === 'rtl'
+  const total = vertical ? box.height : box.width
+  const px = [...el.querySelectorAll(':scope > .tl__step > .tl__marker')].map((m) => {
     const r = m.getBoundingClientRect()
-    if (vertical) return box.height ? (r.top + r.height / 2 - box.top) / box.height : 0
+    if (vertical) return r.top + r.height / 2 - box.top
     const x = r.left + r.width / 2 - box.left
-    return box.width ? (rtl ? box.width - x : x) / box.width : 0
+    return rtl ? box.width - x : x
   })
-  geo.value = { vertical, rtl, marks }
+  const from = px.length > 1 ? px[0] : 0
+  const to = px.length > 1 ? px[px.length - 1] : total
+  const len = Math.max(1, to - from)
+  geo.value = { vertical, rtl, from: Math.round(from), end: Math.max(0, Math.round(total - to)), len, marks: px.map((v) => (v - from) / len) }
 }
 const markAt = (i) => geo.value.marks[i] ?? (i + 0.5) / Math.max(1, items.value.length)
 
@@ -148,7 +155,7 @@ function onScroll() {
   const box = el.getBoundingClientRect()
   const mid = window.innerHeight * 0.55
   const p = geo.value.vertical
-    ? (box.height ? (mid - box.top) / box.height : 0)
+    ? (mid - box.top - (geo.value.from || 0)) / Math.max(1, geo.value.len || box.height)
     : (mid - box.top) / Math.max(1, window.innerHeight * 0.4) // a row fills while it crosses the screen
   progress.value = Math.min(1, Math.max(0, p))
   let c = -1
@@ -189,9 +196,13 @@ watch(playing, (on) => { if (on) show(current.value, true); else if (clickable.v
 let ro = null
 let io = null
 onMounted(() => {
-  if (!live.value) return
-  reduced.value = !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   measure()
+  if (!live.value) {
+    ro = new ResizeObserver(measure)
+    ro.observe(listEl.value)
+    return
+  }
+  reduced.value = !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   ro = new ResizeObserver(() => { measure(); if (mode.value === 'scroll') onScroll(); else show(current.value, playing()) })
   ro.observe(listEl.value)
   if (mode.value === 'scroll') {
@@ -237,7 +248,7 @@ const vars = computed(() => {
 <style scoped>
 .tl { --tl-s: var(--tl-size, 40px); list-style: none; margin: 0; padding: 0; position: relative; display: grid; gap: var(--tl-gap, 32px); }
 .tl--dot { --tl-s: var(--tl-size, 16px); }
-.tl__step { position: relative; }
+.tl__step { position: relative; z-index: 1; }
 .tl__marker {
   position: absolute; z-index: 1; display: grid; place-items: center;
   width: var(--tl-s); height: var(--tl-s); border-radius: 50%;
@@ -258,7 +269,7 @@ const vars = computed(() => {
 
 /* Line in the middle, steps on both sides (the start side first). */
 @media (min-width: 1024px) {
-  .tl-d-alternate::before, .tl-d-alternate::after { top: 0; bottom: 0; inset-inline-start: 50%; width: var(--tl-lw, 2px); transform: translateX(-50%); }
+  .tl-d-alternate::before, .tl-d-alternate::after { top: var(--tl-from, 0); bottom: var(--tl-end, 0); inset-inline-start: 50%; width: var(--tl-lw, 2px); transform: translateX(-50%); }
   .tl-d-alternate .tl__step { width: calc(50% - var(--tl-s) / 2 - 28px); }
   .tl-d-alternate .tl__step--b { margin-inline-start: auto; }
   .tl-d-alternate .tl__marker { top: 50%; transform: translateY(-50%); }
@@ -267,11 +278,11 @@ const vars = computed(() => {
 }
 /* Line at the start; in a row, line above. */
 @media (min-width: 1024px) {
-  .tl-d-start::before, .tl-d-start::after { top: 0; bottom: 0; inset-inline-start: calc(var(--tl-s) / 2); width: var(--tl-lw, 2px); transform: translateX(-50%); }
+  .tl-d-start::before, .tl-d-start::after { top: var(--tl-from, calc(var(--tl-s) / 2)); bottom: var(--tl-end, 0); inset-inline-start: calc(var(--tl-s) / 2); width: var(--tl-lw, 2px); transform: translateX(-50%); }
   .tl-d-start .tl__step { padding-inline-start: calc(var(--tl-s) + 24px); }
   .tl-d-start .tl__marker { top: 0; inset-inline-start: 0; }
   .tl-d-horizontal { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
-  .tl-d-horizontal::before, .tl-d-horizontal::after { top: calc(var(--tl-s) / 2); inset-inline: 0; height: var(--tl-lw, 2px); transform: translateY(-50%); }
+  .tl-d-horizontal::before, .tl-d-horizontal::after { top: calc(var(--tl-s) / 2); inset-inline: var(--tl-from, calc(var(--tl-s) / 2)) var(--tl-end, 0); height: var(--tl-lw, 2px); transform: translateY(-50%); }
   .tl-d-horizontal .tl__step { padding-top: calc(var(--tl-s) + 20px); }
   .tl-d-horizontal .tl__marker { top: 0; inset-inline-start: 0; }
 }
@@ -281,18 +292,18 @@ const vars = computed(() => {
   .tl::before, .tl::after { inset: auto; width: auto; height: auto; transform: none; }
   .tl__step { width: auto; margin: 0; padding: 0; }
   .tl__marker { inset: auto; transform: none; }
-  .tl-t-alternate::before, .tl-t-alternate::after { top: 0; bottom: 0; inset-inline-start: 50%; width: var(--tl-lw, 2px); transform: translateX(-50%); }
+  .tl-t-alternate::before, .tl-t-alternate::after { top: var(--tl-from, 0); bottom: var(--tl-end, 0); inset-inline-start: 50%; width: var(--tl-lw, 2px); transform: translateX(-50%); }
   .tl-t-alternate .tl__step { width: calc(50% - var(--tl-s) / 2 - 20px); }
   .tl-t-alternate .tl__step--b { margin-inline-start: auto; }
   .tl-t-alternate .tl__marker { top: 50%; transform: translateY(-50%); }
   .tl-t-alternate .tl__step--a .tl__marker { inset-inline-end: calc(-20px - var(--tl-s)); }
   .tl-t-alternate .tl__step--b .tl__marker { inset-inline-start: calc(-20px - var(--tl-s)); }
   .tl-t-start { grid-auto-flow: row; }
-  .tl-t-start::before, .tl-t-start::after { top: 0; bottom: 0; inset-inline-start: calc(var(--tl-s) / 2); width: var(--tl-lw, 2px); transform: translateX(-50%); }
+  .tl-t-start::before, .tl-t-start::after { top: var(--tl-from, calc(var(--tl-s) / 2)); bottom: var(--tl-end, 0); inset-inline-start: calc(var(--tl-s) / 2); width: var(--tl-lw, 2px); transform: translateX(-50%); }
   .tl-t-start .tl__step { padding-inline-start: calc(var(--tl-s) + 20px); }
   .tl-t-start .tl__marker { top: 0; inset-inline-start: 0; }
   .tl-t-horizontal { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
-  .tl-t-horizontal::before, .tl-t-horizontal::after { top: calc(var(--tl-s) / 2); inset-inline: 0; height: var(--tl-lw, 2px); transform: translateY(-50%); }
+  .tl-t-horizontal::before, .tl-t-horizontal::after { top: calc(var(--tl-s) / 2); inset-inline: var(--tl-from, calc(var(--tl-s) / 2)) var(--tl-end, 0); height: var(--tl-lw, 2px); transform: translateY(-50%); }
   .tl-t-horizontal .tl__step { padding-top: calc(var(--tl-s) + 20px); }
   .tl-t-horizontal .tl__marker { top: 0; inset-inline-start: 0; }
 }
@@ -301,11 +312,11 @@ const vars = computed(() => {
   .tl::before, .tl::after { inset: auto; width: auto; height: auto; transform: none; }
   .tl__step { width: auto; margin: 0; padding: 0; }
   .tl__marker { inset: auto; transform: none; }
-  .tl-m-start::before, .tl-m-start::after { top: 0; bottom: 0; inset-inline-start: calc(var(--tl-s) / 2); width: var(--tl-lw, 2px); transform: translateX(-50%); }
+  .tl-m-start::before, .tl-m-start::after { top: var(--tl-from, calc(var(--tl-s) / 2)); bottom: var(--tl-end, 0); inset-inline-start: calc(var(--tl-s) / 2); width: var(--tl-lw, 2px); transform: translateX(-50%); }
   .tl-m-start .tl__step { padding-inline-start: calc(var(--tl-s) + 16px); }
   .tl-m-start .tl__marker { top: 0; inset-inline-start: 0; }
   .tl-m-horizontal { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
-  .tl-m-horizontal::before, .tl-m-horizontal::after { top: calc(var(--tl-s) / 2); inset-inline: 0; height: var(--tl-lw, 2px); transform: translateY(-50%); }
+  .tl-m-horizontal::before, .tl-m-horizontal::after { top: calc(var(--tl-s) / 2); inset-inline: var(--tl-from, calc(var(--tl-s) / 2)) var(--tl-end, 0); height: var(--tl-lw, 2px); transform: translateY(-50%); }
   .tl-m-horizontal .tl__step { padding-top: calc(var(--tl-s) + 14px); }
   .tl-m-horizontal .tl__marker { top: 0; inset-inline-start: 0; }
   .tl__body--card { padding: var(--tl-pad-m, 18px); }
@@ -316,19 +327,19 @@ const vars = computed(() => {
   content: ''; position: absolute; z-index: 0; background: var(--tl-fill, var(--tl-marker, var(--q-secondary)));
   clip-path: var(--tl-clip, inset(0 0 100% 0)); transition: clip-path var(--tl-fill-s, .5s) linear;
 }
-.tl--live .tl__step { transition: opacity .35s ease; }
-.tl--live .tl__step.is-ahead { opacity: var(--tl-dim, .45); }
+.tl--live .tl__body { transition: opacity .35s ease; }
+.tl--live .tl__step.is-ahead .tl__body { opacity: var(--tl-dim, .45); }
 .tl--live .tl__step.is-ahead .tl__marker { background: var(--tl-idle, #d9dde3); color: var(--tl-marker-text, #fff); }
 .tl--live .tl__marker { transition: background-color .35s ease, transform .35s ease; }
 .tl--live .tl__step.is-current .tl__marker { box-shadow: 0 0 0 6px var(--tl-ring, #fff), 0 0 0 9px color-mix(in srgb, var(--tl-fill, var(--q-secondary)) 30%, transparent); }
 .tl__hit { position: absolute; inset: 0; z-index: 2; width: 100%; padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: var(--tl-radius, 16px); }
 .tl__hit:focus-visible { outline: 2px solid var(--tl-fill, var(--q-secondary)); outline-offset: 4px; }
-.tl--pick .tl__step:not(.is-current):hover { opacity: .8; }
+.tl--pick .tl__step:not(.is-current):hover .tl__body { opacity: .8; }
 /* Only the current step's text: folds open and closed. */
 .tl__fold { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .35s ease; }
 .tl__fold > .tl__text { overflow: hidden; min-height: 0; }
 .tl--collapse .tl__step:not(.is-current) .tl__fold { grid-template-rows: 0fr; }
 @media (prefers-reduced-motion: reduce) {
-  .tl--live::after, .tl--live .tl__step, .tl__fold { transition: none; }
+  .tl--live::after, .tl--live .tl__body, .tl__fold { transition: none; }
 }
 </style>

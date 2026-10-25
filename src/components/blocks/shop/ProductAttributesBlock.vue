@@ -23,6 +23,7 @@ import { computed, inject } from 'vue'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
+import { detailKeys, pickDetails } from 'src/utils/product-details.js'
 
 /**
  * "Product Details" (product page template): the product's attributes (e.g. Taste:
@@ -39,15 +40,12 @@ const titleText = computed(() => textStyle(d.value, tsKeys('title'), 'headings')
 const nameText = computed(() => textStyle(d.value, tsKeys('name')))
 const valueText = computed(() => textStyle(d.value, tsKeys('value')))
 
-const norm = (s) => String(s || '').trim().toLowerCase()
-const only = computed(() => String(d.value.only || '').split('\n').map(norm).filter(Boolean))
+const only = computed(() => detailKeys(d.value.only))
 const rows = computed(() => {
-  const all = (p?.product?.attributes || [])
-    .filter((a) => d.value.show_options || !a.has_variations)
+  const attrs = (p?.product?.attributes || []).filter((a) => d.value.show_options || !a.has_variations)
+  return (only.value.length ? pickDetails(attrs, only.value) : attrs)
     .map((a) => ({ name: a.name, value: (a.terms || []).map((t) => t.name).join(', ') }))
     .filter((r) => r.name && r.value)
-  if (!only.value.length) return all
-  return only.value.map((n) => all.find((r) => norm(r.name) === n)).filter(Boolean)
 })
 
 const vars = computed(() => {

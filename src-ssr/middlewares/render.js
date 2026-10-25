@@ -488,8 +488,10 @@ export default defineSsrMiddleware(({ app, resolve, render, folders }) => {
                 res.send(output)
             })
             .catch(err => {
-                if (err.url) {
-                    if (err.code) res.redirect(err.code, err.url)
+                // A router redirect: { url: '/…', code? }. Other errors can carry a `url` too (a module that
+                // failed to load has its file:// address): redirecting there threw and stopped the server.
+                if (typeof err.url === 'string' && /^(\/(?!\/)|https?:\/\/)/.test(err.url)) {
+                    if (Number.isInteger(err.code) && err.code >= 300 && err.code < 400) res.redirect(err.code, err.url)
                     else res.redirect(err.url)
                 } else if (err.code === 404) {
                     res.status(404).send('404 | Page Not Found')

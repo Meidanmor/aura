@@ -8,7 +8,7 @@
         :loading="adding"
         @click="run && run()"
         class="btn-block__btn"
-        :class="[`btn-block__btn--${variant}`, `btn-block__btn--${size}`, labelText.class, paddingVars.cls]"
+        :class="[`btn-block__btn--${variant}`, `btn-block__btn--${size}`, labelText.class, paddingVars.cls, { 'has-icon-gap': hasIconGap }]"
         :style="btnVars"
         :label="d.text || undefined"
         :outline="variant === 'outline'"
@@ -146,8 +146,12 @@ const btnVars = computed(() => {
   if (iconSize) vars['--btn-icon-size'] = iconSize
   const iconColor = resolveGlobalColor(d.value.icon_color)
   if (iconColor) vars['--btn-icon-color'] = iconColor
+  setResponsiveVar(vars, '--btn-icon-gap', d.value.icon_gap, toCssLength)
   return vars
 })
+
+// Style → Icon → Space Between Icon and Text (per screen size; unset keeps Quasar's 12px).
+const hasIconGap = computed(() => DEVICES.some((device) => { const v = asResponsive(d.value.icon_gap)[device]; return v !== '' && v != null }))
 
 // Style → Button Padding: { desktop: { top, right, bottom, left }, … }, each side on its own.
 const SIDES = ['top', 'right', 'bottom', 'left']
@@ -206,5 +210,11 @@ const paddingVars = computed(() => {
 }
 .btn-block__btn--link { text-decoration: underline; text-underline-offset: 6px; padding-left: 0; padding-right: 0; }
 .btn-block__btn--link :deep(.q-focus-helper) { display: none; }
+/* Logical margins: they replace Quasar's .on-left / .on-right margin on either text direction. */
+.has-icon-gap { --btn-gap-now: var(--btn-icon-gap, 12px); }
+@media (max-width: 1023px) { .has-icon-gap { --btn-gap-now: var(--btn-icon-gap-t, var(--btn-icon-gap, 12px)); } }
+@media (max-width: 767px) { .has-icon-gap { --btn-gap-now: var(--btn-icon-gap-m, var(--btn-icon-gap-t, var(--btn-icon-gap, 12px))); } }
+.has-icon-gap :deep(.q-icon.on-left) { margin-inline: 0 var(--btn-gap-now); }
+.has-icon-gap :deep(.q-icon.on-right) { margin-inline: var(--btn-gap-now) 0; }
 .btn-block__btn :deep(.q-icon) { font-size: var(--btn-icon-size, 1.4em); color: var(--btn-icon-color, inherit); }
 </style>

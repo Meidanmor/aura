@@ -65,6 +65,9 @@
     <CookieBanner v-if="uiHydrated" />
     <ContactButton v-if="uiHydrated" />
 
+    <!-- Store builder → Popups (browser only). -->
+    <PopupHost v-if="uiHydrated" />
+
     <NotificationSoftAskModal
         v-if="uiHydrated"
         :model-value="notificationSoftAskVisible"
@@ -110,6 +113,7 @@ import {
   dismissNotificationSoftAsk
 } from 'src/composables/useNotificationSoftAsk.js'
 import NotificationSoftAskModal from 'src/components/app/NotificationSoftAskModal.vue'
+import PopupHost from 'src/components/popups/PopupHost.vue'
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
 import {
   matWifi,
