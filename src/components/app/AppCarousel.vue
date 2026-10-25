@@ -4,6 +4,8 @@
     :key="carouselKey"
     v-model="slide"
     animated
+    transition-prev="slide-right"
+    transition-next="slide-left"
     swipeable
     :infinite="showControls"
     :navigation="showControls"
@@ -68,3 +70,10 @@ defineProps({
 
 const slide = defineModel()
 </script>
+
+<style scoped>
+/* Right-to-left pages: the previous arrow sits on the right, so both chevrons point the other way.
+   The transitions are named above on purpose: Quasar's own defaults swap them on RTL pages,
+   and postcss-rtlcss mirrors the slide CSS again, which made slides move the wrong way. */
+[dir="rtl"] .q-carousel__control svg { transform: scaleX(-1); }
+</style>

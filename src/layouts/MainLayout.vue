@@ -2,6 +2,11 @@
   <q-layout view="hHh lpR fFf">
     <AnnouncementBar v-if="headerSettings?.announcement?.enabled && (typeof headerSettings?.announcement?.text === 'string' && headerSettings.announcement.text.trim().length > 0)" :announcement="headerSettings?.announcement" />
 
+    <!-- The header's "Above header" sections: outside the header element, they scroll away with the page. -->
+    <div v-if="aboveHeader.length" class="above-header">
+      <SectionRenderer :sections="aboveHeader" page="header" />
+    </div>
+
     <AppHeader
         :header-config="shownHeader"
         :is-super-admin="isSuperAdmin"
@@ -87,6 +92,8 @@ import MobileNavDrawer from '../components/app/MobileNavDrawer.vue'
 import AppHeader from '../components/app/AppHeader.vue'
 import AppFooter from '../components/app/AppFooter.vue'
 import AnnouncementBar from '../components/app/AnnouncementBar.vue'
+import SectionRenderer from 'components/sections/SectionRenderer.vue'
+import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { stripLang } from 'src/i18n/lang.js'
 import { pickChrome } from 'src/utils/layouts.js'
 import { useRoute, useRouter } from 'vue-router'
@@ -476,6 +483,15 @@ const route = useRoute()
 const router = useRouter()
 // Header / footer templates: the one chosen for this page, else the main one.
 const shownHeader = computed(() => pickChrome(headerSettings.value, route))
+const aboveHeader = computed(() => (shownHeader.value?.sections || []).filter((s) => s?.location === 'above'))
+// Branding → Loading bar: app.css reads --qwoo-loading-bar (the bar only runs in the browser).
+if (process.env.CLIENT) {
+  watch(() => resolveGlobalColor(brandSettings.value?.loading_bar), (c) => {
+    const root = document.documentElement.style
+    if (c) root.setProperty('--qwoo-loading-bar', c)
+    else root.removeProperty('--qwoo-loading-bar')
+  }, { immediate: true })
+}
 const shownFooter = computed(() => pickChrome(footerSettings.value, route))
 
 const noDelayRoutes = ['/checkout/', '/cart/', '/my-account/']

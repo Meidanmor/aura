@@ -97,6 +97,8 @@ import IconListBlock from '../blocks/IconListBlock.vue'
 import IconBlock from '../blocks/IconBlock.vue'
 import RunningTextBlock from '../blocks/RunningTextBlock.vue'
 import FaqBlock from '../blocks/FaqBlock.vue'
+import TimelineBlock from '../blocks/TimelineBlock.vue'
+import PaymentIconsBlock from '../blocks/PaymentIconsBlock.vue'
 import TabsBlock from '../blocks/TabsBlock.vue'
 import CountdownBlock from '../blocks/CountdownBlock.vue'
 import ProductGridBlock from '../blocks/ProductGridBlock.vue'
@@ -113,6 +115,7 @@ import LoopText from '../loops/LoopText.vue'
 import LoopPrice from '../loops/LoopPrice.vue'
 import LoopStars from '../loops/LoopStars.vue'
 import LoopCartButton from '../loops/LoopCartButton.vue'
+import LoopAttribute from '../loops/LoopAttribute.vue'
 import MiniCartBlock from "components/blocks/MiniCartBlock.vue";
 import MiniWishlistBlock from "components/blocks/MiniWishlistBlock.vue";
 import SearchBlock from "components/blocks/SearchBlock.vue";
@@ -161,6 +164,8 @@ const blockComponents = {
   icon: IconBlock,
   running_text: RunningTextBlock,
   faq: FaqBlock,
+  timeline: TimelineBlock,
+  payment_icons: PaymentIconsBlock,
   tabs: TabsBlock,
   countdown: CountdownBlock,
   product_grid: ProductGridBlock,
@@ -180,6 +185,7 @@ const blockComponents = {
   lp_price: LoopPrice,
   lp_rating: LoopStars, lr_stars: LoopStars,
   lp_cart: LoopCartButton,
+  lp_attribute: LoopAttribute,
   ...shopBlocks,
 }
 

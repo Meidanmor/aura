@@ -10,7 +10,7 @@
  *                heights per screen size use the ts-sz-* / ts-lh-* classes in
  *                app.css (--ts-size, --ts-size-t, --ts-size-m).
  *   textVars()   for text drawn inside other components (Quasar fields, cards):
- *                CSS variables --ts-{name}-font|weight|color|size|lh and classes
+ *                CSS variables --ts-{name}-font|weight|color|size|lh|case|ls and classes
  *                ts-{name}-font… that the block's own CSS reads.
  */
 import { brandFontVar } from './brand-fonts.js'
@@ -89,6 +89,11 @@ export function textVars(d, keys, defaultFont, name) {
   for (const [device, v] of Object.entries(p.lhs)) {
     style[`--ts-${name}-lh${SUFFIX[device]}`] = v
     cls[`ts-${name}-lh-${DEVICE[device]}`] = true
+  }
+  if (p.textCase) set('case', p.textCase)
+  for (const [device, v] of Object.entries(p.spacings)) {
+    style[`--ts-${name}-ls${SUFFIX[device]}`] = v
+    cls[`ts-${name}-ls-${DEVICE[device]}`] = true
   }
   return { class: cls, style }
 }

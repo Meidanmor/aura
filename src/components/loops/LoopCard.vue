@@ -149,7 +149,9 @@ const shape = computed(() => {
 .lt-img__badge--top-end { top: 0; inset-inline-end: 0; }
 .lt-img__badge--bottom-start { bottom: 0; inset-inline-start: 0; }
 .lt-img__badge--bottom-end { bottom: 0; inset-inline-end: 0; }
-.lt-img__heart { position: absolute; z-index: 3; top: 6px; inset-inline-end: 6px; pointer-events: auto; }
+.lt-img__icons { position: absolute; z-index: 3; top: 6px; inset-inline-end: 6px; display: flex; flex-direction: column; gap: 6px; pointer-events: auto; color: var(--lt-icons, inherit); }
+.lt-img__icons--outline { top: 10px; inset-inline-end: 10px; }
+.lt-img__icons--outline .q-btn { width: 32px; height: 32px; min-height: 32px; border: 1.5px solid currentColor; background: rgba(255, 255, 255, .85); font-size: 12px; }
 
 /* Card texts (LoopText.vue): cut after n lines. */
 .lt-text { margin: 0; overflow-wrap: anywhere; }

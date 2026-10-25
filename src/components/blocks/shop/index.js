@@ -7,7 +7,7 @@ const SHOP_BLOCKS = {
   product_rating: 'ProductRatingBlock', product_categories: 'ProductCategoriesBlock', product_price: 'ProductPriceBlock',
   product_description: 'ProductDescriptionBlock', product_stock: 'ProductStockBlock', product_add_to_cart: 'ProductAddToCartBlock',
   product_wishlist: 'ProductWishlistBlock', product_attributes: 'ProductAttributesBlock', product_sku: 'ProductSkuBlock', product_share: 'ProductShareBlock',
-  product_reviews: 'ProductReviewsBlock', product_related: 'ProductRelatedBlock',
+  product_reviews: 'ProductReviewsBlock', product_related: 'ProductRelatedBlock', product_faq: 'ProductFaqBlock', product_together: 'ProductTogetherBlock',
   archive_breadcrumbs: 'ArchiveBreadcrumbsBlock', archive_title: 'ArchiveTitleBlock', archive_filters: 'ArchiveFiltersBlock',
   archive_count: 'ArchiveCountBlock', archive_sort: 'ArchiveSortBlock', archive_filters_button: 'ArchiveFiltersButtonBlock', archive_products: 'ArchiveProductsBlock',
   archive_pagination: 'ArchivePaginationBlock',

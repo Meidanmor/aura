@@ -286,6 +286,28 @@ async function loadVariationPrices() {
   }
 }
 
+// The product's questions and its "bought together" ids (extensions.qwoo.faq /
+// bought_together): only single product answers carry them, so the blocks that
+// show them ask for the single product once when it came from a list.
+const extrasAsked = new Set()
+async function loadExtras() {
+  const current = product.value
+  const q = current?.extensions?.qwoo || {}
+  if (!current?.id || extrasAsked.has(current.id) || (Array.isArray(q.faq) && Array.isArray(q.bought_together))) return
+  extrasAsked.add(current.id)
+  try {
+    const full = await fetchProductById(current.id)
+    const fq = full?.extensions?.qwoo || {}
+    if (!Array.isArray(fq.faq) && !Array.isArray(fq.bought_together)) return
+    for (const p of [product.value, productsStore.products.value.find(x => x.id === current.id)]) {
+      if (p?.id !== current.id) continue
+      p.extensions = { ...(p.extensions || {}), qwoo: { ...(p.extensions?.qwoo || {}), faq: fq.faq || [], bought_together: fq.bought_together || [] } }
+    }
+  } catch (e) {
+    console.error(e)
+  }
+}
+
 const lightboxRef = ref(null)
 
 // replace your openLightbox function with:
@@ -631,7 +653,7 @@ provide('productPage', reactive({
   product, gallery, imagesCarousel: markRaw(imagesCarousel), cart: markRaw(cart), wishlist: markRaw(wishlist),
   reviewsOn, scrollToReviews, safeCategoryName, safePrice, safeVariationPrice, safeDescription,
   variationLoading, selectedVariation, selectedVariations, availableAttributes, getOptionsWithDisabled,
-  choicePrice, choicePricesDiffer,
+  choicePrice, choicePricesDiffer, loadExtras,
   onVariationChange, variationError, isVariable, quantity, decreaseQty, increaseQty,
   shouldDisableCartButtons, addToCartHandler, addToWishlist,
   onImageMouseDown, onImageMouseMove, onImageClick,

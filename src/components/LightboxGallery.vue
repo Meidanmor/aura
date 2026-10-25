@@ -206,8 +206,10 @@ watch(isOpen, (val) => {
 function onKeyDown(e) {
   if (!isOpen.value) return
 
-  if (e.key === 'ArrowLeft')  { e.preventDefault(); navigate(-1) }
-  if (e.key === 'ArrowRight') { e.preventDefault(); navigate(1) }
+  // Right-to-left pages: the next image is to the left (the arrows swap sides too).
+  const ahead = document.documentElement.dir === 'rtl' ? -1 : 1
+  if (e.key === 'ArrowLeft')  { e.preventDefault(); navigate(-ahead) }
+  if (e.key === 'ArrowRight') { e.preventDefault(); navigate(ahead) }
   if (e.key === 'Escape')     { e.preventDefault(); close() }
   if (e.key === 'ArrowUp')    { e.preventDefault(); adjustZoom(0.3) }
   if (e.key === 'ArrowDown')  { e.preventDefault(); adjustZoom(-0.3) }
@@ -416,6 +418,7 @@ function onTouchEnd(e) {
 
 .lightbox-arrow--left  { left: 16px; }
 .lightbox-arrow--right { right: 16px; }
+[dir="rtl"] .lightbox-arrow svg { transform: scaleX(-1); }
 
 .lightbox-arrow:hover.lightbox-arrow--left  { transform: translateY(-50%) translateX(-2px); }
 .lightbox-arrow:hover.lightbox-arrow--right { transform: translateY(-50%) translateX(2px); }

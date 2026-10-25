@@ -122,6 +122,7 @@ import { useHoneypot } from 'src/composables/useHoneypot.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToFlex } from 'src/composables/useSectionStyle.js'
 import { useI18n } from 'src/i18n/index.js'
+import { gradientOf } from 'src/utils/gradient.js'
 import { mergeBinds, textStyle, textVars, tsKeys } from 'src/utils/text-style.js'
 
 const { t } = useI18n()
@@ -197,7 +198,7 @@ const submitStyle = computed(() => {
   if (buttonStyle.value === 'outline') {
     if (bg) style['border-color'] = bg
   } else {
-    style.background = bg || `var(--q-${buttonStyle.value === 'secondary' ? 'secondary' : 'primary'})`
+    style.background = gradientOf(d.value.button_bg_color, d.value.button_bg_color2, 90) || `var(--q-${buttonStyle.value === 'secondary' ? 'secondary' : 'primary'})`
   }
   if (txt) style.color = `${txt} !important`
   return style

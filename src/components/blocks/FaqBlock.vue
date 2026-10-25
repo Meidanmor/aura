@@ -72,11 +72,13 @@ useMeta(() => {
 const cssVars = computed(() => {
   const vars = {}
   setResponsiveVar(vars, '--faq-q-size', d.value.question_size, toCssLength)
-  const map = { question_color: '--faq-q-color', answer_color: '--faq-a-color', accent_color: '--faq-accent', item_bg: '--faq-bg' }
+  const map = { question_color: '--faq-q-color', answer_color: '--faq-a-color', accent_color: '--faq-accent', item_bg: '--faq-bg', item_border: '--faq-border' }
   for (const [key, cssVar] of Object.entries(map)) {
     const c = resolveGlobalColor(d.value[key])
     if (c) vars[cssVar] = c
   }
+  const radius = toCssLength(d.value.item_radius)
+  if (radius) vars['--faq-radius'] = radius
   return vars
 })
 </script>
@@ -88,8 +90,8 @@ const cssVars = computed(() => {
 .faq-block--boxed { gap: 12px; }
 .faq-block--boxed .faq-block__item {
   background: var(--faq-bg, #fff);
-  border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--faq-radius, 10px);
+  border: 1px solid var(--faq-border, rgba(0, 0, 0, 0.08));
   padding: 0 18px;
 }
 

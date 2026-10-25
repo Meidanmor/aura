@@ -194,12 +194,15 @@ img.q-img__image {
 /*header .nav-items-el {
     margin-left: auto;
 }*/
-/* Header icons follow the text colour (secondary by default, the header's own colours when set). */
-header svg, header svg path {
+/* Header icons follow the text colour (secondary by default, the header's own colours when set).
+   The "Above header" sections look the same as inside the header. */
+header svg, header svg path,
+.above-header svg, .above-header svg path {
     fill: currentColor;
 }
 /* Header text (widget labels, language names) in the icons' color, not Quasar's white. */
-header.q-header {
+header.q-header,
+.above-header {
     color: var(--q-secondary);
 }
 .fade-enter-active, .fade-leave-active {
@@ -1016,6 +1019,10 @@ header.header-over {
 }
 .header-inner {
     transition: background-color .25s ease;
+}
+/* Branding → Loading bar (MainLayout.vue sets the variable); Quasar's bg-secondary is !important. */
+html .q-loading-bar {
+    background: var(--qwoo-loading-bar, var(--q-secondary)) !important;
 }
 header.header-solid-text .header-inner,
 header.header-solid-text .header-inner :not(.q-badge) {

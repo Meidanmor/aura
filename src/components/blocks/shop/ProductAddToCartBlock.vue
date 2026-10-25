@@ -1,5 +1,5 @@
 <template>
-  <div v-if="p?.product" class="product-buy" :class="{ 'is-full': d.full_width }">
+  <div v-if="p?.product" class="product-buy" :class="[{ 'is-full': d.full_width || d.buttons_layout === 'stack' }, `product-buy--${d.buttons_layout || 'auto'}`]" :style="radiusVar">
     <!-- Variations Selection for Variable Product -->
     <div v-if="p.isVariable" class="q-mb-md">
       <div v-for="attribute in p.availableAttributes" :key="attribute.id" class="q-mb-sm">
@@ -72,6 +72,8 @@
             :class="buttonText.class"
             :style="[buttonText.style, buttonColors]"
             :color="buttonBg ? undefined : 'secondary'"
+            :outline="d.button_style === 'outline'"
+            :unelevated="d.button_style !== 'outline'"
             :disable="p.shouldDisableCartButtons"
             :loading="p.cart.state.loading.cart"
             @click="p.addToCartHandler"
@@ -105,6 +107,7 @@ import { matAdd, matArrowDropDown, matCancel, matRemove } from '@quasar/extras/m
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { toCssLength } from 'src/composables/useSectionStyle.js'
+import { gradientOf } from 'src/utils/gradient.js'
 
 /**
  * "Add To Cart" (product page template): the variant choices, the quantity,
@@ -117,8 +120,23 @@ const d = computed(() => props.data.data || {})
 const buttonText = computed(() => textStyle(d.value, tsKeys('button'), 'buttons'))
 const buttonBg = computed(() => resolveGlobalColor(d.value.button_bg))
 const quickBg = computed(() => resolveGlobalColor(d.value.quick_bg))
-const buttonColors = computed(() => ({ ...(buttonBg.value ? { background: buttonBg.value } : {}), ...(d.value.button_text ? { color: resolveGlobalColor(d.value.button_text) } : {}) }))
-const quickColors = computed(() => ({ ...(quickBg.value ? { background: quickBg.value } : {}), ...(d.value.quick_text ? { color: resolveGlobalColor(d.value.quick_text) } : {}) }))
+const angle = computed(() => d.value.gradient_angle ?? 90)
+// Outline: the button colour draws the border and text; filled: a second colour makes a gradient.
+const buttonColors = computed(() => {
+  if (d.value.button_style === 'outline') {
+    return { ...(buttonBg.value ? { color: `${buttonBg.value} !important` } : {}), background: 'transparent' }
+  }
+  const bg = gradientOf(d.value.button_bg, d.value.button_bg2, angle.value)
+  return { ...(bg ? { background: bg } : {}), ...(d.value.button_text ? { color: resolveGlobalColor(d.value.button_text) } : {}) }
+})
+const quickColors = computed(() => {
+  const bg = gradientOf(d.value.quick_bg, d.value.quick_bg2, angle.value)
+  return { ...(bg ? { background: bg } : {}), ...(d.value.quick_text ? { color: resolveGlobalColor(d.value.quick_text) } : {}) }
+})
+const radiusVar = computed(() => {
+  const r = toCssLength(d.value.button_radius)
+  return r ? { '--pb-btn-radius': r } : {}
+})
 
 const choiceStyle = computed(() => (['buttons', 'cards'].includes(d.value.choice_style) ? d.value.choice_style : 'select'))
 const choiceVars = computed(() => {
@@ -148,6 +166,8 @@ function choose(name, value) {
 .product-buy__buttons { display: flex; flex-wrap: wrap; gap: 8px; }
 .is-full .product-buy__buttons { flex-direction: column; }
 .is-full .buy-btn { width: 100%; }
+.product-buy--equal .product-buy__buttons .buy-btn { flex: 1 1 0; }
+.buy-btn { border-radius: var(--pb-btn-radius, 4px); min-height: 48px; padding-inline: 24px; }
 .pb-choices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .pb-choices--cards { flex-direction: column; gap: 10px; }
 .pb-choice { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 18px; border: 1.5px solid rgba(0, 0, 0, .16); border-radius: var(--pb-radius, 12px); background: transparent; color: inherit; font: inherit; font-weight: 600; cursor: pointer; text-align: start; }

@@ -27,18 +27,30 @@
     />
     <span v-if="shade" class="lt-img__shade" :class="`lt-img__shade--${shade}`" aria-hidden="true" />
     <template v-if="isProduct">
-      <span v-if="d.show_badge !== false && badge" class="lt-img__badge" :class="`lt-img__badge--${badgePosition}`">{{ badge === 'sold' ? t('Sold out') : t('Sale!') }}</span>
-      <q-btn
-          v-if="d.show_wishlist"
-          class="lt-img__heart"
-          flat
-          round
-          dense
-          :icon="wished ? matFavorite : matFavoriteBorder"
-          :aria-label="wished ? t('Remove from wishlist') : t('Add to wishlist')"
-          :loading="wishlist.isLoading(ctx.item.id)"
-          @click.prevent.stop="toggleWish"
-      />
+      <span v-if="d.show_badge !== false && badge" class="lt-img__badge" :class="`lt-img__badge--${badgePosition}`" :style="badgeStyle">{{ badgeText }}</span>
+      <div v-if="d.show_wishlist || d.show_share" class="lt-img__icons" :class="{ 'lt-img__icons--outline': d.icons_style === 'outline' }">
+        <q-btn
+            v-if="d.show_wishlist"
+            class="lt-img__heart"
+            flat
+            round
+            dense
+            :icon="wished ? matFavorite : matFavoriteBorder"
+            :aria-label="wished ? t('Remove from wishlist') : t('Add to wishlist')"
+            :loading="wishlist.isLoading(ctx.item.id)"
+            @click.prevent.stop="toggleWish"
+        />
+        <q-btn
+            v-if="d.show_share"
+            class="lt-img__share"
+            flat
+            round
+            dense
+            :icon="matShare"
+            :aria-label="t('Share')"
+            @click.prevent.stop="share"
+        />
+      </div>
     </template>
   </div>
 </template>
@@ -53,7 +65,9 @@
  */
 import { computed } from 'vue'
 import { useQuasar } from 'quasar'
-import { matFavorite, matFavoriteBorder } from '@quasar/extras/material-icons'
+import { matFavorite, matFavoriteBorder, matShare } from '@quasar/extras/material-icons'
+import { gradientOf } from 'src/utils/gradient.js'
+import { useI18n } from 'src/i18n/index.js'
 import wishlist from 'src/stores/wishlist.js'
 import { useLoopItem, loopImage } from './loop-item.js'
 import { asResponsive, toCssLength, DEVICES } from 'src/composables/useSectionStyle.js'
@@ -67,6 +81,7 @@ const props = defineProps({
   data: { type: Object, required: true },
 })
 const $q = useQuasar()
+const { t } = useI18n()
 const loop = useLoopItem()
 const ctx = computed(() => loop?.value || null)
 const d = computed(() => props.data.data || {})
@@ -89,6 +104,30 @@ const badge = computed(() => {
   if (!p || !isProduct.value) return ''
   if (p.is_in_stock === false) return 'sold'
   return p.on_sale ? 'sale' : ''
+})
+// Content → Sale Label Shows: "Sale!" or the discount in percent ("{percent}% off").
+const percent = computed(() => {
+  const prices = ctx.value?.item?.prices
+  const regular = Number(prices?.regular_price)
+  const price = Number(prices?.price)
+  return regular > 0 && price < regular ? Math.round(((regular - price) / regular) * 100) : 0
+})
+const badgeText = computed(() => {
+  if (badge.value === 'sold') return t('Sold out')
+  if (d.value.badge_text === 'percent' && percent.value > 0) {
+    return (d.value.badge_format || t('{percent}% off')).replace('{percent}', String(percent.value))
+  }
+  return t('Sale!')
+})
+const badgeStyle = computed(() => {
+  const s = {}
+  const bg = gradientOf(d.value.badge_bg, d.value.badge_bg2, 90)
+  if (bg) s.background = bg
+  const c = resolveGlobalColor(d.value.badge_color)
+  if (c) s.color = c
+  const r = toCssLength(d.value.badge_radius)
+  if (r) s['border-radius'] = r
+  return s
 })
 
 // The card's photo box per screen size, so a cropped photo loads a file wide enough at once.
@@ -142,6 +181,8 @@ const vars = computed(() => {
   const bc = resolveGlobalColor(d.value.image_border_color)
   if (bc) v['--lt-bc'] = bc
   if (d.value.object_fit === 'contain') v['--lt-fit'] = 'contain'
+  const ic = resolveGlobalColor(d.value.icons_color)
+  if (ic) v['--lt-icons'] = ic
   if (shade.value) {
     const color = resolveGlobalColor(d.value.overlay_color)
     if (color) v['--lt-shade'] = color
@@ -157,5 +198,16 @@ const wished = computed(() => {
 })
 async function toggleWish() {
   await wishlist.toggleWishlistItem(ctx.value.item.id, $q)
+}
+// The phone's share menu; elsewhere the product's address is copied.
+async function share() {
+  const item = ctx.value?.item
+  const path = item?.permalink ? new URL(item.permalink, location.origin).pathname : location.pathname
+  const url = location.origin + path
+  try {
+    if (navigator.share) { await navigator.share({ title: item?.name || '', url }); return }
+    await navigator.clipboard.writeText(url)
+    $q.notify({ message: t('Link copied'), timeout: 1500 })
+  } catch { /* closed by the shopper */ }
 }
 </script>

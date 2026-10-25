@@ -1,10 +1,10 @@
 <template>
-  <div v-if="(d.text || (run && icon)) && (d.url || run)" class="btn-block" :class="fullWidthClasses" :style="wrapVars">
+  <div v-if="(d.text || (run && btnIcon) || (d.url && btnIcon)) && (d.url || run)" class="btn-block" :class="fullWidthClasses" :style="wrapVars">
     <q-btn
         v-bind="run ? {} : linkAttrs"
-        :icon="icon && !iconRight ? icon : undefined"
-        :icon-right="icon && iconRight ? icon : undefined"
-        :aria-label="ariaLabel || undefined"
+        :icon="btnIcon && !iconAtEnd ? btnIcon : undefined"
+        :icon-right="btnIcon && iconAtEnd ? btnIcon : undefined"
+        :aria-label="ariaLabel || (!d.text && d.label) || undefined"
         :loading="adding"
         @click="run && run()"
         class="btn-block__btn"
@@ -28,6 +28,8 @@ import cart from 'src/stores/cart.js'
 import { fetchProductById } from 'src/api/woocommerce.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { brandFontVar } from 'src/utils/brand-fonts.js'
+import { generalIcons } from 'src/utils/builder-icons.js'
+import { gradientOf } from 'src/utils/gradient.js'
 import { textStyle } from 'src/utils/text-style.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToFlex, DEVICES } from 'src/composables/useSectionStyle.js'
 
@@ -45,9 +47,20 @@ const route = useRoute()
 const router = useRouter()
 const d = computed(() => props.data.data || {})
 
-// "When Clicked: Add a product to the cart": simple products go in the cart,
-// products with options (sizes, colours) open their page to choose.
-const cartProductId = computed(() => (d.value.click_action === 'add_to_cart' ? Number(d.value.product_ids?.[0]) || 0 : 0))
+// The icon: the Filters Button's own, else Content → Show an icon (a built-in
+// icon, or your own SVG drawn as an image).
+const btnIcon = computed(() => {
+  if (props.icon) return props.icon
+  if (!d.value.show_icon) return ''
+  if (d.value.icon === 'custom') return d.value.custom_icon?.url ? `img:${d.value.custom_icon.url}` : ''
+  return generalIcons[d.value.icon] || ''
+})
+const iconAtEnd = computed(() => (props.icon ? props.iconRight : d.value.icon_position === 'end'))
+
+// "When Clicked: Add a product to the cart" / "… and go to checkout": simple products
+// go in the cart, products with options (sizes, colours) open their page to choose.
+const buyNow = computed(() => d.value.click_action === 'buy_now')
+const cartProductId = computed(() => (['add_to_cart', 'buy_now'].includes(d.value.click_action) ? Number(d.value.product_ids?.[0]) || 0 : 0))
 const adding = ref(false)
 async function addProduct() {
   if (adding.value) return
@@ -60,7 +73,8 @@ async function addProduct() {
       if (path) await router.push(path)
       return
     }
-    await cart.add(cartProductId.value, 1, null, {}, null, product || null)
+    await cart.add(cartProductId.value, 1, null, {}, null, product || null, !buyNow.value)
+    if (buyNow.value) await router.push('/checkout')
   } finally {
     adding.value = false
   }
@@ -115,7 +129,8 @@ const btnVars = computed(() => {
   if (variant.value === 'primary' || variant.value === 'secondary') {
     // Set explicitly: the theme's global `body .q-btn { background: … }`
     // rule would otherwise override Quasar's bg-primary/bg-secondary.
-    vars.background = bg || `var(--q-${variant.value})`
+    // A second colour makes it a gradient.
+    vars.background = gradientOf(d.value.bg_color, d.value.bg_color2, d.value.gradient_angle ?? 90) || `var(--q-${variant.value})`
   } else if (bg && variant.value === 'outline') {
     vars['border-color'] = bg
   }

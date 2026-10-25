@@ -1,7 +1,7 @@
 <template>
   <q-header :class="headerClasses" :style="outerStyle">
     <div ref="inner" class="header-inner" :style="headerStyle">
-      <SectionRenderer :sections="headerConfig?.sections" page="header"/>
+      <SectionRenderer :sections="ownSections" page="header"/>
     </div>
     <!--<div class="container">
       <q-toolbar class="flex justify-between q-pa-sm">
@@ -108,6 +108,8 @@ const props = defineProps({
  */
 const route = useRoute()
 const settings = computed(() => props.headerConfig?.settings || {})
+// "Above header" sections are drawn before the header element (MainLayout.vue).
+const ownSections = computed(() => (props.headerConfig?.sections || []).filter((s) => s?.location !== 'above'))
 const fixed = computed(() => props.stickyHeader && settings.value.sticky_mode === 'fixed')
 const sectionPage = computed(() => {
   const name = String(route.name || '')

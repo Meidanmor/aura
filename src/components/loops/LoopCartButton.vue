@@ -45,6 +45,8 @@
  * Styles: LoopCard.vue.
  */
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { gradientOf } from 'src/utils/gradient.js'
 import { matAdd, matShoppingBag, matShoppingCart } from '@quasar/extras/material-icons'
 import cart from 'src/stores/cart.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
@@ -56,6 +58,7 @@ const props = defineProps({
   data: { type: Object, required: true },
 })
 const loop = useLoopItem()
+const router = useRouter()
 const d = computed(() => props.data.data || {})
 const product = computed(() => (loop?.value?.type === 'product' ? loop.value.item : null))
 const hasOptions = computed(() => ['variable', 'grouped', 'external'].includes(product.value?.type) || product.value?.has_options === true)
@@ -87,8 +90,10 @@ const btnVars = computed(() => {
   if (size) v['--lt-btn-round'] = size
   const iconSize = toCssLength(d.value.icon_size)
   if (iconSize) v['--lt-btn-icon'] = iconSize
-  const bg = resolveGlobalColor(d.value.btn_bg)
-  if (bg) v[d.value.button_style === 'outline' || d.value.button_style === 'link' ? 'color' : 'background'] = `${bg} !important`
+  const lined = d.value.button_style === 'outline' || d.value.button_style === 'link'
+  // A second colour makes a filled button a gradient.
+  const bg = lined ? resolveGlobalColor(d.value.btn_bg) : gradientOf(d.value.btn_bg, d.value.btn_bg2, d.value.gradient_angle ?? 90)
+  if (bg) v[lined ? 'color' : 'background'] = `${bg} !important`
   const border = resolveGlobalColor(d.value.btn_border)
   if (border) v['--lt-btn-border'] = border
   return v
@@ -98,7 +103,10 @@ async function add() {
   if (!product.value || adding.value) return
   adding.value = true
   try {
-    await cart.add(product.value.id, 1)
+    // "Buy now": into the cart without opening it, then to checkout.
+    const buyNow = d.value.action === 'buy_now'
+    await cart.add(product.value.id, 1, null, {}, null, null, !buyNow)
+    if (buyNow) await router.push('/checkout')
   } finally {
     adding.value = false
   }
