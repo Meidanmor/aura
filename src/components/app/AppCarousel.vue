@@ -8,7 +8,7 @@
     transition-next="slide-left"
     swipeable
     :infinite="showControls"
-    :navigation="showControls"
+    :navigation="showControls && dots"
     :arrows="false"
     height="auto"
     control-color="primary"
@@ -19,7 +19,7 @@
   >
     <slot />
 
-<template v-if="showControls" #navigation-icon="{ name, onClick }">
+<template v-if="showControls && dots" #navigation-icon="{ name, onClick }">
   <q-btn
     :flat="false"
     size="sm"
@@ -35,7 +35,7 @@
   />
 </template>
 
-    <template v-if="showControls" #control>
+    <template v-if="showControls && arrows" #control>
       <q-carousel-control position="left" class="flex items-center">
         <q-btn flat dense color="secondary"
           :aria-label="t('Previous slide')"
@@ -66,6 +66,9 @@ defineProps({
   showControls: Boolean,
   total:        Number,
   onKeydown:    Function,
+  // The Product Photos block can hide either one (a Product Thumbnails block replaces the dots).
+  arrows:       { type: Boolean, default: true },
+  dots:         { type: Boolean, default: true },
 })
 
 const slide = defineModel()

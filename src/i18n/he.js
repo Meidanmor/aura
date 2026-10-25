@@ -1,5 +1,7 @@
 // Hebrew: English text → Hebrew (see i18n/index.js). Arrays are [one, many].
 export default {
+  "Product photos": "תמונות המוצר",
+  "Show photo {n}": "הצגת תמונה {n}",
   "In stock only": "רק מה שבמלאי",
   "From {price}": "החל מ־{price}",
   "— or pay with card —": "— או תשלום בכרטיס —",
