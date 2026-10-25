@@ -223,7 +223,11 @@ onBeforeUnmount(() => {
 
 <style>
 .qwoo-popup .q-dialog__backdrop { background: var(--qp-backdrop, rgba(0, 0, 0, .45)); }
+/* Quasar's `.q-dialog__inner > div { pointer-events: all }` is missing from the
+   build, so the card inherited `no-pointer-events` and every click inside it
+   reached the backdrop (closing the popup). */
 .qwoo-popup__card {
+  pointer-events: all;
   position: relative;
   width: var(--qp-w-now, 560px);
   max-width: 100%;
