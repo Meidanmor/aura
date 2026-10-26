@@ -14,6 +14,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, useSSRContext, watch, provide, reactive, markRaw } from 'vue'
+import { ecommerceOf, eventItem, track } from 'src/utils/custom-code.js'
 import { useRoute, useRouter, onBeforeRouteUpdate } from 'vue-router'
 import { fetchProductById } from 'src/api/woocommerce.js'
 import cart from 'src/stores/cart.js'
@@ -562,6 +563,12 @@ const safePrice = useSanitizedPrice(() => product.value?.price_html)
 const safeVariationPrice = useSanitizedPrice(() => selectedVariation.value?.price_html)
 const safeCategoryName = useSanitizedText(() => product.value?.categories?.[0]?.name)
 
+// The owner's trackers (Settings → Tracking & code).
+function trackView() {
+  const p = product.value
+  if (p?.id) track('view_item', { ecommerce: ecommerceOf([eventItem(p, 1)], p.prices?.currency_code) })
+}
+
 onMounted(async() => {
   if (!product.value || !product.value.id) {
     await fetchProduct(route.params.slug)
@@ -573,6 +580,7 @@ onMounted(async() => {
     imagesCarousel.recompute(true)
 
   }
+  trackView()
 
   if (window.__PAGE_CONFIG__ && Object.keys(window.__PAGE_CONFIG__).length) {
     productSettings.value = window.__PAGE_CONFIG__
@@ -616,6 +624,7 @@ watch(
     //await fetchProduct(newSlug)
 
     enhanceProduct().catch(console.error)
+    trackView()
     imagesCarousel.slide.value = 0
     imagesCarousel.recompute(true)
 

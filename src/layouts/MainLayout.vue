@@ -62,7 +62,7 @@
         :columns="Array.isArray(footerSettings?.columns) ? footerSettings.columns : null"
     />
 
-    <CookieBanner v-if="uiHydrated" />
+    <ConsentBanner v-if="uiHydrated" />
     <ContactButton v-if="uiHydrated" />
 
     <!-- Store builder → Popups (browser only). -->
@@ -98,10 +98,11 @@ import AnnouncementBar from '../components/app/AnnouncementBar.vue'
 import SectionRenderer from 'components/sections/SectionRenderer.vue'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { stripLang } from 'src/i18n/lang.js'
-import { pickChrome } from 'src/utils/layouts.js'
+import { chromeTarget, pickChrome } from 'src/utils/layouts.js'
+import { initCustomCode } from 'src/utils/custom-code.js'
 import { useRoute, useRouter } from 'vue-router'
 import { Platform } from 'quasar';
-import CookieBanner from "../components/app/CookieBanner.vue";
+import ConsentBanner from "../components/app/ConsentBanner.vue";
 import ContactButton from "../components/app/ContactButton.vue";
 import initPush, { subscribeToWebPush, initNativePush, checkNativePermission } from 'src/services/push/push.js'
 import { initLoadingBar } from 'src/composables/useLoadingBar.js'
@@ -488,6 +489,11 @@ async function handleSoftAskEnable() {
 const uiHydrated = ref(false)              // Deferred functional UI
 const route = useRoute()
 const router = useRouter()
+if (process.env.SERVER) {
+  // Which page this is, for the owner's custom code (src-ssr/custom-code.js).
+  const ssr = useSSRContext()
+  if (ssr) ssr.codeWhere = chromeTarget(route)
+}
 // Header / footer templates: the one chosen for this page, else the main one.
 const shownHeader = computed(() => pickChrome(headerSettings.value, route))
 const aboveHeader = computed(() => (shownHeader.value?.sections || []).filter((s) => s?.location === 'above'))
@@ -555,6 +561,8 @@ const initConnectivityListeners = () => {
 }
 
 onMounted(async () => {
+  // The owner's tracking and custom code: right away (not after the first scroll like the rest).
+  initCustomCode(router)
   // Signed in or not: the Account widget, the forms and "Show To" sections wait for it.
   checkSession()
   initSessionWatcher()

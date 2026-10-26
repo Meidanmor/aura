@@ -10,6 +10,7 @@ import { allLangs, isExtraLang, langFromPath, mainLang, stripLang, withLang } fr
 import { LANGUAGES } from '../../src/i18n/index.js'
 import { clientSite } from '../site-content.js'
 import { brandFontPreloads, brandFontsCss } from '../../src/utils/brand-fonts.js'
+import { contentSecurityPolicy, pageCode } from '../custom-code.js'
 
 /*
  * The language of each page being rendered (an extra language lives under
@@ -312,30 +313,10 @@ export default defineSsrMiddleware(({ app, resolve, render, folders }) => {
 
         const frameAncestors = isEditorRequest ? `'self' ${editorOrigin}` : "'self'"
 
-        res.setHeader(
-            'Content-Security-Policy',
-            "default-src 'self'; " +
-            `script-src 'self' 'nonce-${nonce}' https://accounts.google.com https://js.stripe.com https://hcaptcha.com https://*.hcaptcha.com; ` +
-            "style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; " +
-            "img-src 'self' data: https:; " +
-            // The dev server's hot-reload websocket only exists locally.
-            `connect-src 'self' ${WP_BACKEND_URL ? WP_BACKEND_URL : ''} https://api.stripe.com https://hcaptcha.com https://*.hcaptcha.com${process.env.DEV ? ' ws://localhost:* wss://localhost:*' : ''}; ` +
-            "font-src 'self' https://fonts.gstatic.com; " +
-            // Videos (Video block + video backgrounds) are uploads served by
-            // the WP backend or files on this site — the plugin only accepts
-            // "video file URL"s on those hosts. YouTube/Vimeo play in iframes.
-            `media-src 'self' ${WP_BACKEND_URL ? WP_BACKEND_URL : ''}; ` +
-            // Video embeds: only the two exact player hosts the frontend
-            // builds URLs for (privacy-enhanced YouTube + Vimeo).
-            "frame-src https://accounts.google.com https://js.stripe.com https://hooks.stripe.com https://hcaptcha.com https://*.hcaptcha.com https://www.youtube-nocookie.com https://player.vimeo.com; " +
-            // No plugins (<object>/<embed>), no <base> hijacking, and forms
-            // may only submit to this site (the app posts via fetch; Google
-            // sign-in and Stripe use redirects / their own iframes).
-            "object-src 'none'; " +
-            "base-uri 'self'; " +
-            "form-action 'self'; " +
-            `frame-ancestors ${frameAncestors};`
-        )
+        // The page's own rules (src-ssr/custom-code.js); the owner's tracking
+        // addresses are added after the render, once the page is known.
+        const cspBase = { nonce, backend: WP_BACKEND_URL, dev: !!process.env.DEV, frameAncestors }
+        res.setHeader('Content-Security-Policy', contentSecurityPolicy(cspBase))
 
         // Full URL to same-origin, only the origin to other sites, nothing
         // when going https -> http (the browsers' default, made explicit).
@@ -391,6 +372,20 @@ export default defineSsrMiddleware(({ app, resolve, render, folders }) => {
                 const productData = ssrContext.productData || {}
                 const heroData = ssrContext.heroData || {}
 
+                // Tracking & custom code for this page (MainLayout says which page it is).
+                const code = pageCode(req, { where: ssrContext.codeWhere, nonce })
+                if (code) {
+                    res.setHeader('Content-Security-Policy', contentSecurityPolicy({ ...cspBase, code, relaxed: code.relaxed }))
+                    if (code.relaxed) {
+                        // The test browser: what the strict rules would block is reported (custom-code.js in the browser).
+                        res.setHeader('Content-Security-Policy-Report-Only', contentSecurityPolicy({ ...cspBase, code }))
+                    }
+                    if (code.testing) {
+                        res.setHeader('X-Robots-Tag', 'noindex')
+                        res.setHeader('Cache-Control', 'no-store')
+                    }
+                }
+
                 const states = {
                     productData,
                     heroData,
@@ -410,7 +405,9 @@ export default defineSsrMiddleware(({ app, resolve, render, folders }) => {
                     seoData: ssrContext.seoData || null,
                     blogData: ssrContext.blogData || null,
                     // window.__QWOO_SITE__: the languages and the store's name, as published.
-                    qwooSite: clientSite(site)
+                    qwooSite: clientSite(site),
+                    // window.__QWOO_CODE__: the snippets this browser may run, and the consent banner.
+                    qwooCode: code?.state || null
                 }
 
                 // JSON-LD structured data — appended, not replacing anything Quasar produced.
@@ -429,6 +426,7 @@ export default defineSsrMiddleware(({ app, resolve, render, folders }) => {
                     .join('')
 
                 const criticalHeadExtra = `
+          ${code?.head || ''}
           ${schemaHtml}
           ${alternateLinks(ssrContext, req)}
           ${WP_BACKEND_URL ? `<link rel="preconnect" href="${WP_BACKEND_URL}">` : ''}
@@ -480,10 +478,13 @@ export default defineSsrMiddleware(({ app, resolve, render, folders }) => {
                 const withLogo = ssrContext.sectionPriority
                     ? page.replace(/<img\b[^>]*\bheader-logo\b[^>]*>/, (tag) => tag.replace('fetchpriority="high"', 'fetchpriority="auto"'))
                     : page
-                const output = fasterFirstPaint(withLogo, process.env.PROD ? folders?.public : '')
+                // The body first: the owner's code (added inside the head below) may hold "<body" or "</body>" as text.
+                let output = fasterFirstPaint(withLogo, process.env.PROD ? folders?.public : '')
                     .replace(/<html\b([^>]*)>/, (tag, attrs) => `<html ${attrs.replace(/\s(lang|dir)=("[^"]*"|\S+)/g, '').trim()} ${langAttrs}>`.replace('<html  ', '<html '))
-                    .replace('</head>', `${criticalHeadExtra}</head>`)
-                    .replace('</body>', `${bodyBottom}</body>`)
+                const bodyEnd = output.lastIndexOf('</body>')
+                if (bodyEnd >= 0) output = output.slice(0, bodyEnd) + bodyBottom + (code?.bodyEnd || '') + output.slice(bodyEnd)
+                if (code?.bodyStart) output = output.replace(/<body\b[^>]*>/, (tag) => tag + code.bodyStart)
+                output = output.replace('</head>', () => `${criticalHeadExtra}</head>`)
 
                 res.send(output)
             })

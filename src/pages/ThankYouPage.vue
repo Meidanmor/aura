@@ -95,6 +95,7 @@ import {formatCurrency} from 'src/utils/formatters.js'
 import {loadPaymentConfig, paymentConfig} from 'src/payments/config'
 import {takeGrowPayment, waitForGrowPayment} from 'src/payments/grow-return'
 import { useI18n } from 'src/i18n/index.js'
+import { ecommerceOf, eventItem, trackPurchaseOnce } from 'src/utils/custom-code.js'
 
 const { t } = useI18n()
 
@@ -145,10 +146,11 @@ onMounted(async () => {
   const order_key = route.query.order_key
 
   // Back from Grow's payment page: the store asks Grow, which can take a few seconds.
+  let paidLater = null
   if (String(route.query.pm || '').startsWith('grow_') && orderID && order_key) {
     takeGrowPayment() // paid here: no cart to put back on checkout
     growState.value = 'checking'
-    waitForGrowPayment(orderID, order_key).then((paid) => { growState.value = paid ? 'paid' : 'waiting' })
+    paidLater = waitForGrowPayment(orderID, order_key).then((paid) => { growState.value = paid ? 'paid' : 'waiting'; return paid })
   }
 
   try {
@@ -161,8 +163,21 @@ onMounted(async () => {
     }
     const data = await res.json()
     order.value = data
+    // The owner's trackers: the purchase, once per order (a card payment once it's confirmed).
+    if (!paidLater || await paidLater) trackPurchase(data)
   } catch (err) {
     console.error(err)
   }
 })
+
+function trackPurchase(data) {
+  if (!data?.id) return
+  const items = (data.items || []).map((item) => eventItem(item, item.quantity, storeUnit.value))
+  const total = Number(data.totals?.total_price) / 10 ** totalsUnit.value
+  trackPurchaseOnce(data.id, {
+    ...ecommerceOf(items, data.totals?.currency_code, Number.isFinite(total) ? total : undefined),
+    tax: Number(data.totals?.total_tax || 0) / 10 ** totalsUnit.value,
+    shipping: Number(data.totals?.total_shipping || 0) / 10 ** totalsUnit.value,
+  })
+}
 </script>

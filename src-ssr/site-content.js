@@ -20,6 +20,7 @@
  */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { createHmac } from 'node:crypto'
 import { slimConfig } from '../src/utils/slim-config.js'
 
 const BACKEND = (process.env.WP_BACKEND_URL || '').replace(/\/+$/, '')
@@ -66,6 +67,7 @@ let checkedAt = 0
 let nextCheck = 0
 let checking = null
 let site = null // the live version (see build())
+let code = null // tracking & custom code (custom-code.js): { stamp, … } from qwoo/v1/site/code
 
 /* ---------------- the live version ---------------- */
 
@@ -107,6 +109,8 @@ const asPointer = (data) => ({
   version: VERSION_RE.test(data?.version || '') ? data.version : null,
   manifest: httpUrl(data?.manifest),
   files: httpUrl(data?.files),
+  // Tracking & custom code changed when this does (a hash of its stamp).
+  code: /^[a-f0-9]{8,40}$/.test(data?.code || '') ? data.code : '',
   // A hidden store ("Coming soon", see coming-soon.js): a hash of its preview key, never the key.
   ...(data?.hidden === true && /^[a-f0-9]{64}$/.test(data?.preview || '')
     ? { hidden: true, preview: data.preview, name: String(data.name || '').slice(0, 120), lang: data.lang === 'he' ? 'he' : 'en' }
@@ -148,6 +152,7 @@ function refresh(origin) {
     checking = (async () => {
       const p = asPointer(await viaCdn(origin ? `${origin}/__site/current` : '', pointerFromStore, race))
       if (p.version && p.version !== site?.version) await loadVersion(p, origin, race)
+      if (p.code !== code?.hash) await loadCode(p.code)
       pointer = p
       // Nothing published on the store yet: no need to ask as often.
       if (!p.version) wait = NOT_YET_MS
@@ -177,6 +182,33 @@ export async function currentSite(origin = '') {
   // after a publish shows it; a slow answer finishes in the background.
   else if (Date.now() > nextCheck) await Promise.race([refresh(origin), new Promise((resolve) => setTimeout(resolve, CHECK_WAIT_MS))])
   return pointer?.version && site ? site : null
+}
+
+/**
+ * Tracking & custom code, straight from the store (never through the CDN:
+ * it holds Testing code). Signed with the proxy secret, which the browser
+ * never has (it can reach qwoo routes through the proxy, not sign them).
+ */
+async function loadCode(hash) {
+  if (!hash) {
+    code = null
+    return
+  }
+  try {
+    const data = await getJson(`${BACKEND}/wp-json/qwoo/v1/site/code`, {
+      'x-proxy-secret': SECRET,
+      'x-qwoo-code-sig': createHmac('sha256', SECRET).update('qwoo-site-code').digest('hex'),
+    })
+    code = data && typeof data === 'object' ? { ...data, hash } : null
+  } catch (err) {
+    // Keep what we had (asked again on the next check).
+    console.error('[site] loading the custom code failed:', err?.message || err)
+  }
+}
+
+/** Tracking & custom code from the last check, or null (none set up, or an older store). */
+export function siteCode() {
+  return code
 }
 
 /** Whether the store is hidden, from the last check (null before the first one). */

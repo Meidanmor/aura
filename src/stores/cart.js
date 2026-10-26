@@ -5,6 +5,7 @@ import productsStore from 'src/stores/products'
 import { matShoppingCart, matError, matCloudOff } from '@quasar/extras/material-icons'
 import { fetchProductById } from 'src/api/woocommerce.js'
 import { getApiOrigin } from 'src/utils/server/get-api-origin'
+import { ecommerceOf, eventItem, track } from 'src/utils/custom-code.js'
 /* -------------------------
    Constants
    ------------------------- */
@@ -1109,12 +1110,23 @@ async function add(productId, quantity = 1, _variationId = null, variation = {},
   const sig = buildSig(sigId, variationArr)
 
   const localItem = state.local_cart.items.find(i => itemSignature(i) === sig)
-  if (localItem) return _addToExistingLocalItem(localItem, quantity, $q, openDrawer)
+  const apiItem = localItem ? null : (state.cart_array?.items || []).find(i => itemSignature(i) === sig)
+  const result = await (localItem
+    ? _addToExistingLocalItem(localItem, quantity, $q, openDrawer)
+    : apiItem
+      ? _addFromApiItem(apiItem, quantity, variationArr, _variationId, $q, openDrawer)
+      : _addNewItem(productId, quantity, variationArr, _variationId, productDataFromUI, $q, openDrawer))
+  trackAdd(sig, quantity)
+  return result
+}
 
-  const apiItem = (state.cart_array?.items || []).find(i => itemSignature(i) === sig)
-  if (apiItem) return _addFromApiItem(apiItem, quantity, variationArr, _variationId, $q, openDrawer)
-
-  return _addNewItem(productId, quantity, variationArr, _variationId, productDataFromUI, $q, openDrawer)
+/** The owner's trackers (Settings → Tracking & code): what was just added. */
+function trackAdd(sig, quantity) {
+  const item = state.local_cart.items.find(i => itemSignature(i) === sig) || (state.cart_array?.items || []).find(i => itemSignature(i) === sig)
+  if (!item) return
+  const one = eventItem(item, quantity)
+  one.quantity = quantity || 1
+  track('add_to_cart', { ecommerce: ecommerceOf([one], item.prices?.currency_code) })
 }
 
 async function increase(productIdOrKey, $q = null) {

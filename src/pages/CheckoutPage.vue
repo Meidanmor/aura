@@ -57,6 +57,7 @@ import { useCartSummary } from 'src/composables/useCartSummary'
 import {useSeoMeta} from "src/composables/useSeo.js";
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
 import { signedIn } from 'src/composables/useAccount.js'
+import { ecommerceOf, eventItem, track } from 'src/utils/custom-code.js'
 import { t as i18nT, useI18n } from 'src/i18n/index.js'
 
 const { t } = useI18n()
@@ -556,6 +557,13 @@ onMounted(async () => {
     if (cart.restoreLocalCart(growBack.items)) {
       $q.notify({ type: 'info', message: t("Your payment wasn't completed, so your cart is back. You can try again or choose another way to pay."), position: 'top', timeout: 8000 })
     }
+  }
+
+  // The owner's trackers (Settings → Tracking & code).
+  const items = cart.state.cart_array?.items || []
+  if (items.length) {
+    // The items' value (shipping isn't chosen yet); the purchase carries the order's total.
+    track('begin_checkout', { ecommerce: ecommerceOf(items.map((item) => eventItem(item)), cart.state.cart_array.totals?.currency_code) })
   }
 });
 onBeforeRouteLeave(() => {
