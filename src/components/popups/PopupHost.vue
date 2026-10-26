@@ -222,6 +222,12 @@ onBeforeUnmount(() => {
 </script>
 
 <style>
+/* The page behind an open popup doesn't scroll. Quasar locks it by adding
+   q-document--prevent-scroll to <html> and moving <body> up by the scroll
+   (style.top); its own `body { position: fixed }` rule is missing from the
+   build. Only while a popup is open: the drawers keep their behaviour. */
+html.q-document--prevent-scroll:has(.qwoo-popup) { overscroll-behavior: none; }
+html.q-document--prevent-scroll:has(.qwoo-popup) body { position: fixed !important; width: 100%; }
 .qwoo-popup .q-dialog__backdrop { background: var(--qp-backdrop, rgba(0, 0, 0, .45)); }
 /* Quasar's `.q-dialog__inner > div { pointer-events: all }` is missing from the
    build, so the card inherited `no-pointer-events` and every click inside it
