@@ -327,6 +327,7 @@ const rowClasses = computed(() => {
     [`cb-row--${source.value}`]: true,
     'cb-row--arrows': showArrows.value && arrowsAt.value === 'sides',
     [`cb-arrows--${arrowLook.value}`]: true,
+    'cb-arrows--own-hover': !!(d.value.arrow_hover_bg || d.value.arrow_hover_color),
     'cb-noarrows-m': d.value.arrows_mobile === false,
     'cb-bleed-m': !!d.value.bleed_mobile,
   }
@@ -459,8 +460,18 @@ const cssVars = computed(() => {
   if (d.value.grayscale) vars['--cb-gray'] = '1'
   const arrowSize = toCssLength(d.value.arrow_size)
   if (arrowSize) vars['--cb-arrow'] = arrowSize
-  const arrowBg = resolveGlobalColor(d.value.arrow_bg)
-  if (arrowBg) vars['--cb-arrow-bg'] = arrowBg
+  const arrowColors = {
+    arrow_color: '--cb-arrow-c',
+    arrow_bg: '--cb-arrow-bg',
+    arrow_border_color: '--cb-arrow-bc',
+    arrow_hover_color: '--cb-arrow-hc',
+    arrow_hover_bg: '--cb-arrow-hbg',
+    arrow_hover_border_color: '--cb-arrow-hbc',
+  }
+  for (const [key, name] of Object.entries(arrowColors)) {
+    const color = resolveGlobalColor(d.value[key])
+    if (color) vars[name] = color
+  }
   return vars
 })
 </script>
@@ -503,8 +514,8 @@ const cssVars = computed(() => {
 .cb-slide__btn--light { background: #fff !important; color: #111 !important; }
 .cb-slide__btn--secondary { background: var(--q-secondary) !important; color: #fff !important; }
 .cb-slide__btn--outline { color: #fff !important; }
-.cb-hero :deep(.q-carousel__arrow .q-btn),
 .cb-hero :deep(.q-carousel__navigation .q-btn) { color: var(--cb-control, #fff); }
+.cb-hero :deep(.q-carousel__arrow .q-btn) { color: var(--cb-arrow-c, var(--cb-control, #fff)); }
 /* "Arrows to Show": one of them. */
 .cb-only-next :deep(.q-carousel__prev-arrow),
 .cb-only-prev :deep(.q-carousel__next-arrow) { display: none; }
@@ -602,27 +613,36 @@ const cssVars = computed(() => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background: transparent;
-  color: var(--cb-control, var(--q-secondary));
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  background: var(--cb-arrow-bg, transparent);
+  color: var(--cb-arrow-c, var(--cb-control, var(--q-secondary)));
+  transition: background 0.2s, color 0.2s, border-color 0.2s, opacity 0.2s;
 }
 .cb-row__arrow svg { display: block; width: 100%; height: auto; max-height: 100%; }
 [dir="rtl"] .cb-row__arrow svg { transform: scaleX(-1); }
 .cb-row__arrow--side { position: absolute; top: 38%; transform: translateY(-50%); }
 .cb-row__arrow--side.cb-row__arrow--prev { left: 0; }
 .cb-row__arrow--side.cb-row__arrow--next { right: 0; }
-.cb-row__arrow:hover { background: rgba(0, 0, 0, 0.05); }
+.cb-row__arrow:hover { background: var(--cb-arrow-hbg, var(--cb-arrow-bg, rgba(0, 0, 0, 0.05))); color: var(--cb-arrow-hc, var(--cb-arrow-c, var(--cb-control, var(--q-secondary)))); }
 
 /* Arrow Look: round or square buttons hold a smaller chevron. */
 .cb-arrows--outline .cb-row__arrow,
 .cb-arrows--filled .cb-row__arrow,
 .cb-arrows--square .cb-row__arrow { width: var(--cb-arrow, 40px); height: var(--cb-arrow, 40px); padding: calc(var(--cb-arrow, 40px) * 0.32); }
-.cb-arrows--outline .cb-row__arrow { border: 1px solid currentColor; border-radius: 50%; }
-.cb-arrows--square .cb-row__arrow { border: 1px solid currentColor; border-radius: 0; }
-.cb-arrows--filled .cb-row__arrow { border-radius: 50%; background: var(--cb-arrow-bg, var(--cb-control, var(--q-secondary))); color: #fff; }
+.cb-arrows--outline .cb-row__arrow { border: 1px solid var(--cb-arrow-bc, currentColor); border-radius: 50%; }
+.cb-arrows--square .cb-row__arrow { border: 1px solid var(--cb-arrow-bc, currentColor); border-radius: 0; }
+.cb-arrows--filled .cb-row__arrow { border-radius: 50%; background: var(--cb-arrow-bg, var(--cb-control, var(--q-secondary))); color: var(--cb-arrow-c, #fff); }
 .cb-arrows--outline .cb-row__arrow:hover,
-.cb-arrows--square .cb-row__arrow:hover { background: var(--cb-control, var(--q-secondary)); border-color: var(--cb-control, var(--q-secondary)); color: #fff; }
-.cb-arrows--filled .cb-row__arrow:hover { background: var(--cb-arrow-bg, var(--cb-control, var(--q-secondary))); opacity: 0.85; }
+.cb-arrows--square .cb-row__arrow:hover {
+  background: var(--cb-arrow-hbg, var(--cb-control, var(--q-secondary)));
+  border-color: var(--cb-arrow-hbc, var(--cb-arrow-hbg, var(--cb-control, var(--q-secondary))));
+  color: var(--cb-arrow-hc, #fff);
+}
+.cb-arrows--filled .cb-row__arrow:hover {
+  background: var(--cb-arrow-hbg, var(--cb-arrow-bg, var(--cb-control, var(--q-secondary))));
+  color: var(--cb-arrow-hc, var(--cb-arrow-c, #fff));
+}
+/* No own hover colours: the filled arrow just fades a little. */
+.cb-arrows--filled:not(.cb-arrows--own-hover) .cb-row__arrow:hover { opacity: 0.85; }
 .cb-arrows--outline.cb-row--arrows .cb-row__viewport,
 .cb-arrows--filled.cb-row--arrows .cb-row__viewport,
 .cb-arrows--square.cb-row--arrows .cb-row__viewport { padding: 0 calc(var(--cb-arrow, 40px) + 8px); }

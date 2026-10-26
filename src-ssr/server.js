@@ -13,6 +13,7 @@ import express from 'express'
 import compression from 'compression'
 import { createProxyMiddleware } from 'http-proxy-middleware'
 import { siteContentMiddleware } from './site-content.js'
+import { comingSoonMiddleware } from './coming-soon.js'
 import { uploadsHandler, BACKEND_USER_AGENT } from './uploads.js'
 import {
   defineSsrCreate,
@@ -41,6 +42,8 @@ export const create = defineSsrCreate(({ folders }) => {
   // The store's published files, read while running (before the built-in
   // static files, which they replace). See site-content.js.
   app.use(siteContentMiddleware({ publicDir: folders?.public || '' }))
+  // A hidden store: pages answer "Coming soon", except for its preview link.
+  app.use(comingSoonMiddleware())
 
   const backendTarget = process.env.WP_BACKEND_URL // server-only env var, no VITE_ prefix
 

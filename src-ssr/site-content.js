@@ -83,11 +83,7 @@ async function pointerFromStore() {
     'x-proxy-secret': SECRET,
     'x-qwoo-storefront': STOREFRONT_VERSION,
   })
-  return {
-    version: VERSION_RE.test(data?.version || '') ? data.version : null,
-    manifest: httpUrl(data?.manifest),
-    files: httpUrl(data?.files),
-  }
+  return asPointer(data)
 }
 
 function build(data, p) {
@@ -111,6 +107,10 @@ const asPointer = (data) => ({
   version: VERSION_RE.test(data?.version || '') ? data.version : null,
   manifest: httpUrl(data?.manifest),
   files: httpUrl(data?.files),
+  // A hidden store ("Coming soon", see coming-soon.js): a hash of its preview key, never the key.
+  ...(data?.hidden === true && /^[a-f0-9]{64}$/.test(data?.preview || '')
+    ? { hidden: true, preview: data.preview, name: String(data.name || '').slice(0, 120), lang: data.lang === 'he' ? 'he' : 'en' }
+    : {}),
 })
 
 /**
@@ -177,6 +177,11 @@ export async function currentSite(origin = '') {
   // after a publish shows it; a slow answer finishes in the background.
   else if (Date.now() > nextCheck) await Promise.race([refresh(origin), new Promise((resolve) => setTimeout(resolve, CHECK_WAIT_MS))])
   return pointer?.version && site ? site : null
+}
+
+/** Whether the store is hidden, from the last check (null before the first one). */
+export function siteVisibility() {
+  return pointer ? { hidden: !!pointer.hidden, preview: pointer.preview || '', name: pointer.name || '', lang: pointer.lang || 'en' } : null
 }
 
 /** The page's view of the live version, for the browser (window.__QWOO_SITE__). */
