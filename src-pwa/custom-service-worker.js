@@ -32,15 +32,39 @@ const JSON_REVISIONS = Object.fromEntries(
     .filter(([url]) => /^\/(config|data)\/[^/]+\.json$/.test(url))
 )
 
-// ─── Published JSON: fresh when online, cached for offline ───────────────────
-// Network first with a short timeout; the copy in the cache answers when
-// offline or slow (and the network answer still updates the cache). When a
-// file changed, the open pages are told (JSON_UPDATED, so on-screen header,
-// footer and page content refresh in place) and the worker checks for a new
-// version of itself, since changed JSON means a new deploy.
+// ─── Published JSON: saved per version, fetched only after a publish ─────────
+// A store that publishes on itself (site-content.js) names every publish with
+// a version, and one download holds all its configs (/__site/m/{version}, kept
+// by the CDN for good). Once a version is saved here, the saved files answer
+// at once and nothing is downloaded again until /__site/current (one small
+// answer, at most once per VERSION_GAP_MS) names a newer version. Rechecking
+// every file one by one cost ~23 server calls per visitor per page change
+// (found 2026-10-26: Vercel's CPU limit). Configs are slimmed the same way the
+// server does, so the text matches its answers.
+//
+// When a file changed, the open pages are told (JSON_UPDATED, so on-screen
+// header, footer and page content refresh in place) and the worker checks for
+// a new version of itself. Older stores answer { version: null }: their files
+// are fetched network first and rechecked one by one, as before.
 const PUBLISHED_JSON_CACHE = 'published-json-v1'
 const PUBLISHED_JSON = /^\/(config|data)\/(?:[a-z]{2,3}(?:-[a-z0-9]+)?\/)?[^/]+\.json$/i
 const PUBLISHED_JSON_TIMEOUT_MS = 3000
+const OFFLINE_META_CACHE = 'offline-meta-v1'
+const SAVED_VERSION_KEY = '/__qwoo-offline/version'
+const SAVED_FILES_KEY = '/__qwoo-offline/files'
+const VERSION_RE = /^[a-f0-9]{20,40}$/
+const VERSION_GAP_MS = 30 * 1000
+// A file asked for when a check is due waits this long for it (usually a CDN hit).
+const VERSION_WAIT_MS = 800
+const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8' }
+
+function announceChanged(urls) {
+  if (!urls.length) return
+  self.clients.matchAll({ type: 'window' })
+    .then(windows => windows.forEach(client => client.postMessage({ type: 'JSON_UPDATED', urls })))
+    .catch(() => {})
+  self.registration.update().catch(() => {})
+}
 
 async function refreshPublishedJson(path) {
   const cache = await caches.open(PUBLISHED_JSON_CACHE)
@@ -52,20 +76,17 @@ async function refreshPublishedJson(path) {
   if (before !== body) {
     await cache.put(path, response.clone())
     if (before !== null) {
-      const windows = await self.clients.matchAll({ type: 'window' })
-      windows.forEach(client => client.postMessage({ type: 'JSON_UPDATED', urls: [path] }))
-      self.registration.update().catch(() => {})
-      revalidatePublishedJson() // a deploy usually changes more than one file
+      announceChanged([path])
+      sweepPublishedJson() // a deploy usually changes more than one file
     }
   }
   return response
 }
 
-// Rechecks every saved JSON file (each change is announced as above). The
-// app asks for this on page changes and when the tab comes back into view,
-// since the header, footer and branding stay on screen without refetching.
+// Older stores only: rechecks every saved JSON file (each change is announced
+// as above).
 let sweeping = null
-function revalidatePublishedJson() {
+function sweepPublishedJson() {
   if (!sweeping) {
     sweeping = (async () => {
       const cache = await caches.open(PUBLISHED_JSON_CACHE)
@@ -76,61 +97,130 @@ function revalidatePublishedJson() {
   return sweeping
 }
 
-self.addEventListener('message', event => {
-  if (event.data?.type === 'REVALIDATE_JSON') event.waitUntil(Promise.all([revalidatePublishedJson(), saveForOffline()]))
-})
+// The version whose files are saved ('' = none). Read once after the worker starts.
+let savedVersion
+async function readSavedVersion() {
+  if (savedVersion === undefined) {
+    const saved = await caches.open(OFFLINE_META_CACHE).then(meta => meta.match(SAVED_VERSION_KEY)).catch(() => null)
+    savedVersion = saved ? await saved.text() : ''
+  }
+  return savedVersion
+}
 
-// ─── Every published page, kept for offline ──────────────────────────────────
-// A store that publishes on itself (site-content.js) has one download with all
-// its configs per version (/__site/m/{version}, kept by the CDN for good). Once
-// per new version it goes into the cache above, so offline every page opens
-// with the latest content, not only the pages visited before. Configs are
-// slimmed the same way the server does, so the text matches its answers and
-// nothing is announced as changed. Older stores answer { version: null }.
-const OFFLINE_META_CACHE = 'offline-meta-v1'
-const SAVED_VERSION_KEY = '/__qwoo-offline/version'
-const VERSION_RE = /^[a-f0-9]{20,40}$/
-let saving = null
-let savedAt = 0
+/** Saves a whole version: changed files are replaced (and announced), files it no longer has removed. */
+async function saveVersion(version) {
+  const data = await fetch(`/__site/m/${version}`).then(r => (r.ok ? r.json() : null))
+  if (data?.version !== version || !data.json || typeof data.json !== 'object') return
+  const cache = await caches.open(PUBLISHED_JSON_CACHE)
+  const meta = await caches.open(OFFLINE_META_CACHE)
+  const changed = []
+  const keep = new Set()
+  const textOf = path => cache.match(path).then(r => (r ? r.text() : null))
 
-function saveForOffline() {
-  if (saving || Date.now() - savedAt < 60 * 1000) return saving || Promise.resolve()
-  saving = (async () => {
+  await Promise.all(Object.entries(data.json).map(async ([key, value]) => {
+    const path = '/' + key
+    if (!PUBLISHED_JSON.test(path)) return
+    keep.add(path)
+    const body = JSON.stringify(key.startsWith('config/') ? slimConfig(value) : value)
+    const before = await textOf(path)
+    if (before === body) return
+    await cache.put(path, new Response(body, { headers: JSON_HEADERS }))
+    if (before !== null) changed.push(path)
+  }))
+
+  // Published JSON that isn't inline (the products backup and such): fetched
+  // only when its content (sha) changed since the last saved version.
+  const savedFiles = await meta.match(SAVED_FILES_KEY).then(r => (r ? r.json() : {})).catch(() => ({}))
+  const shas = {}
+  await Promise.all(Object.entries(data.files || {}).map(async ([key, file]) => {
+    const path = '/' + key
+    if (!PUBLISHED_JSON.test(path) || key in data.json) return
+    keep.add(path)
+    const sha = String(file?.sha || '')
+    const before = await textOf(path)
+    if (sha && savedFiles[key] === sha && before !== null) {
+      shas[key] = sha
+      return
+    }
+    const response = await fetch(path, { cache: 'no-store', credentials: 'same-origin' }).catch(() => null)
+    if (!response?.ok) return
+    const body = await response.clone().text()
+    if (sha) shas[key] = sha
+    if (before === body) return
+    await cache.put(path, response)
+    if (before !== null) changed.push(path)
+  }))
+
+  // A removed page (or language) must not keep answering from here.
+  const requests = await cache.keys()
+  await Promise.all(requests.map(request => {
+    const path = new URL(request.url).pathname
+    return keep.has(path) ? null : cache.delete(request)
+  }))
+
+  await meta.put(SAVED_FILES_KEY, new Response(JSON.stringify(shas)))
+  await meta.put(SAVED_VERSION_KEY, new Response(version))
+  savedVersion = version
+  announceChanged(changed)
+}
+
+/**
+ * Asks which version is live (at most once per VERSION_GAP_MS) and saves it
+ * when it's new. The app asks for this on page changes and when the tab comes
+ * back into view, since the header, footer and branding stay on screen
+ * without refetching.
+ */
+let checking = null
+let checkedAt = 0
+function syncPublishedJson() {
+  if (checking) return checking
+  if (Date.now() - checkedAt < VERSION_GAP_MS) return Promise.resolve()
+  checking = (async () => {
     const current = await fetch('/__site/current', { cache: 'no-store' }).then(r => (r.ok ? r.json() : null))
-    const version = current?.version
-    if (!VERSION_RE.test(version || '')) return
-    const meta = await caches.open(OFFLINE_META_CACHE)
-    const saved = await meta.match(SAVED_VERSION_KEY)
-    if (saved && (await saved.text()) === version) return
-    const data = await fetch(`/__site/m/${version}`).then(r => (r.ok ? r.json() : null))
-    if (data?.version !== version || !data.json || typeof data.json !== 'object') return
-    const cache = await caches.open(PUBLISHED_JSON_CACHE)
-    const json = { 'Content-Type': 'application/json; charset=utf-8' }
-    await Promise.all(Object.entries(data.json).map(([key, value]) => {
-      if (!PUBLISHED_JSON.test('/' + key)) return null
-      const body = JSON.stringify(key.startsWith('config/') ? slimConfig(value) : value)
-      return cache.put('/' + key, new Response(body, { headers: json }))
-    }))
-    // Published JSON that isn't inline (the products backup and such): fetched once.
-    const others = Object.keys(data.files || {}).filter(key => PUBLISHED_JSON.test('/' + key) && !(key in data.json))
-    await Promise.all(others.map(key => refreshPublishedJson('/' + key).catch(() => {})))
-    await meta.put(SAVED_VERSION_KEY, new Response(version))
+    if (!current) return // offline, or the store couldn't be reached
+    const version = current.version
+    if (!VERSION_RE.test(version || '')) {
+      if (await readSavedVersion()) {
+        // The store stopped naming versions: back to rechecking file by file.
+        await caches.open(OFFLINE_META_CACHE).then(meta => meta.delete(SAVED_VERSION_KEY))
+        savedVersion = ''
+      }
+      return sweepPublishedJson()
+    }
+    if (version !== await readSavedVersion()) await saveVersion(version)
   })()
     .catch(() => {})
     .finally(() => {
-      saving = null
-      savedAt = Date.now()
+      checking = null
+      checkedAt = Date.now()
     })
-  return saving
+  return checking
 }
+
+self.addEventListener('message', event => {
+  if (event.data?.type === 'REVALIDATE_JSON') event.waitUntil(syncPublishedJson())
+})
 
 registerRoute(
   ({ url }) => url.origin === self.location.origin && PUBLISHED_JSON.test(url.pathname),
   async ({ url, event }) => {
     const path = url.pathname // one copy per file, whatever the query string
+    const cache = await caches.open(PUBLISHED_JSON_CACHE)
+
+    // Saved with a version: answer from here. When a check is due, wait for it
+    // briefly so a page opened right after a publish gets the new files; a
+    // slower answer still refreshes the screen through JSON_UPDATED.
+    if (VERSION_RE.test(await readSavedVersion())) {
+      const sync = syncPublishedJson()
+      event.waitUntil(sync)
+      await Promise.race([sync, new Promise(resolve => setTimeout(resolve, VERSION_WAIT_MS))])
+      const saved = VERSION_RE.test(savedVersion) ? await cache.match(path) : null
+      if (saved) return saved
+    }
+
     const network = refreshPublishedJson(path)
     event.waitUntil(network.catch(() => {}))
-    const cached = await caches.open(PUBLISHED_JSON_CACHE).then(cache => cache.match(path))
+    const cached = await cache.match(path)
     if (!cached) return network
     // Prefer the network, but don't keep the page waiting when it's slow.
     const timeout = new Promise(resolve => setTimeout(() => resolve(null), PUBLISHED_JSON_TIMEOUT_MS))
@@ -155,7 +245,7 @@ self.addEventListener('activate', event => {
     await self.clients.claim()
     const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
     windows.forEach(client => client.postMessage({ type: 'SW_ACTIVATED', revisions: JSON_REVISIONS }))
-    await saveForOffline()
+    await syncPublishedJson()
   })())
 })
 
