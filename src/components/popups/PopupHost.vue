@@ -85,8 +85,13 @@ const widthClasses = computed(() => {
 const cardVars = computed(() => {
   const v = {}
   const w = asResponsive(s.value.width)
+  const mw = asResponsive(s.value.max_width)
   for (const [device, suffix] of [['desktop', ''], ['tablet', '-t'], ['mobile', '-m']]) {
     const len = toCssLength(w[device])
+    if (len) v[`--qp-w${suffix}`] = len
+  }
+  for (const [device, suffix] of [['desktop', ''], ['tablet', '-t'], ['mobile', '-m']]) {
+    const len = toCssLength(mw[device])
     if (len) v[`--qp-w${suffix}`] = len
   }
   if (s.value.radius) v['--qp-radius'] = toCssLength(s.value.radius)
