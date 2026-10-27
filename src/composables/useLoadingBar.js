@@ -7,6 +7,11 @@ export function initLoadingBar(router) {
     initialized = true
 
     LoadingBar.setDefaults({
+        hijackFilter (url) {
+            const myApiUrl = typeof window !== 'undefined' ? window.location.origin : '/';
+
+            return url.startsWith(myApiUrl) || url.startsWith('/')
+        },
         color: 'secondary',
         size: '5px',
         position: 'top'
