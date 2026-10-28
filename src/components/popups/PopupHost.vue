@@ -85,14 +85,14 @@ const widthClasses = computed(() => {
 const cardVars = computed(() => {
   const v = {}
   const w = asResponsive(s.value.width)
-  const mw = asResponsive(s.value.max_width)
+  const maxw = asResponsive(s.value.max_width)
   for (const [device, suffix] of [['desktop', ''], ['tablet', '-t'], ['mobile', '-m']]) {
     const len = toCssLength(w[device])
     if (len) v[`--qp-w${suffix}`] = len
   }
   for (const [device, suffix] of [['desktop', ''], ['tablet', '-t'], ['mobile', '-m']]) {
-    const len = toCssLength(mw[device])
-    if (len) v[`--qp-w${suffix}`] = len
+    const len = toCssLength(maxw[device])
+    if (len) v[`--qp-maxw${suffix}`] = len
   }
   if (s.value.radius) v['--qp-radius'] = toCssLength(s.value.radius)
   const bg = resolveGlobalColor(s.value.bg)
@@ -241,7 +241,7 @@ html.q-document--prevent-scroll:has(.qwoo-popup) body { position: fixed !importa
   pointer-events: all;
   position: relative;
   width: var(--qp-w-now, 560px);
-  max-width: 100%;
+  max-width: var(--qp-maxw-now, 100%);
   background: var(--qp-bg, var(--q-bg, #fff));
   border-radius: var(--qp-radius, 16px);
   box-shadow: 0 24px 60px rgba(0, 0, 0, .25);
@@ -259,12 +259,12 @@ html.q-document--prevent-scroll:has(.qwoo-popup) body { position: fixed !importa
   z-index: 2;
 }
 @media (min-width: 1024px) {
-  .qp-w-d { --qp-w-now: var(--qp-w); }
+  .qp-w-d { --qp-w-now: var(--qp-w); --qp-maxw-now: var(--qp-maxw) }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-  .qp-w-t { --qp-w-now: var(--qp-w-t); }
+  .qp-w-t { --qp-w-now: var(--qp-w-t); --qp-maxw-now: var(--qp-maxw-t) }
 }
 @media (max-width: 767px) {
-  .qp-w-m { --qp-w-now: var(--qp-w-m); }
+  .qp-w-m { --qp-w-now: var(--qp-w-m); --qp-maxw-now: var(--qp-maxw-m) }
 }
 </style>
