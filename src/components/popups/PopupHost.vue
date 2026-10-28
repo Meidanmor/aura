@@ -260,12 +260,15 @@ html.q-document--prevent-scroll:has(.qwoo-popup) body { position: fixed !importa
   z-index: 2;
 }
 @media (min-width: 1024px) {
-  .qp-w-d { --qp-w-now: var(--qp-w); --qp-maxw-now: var(--qp-maxw) }
+  .qp-w-d { --qp-w-now: var(--qp-w); }
+  .qp-maxw-d { --qp-maxw-now: var(--qp-maxw) }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-  .qp-w-t { --qp-w-now: var(--qp-w-t); --qp-maxw-now: var(--qp-maxw-t) }
+  .qp-w-t { --qp-w-now: var(--qp-w-t); }
+  .qp-maxw-d { --qp-maxw-now: var(--qp-maxw-t) }
 }
 @media (max-width: 767px) {
-  .qp-w-m { --qp-w-now: var(--qp-w-m); --qp-maxw-now: var(--qp-maxw-m) }
+  .qp-w-m { --qp-w-now: var(--qp-w-m); }
+  .qp-maxw-m { --qp-maxw-now: var(--qp-maxw-m); }
 }
 </style>
