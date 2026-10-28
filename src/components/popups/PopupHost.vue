@@ -80,7 +80,8 @@ const rootVars = computed(() => {
 })
 const widthClasses = computed(() => {
   const w = asResponsive(s.value.width)
-  return { 'qp-w-d': !!w.desktop, 'qp-w-t': !!w.tablet, 'qp-w-m': !!w.mobile }
+  const maxw = asResponsive(s.value.max_width)
+  return { 'qp-w-d': !!w.desktop,'qp-maxw-d': !!maxw.desktop, 'qp-w-t': !!w.tablet,'qp-maxw-t': !!maxw.tablet, 'qp-w-m': !!w.mobile,'qp-maxw-m': !!maxw.mobile, }
 })
 const cardVars = computed(() => {
   const v = {}
