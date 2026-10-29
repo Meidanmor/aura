@@ -113,15 +113,18 @@ async function getByIds(ids = [], ssrContext = null) {
 /**
  * Products for a Shop Builder query (Product Grid / Carousel blocks).
  * `q` is the block data: query_type, category_ids, tag_ids, product_ids,
- * limit, hide_out_of_stock. Uses the Store API; falls back to
+ * limit, hide_out_of_stock, exclude_ids (the product page's own product). Uses the Store API; falls back to
  * products.json (filtered as closely as it can) when the API is down.
  */
 async function queryProducts(q = {}, ssrContext = null) {
   const type = q.query_type || 'newest'
   const limit = Math.max(1, Math.min(24, Number(q.limit) || 8))
 
+  const exclude = (q.exclude_ids || []).map(Number).filter(Boolean)
+  const keep = (list) => (exclude.length ? (list || []).filter((p) => !exclude.includes(Number(p.id))) : list)
+
   if (type === 'manual') {
-    return getFeaturedProducts(q.product_ids || [], ssrContext)
+    return keep(await getFeaturedProducts((q.product_ids || []).filter((id) => !exclude.includes(Number(id))), ssrContext))
   }
 
   const query = new URLSearchParams()
@@ -136,6 +139,7 @@ async function queryProducts(q = {}, ssrContext = null) {
     default: query.append('orderby', 'date'); query.append('order', 'desc')
   }
   if (q.hide_out_of_stock) query.append('stock_status[]', 'instock')
+  if (exclude.length) query.append('exclude', exclude.join(','))
   if ((type === 'category' && !q.category_ids?.length) || (type === 'tag' && !q.tag_ids?.length)) return []
 
   try {
@@ -163,7 +167,7 @@ async function queryProducts(q = {}, ssrContext = null) {
         all = all.filter((p) => p.tags?.some((t) => ids.includes(String(t.id))))
       }
       if (q.hide_out_of_stock) all = all.filter((p) => p.is_in_stock !== false)
-      return all.slice(0, limit)
+      return keep(all).slice(0, limit)
     } catch {
       return []
     }

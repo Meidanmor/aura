@@ -35,6 +35,7 @@ import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { useCarousel } from 'src/composables/useCrousel.js'
 import { useSectionData } from 'src/composables/useSectionData.js'
 import productsStore from 'src/stores/products'
+import { keyWithProduct, useExcludedProduct } from 'src/utils/current-product.js'
 
 const props = defineProps({
   data: {
@@ -47,21 +48,25 @@ const props = defineProps({
   },
 })
 
+// On the product page template: the product being viewed is left out (unless turned off).
+const excludeId = useExcludedProduct(() => props.data.data)
+const others = (list) => (excludeId.value ? (list || []).filter((p) => Number(p.id) !== excludeId.value) : list)
+
 // Mirrors Index.vue's resolveFeaturedProducts: try the admin-configured
 // product_ids first, and fall back to the latest 6 products if there are
 // no ids configured, or if resolving the configured ids came back empty
 // (e.g. stale ids no longer in the catalog).
 async function resolveFeaturedProducts(ssrContext) {
-  const ids = props.data.data.product_ids || []
+  const ids = (props.data.data.product_ids || []).filter((id) => Number(id) !== excludeId.value)
 
   let items = ids.length
-      ? await productsStore.getFeaturedProducts(ids, ssrContext)
+      ? others(await productsStore.getFeaturedProducts(ids, ssrContext))
       : []
 
   if (!items?.length) {
     items = await productsStore
         .preFetchProducts({ api: true, per_page: 6, dryRun: true, ssrContext })
-        .then((r) => r.products)
+        .then((r) => others(r.products))
   }
 
   return items
@@ -72,7 +77,7 @@ const picked = usePriorityBlock(props.blockId)
 // A card design chosen for this block (Store builder → Card designs), published with it.
 const card = computed(() => (Array.isArray(props.data.data?.card) && props.data.data.card.length ? props.data.data.card : null))
 
-const { data: products, resolve } = useSectionData(props.blockId, resolveFeaturedProducts)
+const { data: products, resolve } = useSectionData(keyWithProduct(props.blockId, excludeId.value), resolveFeaturedProducts)
 
 
 // A getter, so a changed "Products Per Slide" (Live Preview) is re-read.
@@ -112,7 +117,7 @@ const stopProductsWatch = watch(
 )
 // Live preview: re-resolve when the admin changes the picked products.
 const stopIdsWatch = watch(
-    () => (props.data.data.product_ids || []).join(','),
+    () => `${excludeId.value}|${(props.data.data.product_ids || []).join(',')}`,
     async (next, prev) => {
       if (next !== prev) await resolve(null)
     }

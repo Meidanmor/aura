@@ -207,6 +207,7 @@ import LoopCard from '../loops/LoopCard.vue'
 import ProductTags from '../sections/ProductTags.vue'
 import productsStore from 'src/stores/products'
 import { useBlockQuery } from 'src/composables/useBlockQuery.js'
+import { keyWithProduct, useExcludedProduct } from 'src/utils/current-product.js'
 import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
@@ -254,13 +255,15 @@ const slides = computed(() => (d.value.slides || [])
     .map((s) => ({ ...s, src: imgUrl(s.image), srcset: srcsetOf(s.image), mobileSrc: imgUrl(s.mobile_image), width: s.image?.width, height: s.image?.height }))
     .filter((s) => s.src))
 
+// On the product page template: the product being viewed is left out (unless turned off).
+const excludeId = useExcludedProduct(() => (source.value === 'products' && !props.products ? d.value : { exclude_current: false }))
 const queryKey = () => JSON.stringify([
-  source.value, d.value.query_type, d.value.category_ids, d.value.tag_ids, d.value.product_ids,
+  excludeId.value, source.value, d.value.query_type, d.value.category_ids, d.value.tag_ids, d.value.product_ids,
   d.value.limit, d.value.hide_out_of_stock, d.value.slide_category_ids,
 ])
-const { data: fetched } = useBlockQuery(props.blockId, queryKey, (ssrContext) => {
+const { data: fetched } = useBlockQuery(keyWithProduct(props.blockId, excludeId.value), queryKey, (ssrContext) => {
   if (props.products) return Promise.resolve(null)
-  if (source.value === 'products') return productsStore.queryProducts(d.value, ssrContext)
+  if (source.value === 'products') return productsStore.queryProducts({ ...d.value, exclude_ids: excludeId.value ? [excludeId.value] : [] }, ssrContext)
   if (source.value === 'categories') return productsStore.queryCategories(d.value.slide_category_ids || [], ssrContext)
   return Promise.resolve([])
 })

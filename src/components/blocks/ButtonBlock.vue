@@ -23,7 +23,7 @@
 
 <script setup>
 import { zeroPriceButton } from 'src/utils/zero-price.js'
-import { computed, ref } from 'vue'
+import { computed, inject, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import cart from 'src/stores/cart.js'
 import { fetchProductById } from 'src/api/woocommerce.js'
@@ -61,12 +61,20 @@ const iconAtEnd = computed(() => (props.icon ? props.iconRight : d.value.icon_po
 // "When Clicked: Add a product to the cart" / "… and go to checkout": simple products
 // go in the cart, products with options (sizes, colours) open their page to choose.
 const buyNow = computed(() => d.value.click_action === 'buy_now')
-const cartProductId = computed(() => (['add_to_cart', 'buy_now'].includes(d.value.click_action) ? Number(d.value.product_ids?.[0]) || 0 : 0))
+// 'Use this page's product' (product page template): the product being viewed, with the shopper's options.
+const productPage = inject('productPage', null)
+const useCurrent = computed(() => !!(d.value.product_current && productPage?.product?.id))
+const cartProductId = computed(() => {
+  if (!['add_to_cart', 'buy_now'].includes(d.value.click_action)) return 0
+  if (useCurrent.value) return productPage.product.id
+  return Number(d.value.product_ids?.[0]) || 0
+})
 const adding = ref(false)
 async function addProduct() {
   if (adding.value) return
   adding.value = true
   try {
+    if (useCurrent.value) return await addCurrent()
     const product = await fetchProductById(cartProductId.value).catch(() => null)
     const hasOptions = ['variable', 'grouped', 'external'].includes(product?.type) || product?.has_options === true
     // No price or 0, not for sale (the store's setting): the owner's link, else the product's page.
@@ -86,6 +94,17 @@ async function addProduct() {
   } finally {
     adding.value = false
   }
+}
+async function addCurrent() {
+  const product = productPage.product
+  const zero = zeroPriceButton(product, { onProductPage: true })
+  if (zero) {
+    if (zero.to) await router.push(zero.to)
+    else if (zero.href) window.open(zero.href, zero.external ? '_blank' : '_self', 'noopener')
+    return
+  }
+  if (!(await productPage.addCurrentToCart({ checkout: buyNow.value }))) return
+  if (buyNow.value) await router.push('/checkout')
 }
 const run = computed(() => props.action || (cartProductId.value ? addProduct : null))
 

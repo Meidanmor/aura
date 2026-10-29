@@ -322,12 +322,11 @@ function openLightbox(index) {
 
 const openDrawer = ref(true);
 function addToCart(e) {
-  handleAddToCart(e)
+  return handleAddToCart(e)
 }
-function handleAddToCart(e) {
-  if (e?.target?.closest?.('[data-quick-checkout]')) {
-    openDrawer.value = false;
-  }
+// `checkout`: going to the checkout next, so the cart drawer stays closed.
+function handleAddToCart(e, { checkout = false } = {}) {
+  openDrawer.value = !checkout && !e?.target?.closest?.('[data-quick-checkout]')
   const matchedVariation = product.value.variations.find((variation) => {
     return Object.entries(selectedVariations.value).every(([attrName, selectedValue]) => {
       const attr = variation.attributes.find(a => a.name === attrName);
@@ -338,8 +337,7 @@ function handleAddToCart(e) {
   });
 
   if (!matchedVariation) {
-    cart.add(product.value.id, quantity.value, null, null, $q, '', openDrawer.value);
-    return;
+    return cart.add(product.value.id, quantity.value, null, null, $q, '', openDrawer.value);
   }
 
   const selectedVariationsArray = {variation: []};
@@ -356,7 +354,23 @@ function handleAddToCart(e) {
       value: resolvedValue
     });
   }
-  cart.add(product.value.id, quantity.value, matchedVariation.id, selectedVariationsArray.variation, $q, '', openDrawer.value);
+  return cart.add(product.value.id, quantity.value, matchedVariation.id, selectedVariationsArray.variation, $q, '', openDrawer.value);
+}
+// The Button block ("Use this page's product") and Floating Add To Cart: this
+// product with the options chosen on the page. False while options are missing
+// (the page then scrolls to them).
+async function addCurrentToCart({ checkout = false } = {}) {
+  if (isVariable.value && !selectedVariation.value) {
+    variationError.value = t('Please select all variation options.')
+    showChoices()
+    return false
+  }
+  await handleAddToCart(null, { checkout })
+  return true
+}
+function showChoices() {
+  const el = [...document.querySelectorAll('.product-buy')].find((x) => x.offsetParent !== null)
+  el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 }
 function increaseQty(maxQty) {
   if(quantity.value === maxQty){
@@ -662,7 +676,7 @@ provide('productPage', reactive({
   variationLoading, selectedVariation, selectedVariations, availableAttributes, getOptionsWithDisabled,
   choicePrice, choicePricesDiffer, loadExtras,
   onVariationChange, variationError, isVariable, quantity, decreaseQty, increaseQty,
-  shouldDisableCartButtons, addToCartHandler, addToWishlist,
+  shouldDisableCartButtons, addToCartHandler, addCurrentToCart, showChoices, addToWishlist,
   onImageMouseDown, onImageMouseMove, onImageClick,
 }))
 </script>

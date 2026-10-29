@@ -25,6 +25,7 @@ import ProductCard from '../shop/ProductCard.vue'
 import LoopCard from '../loops/LoopCard.vue'
 import productsStore from 'src/stores/products'
 import { useBlockQuery } from 'src/composables/useBlockQuery.js'
+import { keyWithProduct, useExcludedProduct } from 'src/utils/current-product.js'
 import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
 
@@ -38,16 +39,19 @@ const d = computed(() => props.data.data || {})
 const card = computed(() => (Array.isArray(props.data.data?.card) && props.data.data.card.length ? props.data.data.card : null))
 const isInternal = (url) => String(url).startsWith('/') && !String(url).startsWith('//')
 
+// On the product page template: the product being viewed is left out (unless turned off).
+const excludeId = useExcludedProduct(() => d.value)
+
 // Everything that changes which products are shown.
 const queryKey = () => JSON.stringify([
-  d.value.query_type, d.value.category_ids, d.value.tag_ids, d.value.product_ids, d.value.limit, d.value.hide_out_of_stock,
+  excludeId.value, d.value.query_type, d.value.category_ids, d.value.tag_ids, d.value.product_ids, d.value.limit, d.value.hide_out_of_stock,
 ])
 
 // The page's first images (src/utils/priority-image.js): its first cards.
 const picked = usePriorityBlock(props.blockId)
 
-const { data: products } = useBlockQuery(props.blockId, queryKey, (ssrContext) =>
-    productsStore.queryProducts(d.value, ssrContext)
+const { data: products } = useBlockQuery(keyWithProduct(props.blockId, excludeId.value), queryKey, (ssrContext) =>
+    productsStore.queryProducts({ ...d.value, exclude_ids: excludeId.value ? [excludeId.value] : [] }, ssrContext)
 )
 
 const cssVars = computed(() => {
