@@ -8,7 +8,8 @@ import { join } from 'node:path'
 import branding from '../../public/config/branding.json' // adjust path as needed
 import { allLangs, isExtraLang, langFromPath, mainLang, stripLang, withLang } from '../../src/i18n/lang.js'
 import { LANGUAGES } from '../../src/i18n/index.js'
-import { clientSite } from '../site-content.js'
+import { clientSite, originOf } from '../site-content.js'
+import { cacheablePath, cachedAnswer } from '../api-cache.js'
 import { brandFontPreloads, brandFontsCss } from '../../src/utils/brand-fonts.js'
 import { contentSecurityPolicy, pageCode } from '../custom-code.js'
 
@@ -19,6 +20,8 @@ import { contentSecurityPolicy, pageCode } from '../custom-code.js'
  * server's own calls to the store's API say which language they want.
  */
 const langStore = globalThis.__QWOO_LANG_ALS || (globalThis.__QWOO_LANG_ALS = new AsyncLocalStorage())
+const BACKEND = (process.env.WP_BACKEND_URL || '').replace(/\/+$/, '')
+const PROXY_SECRET = process.env.PROXY_SHARED_SECRET || ''
 if (!globalThis.__QWOO_FETCH_LANG) {
     globalThis.__QWOO_FETCH_LANG = true
     const original = globalThis.fetch
@@ -26,13 +29,24 @@ if (!globalThis.__QWOO_FETCH_LANG) {
         const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input?.url || ''
         if (url.includes('/wp-json/')) {
             const headers = new Headers(init?.headers || (input instanceof Request ? input.headers : undefined))
-            const { lang, ua } = langStore.getStore() || {}
+            const { lang, ua, origin } = langStore.getStore() || {}
             if (isExtraLang(lang)) headers.set('X-Qwoo-Lang', lang)
             // The visitor's own browser name, for the store (see server.js).
             if (ua) headers.set('X-Qwoo-Client-UA', ua)
             // Photo addresses on this domain (server.js serves /wp-content/uploads).
             headers.set('X-Qwoo-Uploads', '1')
             headers.set('User-Agent', BACKEND_USER_AGENT)
+            // The page's calls to its own /wp-json go straight to the store, signed like the proxy in
+            // server.js signs them: through the public address each one went out to Vercel's edge and
+            // ran this function a second time before reaching the store.
+            if (BACKEND && PROXY_SECRET && origin && typeof input !== 'object' && url.startsWith(`${origin}/wp-json/`)) {
+                headers.set('X-Proxy-Secret', PROXY_SECRET)
+                const path = url.slice(origin.length)
+                const call = () => original(BACKEND + path, { ...init, headers })
+                // The store's public answers, kept until something changes on the store (api-cache.js).
+                if ((!init?.method || init.method === 'GET') && cacheablePath(path)) return cachedAnswer(path, isExtraLang(lang) ? lang : '', call)
+                return call()
+            }
             return original(input, { ...init, headers })
         }
         return original(input, init)
@@ -361,7 +375,7 @@ export default defineSsrMiddleware(({ app, resolve, render, folders }) => {
         const pageLang = langFromPath(req.path || req.url)
 
         const ua = String(req.headers['user-agent'] || '').slice(0, 512)
-        langStore.run({ lang: pageLang, ua }, () => render(ssrContext))
+        langStore.run({ lang: pageLang, ua, origin: originOf(req) }, () => render(ssrContext))
             .then(html => {
                 // NOTE: html already contains the correct <title>/<meta>/<link>/<script>
                 // tags from every useMeta() call in the rendered component tree,

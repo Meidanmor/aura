@@ -45,51 +45,55 @@ export function createArchivePreFetch(mode) {
     return async function preFetch({ ssrContext, currentRoute, redirect }) {
 
         const isPreview = currentRoute.query.preview === 'true'
-        const configData = await loadPageConfig((mode === 'category' ? 'category' : 'shop'), isPreview, getApiOrigin(ssrContext))
+        const origin = getApiOrigin(ssrContext)
+        const seoPath = mode === 'category'
+            ? `product-category/${currentRoute.params.slug}`
+            : 'shop'
+        const urlFilters = parseQueryFilters(currentRoute.query)
+        const sortParams = getSortParams(urlFilters.sortBy || 'menu_order')
+        const requestedPage = urlFilters.currentPage || 1
 
-        const categories = await productsStore.prefetchCategories(ssrContext)
+        // Everything that doesn't need the category's id is asked at the same time (each call to the
+        // store takes a few hundred ms: one after another, they added up to the page's wait).
+        const configPromise = loadPageConfig((mode === 'category' ? 'category' : 'shop'), isPreview, origin)
+        const categoriesPromise = productsStore.prefetchCategories(ssrContext)
+        const seoPromise = fetchSeoForPath(seoPath, origin)
+        const shopListPromise = mode === 'category' ? null : listFor(urlFilters.selectedCategory?.length ? urlFilters.selectedCategory : null)
+
+        const [configData, categories, seo] = await Promise.all([configPromise, categoriesPromise, seoPromise])
+        // The owner changed the category's address: send visitors to the new one.
+        if (seo.redirect) {
+            shopListPromise?.catch(() => {})
+            redirect(seo.redirect, 301)
+            return
+        }
 
         const currentCat = mode === 'category'
             ? categories.find(c => sameSlug(c.slug, currentRoute.params.slug)) || null
             : null
 
-        const seoPath = mode === 'category'
-            ? `product-category/${currentRoute.params.slug}`
-            : 'shop'
-        const seo = await fetchSeoForPath(seoPath, getApiOrigin(ssrContext))
-        // The owner changed the category's address: send visitors to the new one.
-        if (seo.redirect) {
-            redirect(seo.redirect, 301)
-            return
+        // The products and their price range (a category page needs its id first).
+        function listFor(category) {
+            return Promise.all([
+                productsStore.preFetchProducts({
+                    api: true,
+                    page: requestedPage,
+                    per_page: 6,
+                    dryRun: true,
+                    search: urlFilters.search || undefined,
+                    category: Array.isArray(category) ? category.join(',') : (category ?? undefined),
+                    min_amount: urlFilters.priceRange?.min ?? undefined,
+                    max_amount: urlFilters.priceRange?.max ?? undefined,
+                    attributes: urlFilters.attributes,
+                    in_stock: !!urlFilters.inStock,
+                    ssrContext,
+                    ...sortParams
+                }),
+                productsStore.prefetchPriceMeta(category, ssrContext),
+            ])
         }
 
-        const urlFilters = parseQueryFilters(currentRoute.query)
-        const sortParams = getSortParams(urlFilters.sortBy || 'menu_order')
-
-        const categoryParam = mode === 'category'
-            ? (currentCat?.id ?? undefined)
-            : (urlFilters.selectedCategory?.length ? urlFilters.selectedCategory.join(',') : undefined)
-
-        const priceMetaCategoryArg = mode === 'category'
-            ? (currentCat?.id ?? null)
-            : (urlFilters.selectedCategory?.length ? urlFilters.selectedCategory : null)
-
-        const requestedPage = urlFilters.currentPage || 1
-
-        const result = await productsStore.preFetchProducts({
-            api: true,
-            page: requestedPage,
-            per_page: 6,
-            dryRun: true,
-            search: urlFilters.search || undefined,
-            category: categoryParam,
-            min_amount: urlFilters.priceRange?.min ?? undefined,
-            max_amount: urlFilters.priceRange?.max ?? undefined,
-            attributes: urlFilters.attributes,
-            in_stock: !!urlFilters.inStock,
-            ssrContext,
-            ...sortParams
-        })
+        const [result, priceMeta] = await (shopListPromise || listFor(currentCat?.id ?? null))
 
         // ✅ shared page-existence guard
         const totalPages = result.totalPages || 1
@@ -98,8 +102,6 @@ export function createArchivePreFetch(mode) {
             delete cleanQuery.page
             return redirect({ path: currentRoute.path, query: cleanQuery })
         }
-
-        const priceMeta = await productsStore.prefetchPriceMeta(priceMetaCategoryArg, ssrContext)
 
         if (ssrContext) {
             ssrContext.urlFilters = urlFilters

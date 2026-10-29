@@ -62,6 +62,8 @@
         :columns="Array.isArray(footerSettings?.columns) ? footerSettings.columns : null"
     />
 
+    <SeoWait />
+
     <ConsentBanner v-if="uiHydrated" />
     <ContactButton v-if="uiHydrated" />
 
@@ -115,6 +117,7 @@ import {
 } from 'src/composables/useNotificationSoftAsk.js'
 import NotificationSoftAskModal from 'src/components/app/NotificationSoftAskModal.vue'
 import PopupHost from 'src/components/popups/PopupHost.vue'
+import SeoWait from 'src/components/app/SeoWait.js'
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
 import {
   matWifi,

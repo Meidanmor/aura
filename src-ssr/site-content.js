@@ -22,6 +22,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { createHmac } from 'node:crypto'
 import { slimConfig } from '../src/utils/slim-config.js'
+import { BACKEND_USER_AGENT } from './uploads.js'
 
 const BACKEND = (process.env.WP_BACKEND_URL || '').replace(/\/+$/, '')
 const SECRET = process.env.PROXY_SHARED_SECRET || ''
@@ -29,7 +30,11 @@ const SECRET = process.env.PROXY_SHARED_SECRET || ''
 /** Tells the store this storefront reads its published files (it switches publishing over). */
 const STOREFRONT_VERSION = '2'
 const CHECK_MS = 3000
+/** With the store's pointer file (a plain file, a few ms): checked more often. */
+const FILE_CHECK_MS = 1000
 const CHECK_WAIT_MS = 500
+/** Even with the pointer file, the store itself is asked this often (in the background): see refresh(). */
+const ROUTE_MS = 60000
 const NOT_YET_MS = 10000
 const FAILED_MS = 60000
 const TIMEOUT_MS = 5000
@@ -66,6 +71,9 @@ let pointer = null // { version, manifest, files }; version null: nothing publis
 let checkedAt = 0
 let nextCheck = 0
 let checking = null
+let routeAt = 0 // the last answer from the store itself (not its pointer file)
+let fileFails = 0
+let fileOff = false // the pointer file came through a CDN cache: never trusted again by this instance
 let site = null // the live version (see build())
 let code = null // tracking & custom code (custom-code.js): { stamp, … } from qwoo/v1/site/code
 
@@ -88,6 +96,24 @@ async function pointerFromStore() {
   return asPointer(data)
 }
 
+/** CDN cache states that mean the answer may be old (Hostinger's CDN on *.hostingersite.com backends). */
+const CACHED_RE = /^(hit|stale|updating|revalidated)$/i
+
+/**
+ * Which version is live, from the store's pointer file (uploads/qwoo-site/current.json, written by
+ * the store whenever it changes): a plain file, so no WordPress start-up (a few ms instead of a
+ * few hundred). Its address comes from qwoo/v1/site.
+ */
+async function pointerFromFile(url) {
+  const res = await fetch(`${url}?t=${Date.now()}`, { cache: 'no-store', headers: { 'user-agent': BACKEND_USER_AGENT }, signal: AbortSignal.timeout(2000) })
+  if (!res.ok) throw new Error(`the pointer file answered ${res.status}`)
+  if (CACHED_RE.test(res.headers.get('x-hcdn-cache-status') || '')) {
+    fileOff = true
+    throw new Error('the pointer file came from a CDN cache: asking the store instead')
+  }
+  return asPointer(await res.json(), url)
+}
+
 function build(data, p) {
   const json = data.json && typeof data.json === 'object' ? { ...data.json } : {}
   // Store builder configs without their empty style fields (slim-config.js): smaller pages.
@@ -105,8 +131,14 @@ function build(data, p) {
   }
 }
 
-const asPointer = (data) => ({
+const asPointer = (data, file = '') => ({
   version: VERSION_RE.test(data?.version || '') ? data.version : null,
+  // The pointer file's address (qwoo/v1/site says it; older stores have none).
+  file: httpUrl(data?.pointer) || httpUrl(data?.file) || file,
+  // Changes when anything shoppers see changes (api-cache.js keeps the store's answers until then).
+  stamp: /^[a-f0-9]{6,40}$/.test(data?.stamp || '') ? data.stamp : '',
+  // false: product answers depend on the shopper (taxes by address), never shared between visitors.
+  shared: data?.shared !== false,
   manifest: httpUrl(data?.manifest),
   files: httpUrl(data?.files),
   // Tracking & custom code changed when this does (a hash of its stamp).
@@ -145,15 +177,53 @@ async function loadVersion(p, origin, race) {
   site = build(data, p)
 }
 
+/** Makes a pointer the live one (its version and custom code loaded first). */
+async function apply(p, origin, race) {
+  if (p.version && p.version !== site?.version) await loadVersion(p, origin, race)
+  if (p.code !== code?.hash) await loadCode(p.code)
+  // A pointer file's answer lists no file address: keep the one the store gave.
+  pointer = p.file || !pointer?.file ? p : { ...p, file: pointer.file }
+}
+
+/**
+ * The store itself, once a minute, while the pointer file answers the frequent checks: its answer
+ * is the truth (it rewrites a file that missed a change), and it keeps WordPress's own timed jobs
+ * (scheduled sales and posts) running on a store whose pages all come from api-cache.js.
+ * In the background: never holds a page.
+ */
+let routeChecking = null
+function routeCheck(origin) {
+  if (routeChecking) return
+  routeAt = Date.now()
+  routeChecking = pointerFromStore()
+    .then((p) => apply(p, origin, false))
+    .catch((err) => console.error('[site] asking the store failed:', err?.message || err))
+    .finally(() => { routeChecking = null })
+}
+
 function refresh(origin) {
   if (!checking) {
     const race = !checkedAt
     let wait = CHECK_MS
     checking = (async () => {
-      const p = asPointer(await viaCdn(origin ? `${origin}/__site/current` : '', pointerFromStore, race))
-      if (p.version && p.version !== site?.version) await loadVersion(p, origin, race)
-      if (p.code !== code?.hash) await loadCode(p.code)
-      pointer = p
+      let p = null
+      if (pointer?.file && !fileOff) {
+        try {
+          p = await pointerFromFile(pointer.file)
+          fileFails = 0
+          wait = FILE_CHECK_MS
+        } catch (err) {
+          // Missing or slow: the store answers this time; after three in a row, for good.
+          if (++fileFails >= 3) fileOff = true
+          console.error('[site] reading the pointer file failed:', err?.message || err)
+        }
+        if (p && Date.now() - routeAt > ROUTE_MS) routeCheck(origin)
+      }
+      if (!p) {
+        p = asPointer(await viaCdn(origin ? `${origin}/__site/current` : '', pointerFromStore, race))
+        routeAt = Date.now()
+      }
+      await apply(p, origin, race)
       // Nothing published on the store yet: no need to ask as often.
       if (!p.version) wait = NOT_YET_MS
     })()
@@ -178,8 +248,8 @@ function refresh(origin) {
 export async function currentSite(origin = '') {
   if (!BACKEND) return null
   if (!checkedAt) await refresh(origin)
-  // Due for a check: wait for it briefly (usually a CDN hit), so a page right
-  // after a publish shows it; a slow answer finishes in the background.
+  // Due for a check: wait for it briefly (the pointer file, or a CDN hit), so a page right
+  // after a publish or a change shows it; a slow answer finishes in the background.
   else if (Date.now() > nextCheck) await Promise.race([refresh(origin), new Promise((resolve) => setTimeout(resolve, CHECK_WAIT_MS))])
   return pointer?.version && site ? site : null
 }
@@ -209,6 +279,19 @@ async function loadCode(hash) {
 /** Tracking & custom code from the last check, or null (none set up, or an older store). */
 export function siteCode() {
   return code
+}
+
+/**
+ * What the store's public answers are valid for (api-cache.js): the live version and the content
+ * stamp. null: an older store (no stamp), nothing is kept.
+ */
+export function contentTag() {
+  return pointer?.stamp ? `${pointer.version || '-'}|${pointer.stamp}` : null
+}
+
+/** Whether product answers are the same for every shopper (see asPointer). */
+export function sharedAnswers() {
+  return pointer?.shared !== false
 }
 
 /** Whether the store is hidden, from the last check (null before the first one). */
@@ -317,8 +400,10 @@ function webManifest(s, publicDir) {
   return out
 }
 
-function originOf(req) {
-  const proto = String(req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim()
+/** This site's own address for a request (behind Vercel's edge: its forwarded host). */
+export function originOf(req) {
+  // QWOO_DEV_HTTP: the local test setup (qwoo-dev) serves the dev server on plain http.
+  const proto = String(req.headers['x-forwarded-proto'] || (process.env.QWOO_DEV_HTTP ? 'http' : 'https')).split(',')[0].trim()
   const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim()
   return host ? `${proto}://${host}` : ''
 }
@@ -336,7 +421,9 @@ export function siteContentMiddleware({ publicDir }) {
     try {
       // Which version is live: cached by the CDN for a few seconds.
       if (req.path === '/__site/current') {
-        const p = await pointerFromStore()
+        let p = null
+        if (pointer?.file && !fileOff) p = await pointerFromFile(pointer.file).then((x) => ({ ...x, file: pointer.file })).catch(() => null)
+        if (!p) p = await pointerFromStore()
         res.setHeader('Cache-Control', 'no-store')
         // Never an older answer than that (no stale-while-revalidate): a publish shows within seconds.
         res.setHeader('Vercel-CDN-Cache-Control', 'max-age=2')

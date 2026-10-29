@@ -26,7 +26,7 @@
  * dynamic one.
  */
 import { loadPageConfig } from 'src/utils/config-loader.js'
-import { fetchSeoForPath } from 'src/composables/useSeo.js'
+import { deferSeo, fetchSeoForPath } from 'src/composables/useSeo.js'
 
 // Addresses come encoded ("%d7%90…") from the store and decoded from the
 // router: compare them decoded, without slashes at either end.
@@ -72,15 +72,23 @@ defineOptions({
   async preFetch({ ssrContext, currentRoute, redirect }) {
     const origin = getApiOrigin(ssrContext)
     const path = currentRoute.params.pagePath
-    const [page, seo] = await Promise.all([pageAt(path, origin), fetchSeoForPath(path, origin)])
+    const seoPromise = fetchSeoForPath(path, origin)
+    const page = await pageAt(path, origin)
+    // A page that's here: its sections load while the SEO answer is on its way (useSeo.js).
+    if (ssrContext && page) {
+      ssrContext.pageConfig = page
+      deferSeo(ssrContext, seoPromise)
+      return
+    }
+    const seo = await seoPromise
     // The owner moved the page: send visitors and search engines to its new address.
     if (!page && seo.redirect) {
       redirect(seo.redirect, 301)
       return
     }
     if (ssrContext) {
-      ssrContext.pageConfig = page || {}
-      ssrContext.seoData = page ? seo : { ...seo, robots: 'noindex, nofollow', not_found: true }
+      ssrContext.pageConfig = {}
+      ssrContext.seoData = { ...seo, robots: 'noindex, nofollow', not_found: true }
     } else {
       window.__PAGE_CONFIG__ = page || {}
       window.__SEO_DATA__ = seo

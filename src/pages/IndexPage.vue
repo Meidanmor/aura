@@ -68,14 +68,15 @@ defineOptions({
     // Products are loaded by the sections that show them (useSectionData),
     // only when the homepage has such a section.
 
-    const {fetchSeoForPath} = await import('src/composables/useSeo')
+    const {fetchSeoForPath, deferSeo} = await import('src/composables/useSeo')
 
     const isPreview = currentRoute.query.preview === 'true'
 
-    const [seo, homePage] = await Promise.all([
-      fetchSeoForPath('homepage', getApiOrigin(ssrContext)),
-      homePageOf(getApiOrigin(ssrContext)),
-    ])
+    const seoPromise = fetchSeoForPath('homepage', getApiOrigin(ssrContext))
+    const homePage = await homePageOf(getApiOrigin(ssrContext))
+    // On the server the sections' products load while the SEO answer is on its way (useSeo.js).
+    const seo = ssrContext ? null : await seoPromise
+    if (ssrContext) deferSeo(ssrContext, seoPromise)
     // The owner's Home page (one of their pages); stores that haven't published one keep the old homepage.
     // (An extra language without its own Home page yet shows the default sections.)
     const configData = homePage
@@ -88,8 +89,6 @@ defineOptions({
     }
 
     if (ssrContext) {
-      // Initialize the state object if it doesn't exist
-      ssrContext.seoData = seo
       ssrContext.pageConfig = configData
       // 2. Attach it to the rendered state (for the component)
       if (configData?.hero_image) {

@@ -16,6 +16,7 @@ import { siteContentMiddleware } from './site-content.js'
 import { comingSoonMiddleware } from './coming-soon.js'
 import { codeTestMiddleware } from './custom-code.js'
 import { uploadsHandler, BACKEND_USER_AGENT } from './uploads.js'
+import { apiCacheMiddleware } from './api-cache.js'
 import {
   defineSsrCreate,
   defineSsrListen,
@@ -67,6 +68,8 @@ export const create = defineSsrCreate(({ folders }) => {
     }
 
     app.use(uploadsHandler(backendTarget))
+    // The store's public answers (products, SEO, blog…), kept until something changes (api-cache.js).
+    app.use(apiCacheMiddleware())
 
     app.use(createProxyMiddleware({
       target: backendTarget,
