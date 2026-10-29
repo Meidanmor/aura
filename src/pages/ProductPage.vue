@@ -35,6 +35,7 @@ import ErrorNotFound from "pages/ErrorNotFound.vue";
 import {loadPageConfig, subscribeToLiveConfig} from "src/utils/config-loader.js";
 import { useI18n } from 'src/i18n/index.js'
 import { formatStoreAmount } from 'src/utils/formatters.js'
+import { sameSlug } from 'src/utils/slug.js'
 
 const { t } = useI18n()
 
@@ -75,7 +76,7 @@ if (process.env.CLIENT) {
   notFound.value = !!window.__SEO_DATA__?.not_found && !window.__PRODUCT_DATA__?.id
   if (window.__PRODUCT_DATA__ && window.__PRODUCT_DATA__.id) {
     const ssrProductSlug = getSlugFromPermalink(window.__PRODUCT_DATA__.permalink)
-    if(ssrProductSlug === route.params.slug) {
+    if (sameSlug(ssrProductSlug, route.params.slug)) {
       product.value = window.__PRODUCT_DATA__
     }
   }
@@ -370,10 +371,7 @@ function decreaseQty() {
 }
 
 async function fetchProduct(slug) {
-  let existing = productsStore.products.value.find(p => {
-    const pSlug = getSlugFromPermalink(p.permalink)
-    return pSlug === slug
-  })
+  let existing = productsStore.products.value.find(p => sameSlug(getSlugFromPermalink(p.permalink), slug))
 
   if (existing) {
     product.value = JSON.parse(JSON.stringify(existing))

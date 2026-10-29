@@ -113,9 +113,9 @@ function onClick(e) {
   .wb-size-d .widget-btn__icon { font-size: var(--wb-icon); }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-  .wb-size-t .widget-btn__icon { font-size: var(--wb-icon-t); }
+  .wb-size-t .widget-btn__icon { font-size: var(--wb-icon-t, var(--wb-icon)); }
 }
 @media (max-width: 767px) {
-  .wb-size-m .widget-btn__icon { font-size: var(--wb-icon-m); }
+  .wb-size-m .widget-btn__icon { font-size: var(--wb-icon-m, var(--wb-icon-t, var(--wb-icon))); }
 }
 </style>

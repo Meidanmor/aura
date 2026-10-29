@@ -177,13 +177,13 @@ const cssVars = computed(() => {
   .tb-stretch-d .tabs-block__tab { flex: 1 1 0; }
 }
 @media (max-width: 1023px) {
-  .tabs-block__list { justify-content: var(--tb-justify-t, flex-start); }
+  .tabs-block__list { justify-content: var(--tb-justify-t, var(--tb-justify, flex-start)); }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
   .tb-stretch-t .tabs-block__tab { flex: 1 1 0; }
 }
 @media (max-width: 767px) {
-  .tabs-block__list { justify-content: var(--tb-justify-m, flex-start); }
+  .tabs-block__list { justify-content: var(--tb-justify-m, var(--tb-justify-t, var(--tb-justify, flex-start))); }
   .tb-stretch-m .tabs-block__tab { flex: 1 1 0; }
 
   /* Accordion mode on mobile */

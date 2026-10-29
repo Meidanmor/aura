@@ -180,8 +180,8 @@ const paddingVars = computed(() => {
 
 <style scoped>
 .btn-block { display: flex; justify-content: var(--btn-justify, flex-start); }
-@media (max-width: 1023px) { .btn-block { justify-content: var(--btn-justify-t, flex-start); } }
-@media (max-width: 767px) { .btn-block { justify-content: var(--btn-justify-m, flex-start); } }
+@media (max-width: 1023px) { .btn-block { justify-content: var(--btn-justify-t, var(--btn-justify, flex-start)); } }
+@media (max-width: 767px) { .btn-block { justify-content: var(--btn-justify-m, var(--btn-justify-t, var(--btn-justify, flex-start))); } }
 
 /* "Full width" alignment, per device. */
 @media (min-width: 1024px) { .btn-full-d .btn-block__btn { width: 100%; } }
@@ -197,16 +197,16 @@ const paddingVars = computed(() => {
   .bp-l-d { padding-left: var(--bp-left) !important; }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-  .bp-t-t { padding-top: var(--bp-top-t) !important; min-height: 0; }
-  .bp-r-t { padding-right: var(--bp-right-t) !important; }
-  .bp-b-t { padding-bottom: var(--bp-bottom-t) !important; min-height: 0; }
-  .bp-l-t { padding-left: var(--bp-left-t) !important; }
+  .bp-t-t { padding-top: var(--bp-top-t, var(--bp-top)) !important; min-height: 0; }
+  .bp-r-t { padding-right: var(--bp-right-t, var(--bp-right)) !important; }
+  .bp-b-t { padding-bottom: var(--bp-bottom-t, var(--bp-bottom)) !important; min-height: 0; }
+  .bp-l-t { padding-left: var(--bp-left-t, var(--bp-left)) !important; }
 }
 @media (max-width: 767px) {
-  .bp-t-m { padding-top: var(--bp-top-m) !important; min-height: 0; }
-  .bp-r-m { padding-right: var(--bp-right-m) !important; }
-  .bp-b-m { padding-bottom: var(--bp-bottom-m) !important; min-height: 0; }
-  .bp-l-m { padding-left: var(--bp-left-m) !important; }
+  .bp-t-m { padding-top: var(--bp-top-m, var(--bp-top-t, var(--bp-top))) !important; min-height: 0; }
+  .bp-r-m { padding-right: var(--bp-right-m, var(--bp-right-t, var(--bp-right))) !important; }
+  .bp-b-m { padding-bottom: var(--bp-bottom-m, var(--bp-bottom-t, var(--bp-bottom))) !important; min-height: 0; }
+  .bp-l-m { padding-left: var(--bp-left-m, var(--bp-left-t, var(--bp-left))) !important; }
 }
 .btn-block__btn--link { text-decoration: underline; text-underline-offset: 6px; padding-left: 0; padding-right: 0; }
 .btn-block__btn--link :deep(.q-focus-helper) { display: none; }

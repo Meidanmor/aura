@@ -115,10 +115,10 @@ watch(
   gap: var(--cg-gap, 16px);
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-  .category-grid { grid-template-columns: repeat(var(--cg-cols-t, 2), minmax(0, 1fr)); gap: var(--cg-gap-t, var(--cg-gap, 16px)); }
+  .category-grid { grid-template-columns: repeat(var(--cg-cols-t, var(--cg-cols, 2)), minmax(0, 1fr)); gap: var(--cg-gap-t, var(--cg-gap, 16px)); }
 }
 @media (max-width: 767px) {
-  .category-grid { grid-template-columns: repeat(var(--cg-cols-m, 2), minmax(0, 1fr)); gap: var(--cg-gap-m, var(--cg-gap, 16px)); }
+  .category-grid { grid-template-columns: repeat(var(--cg-cols-m, var(--cg-cols-t, var(--cg-cols, 2))), minmax(0, 1fr)); gap: var(--cg-gap-m, var(--cg-gap-t, var(--cg-gap, 16px))); }
 }
 .category-grid__cell { min-width: 0; }
 .category-grid-card {

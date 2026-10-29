@@ -24,6 +24,25 @@ const CASES = new Set(['uppercase', 'lowercase', 'capitalize'])
 // A line height may be unitless (1.6): numbers stay numbers.
 const lineHeight = (v) => (v === '' || v == null ? null : String(v).trim())
 
+/**
+ * A per-screen value as the page needs it: `vars` only where a screen size
+ * differs from the bigger one (the CSS falls back to the bigger screen's
+ * variable), `has` on every size that has a value, its own or inherited
+ * (an empty smaller screen means "same as the bigger one", as the dashboard says).
+ */
+function cascade(map) {
+  const vars = {}
+  const has = {}
+  let bigger = null
+  for (const device of Object.keys(SUFFIX)) {
+    const v = map[device] ?? null
+    if (v !== null && v !== bigger) vars[device] = v
+    if (v !== null) bigger = v
+    if (bigger !== null) has[device] = true
+  }
+  return { vars, has }
+}
+
 /** The data keys of a text style: "{prefix}_{part}", or the older names in `over`. */
 export function tsKeys(prefix, over = {}) {
   return { font: `${prefix}_font`, size: `${prefix}_size`, weight: `${prefix}_weight`, lh: `${prefix}_line_height`, color: `${prefix}_color`, spacing: `${prefix}_spacing`, textCase: `${prefix}_case`, ...over }
@@ -55,17 +74,10 @@ export function textStyle(d, keys, defaultFont = 'text') {
   if (p.weight) style.fontWeight = p.weight
   if (p.color) style.color = p.color
   if (p.textCase) style.textTransform = p.textCase
-  for (const [device, v] of Object.entries(p.sizes)) {
-    style[`--ts-size${SUFFIX[device]}`] = v
-    cls[`ts-sz-${DEVICE[device]}`] = true
-  }
-  for (const [device, v] of Object.entries(p.lhs)) {
-    style[`--ts-lh${SUFFIX[device]}`] = v
-    cls[`ts-lh-${DEVICE[device]}`] = true
-  }
-  for (const [device, v] of Object.entries(p.spacings)) {
-    style[`--ts-ls${SUFFIX[device]}`] = v
-    cls[`ts-ls-${DEVICE[device]}`] = true
+  for (const [map, varName, clsName] of [[p.sizes, '--ts-size', 'ts-sz'], [p.lhs, '--ts-lh', 'ts-lh'], [p.spacings, '--ts-ls', 'ts-ls']]) {
+    const c = cascade(map)
+    for (const [device, v] of Object.entries(c.vars)) style[`${varName}${SUFFIX[device]}`] = v
+    for (const device of Object.keys(c.has)) cls[`${clsName}-${DEVICE[device]}`] = true
   }
   return { class: cls, style }
 }
@@ -82,18 +94,11 @@ export function textVars(d, keys, defaultFont, name) {
   if (p.font) set('font', p.font)
   if (p.weight) set('weight', p.weight)
   if (p.color) set('color', p.color)
-  for (const [device, v] of Object.entries(p.sizes)) {
-    style[`--ts-${name}-size${SUFFIX[device]}`] = v
-    cls[`ts-${name}-sz-${DEVICE[device]}`] = true
-  }
-  for (const [device, v] of Object.entries(p.lhs)) {
-    style[`--ts-${name}-lh${SUFFIX[device]}`] = v
-    cls[`ts-${name}-lh-${DEVICE[device]}`] = true
-  }
   if (p.textCase) set('case', p.textCase)
-  for (const [device, v] of Object.entries(p.spacings)) {
-    style[`--ts-${name}-ls${SUFFIX[device]}`] = v
-    cls[`ts-${name}-ls-${DEVICE[device]}`] = true
+  for (const [map, part, short] of [[p.sizes, 'size', 'sz'], [p.lhs, 'lh', 'lh'], [p.spacings, 'ls', 'ls']]) {
+    const c = cascade(map)
+    for (const [device, v] of Object.entries(c.vars)) style[`--ts-${name}-${part}${SUFFIX[device]}`] = v
+    for (const device of Object.keys(c.has)) cls[`ts-${name}-${short}-${DEVICE[device]}`] = true
   }
   return { class: cls, style }
 }

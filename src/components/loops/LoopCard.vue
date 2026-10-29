@@ -80,12 +80,12 @@ const shape = computed(() => {
   .lt-ch-d > .sb-container { min-height: var(--lt-ch); }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-  .lt-cr-t > .sb-container { aspect-ratio: var(--lt-cr-t); }
-  .lt-ch-t > .sb-container { min-height: var(--lt-ch-t); }
+  .lt-cr-t > .sb-container { aspect-ratio: var(--lt-cr-t, var(--lt-cr)); }
+  .lt-ch-t > .sb-container { min-height: var(--lt-ch-t, var(--lt-ch)); }
 }
 @media (max-width: 767px) {
-  .lt-cr-m > .sb-container { aspect-ratio: var(--lt-cr-m); }
-  .lt-ch-m > .sb-container { min-height: var(--lt-ch-m); }
+  .lt-cr-m > .sb-container { aspect-ratio: var(--lt-cr-m, var(--lt-cr-t, var(--lt-cr))); }
+  .lt-ch-m > .sb-container { min-height: var(--lt-ch-m, var(--lt-ch-t, var(--lt-ch))); }
 }
 
 /* Card images (LoopImage.vue). */
@@ -110,14 +110,14 @@ const shape = computed(() => {
   .lt-card .sb-block:has(> .lt-f-d) { flex: 1 1 auto; display: flex; flex-direction: column; }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-  .lt-r-t { aspect-ratio: var(--lt-ratio-t); }
-  .lt-h-t { height: var(--lt-h-t); }
+  .lt-r-t { aspect-ratio: var(--lt-ratio-t, var(--lt-ratio)); }
+  .lt-h-t { height: var(--lt-h-t, var(--lt-h)); }
   .lt-f-t { flex: 1 1 auto; min-height: 160px; }
   .lt-card .sb-block:has(> .lt-f-t) { flex: 1 1 auto; display: flex; flex-direction: column; }
 }
 @media (max-width: 767px) {
-  .lt-r-m { aspect-ratio: var(--lt-ratio-m); }
-  .lt-h-m { height: var(--lt-h-m); }
+  .lt-r-m { aspect-ratio: var(--lt-ratio-m, var(--lt-ratio-t, var(--lt-ratio))); }
+  .lt-h-m { height: var(--lt-h-m, var(--lt-h-t, var(--lt-h))); }
   .lt-f-m { flex: 1 1 auto; min-height: 160px; }
   .lt-card .sb-block:has(> .lt-f-m) { flex: 1 1 auto; display: flex; flex-direction: column; }
 }

@@ -220,6 +220,8 @@ const { t } = useI18n()
 const props = defineProps({
   data: { type: Object, required: true },
   blockId: { type: String, default: '' },
+  // Products found by the block using this carousel (Related Products): shown as they are, no query.
+  products: { type: Array, default: null },
 })
 
 const d = computed(() => props.data.data || {})
@@ -227,7 +229,7 @@ const d = computed(() => props.data.data || {})
 const titleText = computed(() => textStyle(d.value, tsKeys('title', { size: null, color: null }), 'headings'))
 const slideText = computed(() => textStyle(d.value, tsKeys('text', { color: null })))
 const buttonText = computed(() => textStyle(d.value, tsKeys('button', { size: 'button_text_size', color: null }), 'buttons'))
-const source = computed(() => d.value.source || 'slides')
+const source = computed(() => (props.products ? 'products' : d.value.source || 'slides'))
 const loop = computed(() => d.value.loop !== false)
 
 const isInternal = (url) => String(url).startsWith('/') && !String(url).startsWith('//')
@@ -257,6 +259,7 @@ const queryKey = () => JSON.stringify([
   d.value.limit, d.value.hide_out_of_stock, d.value.slide_category_ids,
 ])
 const { data: fetched } = useBlockQuery(props.blockId, queryKey, (ssrContext) => {
+  if (props.products) return Promise.resolve(null)
   if (source.value === 'products') return productsStore.queryProducts(d.value, ssrContext)
   if (source.value === 'categories') return productsStore.queryCategories(d.value.slide_category_ids || [], ssrContext)
   return Promise.resolve([])
@@ -268,6 +271,7 @@ const items = computed(() => {
         .map((img, i) => ({ ...img, key: i, src: imgUrl(img.image), srcset: srcsetOf(img.image), width: img.image?.width, height: img.image?.height }))
         .filter((img) => img.src)
   }
+  if (props.products) return props.products
   if (source.value === 'products' || source.value === 'categories') return fetched.value || []
   return []
 })
@@ -674,10 +678,10 @@ const cssVars = computed(() => {
   transform: translate(var(--p-tx), var(--p-ty));
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-  .cb-pos { top: var(--p-top-t); bottom: var(--p-bottom-t); left: var(--p-left-t); right: var(--p-right-t); transform: translate(var(--p-tx-t), var(--p-ty-t)); }
+  .cb-pos { top: var(--p-top-t, var(--p-top)); bottom: var(--p-bottom-t, var(--p-bottom)); left: var(--p-left-t, var(--p-left)); right: var(--p-right-t, var(--p-right)); transform: translate(var(--p-tx-t, var(--p-tx)), var(--p-ty-t, var(--p-ty))); }
 }
 @media (max-width: 767px) {
-  .cb-pos { top: var(--p-top-m); bottom: var(--p-bottom-m); left: var(--p-left-m); right: var(--p-right-m); transform: translate(var(--p-tx-m), var(--p-ty-m)); }
+  .cb-pos { top: var(--p-top-m, var(--p-top-t, var(--p-top))); bottom: var(--p-bottom-m, var(--p-bottom-t, var(--p-bottom))); left: var(--p-left-m, var(--p-left-t, var(--p-left))); right: var(--p-right-m, var(--p-right-t, var(--p-right))); transform: translate(var(--p-tx-m, var(--p-tx-t, var(--p-tx))), var(--p-ty-m, var(--p-ty-t, var(--p-ty)))); }
 }
 /* rtl:end:ignore */
 .cb-row__dot {
@@ -725,22 +729,22 @@ const cssVars = computed(() => {
 .cb-cat:hover .cb-cat__img { transform: scale(1.06); }
 
 @media (max-width: 1023px) {
-  .cb-hero :deep(.q-carousel__slide.cb-slide) { height: var(--cb-h-t, 440px); }
-  .cb-slide__title { font-size: var(--cb-title-t, 2.4rem); }
-  .cb-row__track { --cb-gap-now: var(--cb-gap-t, 16px); --cb-n: var(--cb-per-t, 3); }
-  .cb-img img { height: var(--cb-img-h-t, auto); }
-  .cb-row--logos .cb-img img { height: var(--cb-img-h-t, 60px); }
+  .cb-hero :deep(.q-carousel__slide.cb-slide) { height: var(--cb-h-t, var(--cb-h, 440px)); }
+  .cb-slide__title { font-size: var(--cb-title-t, var(--cb-title, 2.4rem)); }
+  .cb-row__track { --cb-gap-now: var(--cb-gap-t, var(--cb-gap, 16px)); --cb-n: var(--cb-per-t, var(--cb-per, 3)); }
+  .cb-img img { height: var(--cb-img-h-t, var(--cb-img-h, auto)); }
+  .cb-row--logos .cb-img img { height: var(--cb-img-h-t, var(--cb-img-h, 60px)); }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
   .cb-st-peek-t .cb-row__track { --cb-col: calc((100% - var(--cb-n) * var(--cb-gap-now)) / (var(--cb-n) + 0.5)); }
   .cb-st-center-t .cb-row__track { --cb-col: calc((100cqw - (var(--cb-n) + 1) * var(--cb-gap-now)) / (var(--cb-n) + 0.5)); --cb-pad: calc(var(--cb-col) * 0.25 + var(--cb-gap-now)); }
 }
 @media (max-width: 767px) {
-  .cb-hero :deep(.q-carousel__slide.cb-slide) { height: var(--cb-h-m, 380px); }
+  .cb-hero :deep(.q-carousel__slide.cb-slide) { height: var(--cb-h-m, var(--cb-h-t, var(--cb-h, 380px))); }
   .cb-slide__content { padding: 32px 24px 48px; }
-  .cb-slide__title { font-size: var(--cb-title-m, 1.9rem); }
+  .cb-slide__title { font-size: var(--cb-title-m, var(--cb-title-t, var(--cb-title, 1.9rem))); }
   .cb-slide__text { font-size: 1rem; }
-  .cb-row__track { --cb-gap-now: var(--cb-gap-m, 12px); --cb-n: var(--cb-per-m, 2); }
+  .cb-row__track { --cb-gap-now: var(--cb-gap-m, var(--cb-gap-t, var(--cb-gap, 12px))); --cb-n: var(--cb-per-m, var(--cb-per-t, var(--cb-per, 2))); }
   .cb-st-peek-m .cb-row__track { --cb-col: calc((100% - var(--cb-n) * var(--cb-gap-now)) / (var(--cb-n) + 0.5)); }
   .cb-st-center-m .cb-row__track { --cb-col: calc((100cqw - (var(--cb-n) + 1) * var(--cb-gap-now)) / (var(--cb-n) + 0.5)); --cb-pad: calc(var(--cb-col) * 0.25 + var(--cb-gap-now)); }
   /* "Show arrows on phones" off: people swipe. */
@@ -753,7 +757,7 @@ const cssVars = computed(() => {
     padding-inline: calc(50vw - 50cqw + var(--cb-pad));
     scroll-padding-inline: calc(50vw - 50cqw + var(--cb-pad));
   }
-  .cb-img img { height: var(--cb-img-h-m, auto); }
-  .cb-row--logos .cb-img img { height: var(--cb-img-h-m, 48px); }
+  .cb-img img { height: var(--cb-img-h-m, var(--cb-img-h-t, var(--cb-img-h, auto))); }
+  .cb-row--logos .cb-img img { height: var(--cb-img-h-m, var(--cb-img-h-t, var(--cb-img-h, 48px))); }
 }
 </style>

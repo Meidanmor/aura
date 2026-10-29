@@ -150,6 +150,6 @@ const cssVars = computed(() => {
 .faq-block__answer :deep(p) { margin: 0 0 0.75em; }
 .faq-block__answer :deep(p:last-child) { margin-bottom: 0; }
 
-@media (max-width: 1023px) { .faq-block__question { font-size: var(--faq-q-size-t, 1.05em); } }
-@media (max-width: 767px) { .faq-block__question { font-size: var(--faq-q-size-m, 1em); } }
+@media (max-width: 1023px) { .faq-block__question { font-size: var(--faq-q-size-t, var(--faq-q-size, 1.05em)); } }
+@media (max-width: 767px) { .faq-block__question { font-size: var(--faq-q-size-m, var(--faq-q-size-t, var(--faq-q-size, 1em))); } }
 </style>

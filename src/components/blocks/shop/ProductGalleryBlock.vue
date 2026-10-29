@@ -149,15 +149,15 @@ watch(() => p?.imagesCarousel.slide.value, () => {
 .pg-auto :deep(.q-carousel__slide) { max-height: none; }
 .pg-fixed .gallery-img--single, .pg-min .gallery-img--single, .pg-auto .gallery-img--single { max-height: none; }
 @media (max-width: 1023px) {
-  .pg-max .gallery-img, .pg-max .product-video, .pg-max :deep(.q-carousel__slide) { max-height: var(--pg-h-t, 400px); }
-  .pg-max .gallery-img--single { max-height: calc(var(--pg-h-t, 400px) * 1.25); }
-  .pg-fixed .gallery-img, .pg-fixed .product-video, .pg-fixed :deep(.q-carousel__slide) { height: var(--pg-h-t); }
-  .pg-min .gallery-img, .pg-min .product-video, .pg-min :deep(.q-carousel__slide) { min-height: var(--pg-h-t); }
+  .pg-max .gallery-img, .pg-max .product-video, .pg-max :deep(.q-carousel__slide) { max-height: var(--pg-h-t, var(--pg-h, 400px)); }
+  .pg-max .gallery-img--single { max-height: calc(var(--pg-h-t, var(--pg-h, 400px)) * 1.25); }
+  .pg-fixed .gallery-img, .pg-fixed .product-video, .pg-fixed :deep(.q-carousel__slide) { height: var(--pg-h-t, var(--pg-h)); }
+  .pg-min .gallery-img, .pg-min .product-video, .pg-min :deep(.q-carousel__slide) { min-height: var(--pg-h-t, var(--pg-h)); }
 }
 @media (max-width: 767px) {
-  .pg-max .gallery-img, .pg-max .product-video, .pg-max :deep(.q-carousel__slide) { max-height: var(--pg-h-m, 400px); }
-  .pg-max .gallery-img--single { max-height: calc(var(--pg-h-m, 400px) * 1.25); }
-  .pg-fixed .gallery-img, .pg-fixed .product-video, .pg-fixed :deep(.q-carousel__slide) { height: var(--pg-h-m); }
-  .pg-min .gallery-img, .pg-min .product-video, .pg-min :deep(.q-carousel__slide) { min-height: var(--pg-h-m); }
+  .pg-max .gallery-img, .pg-max .product-video, .pg-max :deep(.q-carousel__slide) { max-height: var(--pg-h-m, var(--pg-h-t, var(--pg-h, 400px))); }
+  .pg-max .gallery-img--single { max-height: calc(var(--pg-h-m, var(--pg-h-t, var(--pg-h, 400px))) * 1.25); }
+  .pg-fixed .gallery-img, .pg-fixed .product-video, .pg-fixed :deep(.q-carousel__slide) { height: var(--pg-h-m, var(--pg-h-t, var(--pg-h))); }
+  .pg-min .gallery-img, .pg-min .product-video, .pg-min :deep(.q-carousel__slide) { min-height: var(--pg-h-m, var(--pg-h-t, var(--pg-h))); }
 }
 </style>

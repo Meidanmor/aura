@@ -5,6 +5,7 @@ import { useFilterSync, parseQueryFilters, attrToString } from 'src/composables/
 import { scroll } from 'quasar'
 import { fetchSeoForPath, useSeoMeta } from 'src/composables/useSeo'
 import productsStore from 'src/stores/products'
+import { sameSlug } from 'src/utils/slug.js'
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
 import {loadPageConfig, subscribeToLiveConfig} from "src/utils/config-loader.js";
 
@@ -35,12 +36,6 @@ export const sortOptions = [
     { label: 'Rating',             value: 'rating'     },
 ]
 
-// Category slugs come encoded from the API ("%d7%98…") and decoded from the
-// router ("טבעות"): compare them decoded.
-function sameSlug(a = '', b = '') {
-    const plain = (s) => { try { return decodeURIComponent(String(s)).toLowerCase() } catch { return String(s).toLowerCase() } }
-    return plain(a) === plain(b)
-}
 
 /**
  * mode: 'shop'     -> category comes from URL (checkbox multi-select)
@@ -354,6 +349,8 @@ export function useProductArchive(mode) {
         watch(
             () => route.params.slug,
             async (newSlug) => {
+                // Leaving for another kind of page (a product's slug): not a category change.
+                if (!route.path.includes('/product-category/')) return
                 fetchSeoForPath(`product-category/${newSlug}`).then((seo) => { seoData.value = seo })
                 if (!Array.isArray(productsStore.categories.value) || !productsStore.categories.value.length) {
                     await productsStore.prefetchCategories()
@@ -420,7 +417,7 @@ export function useProductArchive(mode) {
             })
         }
 
-        if (!priceMin.value) {
+        if (priceMin.value == null) {
             await fetchPriceMeta(mode === 'category' ? (selectedCategoryOBJ.value?.id || null) : null)
             priceMin.value = pendingPriceRange.value.min
             priceMax.value = pendingPriceRange.value.max

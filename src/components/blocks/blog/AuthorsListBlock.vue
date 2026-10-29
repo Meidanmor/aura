@@ -61,11 +61,11 @@ const vars = computed(() => {
 /* rtl:end:ignore */
 .authors-empty { padding: 24px 0; }
 @media (min-width: 768px) and (max-width: 1023px) {
-  .authors-grid { grid-template-columns: repeat(var(--al-cols-t), minmax(0, 1fr)); }
-  .author-card-photo { width: var(--al-size-t); height: var(--al-size-t); }
+  .authors-grid { grid-template-columns: repeat(var(--al-cols-t, var(--al-cols)), minmax(0, 1fr)); }
+  .author-card-photo { width: var(--al-size-t, var(--al-size)); height: var(--al-size-t, var(--al-size)); }
 }
 @media (max-width: 767px) {
-  .authors-grid { grid-template-columns: repeat(var(--al-cols-m), minmax(0, 1fr)); }
-  .author-card-photo { width: var(--al-size-m); height: var(--al-size-m); }
+  .authors-grid { grid-template-columns: repeat(var(--al-cols-m, var(--al-cols-t, var(--al-cols))), minmax(0, 1fr)); }
+  .author-card-photo { width: var(--al-size-m, var(--al-size-t, var(--al-size))); height: var(--al-size-m, var(--al-size-t, var(--al-size))); }
 }
 </style>

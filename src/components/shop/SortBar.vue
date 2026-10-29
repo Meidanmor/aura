@@ -194,14 +194,14 @@ const filtersStyle = computed(() => ({ '--so-fbg': color('filters_bg') || undefi
 }
 @media (min-width: 768px) and (max-width: 1023px) {
   .sort-bar {
-    --so-jc-now: var(--so-jc-t); --so-w-now: var(--so-w-t); --so-h-now: var(--so-h-t); --so-px-now: var(--so-px-t); --so-gap-now: var(--so-gap-t);
-    --so-bpt: var(--so-bp-top-t); --so-bpr: var(--so-bp-right-t); --so-bpb: var(--so-bp-bottom-t); --so-bpl: var(--so-bp-left-t);
+    --so-jc-now: var(--so-jc-t, var(--so-jc)); --so-w-now: var(--so-w-t, var(--so-w)); --so-h-now: var(--so-h-t, var(--so-h)); --so-px-now: var(--so-px-t, var(--so-px)); --so-gap-now: var(--so-gap-t, var(--so-gap));
+    --so-bpt: var(--so-bp-top-t, var(--so-bp-top)); --so-bpr: var(--so-bp-right-t, var(--so-bp-right)); --so-bpb: var(--so-bp-bottom-t, var(--so-bp-bottom)); --so-bpl: var(--so-bp-left-t, var(--so-bp-left));
   }
 }
 @media (max-width: 767px) {
   .sort-bar {
-    --so-jc-now: var(--so-jc-m); --so-w-now: var(--so-w-m); --so-h-now: var(--so-h-m); --so-px-now: var(--so-px-m); --so-gap-now: var(--so-gap-m);
-    --so-bpt: var(--so-bp-top-m); --so-bpr: var(--so-bp-right-m); --so-bpb: var(--so-bp-bottom-m); --so-bpl: var(--so-bp-left-m);
+    --so-jc-now: var(--so-jc-m, var(--so-jc-t, var(--so-jc))); --so-w-now: var(--so-w-m, var(--so-w-t, var(--so-w))); --so-h-now: var(--so-h-m, var(--so-h-t, var(--so-h))); --so-px-now: var(--so-px-m, var(--so-px-t, var(--so-px))); --so-gap-now: var(--so-gap-m, var(--so-gap-t, var(--so-gap)));
+    --so-bpt: var(--so-bp-top-m, var(--so-bp-top-t, var(--so-bp-top))); --so-bpr: var(--so-bp-right-m, var(--so-bp-right-t, var(--so-bp-right))); --so-bpb: var(--so-bp-bottom-m, var(--so-bp-bottom-t, var(--so-bp-bottom))); --so-bpl: var(--so-bp-left-m, var(--so-bp-left-t, var(--so-bp-left)));
   }
 }
 /* Full width, per screen size. */
@@ -243,20 +243,20 @@ const filtersStyle = computed(() => ({ '--so-fbg': color('filters_bg') || undefi
   .ts-sv-ls-d :deep(.q-field__native) { letter-spacing: var(--ts-sv-ls); }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-  .ts-sl-sz-t :deep(.q-field__label) { font-size: var(--ts-sl-size-t); }
-  .ts-sl-lh-t :deep(.q-field__label) { line-height: var(--ts-sl-lh-t); }
-  .ts-sl-ls-t :deep(.q-field__label) { letter-spacing: var(--ts-sl-ls-t); }
-  .ts-sv-sz-t :deep(.q-field__native) { font-size: var(--ts-sv-size-t); }
-  .ts-sv-lh-t :deep(.q-field__native) { line-height: var(--ts-sv-lh-t); }
-  .ts-sv-ls-t :deep(.q-field__native) { letter-spacing: var(--ts-sv-ls-t); }
+  .ts-sl-sz-t :deep(.q-field__label) { font-size: var(--ts-sl-size-t, var(--ts-sl-size)); }
+  .ts-sl-lh-t :deep(.q-field__label) { line-height: var(--ts-sl-lh-t, var(--ts-sl-lh)); }
+  .ts-sl-ls-t :deep(.q-field__label) { letter-spacing: var(--ts-sl-ls-t, var(--ts-sl-ls)); }
+  .ts-sv-sz-t :deep(.q-field__native) { font-size: var(--ts-sv-size-t, var(--ts-sv-size)); }
+  .ts-sv-lh-t :deep(.q-field__native) { line-height: var(--ts-sv-lh-t, var(--ts-sv-lh)); }
+  .ts-sv-ls-t :deep(.q-field__native) { letter-spacing: var(--ts-sv-ls-t, var(--ts-sv-ls)); }
 }
 @media (max-width: 767px) {
-  .ts-sl-sz-m :deep(.q-field__label) { font-size: var(--ts-sl-size-m); }
-  .ts-sl-lh-m :deep(.q-field__label) { line-height: var(--ts-sl-lh-m); }
-  .ts-sl-ls-m :deep(.q-field__label) { letter-spacing: var(--ts-sl-ls-m); }
-  .ts-sv-sz-m :deep(.q-field__native) { font-size: var(--ts-sv-size-m); }
-  .ts-sv-lh-m :deep(.q-field__native) { line-height: var(--ts-sv-lh-m); }
-  .ts-sv-ls-m :deep(.q-field__native) { letter-spacing: var(--ts-sv-ls-m); }
+  .ts-sl-sz-m :deep(.q-field__label) { font-size: var(--ts-sl-size-m, var(--ts-sl-size-t, var(--ts-sl-size))); }
+  .ts-sl-lh-m :deep(.q-field__label) { line-height: var(--ts-sl-lh-m, var(--ts-sl-lh-t, var(--ts-sl-lh))); }
+  .ts-sl-ls-m :deep(.q-field__label) { letter-spacing: var(--ts-sl-ls-m, var(--ts-sl-ls-t, var(--ts-sl-ls))); }
+  .ts-sv-sz-m :deep(.q-field__native) { font-size: var(--ts-sv-size-m, var(--ts-sv-size-t, var(--ts-sv-size))); }
+  .ts-sv-lh-m :deep(.q-field__native) { line-height: var(--ts-sv-lh-m, var(--ts-sv-lh-t, var(--ts-sv-lh))); }
+  .ts-sv-ls-m :deep(.q-field__native) { letter-spacing: var(--ts-sv-ls-m, var(--ts-sv-ls-t, var(--ts-sv-ls))); }
 }
 
 /* Show As: Buttons. */

@@ -61,13 +61,13 @@ const vars = computed(() => {
   .author-profile { flex-direction: row; }
   .author-profile.is-right { flex-direction: row-reverse; }
   .ap-col-t, .ap-col-t.is-right { flex-direction: column; }
-  .author-profile-photo { width: var(--ap-size-t); height: var(--ap-size-t); }
+  .author-profile-photo { width: var(--ap-size-t, var(--ap-size)); height: var(--ap-size-t, var(--ap-size)); }
 }
 @media (max-width: 767px) {
   .author-profile { flex-direction: row; }
   .author-profile.is-right { flex-direction: row-reverse; }
   .ap-col-m, .ap-col-m.is-right { flex-direction: column; }
-  .author-profile-photo { width: var(--ap-size-m); height: var(--ap-size-m); }
+  .author-profile-photo { width: var(--ap-size-m, var(--ap-size-t, var(--ap-size))); height: var(--ap-size-m, var(--ap-size-t, var(--ap-size))); }
 }
 .ap-col-d.is-center .author-profile-bio { margin-inline: auto; }
 </style>

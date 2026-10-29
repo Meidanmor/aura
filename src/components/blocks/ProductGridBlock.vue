@@ -68,9 +68,9 @@ const cssVars = computed(() => {
 .product-grid-block__footer { display: flex; justify-content: center; margin-top: 24px; }
 
 @media (max-width: 1023px) {
-  .product-grid-block__grid { grid-template-columns: repeat(var(--pg-cols-t, 3), minmax(0, 1fr)); gap: var(--pg-gap-t, 16px); }
+  .product-grid-block__grid { grid-template-columns: repeat(var(--pg-cols-t, var(--pg-cols, 3)), minmax(0, 1fr)); gap: var(--pg-gap-t, var(--pg-gap, 16px)); }
 }
 @media (max-width: 767px) {
-  .product-grid-block__grid { grid-template-columns: repeat(var(--pg-cols-m, 2), minmax(0, 1fr)); gap: var(--pg-gap-m, 12px); }
+  .product-grid-block__grid { grid-template-columns: repeat(var(--pg-cols-m, var(--pg-cols-t, var(--pg-cols, 2))), minmax(0, 1fr)); gap: var(--pg-gap-m, var(--pg-gap-t, var(--pg-gap, 12px))); }
 }
 </style>

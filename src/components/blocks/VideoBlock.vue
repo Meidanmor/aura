@@ -162,11 +162,11 @@ video.video-block__media { object-fit: contain; }
 .video-block__cover:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
 
 @media (max-width: 1023px) {
-  .video-block { justify-content: var(--vb-align-t, center); }
-  .video-block__frame { aspect-ratio: var(--vb-ratio-t, 16 / 9); max-width: var(--vb-maxw-t, 100%); }
+  .video-block { justify-content: var(--vb-align-t, var(--vb-align, center)); }
+  .video-block__frame { aspect-ratio: var(--vb-ratio-t, var(--vb-ratio, 16 / 9)); max-width: var(--vb-maxw-t, var(--vb-maxw, 100%)); }
 }
 @media (max-width: 767px) {
-  .video-block { justify-content: var(--vb-align-m, center); }
-  .video-block__frame { aspect-ratio: var(--vb-ratio-m, 16 / 9); max-width: var(--vb-maxw-m, 100%); }
+  .video-block { justify-content: var(--vb-align-m, var(--vb-align-t, var(--vb-align, center))); }
+  .video-block__frame { aspect-ratio: var(--vb-ratio-m, var(--vb-ratio-t, var(--vb-ratio, 16 / 9))); max-width: var(--vb-maxw-m, var(--vb-maxw-t, var(--vb-maxw, 100%))); }
 }
 </style>

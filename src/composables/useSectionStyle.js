@@ -75,12 +75,19 @@ function setLookVars(vars, name, r, empty) {
   return DEVICES.some((d) => !!r[d])
 }
 
-/** Writes --name / --name-t / --name-m for a responsive value. */
+/**
+ * Writes --name / --name-t / --name-m for a responsive value, a smaller screen
+ * only where it differs from the bigger one's (every rule falls back
+ * --name-m → --name-t → --name, so a repeat adds nothing but page size).
+ */
 export function setResponsiveVar(vars, name, value, transform = (x) => x) {
   const r = asResponsive(value)
+  let bigger = null
   for (const device of DEVICES) {
-    const v = transform(r[device])
-    if (v !== null && v !== undefined && v !== '') vars[`${name}${SUFFIX[device]}`] = String(v)
+    const raw = transform(r[device])
+    const v = raw === null || raw === undefined || raw === '' ? null : String(raw)
+    if (v !== null && v !== bigger) vars[`${name}${SUFFIX[device]}`] = v
+    if (v !== null) bigger = v
   }
 }
 
@@ -184,14 +191,16 @@ const cssUrl = (url) => `url("${String(url).replace(/"/g, '%22')}")`
 function setSidesVars(vars, value) {
   const r = asResponsive(value)
   let any = false
+  const bigger = {}
   for (const device of DEVICES) {
     const sides = r[device] || {}
     for (const [side, key] of [['top', 'pt'], ['right', 'pr'], ['bottom', 'pb'], ['left', 'pl']]) {
       const len = toCssLength(sides[side])
-      if (len) {
-        vars[`--sb-${key}${SUFFIX[device]}`] = len
-        any = true
-      }
+      if (!len) continue
+      // A smaller screen only where it differs (the CSS falls back to the bigger one's).
+      if (len !== bigger[key]) vars[`--sb-${key}${SUFFIX[device]}`] = len
+      bigger[key] = len
+      any = true
     }
   }
   return any
@@ -211,12 +220,14 @@ function setMarginVars(vars, s) {
   }
   const r = asResponsive(s.margin)
   let sideways = false
+  const bigger = {}
   for (const device of DEVICES) {
     const sides = r[device] || {}
     for (const [side, key] of [['top', 'mt'], ['right', 'mr'], ['bottom', 'mb'], ['left', 'ml']]) {
       const len = toCssLength(sides[side])
       if (!len) continue
-      vars[`--sbb-${key}${SUFFIX[device]}`] = len
+      if (len !== bigger[key]) vars[`--sbb-${key}${SUFFIX[device]}`] = len
+      bigger[key] = len
       if (key === 'mr' || key === 'ml') sideways = true
     }
   }

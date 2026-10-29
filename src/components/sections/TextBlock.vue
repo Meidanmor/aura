@@ -64,11 +64,11 @@ const typographyClasses = computed(() => {
   .tb-lh-d { line-height: var(--tb-lh); }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-  .tb-size-t { font-size: var(--tb-size-t); }
-  .tb-lh-t { line-height: var(--tb-lh-t); }
+  .tb-size-t { font-size: var(--tb-size-t, var(--tb-size)); }
+  .tb-lh-t { line-height: var(--tb-lh-t, var(--tb-lh)); }
 }
 @media (max-width: 767px) {
-  .tb-size-m { font-size: var(--tb-size-m); }
-  .tb-lh-m { line-height: var(--tb-lh-m); }
+  .tb-size-m { font-size: var(--tb-size-m, var(--tb-size-t, var(--tb-size))); }
+  .tb-lh-m { line-height: var(--tb-lh-m, var(--tb-lh-t, var(--tb-lh))); }
 }
 </style>

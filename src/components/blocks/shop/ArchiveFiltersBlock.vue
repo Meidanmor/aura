@@ -116,6 +116,25 @@ const shownAttributes = computed(() => {
 .filters-chip:hover { border-color: currentColor; }
 .filters-chip.is-on { background: var(--q-secondary); border-color: var(--q-secondary); color: var(--q-primary); }
 
+/* Computers: the box is as tall as its filters (a fixed height cut them off
+   behind a hidden scrollbar and caught the mouse wheel). The scroll area is
+   only needed in the phones' drawer. */
+@media (min-width: 768px) {
+  .filters-wrap { height: auto; }
+  .filters-wrap :deep(.q-scrollarea) { contain: none; }
+  .filters-wrap :deep(.q-scrollarea),
+  .filters-wrap :deep(.q-scrollarea__container),
+  .filters-wrap :deep(.q-scrollarea__content) {
+    position: static;
+    height: auto !important;
+    width: 100% !important;
+    overflow: visible;
+  }
+  .filters-wrap :deep(.q-scrollarea__bar),
+  .filters-wrap :deep(.q-scrollarea__thumb) { display: none; }
+  .sticky.filters-drawer-header { position: static; background: none; box-shadow: none; }
+}
+
 @media (max-width: 767px) {
   .filters-wrap {
     position: fixed;

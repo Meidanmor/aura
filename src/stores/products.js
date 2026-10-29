@@ -1,6 +1,7 @@
 // src/stores/products.js
 import { ref } from 'vue'
 import { getApiOrigin } from 'src/utils/server/get-api-origin'
+import { plainSlug, sameSlug, slugOfPermalink } from 'src/utils/slug.js'
 
 // STORE_API_BASE is no longer a module-level constant — it depended on
 // process.env.VITE_API_BASE, which is fixed once at server boot and shared
@@ -435,19 +436,22 @@ async function fetchProductsIfNeeded(ctx) {
 // other languages): it never answers from what an earlier request loaded.
 const onServer = typeof window === 'undefined'
 
+// Products opened one by one (product pages), by plain slug. Kept apart from
+// `products` and `productsLoading`, which belong to the list the shop shows:
+// opening a product from the shop must not turn that list into skeletons
+// (or add a card to it) while the next page loads.
+const bySlug = new Map()
+
 async function fetchSingleProduct(slug, ssrContext = null) {
-  // 1. Check if we already have it in the existing list
-  const existing = !onServer && products.value.find(p => {
-    const pSlug = p.permalink?.split('/').filter(Boolean).pop()
-    return pSlug === slug
-  })
+  // 1. Already loaded: opened before, or in the list the shop shows
+  const key = plainSlug(slug)
+  const existing = !onServer && (bySlug.get(key) || products.value.find(p => sameSlug(p.slug || slugOfPermalink(p.permalink), slug)))
 
   if (existing) return existing
 
   // 2. If not, fetch it specifically from the API
   try {
-    productsLoading.value = true
-    const fetchSingleProduct = await fetch(`${storeApiBase(ssrContext)}/products/${slug}`)
+    const fetchSingleProduct = await fetch(`${storeApiBase(ssrContext)}/products/${encodeURIComponent(key)}`)
     // No such product: an answer, not a failure — don't go looking by search.
     if (fetchSingleProduct.status === 404) return null
     if (!fetchSingleProduct.ok) throw new Error(`API error: ${fetchSingleProduct.status}`)
@@ -455,19 +459,20 @@ async function fetchSingleProduct(slug, ssrContext = null) {
     const data = await fetchSingleProduct.json();
 
     if (data?.id) {
-      if (!onServer) products.value.push(data)
+      if (!onServer) bySlug.set(key, data)
       return data
     }
   } catch (err) {
     console.error('Error fetching single product:', err)
-    const results = await preFetchProducts({search: slug, api: true, ssrContext})
-    const found = Array.isArray(results) ? results[0] : results?.products?.[0] ?? null
-    if (found) {
-      products.value.push(found)
-      return found
-    }
-  } finally {
-    productsLoading.value = false
+    // Look it up by search (without touching the shop's list).
+    try {
+      const res = await fetch(`${storeApiBase(ssrContext)}/products?per_page=1&search=${encodeURIComponent(key)}`)
+      const found = res.ok ? (await res.json())?.[0] : null
+      if (found?.id) {
+        if (!onServer) bySlug.set(key, found)
+        return found
+      }
+    } catch { /* the store can't be reached */ }
   }
   return null
 }

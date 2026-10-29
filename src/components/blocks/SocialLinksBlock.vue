@@ -115,17 +115,17 @@ const cssVars = computed(() => {
 .social-links__label { font-weight: 500; }
 
 @media (max-width: 1023px) {
-  .social-links { gap: var(--sl-gap-t, 10px); justify-content: var(--sl-align-t, flex-start); }
-  .social-links__icon { font-size: var(--sl-size-t, 18px); }
+  .social-links { gap: var(--sl-gap-t, var(--sl-gap, 10px)); justify-content: var(--sl-align-t, var(--sl-align, flex-start)); }
+  .social-links__icon { font-size: var(--sl-size-t, var(--sl-size, 18px)); }
   .social-links--circle .social-links__icon,
   .social-links--rounded .social-links__icon,
-  .social-links--square .social-links__icon { width: calc(var(--sl-size-t, 18px) * 2.1); height: calc(var(--sl-size-t, 18px) * 2.1); }
+  .social-links--square .social-links__icon { width: calc(var(--sl-size-t, var(--sl-size, 18px)) * 2.1); height: calc(var(--sl-size-t, var(--sl-size, 18px)) * 2.1); }
 }
 @media (max-width: 767px) {
-  .social-links { gap: var(--sl-gap-m, 10px); justify-content: var(--sl-align-m, flex-start); }
-  .social-links__icon { font-size: var(--sl-size-m, 18px); }
+  .social-links { gap: var(--sl-gap-m, var(--sl-gap-t, var(--sl-gap, 10px))); justify-content: var(--sl-align-m, var(--sl-align-t, var(--sl-align, flex-start))); }
+  .social-links__icon { font-size: var(--sl-size-m, var(--sl-size-t, var(--sl-size, 18px))); }
   .social-links--circle .social-links__icon,
   .social-links--rounded .social-links__icon,
-  .social-links--square .social-links__icon { width: calc(var(--sl-size-m, 18px) * 2.1); height: calc(var(--sl-size-m, 18px) * 2.1); }
+  .social-links--square .social-links__icon { width: calc(var(--sl-size-m, var(--sl-size-t, var(--sl-size, 18px))) * 2.1); height: calc(var(--sl-size-m, var(--sl-size-t, var(--sl-size, 18px))) * 2.1); }
 }
 </style>

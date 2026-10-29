@@ -264,11 +264,11 @@ html.q-document--prevent-scroll:has(.qwoo-popup) body { position: fixed !importa
   .qp-maxw-d { --qp-maxw-now: var(--qp-maxw) }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-  .qp-w-t { --qp-w-now: var(--qp-w-t); }
-  .qp-maxw-d { --qp-maxw-now: var(--qp-maxw-t) }
+  .qp-w-t { --qp-w-now: var(--qp-w-t, var(--qp-w)); }
+  .qp-maxw-d { --qp-maxw-now: var(--qp-maxw-t, var(--qp-maxw)) }
 }
 @media (max-width: 767px) {
-  .qp-w-m { --qp-w-now: var(--qp-w-m); }
-  .qp-maxw-m { --qp-maxw-now: var(--qp-maxw-m); }
+  .qp-w-m { --qp-w-now: var(--qp-w-m, var(--qp-w-t, var(--qp-w))); }
+  .qp-maxw-m { --qp-maxw-now: var(--qp-maxw-m, var(--qp-maxw-t, var(--qp-maxw))); }
 }
 </style>

@@ -61,9 +61,9 @@ const vars = computed(() => {
 }
 .products-grid > :deep(.q-card), .products-grid__item > :deep(.q-card) { display: flex; flex-direction: column; justify-content: flex-start; }
 @media (max-width: 1023px) {
-  .products-grid { grid-template-columns: repeat(var(--pg-cols-t, 2), minmax(0, 1fr)); gap: var(--pg-gap-t, 16px); }
+  .products-grid { grid-template-columns: repeat(var(--pg-cols-t, var(--pg-cols, 2)), minmax(0, 1fr)); gap: var(--pg-gap-t, var(--pg-gap, 16px)); }
 }
 @media (max-width: 767px) {
-  .products-grid { grid-template-columns: repeat(var(--pg-cols-m, 2), minmax(0, 1fr)); gap: var(--pg-gap-m, 16px); }
+  .products-grid { grid-template-columns: repeat(var(--pg-cols-m, var(--pg-cols-t, var(--pg-cols, 2))), minmax(0, 1fr)); gap: var(--pg-gap-m, var(--pg-gap-t, var(--pg-gap, 16px))); }
 }
 </style>

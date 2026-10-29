@@ -1,6 +1,6 @@
 <!-- src/components/shop/PriceFilterCard.vue -->
 <template>
-  <div class="filters-inner-wrap q-pa-md q-mb-md" v-if="!min">
+  <div class="filters-inner-wrap q-pa-md q-mb-md" v-if="min == null || max == null">
     <q-skeleton type="rect" class="q-mb-md" />
   </div>
   <q-card class="filters-inner-wrap price-range-wrap q-pa-md q-mb-md" v-else>

@@ -60,6 +60,6 @@ const vars = computed(() => {
 .post-author-name a { color: inherit; }
 .post-author-meta { margin: 2px 0 0; opacity: .75; font-size: .9em; }
 .post-author-bio { white-space: pre-line; }
-@media (min-width: 768px) and (max-width: 1023px) { .post-author-photo { width: var(--pa-size-t); height: var(--pa-size-t); } }
-@media (max-width: 767px) { .post-author-photo { width: var(--pa-size-m); height: var(--pa-size-m); } }
+@media (min-width: 768px) and (max-width: 1023px) { .post-author-photo { width: var(--pa-size-t, var(--pa-size)); height: var(--pa-size-t, var(--pa-size)); } }
+@media (max-width: 767px) { .post-author-photo { width: var(--pa-size-m, var(--pa-size-t, var(--pa-size))); height: var(--pa-size-m, var(--pa-size-t, var(--pa-size))); } }
 </style>

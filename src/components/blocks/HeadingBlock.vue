@@ -82,11 +82,11 @@ const subtitleStyle = computed(() => ({
   .hb-sub-d .heading-block__subtitle { font-size: var(--hb-sub-size); }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-  .hb-size-t .heading-block__title { font-size: var(--hb-size-t); line-height: 1.15; }
-  .hb-sub-t .heading-block__subtitle { font-size: var(--hb-sub-size-t); }
+  .hb-size-t .heading-block__title { font-size: var(--hb-size-t, var(--hb-size)); line-height: 1.15; }
+  .hb-sub-t .heading-block__subtitle { font-size: var(--hb-sub-size-t, var(--hb-sub-size)); }
 }
 @media (max-width: 767px) {
-  .hb-size-m .heading-block__title { font-size: var(--hb-size-m); line-height: 1.15; }
-  .hb-sub-m .heading-block__subtitle { font-size: var(--hb-sub-size-m); }
+  .hb-size-m .heading-block__title { font-size: var(--hb-size-m, var(--hb-size-t, var(--hb-size))); line-height: 1.15; }
+  .hb-sub-m .heading-block__subtitle { font-size: var(--hb-sub-size-m, var(--hb-sub-size-t, var(--hb-sub-size))); }
 }
 </style>

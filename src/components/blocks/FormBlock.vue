@@ -337,16 +337,16 @@ const cssVars = computed(() => {
   .ts-fi-lh-d :deep(:is(.q-field__native, .q-field__input)) { line-height: var(--ts-fi-lh); }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-  .ts-fl-sz-t :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { font-size: var(--ts-fl-size-t); }
-  .ts-fi-sz-t :deep(:is(.q-field__native, .q-field__input)) { font-size: var(--ts-fi-size-t); }
-  .ts-fl-lh-t :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { line-height: var(--ts-fl-lh-t); }
-  .ts-fi-lh-t :deep(:is(.q-field__native, .q-field__input)) { line-height: var(--ts-fi-lh-t); }
+  .ts-fl-sz-t :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { font-size: var(--ts-fl-size-t, var(--ts-fl-size)); }
+  .ts-fi-sz-t :deep(:is(.q-field__native, .q-field__input)) { font-size: var(--ts-fi-size-t, var(--ts-fi-size)); }
+  .ts-fl-lh-t :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { line-height: var(--ts-fl-lh-t, var(--ts-fl-lh)); }
+  .ts-fi-lh-t :deep(:is(.q-field__native, .q-field__input)) { line-height: var(--ts-fi-lh-t, var(--ts-fi-lh)); }
 }
 @media (max-width: 767px) {
-  .ts-fl-sz-m :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { font-size: var(--ts-fl-size-m); }
-  .ts-fi-sz-m :deep(:is(.q-field__native, .q-field__input)) { font-size: var(--ts-fi-size-m); }
-  .ts-fl-lh-m :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { line-height: var(--ts-fl-lh-m); }
-  .ts-fi-lh-m :deep(:is(.q-field__native, .q-field__input)) { line-height: var(--ts-fi-lh-m); }
+  .ts-fl-sz-m :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { font-size: var(--ts-fl-size-m, var(--ts-fl-size-t, var(--ts-fl-size))); }
+  .ts-fi-sz-m :deep(:is(.q-field__native, .q-field__input)) { font-size: var(--ts-fi-size-m, var(--ts-fi-size-t, var(--ts-fi-size))); }
+  .ts-fl-lh-m :deep(:is(.q-field__label, .q-checkbox__label, .q-radio__label)) { line-height: var(--ts-fl-lh-m, var(--ts-fl-lh-t, var(--ts-fl-lh))); }
+  .ts-fi-lh-m :deep(:is(.q-field__native, .q-field__input)) { line-height: var(--ts-fi-lh-m, var(--ts-fi-lh-t, var(--ts-fi-lh))); }
 }
 .form-block__success {
   display: flex;
@@ -372,8 +372,8 @@ const cssVars = computed(() => {
   .fb-btn-full-d .form-block__submit { width: 100%; }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-  .form-block { max-width: var(--fb-maxw-t, none); }
-  .form-block__actions { justify-content: var(--fb-btn-align-t, flex-start); }
+  .form-block { max-width: var(--fb-maxw-t, var(--fb-maxw, none)); }
+  .form-block__actions { justify-content: var(--fb-btn-align-t, var(--fb-btn-align, flex-start)); }
   .fb-inline-t .form-block__form { display: flex; align-items: flex-start; gap: 12px; }
   .fb-inline-t .form-block__fields { flex: 1 1 auto; flex-wrap: nowrap; }
   .fb-inline-t .form-block__actions { margin-top: 0; }
@@ -381,8 +381,8 @@ const cssVars = computed(() => {
   .fb-btn-full-t .form-block__submit { width: 100%; }
 }
 @media (max-width: 767px) {
-  .form-block { max-width: var(--fb-maxw-m, none); }
-  .form-block__actions { justify-content: var(--fb-btn-align-m, flex-start); }
+  .form-block { max-width: var(--fb-maxw-m, var(--fb-maxw-t, var(--fb-maxw, none))); }
+  .form-block__actions { justify-content: var(--fb-btn-align-m, var(--fb-btn-align-t, var(--fb-btn-align, flex-start))); }
   .fb-inline-m .form-block__form { display: flex; align-items: flex-start; gap: 12px; }
   .fb-inline-m .form-block__fields { flex: 1 1 auto; flex-wrap: nowrap; }
   .fb-inline-m .form-block__actions { margin-top: 0; }

@@ -118,9 +118,9 @@ watch(
   gap: 16px;
 }
 @media (max-width: 1023px) {
-  .testimonials-grid { grid-template-columns: repeat(var(--tg-cols-t, 2), minmax(0, 1fr)); }
+  .testimonials-grid { grid-template-columns: repeat(var(--tg-cols-t, var(--tg-cols, 2)), minmax(0, 1fr)); }
 }
 @media (max-width: 767px) {
-  .testimonials-grid { grid-template-columns: repeat(var(--tg-cols-m, 1), minmax(0, 1fr)); }
+  .testimonials-grid { grid-template-columns: repeat(var(--tg-cols-m, var(--tg-cols-t, var(--tg-cols, 1))), minmax(0, 1fr)); }
 }
 </style>

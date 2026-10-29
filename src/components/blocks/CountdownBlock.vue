@@ -133,13 +133,13 @@ const cssVars = computed(() => {
 .countdown-block__message { margin: 0; text-align: center; font-weight: 600; }
 
 @media (max-width: 1023px) {
-  .countdown-block__units { justify-content: var(--cd-align-t, center); }
-  .countdown-block__number { font-size: var(--cd-size-t, 36px); }
-  .countdown-block__unit { min-width: calc(var(--cd-size-t, 36px) * 1.8); }
+  .countdown-block__units { justify-content: var(--cd-align-t, var(--cd-align, center)); }
+  .countdown-block__number { font-size: var(--cd-size-t, var(--cd-size, 36px)); }
+  .countdown-block__unit { min-width: calc(var(--cd-size-t, var(--cd-size, 36px)) * 1.8); }
 }
 @media (max-width: 767px) {
-  .countdown-block__units { justify-content: var(--cd-align-m, center); gap: 8px; }
-  .countdown-block__number { font-size: var(--cd-size-m, 28px); }
-  .countdown-block__unit { min-width: calc(var(--cd-size-m, 28px) * 1.8); }
+  .countdown-block__units { justify-content: var(--cd-align-m, var(--cd-align-t, var(--cd-align, center))); gap: 8px; }
+  .countdown-block__number { font-size: var(--cd-size-m, var(--cd-size-t, var(--cd-size, 28px))); }
+  .countdown-block__unit { min-width: calc(var(--cd-size-m, var(--cd-size-t, var(--cd-size, 28px))) * 1.8); }
 }
 </style>
