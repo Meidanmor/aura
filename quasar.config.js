@@ -272,6 +272,9 @@ export default defineConfig((ctx) => {
             }
           };
         }
+        // The local test setup (qwoo-dev) hands Vite a copy of public/ without the store's content
+        // paths, so the dev server serves the store's live version like Vercel does.
+        if (ctx.dev && process.env.QWOO_DEV_PUBLIC) viteConf.publicDir = process.env.QWOO_DEV_PUBLIC
         // ... inside extendViteConf
         viteConf.resolve.alias = {
           'src/services/push/push.js': isCapacitor
@@ -286,6 +289,7 @@ export default defineConfig((ctx) => {
 devServer: {
   https: (() => {
     if (!ctx.dev || ctx.mode.capacitor) return false // no https needed at all here
+    if (process.env.QWOO_DEV_HTTP) return false // the local test setup (qwoo-dev) runs on plain http
     const keyPath = './certs/localhost-key.pem'
     const certPath = './certs/localhost.pem'
     if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
