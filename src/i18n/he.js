@@ -446,4 +446,8 @@ export default {
   "An account with this email already exists. Please sign in.": "כבר יש חשבון עם האימייל הזה. אפשר להתחבר.",
   "That password is too long.": "הסיסמה ארוכה מדי.",
   "Close": "סגירה",
+  "View product": "לצפייה במוצר",
+  "Sort": "מיון",
+  "We use cookies": "אנחנו משתמשים בעוגיות",
+  "We use cookies to run the store and to improve your experience.": "אנחנו משתמשים בעוגיות כדי להפעיל את החנות ולשפר את החוויה שלך.",
 }

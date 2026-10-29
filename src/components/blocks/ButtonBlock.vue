@@ -22,6 +22,7 @@
 </template>
 
 <script setup>
+import { zeroPriceButton } from 'src/utils/zero-price.js'
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import cart from 'src/stores/cart.js'
@@ -68,7 +69,14 @@ async function addProduct() {
   try {
     const product = await fetchProductById(cartProductId.value).catch(() => null)
     const hasOptions = ['variable', 'grouped', 'external'].includes(product?.type) || product?.has_options === true
-    if (product && hasOptions) {
+    // No price or 0, not for sale (the store's setting): the owner's link, else the product's page.
+    const zero = zeroPriceButton(product)
+    if (zero && !zero.hide) {
+      if (zero.to) await router.push(zero.to)
+      else if (zero.href) window.open(zero.href, zero.external ? '_blank' : '_self', 'noopener')
+      return
+    }
+    if (product && (hasOptions || zero)) {
       const path = product.permalink ? new URL(product.permalink, 'http://x').pathname : ''
       if (path) await router.push(path)
       return

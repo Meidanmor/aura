@@ -1,7 +1,5 @@
 <template>
-  <!-- A store without tracking code: the plain cookie notice. -->
-  <CookieBanner v-if="!asks" />
-  <transition v-else name="fade">
+  <transition name="fade">
     <div v-if="visible" class="cookie-banner consent-banner" role="dialog" :aria-label="title || t('Cookies')" aria-live="polite">
       <div class="consent-body">
         <div v-if="title" class="consent-title">{{ title }}</div>
@@ -27,7 +25,11 @@
       </div>
 
       <div class="cookie-actions consent-actions">
-        <template v-if="choosing">
+        <!-- No analytics or marketing code: nothing to choose, one button. -->
+        <template v-if="!asks">
+          <q-btn unelevated no-caps color="secondary" :label="own.accept || t('OK')" @click="noticeSeen" />
+        </template>
+        <template v-else-if="choosing">
           <q-btn unelevated no-caps color="secondary" :label="own.save || t('Save my choice')" @click="done(picked)" />
         </template>
         <template v-else-if="mode === 'notice'">
@@ -47,34 +49,44 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
-import CookieBanner from './CookieBanner.vue'
 import { loadPageConfig } from 'src/utils/config-loader.js'
 import { allowedNow, codeConfig, consentChoice, saveConsent } from 'src/utils/custom-code.js'
 import { currentLang } from 'src/i18n/lang.js'
 import { useI18n } from 'src/i18n/index.js'
 
 /**
- * The consent banner (Settings → Tracking & code): shown when the store has
- * analytics or marketing code. "Ask first": nothing of that runs before the
- * shopper agrees (Accept all / Reject all / Choose). "Notice only": it runs,
- * and the shopper can turn it off. The choice is kept for 6 months; "Cookie
- * settings" links (#cookie-settings) open the choices again.
+ * The cookie banner (Settings → Tracking & code), the same for every store.
+ * With analytics or marketing code: "Ask first": nothing of that runs before
+ * the shopper agrees (Accept all / Reject all / Choose), and the banner
+ * always shows; "Notice only": it runs, and the shopper can turn it off. The
+ * choice is kept for 6 months; "Cookie settings" links (#cookie-settings)
+ * open the choices again. Without such code: a notice with one button (kept
+ * in localStorage cookie_consent), so a later "ask" store still asks.
+ * "Show a cookie banner" off hides it, except for "Ask first" with code.
+ * Title and message are the owner's (the store starts them with real texts;
+ * empty = none); an older store or one never set up gets the built-in ones.
  */
 const { t } = useI18n()
 const cfg = codeConfig()
 const asks = !!cfg?.ask
 const mode = cfg?.mode === 'notice' ? 'notice' : 'ask'
 const own = computed(() => cfg?.texts?.[currentLang()] || {})
+// Owner's switch (stores without settings: on). "Ask first" with code needs the banner.
+const shown = (asks && mode === 'ask') || cfg?.banner !== false
+// The store sends title and message (maybe empty on purpose); without them, the built-in ones.
+const ownText = (key, fallback) => (Object.prototype.hasOwnProperty.call(own.value, key) ? String(own.value[key] || '') : fallback())
 
 const visible = ref(false)
 const choosing = ref(false)
 const picked = reactive({ analytics: false, marketing: false })
 const privacyPath = ref('')
 
-const title = computed(() => own.value.title || '')
-const text = computed(() => own.value.text || (mode === 'notice'
-  ? t('We use cookies to run the store, see how it\'s used and measure our ads. You can turn them off.')
-  : t('We use cookies to run the store. With your permission, we also use them to see how the store is used and to measure our ads.')))
+const title = computed(() => ownText('title', () => t('We use cookies')))
+const text = computed(() => ownText('text', () => (!asks
+  ? t('We use cookies to run the store and to improve your experience.')
+  : mode === 'notice'
+    ? t('We use cookies to run the store, see how it\'s used and measure our ads. You can turn them off.')
+    : t('We use cookies to run the store. With your permission, we also use them to see how the store is used and to measure our ads.'))))
 
 const PRIVACY_PATHS = ['privacy-policy', 'privacy']
 async function findPrivacyPage() {
@@ -92,6 +104,12 @@ function choose() {
   choosing.value = true
 }
 
+const NOTICE_KEY = 'cookie_consent'
+function noticeSeen() {
+  try { localStorage.setItem(NOTICE_KEY, 'accepted') } catch { /* private mode */ }
+  visible.value = false
+}
+
 function done(next) {
   saveConsent(next)
   visible.value = false
@@ -107,9 +125,15 @@ function reopen() {
 }
 
 onMounted(() => {
-  if (!asks) return
-  window.addEventListener('qwoo:consent-open', reopen)
-  if (consentChoice()) return
+  if (asks) window.addEventListener('qwoo:consent-open', reopen)
+  if (!shown) return
+  if (asks) {
+    if (consentChoice()) return
+  } else {
+    let seen = null
+    try { seen = localStorage.getItem(NOTICE_KEY) } catch { /* private mode */ }
+    if (seen) return
+  }
   visible.value = true
   findPrivacyPage()
 })

@@ -50,6 +50,21 @@
 
     <div v-if="p.product.status === 'draft'"><b>{{ t('This is a draft product. It\'s shown for admins only!') }}</b></div>
 
+    <!-- No price or 0 (the store's setting): the owner's button, or nothing. -->
+    <div v-else-if="zero" class="product-buy__buttons">
+      <q-btn
+          v-if="!zero.hide"
+          :label="zero.label"
+          class="buy-btn"
+          :class="[buttonText.class, paddingVars.cls]"
+          :style="[buttonText.style, buttonColors]"
+          :color="buttonBg ? undefined : 'secondary'"
+          :outline="d.button_style === 'outline'"
+          :unelevated="d.button_style !== 'outline'"
+          v-bind="zeroPriceLink(zero)"
+      />
+    </div>
+
     <template v-else-if="p.product.is_in_stock">
       <div v-if="d.show_quantity !== false" class="row items-center q-mb-md">
         <q-btn :aria-label="t('Decrease quantity')" flat round :icon="matRemove" @click="p.decreaseQty" />
@@ -108,6 +123,7 @@ import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { asResponsive, toCssLength } from 'src/composables/useSectionStyle.js'
 import { gradientOf } from 'src/utils/gradient.js'
+import { zeroPriceButton, zeroPriceLink } from 'src/utils/zero-price.js'
 
 /**
  * "Add To Cart" (product page template): the variant choices, the quantity,
@@ -117,6 +133,7 @@ import { gradientOf } from 'src/utils/gradient.js'
 const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
 const p = inject('productPage', null)
 const d = computed(() => props.data.data || {})
+const zero = computed(() => zeroPriceButton(p?.product, { onProductPage: true }))
 const buttonText = computed(() => textStyle(d.value, tsKeys('button'), 'buttons'))
 const buttonBg = computed(() => resolveGlobalColor(d.value.button_bg))
 const quickBg = computed(() => resolveGlobalColor(d.value.quick_bg))

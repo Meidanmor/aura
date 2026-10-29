@@ -1,8 +1,38 @@
 <!-- src/components/shop/SortBar.vue -->
 <template>
   <div class="sort-bar" :class="barClasses" :style="barStyle">
+    <!-- Show As is per screen size: each look in use is drawn, the CSS shows the one for the screen. -->
+    <!-- Show As: One button (like Filters). Opens the orders: a menu on computers, a sheet on phones. -->
+    <div v-if="kinds.has('button')" class="sort-main sort-kind sort-kind--button">
+      <ButtonBlock
+          :data="sortBtnData"
+          :action="openChoices"
+          :icon="sortBtnIcon"
+          :icon-right="d.sbt_icon_position === 'end'"
+          :aria-label="labelText"
+      />
+      <q-menu v-model="menuOpen" no-parent-event :class="menuClass" :style="menuStyle" anchor="bottom start" self="top start">
+        <q-list role="listbox" :aria-label="labelText">
+          <q-item v-for="o in options" :key="o.value" v-close-popup clickable role="option" :aria-selected="o.value === sortBy ? 'true' : 'false'" :active="o.value === sortBy" active-class="text-secondary" @click="$emit('update:sortBy', o.value)">
+            <q-item-section>{{ o.label }}</q-item-section>
+          </q-item>
+        </q-list>
+      </q-menu>
+      <q-dialog v-model="sheetOpen" position="bottom" class="sort-sheet-dialog">
+        <div class="sort-sheet" :class="menuClass" :style="menuStyle" role="listbox" :aria-label="labelText">
+          <div class="sort-sheet__title">{{ labelText }}</div>
+          <q-list>
+            <q-item v-for="o in options" :key="o.value" v-close-popup clickable role="option" :aria-selected="o.value === sortBy ? 'true' : 'false'" :active="o.value === sortBy" active-class="text-secondary" @click="$emit('update:sortBy', o.value)">
+              <q-item-section>{{ o.label }}</q-item-section>
+              <q-item-section v-if="o.value === sortBy" side><q-icon :name="matCheck" /></q-item-section>
+            </q-item>
+          </q-list>
+        </div>
+      </q-dialog>
+    </div>
+
     <!-- Show As: Buttons. One button per order, the chosen one pressed. -->
-    <div v-if="asButtons" class="sort-main sort-buttons" role="group" :aria-label="labelText">
+    <div v-if="kinds.has('buttons')" class="sort-main sort-kind sort-kind--buttons sort-buttons" role="group" :aria-label="labelText">
       <span v-if="showLabel" class="sort-buttons__label" v-bind="labelBind">{{ labelText }}</span>
       <button
           v-for="o in options"
@@ -18,8 +48,8 @@
 
     <!-- Show As: Dropdown list (the default). -->
     <q-select
-        v-else
-        class="sort-main sort-field"
+        v-if="kinds.has('dropdown')"
+        class="sort-main sort-kind sort-kind--dropdown sort-field"
         :class="fieldBinds.class"
         :style="fieldBinds.style"
         :filled="look === 'filled'"
@@ -55,8 +85,9 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { matArrowDropDown, matAutorenew, matClose, matFilterList, matExpandMore, matUnfoldMore } from '@quasar/extras/material-icons'
+import { computed, ref } from 'vue'
+import { matArrowDropDown, matAutorenew, matCheck, matClose, matFilterList, matExpandMore, matUnfoldMore, matSort, matSwapVert, matTune } from '@quasar/extras/material-icons'
+import ButtonBlock from 'components/blocks/ButtonBlock.vue'
 import { useI18n } from 'src/i18n/index.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { textStyle, textVars, tsKeys, mergeBinds } from 'src/utils/text-style.js'
@@ -80,7 +111,15 @@ const { t } = useI18n()
 
 const d = computed(() => props.data || {})
 const options = computed(() => (props.sortOptions || []).map((o) => ({ ...o, label: t(o.label) })))
-const asButtons = computed(() => d.value.display === 'buttons')
+// Show As per screen size (older saves: one value for all). Only the looks in use are drawn.
+const KINDS = ['dropdown', 'buttons', 'button']
+const kindAt = computed(() => {
+  const r = asResponsive(d.value.display)
+  const out = {}
+  for (const device of DEVICES) out[device] = KINDS.includes(r[device]) ? r[device] : 'dropdown'
+  return out
+})
+const kinds = computed(() => new Set(Object.values(kindAt.value)))
 const showLabel = computed(() => d.value.show_label !== false)
 const labelText = computed(() => String(d.value.label_text || '').trim() || t('Sort by'))
 const LOOKS = new Set(['filled', 'outlined', 'underlined', 'plain'])
@@ -107,6 +146,7 @@ function responsive(style, name, value, transform = toCssLength) {
 const JUSTIFY = { default: 'space-between', center: 'center', stretch: 'stretch' }
 const barClasses = computed(() => {
   const cls = {}
+  if (kinds.value.size > 1) for (const device of DEVICES) cls['so-' + SHORT[device] + '-' + kindAt.value[device]] = true
   const r = asResponsive(d.value.alignment)
   for (const device of DEVICES) if (r[device] === 'stretch') cls[`so-stretch-${SHORT[device]}`] = true
   return cls
@@ -170,6 +210,28 @@ const menuStyle = computed(() => {
   if (font) style.fontFamily = font
   return style
 })
+
+// One button: the Filters Button block's looks, from the sbt_* fields.
+const SORT_ICONS = { sort: matSort, swap_vert: matSwapVert, tune: matTune }
+const sortBtnIcon = computed(() => (d.value.sbt_icon === 'none' ? '' : SORT_ICONS[d.value.sbt_icon] || matSort))
+const sortBtnData = computed(() => {
+  const v = d.value
+  const showText = v.sbt_show_text !== false || !sortBtnIcon.value
+  return { data: {
+    text: showText ? (String(v.sbt_text || '').trim() || t('Sort')) : '',
+    style: v.sbt_style || 'secondary', size: v.sbt_size || 'md', btn_padding: v.sbt_padding, border_radius: v.sbt_radius, bg_color: v.sbt_bg,
+    icon_size: v.sbt_icon_size, icon_gap: v.sbt_icon_gap, icon_color: v.sbt_icon_color, alignment: v.alignment,
+    font: v.sbl_font, text_size: v.sbl_size, font_weight: v.sbl_weight, text_color: v.sbl_color,
+    label_line_height: v.sbl_line_height, label_spacing: v.sbl_spacing, label_case: v.sbl_case,
+  } }
+})
+const menuOpen = ref(false)
+const sheetOpen = ref(false)
+function openChoices() {
+  const phone = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
+  if (phone) sheetOpen.value = true
+  else menuOpen.value = !menuOpen.value
+}
 
 const filtersClasses = computed(() => ({ 'so-fbg': !!color('filters_bg'), 'so-ftext': !!color('filters_text') }))
 const filtersStyle = computed(() => ({ '--so-fbg': color('filters_bg') || undefined, '--so-ftext': color('filters_text') || undefined }))
@@ -278,6 +340,18 @@ const filtersStyle = computed(() => ({ '--so-fbg': color('filters_bg') || undefi
 }
 .sort-btn:focus-visible { outline: 2px solid var(--so-abg, var(--q-secondary)); outline-offset: 2px; }
 
+/* Show As per screen size: hide the looks this size doesn't use. */
+@media (min-width: 1024px) {
+  .so-d-dropdown .sort-kind:not(.sort-kind--dropdown), .so-d-buttons .sort-kind:not(.sort-kind--buttons), .so-d-button .sort-kind:not(.sort-kind--button) { display: none; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .so-t-dropdown .sort-kind:not(.sort-kind--dropdown), .so-t-buttons .sort-kind:not(.sort-kind--buttons), .so-t-button .sort-kind:not(.sort-kind--button) { display: none; }
+}
+@media (max-width: 767px) {
+  .so-m-dropdown .sort-kind:not(.sort-kind--dropdown), .so-m-buttons .sort-kind:not(.sort-kind--buttons), .so-m-button .sort-kind:not(.sort-kind--button) { display: none; }
+}
+.sort-kind--button :deep(.btn-block) { margin: 0; }
+
 /* By screen width only: Quasar's .mobile-only also hides on desktop browsers (the Store builder preview). */
 .filters-toggle { display: none; }
 @media (max-width: 767px) { .filters-toggle { display: inline-flex; } }
@@ -292,4 +366,8 @@ const filtersStyle = computed(() => ({ '--so-fbg': color('filters_bg') || undefi
 .qwoo-sort-menu.so-hover .q-item:hover { background: var(--so-list-hover); }
 .qwoo-sort-menu.so-hover .q-item .q-focus-helper { display: none; }
 .qwoo-sort-menu.so-active .q-item.q-item--active { color: var(--so-list-active) !important; }
+/* The one button's sheet (phones), above the cookie banner (z-index 9999). */
+.sort-sheet-dialog { z-index: 10000; }
+.sort-sheet { background: #fff; color: inherit; width: 100%; max-width: 100vw; border-radius: 16px 16px 0 0; padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); }
+.sort-sheet__title { font-weight: 700; padding: 12px 16px 8px; }
 </style>

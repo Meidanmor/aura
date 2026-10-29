@@ -1,7 +1,17 @@
 <template>
-  <div v-if="product" class="lt-align" :style="alignVars">
+  <div v-if="product && !zero?.hide" class="lt-align" :style="alignVars">
+    <!-- No price or 0 (the store's setting): the owner's button instead. -->
     <q-btn
-        v-if="product.is_in_stock === false"
+        v-if="zero"
+        class="lt-cart-btn"
+        :class="{ 'lt-cart-btn--full': !!d.full_width }"
+        v-bind="{ ...look, ...zeroPriceLink(zero) }"
+        :style="btnVars"
+        no-caps
+        @click.stop
+    ><span v-bind="labelBind">{{ zero.label }}</span></q-btn>
+    <q-btn
+        v-else-if="product.is_in_stock === false"
         class="lt-cart-btn"
         :class="{ 'lt-cart-btn--full': !!d.full_width }"
         v-bind="look"
@@ -51,6 +61,7 @@ import { matAdd, matShoppingBag, matShoppingCart } from '@quasar/extras/material
 import cart from 'src/stores/cart.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { useLoopItem, loopItemUrl } from './loop-item.js'
+import { zeroPriceButton, zeroPriceLink } from 'src/utils/zero-price.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { alignToText, setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
 
@@ -63,6 +74,7 @@ const d = computed(() => props.data.data || {})
 const product = computed(() => (loop?.value?.type === 'product' ? loop.value.item : null))
 const hasOptions = computed(() => ['variable', 'grouped', 'external'].includes(product.value?.type) || product.value?.has_options === true)
 const url = computed(() => loopItemUrl('product', product.value))
+const zero = computed(() => zeroPriceButton(product.value))
 const labelBind = computed(() => textStyle(d.value, tsKeys('label'), 'buttons'))
 const look = computed(() => {
   switch (d.value.button_style) {

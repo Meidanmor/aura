@@ -110,12 +110,13 @@ export function pageCode(req, { where, nonce }) {
           mode,
           texts: c.consent?.texts || {},
           ask: needsConsent(snippets),
+          banner: c.consent?.banner !== false,
           snippets: snippets.map(({ id, kind, name, code, place, where: w, targets, page_paths, group }) => ({ id, kind, name, code, place, where: w, targets, page_paths, group })),
           shortcuts,
           ran: out.ran,
           testing,
         }
-      : { mode, texts: c.consent?.texts || {}, ask: false, snippets: [], shortcuts: {}, ran: [], testing },
+      : { mode, banner: c.consent?.banner !== false, texts: c.consent?.texts || {}, ask: false, snippets: [], shortcuts: {}, ran: [], testing },
   }
 }
 
