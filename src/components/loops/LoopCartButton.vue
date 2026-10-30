@@ -67,6 +67,7 @@ import { zeroPriceButton, zeroPriceLink } from 'src/utils/zero-price.js'
 import { useAriaLabel } from 'src/utils/aria-label.js'
 import { t } from 'src/i18n/index.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
+import { iconAlign } from 'src/utils/icon-align.js'
 import { DEVICES, alignToText, asResponsive, setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
 
 const props = defineProps({
@@ -102,7 +103,9 @@ const addLabel = useAriaLabel(() => d.value.aria_label, () => d.value.text || t(
 const optionsLabel = useAriaLabel(() => d.value.aria_label, () => d.value.options_text || t('Choose options'))
 const iconAtEnd = computed(() => d.value.icon_position === 'end' && !iconOnly.value)
 const hasIconGap = computed(() => !iconOnly.value && DEVICES.some((device) => { const v = asResponsive(d.value.icon_gap)[device]; return v !== '' && v != null }))
-const btnClass = computed(() => ({ 'lt-cart-btn--full': !!d.value.full_width && !iconOnly.value, 'lt-cart-btn--round': iconOnly.value, 'has-icon-gap': hasIconGap.value }))
+// Style → Icon Alignment / Icon Offset.
+const iconPlace = computed(() => iconAlign(icon.value ? d.value : {}))
+const btnClass = computed(() => ({ 'lt-cart-btn--full': !!d.value.full_width && !iconOnly.value, 'lt-cart-btn--round': iconOnly.value, 'has-icon-gap': hasIconGap.value, [iconPlace.value.cls]: !!iconPlace.value.cls }))
 const btnVars = computed(() => {
   const v = {}
   const r = toCssLength(d.value.radius)
@@ -112,6 +115,7 @@ const btnVars = computed(() => {
   const iconSize = toCssLength(d.value.icon_size)
   if (iconSize) v['--lt-btn-icon'] = iconSize
   setResponsiveVar(v, '--lt-btn-gap', d.value.icon_gap, toCssLength)
+  Object.assign(v, iconPlace.value.vars)
   const lined = d.value.button_style === 'outline' || d.value.button_style === 'link'
   // A second colour makes a filled button a gradient.
   const bg = lined ? resolveGlobalColor(d.value.btn_bg) : gradientOf(d.value.btn_bg, d.value.btn_bg2, d.value.gradient_angle ?? 90)

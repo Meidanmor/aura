@@ -86,7 +86,7 @@
             :icon="buyIcon && !iconAtEnd ? buyIcon : undefined"
             :icon-right="buyIcon && iconAtEnd ? buyIcon : undefined"
             class="buy-btn"
-            :class="[buttonText.class, paddingVars.cls, { 'has-icon-gap': hasIconGap }]"
+            :class="[buttonText.class, paddingVars.cls, iconPlace.cls, { 'has-icon-gap': hasIconGap }]"
             :style="[buttonText.style, buttonColors, iconVars]"
             :color="buttonBg ? undefined : 'secondary'"
             :outline="d.button_style === 'outline'"
@@ -140,6 +140,7 @@ import { useFieldIds } from 'src/utils/field-id.js'
 import { computed, inject, onMounted, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { matAdd, matArrowDropDown, matCancel, matNotificationsActive, matNotificationsNone, matRemove, matShoppingBag, matShoppingCart } from '@quasar/extras/material-icons'
+import { iconAlign } from 'src/utils/icon-align.js'
 import { getPushConfig, requestBackInStock, wantsBack } from 'src/services/push/shared.js'
 import { subscribeToWebPush } from 'src/services/push/push.js'
 import { t } from 'src/i18n/index.js'
@@ -207,11 +208,14 @@ const BUY_ICONS = { add: matAdd, bag: matShoppingBag, cart: matShoppingCart }
 const buyIcon = computed(() => BUY_ICONS[d.value.icon] || null)
 const iconAtEnd = computed(() => d.value.icon_position === 'end')
 const hasIconGap = computed(() => !!buyIcon.value && DEVICES.some((device) => { const v = asResponsive(d.value.icon_gap)[device]; return v !== '' && v != null }))
+// Style → Icon Alignment / Icon Offset.
+const iconPlace = computed(() => iconAlign(buyIcon.value ? d.value : {}))
 const iconVars = computed(() => {
   const v = {}
   const size = toCssLength(d.value.icon_size)
   if (size) v['--pb-icon'] = size
   setResponsiveVar(v, '--pb-icon-gap', d.value.icon_gap, toCssLength)
+  Object.assign(v, iconPlace.value.vars)
   return v
 })
 const radiusVar = computed(() => {

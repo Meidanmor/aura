@@ -1145,4 +1145,10 @@ html:not(.qa-in):not(.qa-editor) .sb-aud-customers { display: none !important; }
 html.qa-editor .sb-aud-guests,
 html.qa-editor .sb-aud-customers { outline: 1px dashed rgba(127, 127, 127, .6); outline-offset: -1px; }
 .account-sample-note { margin: 0; opacity: .75; }
+/* Style → Icon Alignment / Icon Offset of buttons with an icon (src/utils/icon-align.js). */
+.has-icon-align { --ia-al-now: var(--ia-al, center); --ia-off-now: var(--ia-off, 0px); }
+@media (max-width: 1023px) { .has-icon-align { --ia-al-now: var(--ia-al-t, var(--ia-al, center)); --ia-off-now: var(--ia-off-t, var(--ia-off, 0px)); } }
+@media (max-width: 767px) { .has-icon-align { --ia-al-now: var(--ia-al-m, var(--ia-al-t, var(--ia-al, center))); --ia-off-now: var(--ia-off-m, var(--ia-off-t, var(--ia-off, 0px))); } }
+.q-btn.has-icon-align .q-btn__content { align-items: var(--ia-al-now); }
+.q-btn.has-icon-align .q-btn__content > .q-icon { translate: 0 var(--ia-off-now); }
 /* purgecss end ignore */

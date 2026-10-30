@@ -8,7 +8,7 @@
         :loading="adding"
         @click="run && run()"
         class="btn-block__btn"
-        :class="[`btn-block__btn--${variant}`, `btn-block__btn--${size}`, labelText.class, paddingVars.cls, { 'has-icon-gap': hasIconGap }]"
+        :class="[`btn-block__btn--${variant}`, `btn-block__btn--${size}`, labelText.class, paddingVars.cls, iconPlace.cls, { 'has-icon-gap': hasIconGap }]"
         :style="btnVars"
         :label="d.text || undefined"
         :outline="variant === 'outline'"
@@ -33,6 +33,7 @@ import { brandFontVar } from 'src/utils/brand-fonts.js'
 import { generalIcons } from 'src/utils/builder-icons.js'
 import { gradientOf } from 'src/utils/gradient.js'
 import { textStyle } from 'src/utils/text-style.js'
+import { iconAlign } from 'src/utils/icon-align.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToFlex, DEVICES } from 'src/composables/useSectionStyle.js'
 
 const props = defineProps({
@@ -177,8 +178,11 @@ const btnVars = computed(() => {
   const iconColor = resolveGlobalColor(d.value.icon_color)
   if (iconColor) vars['--btn-icon-color'] = iconColor
   setResponsiveVar(vars, '--btn-icon-gap', d.value.icon_gap, toCssLength)
+  Object.assign(vars, iconPlace.value.vars)
   return vars
 })
+// Style → Icon Alignment / Icon Offset.
+const iconPlace = computed(() => iconAlign(btnIcon.value ? d.value : {}))
 
 // Style → Icon → Space Between Icon and Text (per screen size; unset keeps Quasar's 12px).
 const hasIconGap = computed(() => DEVICES.some((device) => { const v = asResponsive(d.value.icon_gap)[device]; return v !== '' && v != null }))
