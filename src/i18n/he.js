@@ -461,4 +461,6 @@ export default {
   "Clear": "ניקוי",
   "Show products": "הצגת המוצרים",
   "Show {n} product": ["הצגת מוצר אחד","הצגת {n} מוצרים"],
+  "We're updating the store": "אנחנו מעדכנים את החנות",
+  "We'll be back in a few minutes. Thanks for waiting!": "נחזור בעוד כמה דקות. תודה על הסבלנות!",
 }

@@ -69,6 +69,8 @@
 
     <!-- Store builder → Popups (browser only). -->
     <PopupHost v-if="uiHydrated" />
+    <!-- An import running on the store: its pages under an "updating" notice. -->
+    <UpdatingOverlay v-if="uiHydrated" />
 
     <NotificationSoftAskModal
         v-if="uiHydrated"
@@ -128,6 +130,7 @@ import {
 import { getPushConfig } from 'src/services/push/shared.js'
 import NotificationSoftAskModal from 'src/components/app/NotificationSoftAskModal.vue'
 import PopupHost from 'src/components/popups/PopupHost.vue'
+import UpdatingOverlay from 'src/components/app/UpdatingOverlay.vue'
 import SeoWait from 'src/components/app/SeoWait.js'
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
 import {
