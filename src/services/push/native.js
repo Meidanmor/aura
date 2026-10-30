@@ -1,17 +1,16 @@
 // native
 import { Platform } from 'quasar'
-import { urlBase64ToUint8Array, getDeviceId, saveSubscription, queueCartTokenSync } from 'src/services/push/shared.js'
+import { urlBase64ToUint8Array, getDeviceId, saveSubscription, queueCartTokenSync, getPushConfig } from 'src/services/push/shared.js'
 let PushNotifications = null
 let App = null
-
-// your VAPID public key for web push
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_APP_PUBLIC_KEY
 
 /**
  * Subscribe to push notifications (Web/PWA)
  */
 export async function subscribeToWebPush() {
-    //console.log('🚀 Push setup started (Web)')
+    // The store's push key (dashboard → Notifications), else the build's.
+    const { key } = await getPushConfig()
+    if (!key) return
     const permission = await Notification.requestPermission()
     if (permission !== 'granted') {
         console.warn('🔴 Notification permission not granted.')
@@ -22,7 +21,7 @@ export async function subscribeToWebPush() {
         const registration = await navigator.serviceWorker.ready
         const subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+            applicationServerKey: urlBase64ToUint8Array(key)
         })
 
         const deviceId = getDeviceId()
