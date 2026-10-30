@@ -2,20 +2,23 @@ import { LoadingBar } from 'quasar'
 
 let initialized = false
 
-export function initLoadingBar(router) {
-    if (initialized) return
-    initialized = true
-
+// Quasar's bar also starts for every XMLHttpRequest, from the moment the app
+// boots. The storefront's own calls use fetch, so the only XHRs are outside
+// scripts (Clarity, pixels…): the bar follows page changes only.
+export function setLoadingBarDefaults() {
     LoadingBar.setDefaults({
-        hijackFilter (url) {
-            const myApiUrl = typeof window !== 'undefined' ? window.location.origin : '/';
-
-            return url.startsWith(myApiUrl) || url.startsWith('/')
-        },
+        hijackFilter: () => false,
         color: 'secondary',
         size: '5px',
         position: 'top'
     })
+}
+
+export function initLoadingBar(router) {
+    if (initialized) return
+    initialized = true
+
+    setLoadingBarDefaults()
 
     router.beforeEach((to, from, next) => {
         LoadingBar.start()

@@ -106,7 +106,7 @@ export default defineConfig((ctx) => {
 
     // Native app only: send API calls to the live site (src/boot/native-api.js).
     // i18n: the store's language (t() in templates, Quasar's texts and direction).
-    boot: ['i18n', { path: 'touch-press', server: false }, ...(ctx.mode.capacitor ? [{ path: 'native-api', server: false }] : [])],
+    boot: ['i18n', { path: 'touch-press', server: false }, { path: 'loading-bar', server: false }, ...(ctx.mode.capacitor ? [{ path: 'native-api', server: false }] : [])],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: [
