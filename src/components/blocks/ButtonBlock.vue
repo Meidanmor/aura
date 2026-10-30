@@ -4,7 +4,7 @@
         v-bind="run ? {} : linkAttrs"
         :icon="btnIcon && !iconAtEnd ? btnIcon : undefined"
         :icon-right="btnIcon && iconAtEnd ? btnIcon : undefined"
-        :aria-label="ariaLabel || (!d.text && d.label) || undefined"
+        :aria-label="ariaLabel || ownLabel || (!d.text && d.label) || undefined"
         :loading="adding"
         @click="run && run()"
         class="btn-block__btn"
@@ -23,6 +23,7 @@
 
 <script setup>
 import { zeroPriceButton } from 'src/utils/zero-price.js'
+import { useAriaLabel } from 'src/utils/aria-label.js'
 import { computed, inject, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import cart from 'src/stores/cart.js'
@@ -47,6 +48,8 @@ const props = defineProps({
 const route = useRoute()
 const router = useRouter()
 const d = computed(() => props.data.data || {})
+// Advanced → Screen Reader Label ({name} in a Loop Template; in a card, the text plus the item's name).
+const ownLabel = useAriaLabel(() => d.value.aria_label, () => d.value.text)
 
 // The icon: the Filters Button's own, else Content → Show an icon (a built-in
 // icon, or your own SVG drawn as an image).

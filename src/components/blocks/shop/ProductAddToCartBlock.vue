@@ -83,9 +83,11 @@
       <div class="product-buy__buttons">
         <q-btn
             :label="d.button_label || t('Add to Cart')"
+            :icon="buyIcon && !iconAtEnd ? buyIcon : undefined"
+            :icon-right="buyIcon && iconAtEnd ? buyIcon : undefined"
             class="buy-btn"
-            :class="[buttonText.class, paddingVars.cls]"
-            :style="[buttonText.style, buttonColors]"
+            :class="[buttonText.class, paddingVars.cls, { 'has-icon-gap': hasIconGap }]"
+            :style="[buttonText.style, buttonColors, iconVars]"
             :color="buttonBg ? undefined : 'secondary'"
             :outline="d.button_style === 'outline'"
             :unelevated="d.button_style !== 'outline'"
@@ -137,13 +139,13 @@
 import { useFieldIds } from 'src/utils/field-id.js'
 import { computed, inject, onMounted, ref } from 'vue'
 import { useQuasar } from 'quasar'
-import { matAdd, matArrowDropDown, matCancel, matNotificationsActive, matNotificationsNone, matRemove } from '@quasar/extras/material-icons'
+import { matAdd, matArrowDropDown, matCancel, matNotificationsActive, matNotificationsNone, matRemove, matShoppingBag, matShoppingCart } from '@quasar/extras/material-icons'
 import { getPushConfig, requestBackInStock, wantsBack } from 'src/services/push/shared.js'
 import { subscribeToWebPush } from 'src/services/push/push.js'
 import { t } from 'src/i18n/index.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
-import { asResponsive, toCssLength } from 'src/composables/useSectionStyle.js'
+import { DEVICES, asResponsive, setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
 import { gradientOf } from 'src/utils/gradient.js'
 import { zeroPriceButton, zeroPriceLink } from 'src/utils/zero-price.js'
 
@@ -200,6 +202,18 @@ const quickColors = computed(() => {
   const bg = gradientOf(d.value.quick_bg, d.value.quick_bg2, angle.value)
   return { ...(bg ? { background: bg } : {}), ...(d.value.quick_text ? { color: resolveGlobalColor(d.value.quick_text) } : {}) }
 })
+// Content → Icon on the Add to Cart button: position, size, space from the text (per screen size).
+const BUY_ICONS = { add: matAdd, bag: matShoppingBag, cart: matShoppingCart }
+const buyIcon = computed(() => BUY_ICONS[d.value.icon] || null)
+const iconAtEnd = computed(() => d.value.icon_position === 'end')
+const hasIconGap = computed(() => !!buyIcon.value && DEVICES.some((device) => { const v = asResponsive(d.value.icon_gap)[device]; return v !== '' && v != null }))
+const iconVars = computed(() => {
+  const v = {}
+  const size = toCssLength(d.value.icon_size)
+  if (size) v['--pb-icon'] = size
+  setResponsiveVar(v, '--pb-icon-gap', d.value.icon_gap, toCssLength)
+  return v
+})
 const radiusVar = computed(() => {
   const r = toCssLength(d.value.button_radius)
   return r ? { '--pb-btn-radius': r } : {}
@@ -255,6 +269,12 @@ function choose(name, value) {
 .is-full .buy-btn { width: 100%; }
 .product-buy--equal .product-buy__buttons .buy-btn { flex: 1 1 0; }
 .buy-btn { border-radius: var(--pb-btn-radius, 4px); min-height: 48px; padding-inline: 24px; }
+.buy-btn :deep(.q-icon) { font-size: var(--pb-icon, 1.715em); }
+.buy-btn.has-icon-gap { --pb-gap-now: var(--pb-icon-gap, 12px); }
+@media (max-width: 1023px) { .buy-btn.has-icon-gap { --pb-gap-now: var(--pb-icon-gap-t, var(--pb-icon-gap, 12px)); } }
+@media (max-width: 767px) { .buy-btn.has-icon-gap { --pb-gap-now: var(--pb-icon-gap-m, var(--pb-icon-gap-t, var(--pb-icon-gap, 12px))); } }
+.buy-btn.has-icon-gap :deep(.q-icon.on-left) { margin-inline: 0 var(--pb-gap-now); }
+.buy-btn.has-icon-gap :deep(.q-icon.on-right) { margin-inline: var(--pb-gap-now) 0; }
 /* Button Padding, per side and screen size (beats the built-in padding and min-height). */
 @media (min-width: 1024px) {
   .pbp-t-d { padding-top: var(--pbp-top) !important; min-height: 0; }

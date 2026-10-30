@@ -48,6 +48,7 @@
               v-if="slide.button_text && slide.button_url"
               v-bind="linkAttrs(slide.button_url)"
               :label="slide.button_text"
+              :aria-label="slide.aria_label || undefined"
               class="cb-slide__btn"
               :class="[`cb-slide__btn--${d.button_style || 'light'}`, buttonText.class]"
               :style="buttonText.style"
@@ -243,6 +244,7 @@ function linkAttrs(url) {
 function imageLinkAttrs(item) {
   const attrs = isInternal(item.link_url) ? { to: item.link_url } : { href: item.link_url }
   if (item.new_tab) Object.assign(attrs, { target: '_blank', rel: 'noopener noreferrer' })
+  if (item.aria_label) attrs['aria-label'] = item.aria_label
   return attrs
 }
 

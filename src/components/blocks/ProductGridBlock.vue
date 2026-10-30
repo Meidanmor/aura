@@ -11,6 +11,7 @@
           :to="isInternal(d.view_all_url) ? d.view_all_url : undefined"
           :href="isInternal(d.view_all_url) ? undefined : d.view_all_url"
           :label="d.view_all_text || t('View all')"
+          :aria-label="d.aria_label || undefined"
           outline
           no-caps
           class="product-grid-block__view-all"

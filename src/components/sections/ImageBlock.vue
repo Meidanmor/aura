@@ -167,12 +167,15 @@ function linkTag(url) {
 }
 
 function linkAttrs(img) {
+  // The image's Screen Reader Label, else the link is named by the image's alt text.
+  const label = img.aria_label ? { 'aria-label': img.aria_label } : {}
   if (isInternal(img.link_url)) {
-    return img.new_tab ? { to: img.link_url, target: '_blank', rel: 'noopener' } : { to: img.link_url }
+    return { ...(img.new_tab ? { to: img.link_url, target: '_blank', rel: 'noopener' } : { to: img.link_url }), ...label }
   }
-  return img.new_tab
-      ? { href: img.link_url, target: '_blank', rel: 'noopener noreferrer' }
-      : { href: img.link_url }
+  return {
+    ...(img.new_tab ? { href: img.link_url, target: '_blank', rel: 'noopener noreferrer' } : { href: img.link_url }),
+    ...label,
+  }
 }
 </script>
 

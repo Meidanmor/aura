@@ -16,6 +16,7 @@
             <component
                 :is="item.link_url ? linkTag(item.link_url) : 'span'"
                 v-bind="item.link_url ? linkAttrs(item.link_url, copy > 1) : {}"
+                :aria-label="item.link_url && item.aria_label ? item.aria_label : undefined"
                 class="rt__item"
                 dir="auto"
             ><span v-bind="itemText">{{ item.text }}</span></component>
@@ -32,6 +33,7 @@
           <component
               :is="item.link_url ? linkTag(item.link_url) : 'span'"
               v-bind="item.link_url ? linkAttrs(item.link_url, idx >= items.length) : {}"
+              :aria-label="item.link_url && item.aria_label ? item.aria_label : undefined"
               class="rt__item"
               dir="auto"
           ><span v-bind="itemText">{{ item.text }}</span></component>

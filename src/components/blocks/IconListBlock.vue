@@ -5,7 +5,7 @@
           :is="item.link_url ? linkTag(item.link_url) : 'span'"
           v-bind="item.link_url ? linkAttrs(item.link_url) : {}"
           class="icon-list__row"
-          :aria-label="!item.text && item.label ? item.label : undefined"
+          :aria-label="(item.link_url && item.aria_label) || (!item.text && item.label ? item.label : undefined)"
       >
         <BuilderSvg
             v-if="item.icon === 'custom' && customUrl(item)"

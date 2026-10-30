@@ -1,9 +1,11 @@
 <template>
   <!-- Phones: a tap beside the open drawer closes it. -->
   <div v-if="a" class="filters-backdrop" :class="{ shown: a.filtersOpen }" aria-hidden="true" @click="a.filtersOpen = false" />
-  <div v-if="a" class="filters-wrap flex" :class="{ shown: a.filtersOpen }" @pointerdown.stop>
-    <q-scroll-area class="fit">
-      <div class="sticky filters-drawer-header flex justify-between q-mb-md">
+  <div v-if="a" class="filters-wrap flex" :class="{ shown: a.filtersOpen }" data-sheet @pointerdown.stop>
+    <!-- Phones: a sheet from the bottom, dragged down by its handle or title to close. -->
+    <div class="filters-grip" aria-hidden="true" v-on="drag"><span /></div>
+    <q-scroll-area class="fit filters-scroll">
+      <div class="sticky filters-drawer-header flex justify-between q-mb-md" v-on="drag">
         <div class="text-h6" :class="headingText.class" :style="headingText.style">{{ d.title || t('Filters') }}</div>
         <q-btn class="filters-close" :icon="matClose" flat dense :aria-label="t('Close filters drawer')" @click="a.filtersOpen = false" />
       </div>
@@ -13,7 +15,7 @@
       </div>
 
       <template v-if="a.mode === 'shop' && d.show_categories !== false">
-        <div v-if="!a.isHydrated && !a.categoryOptions.length" class="filters-inner-wrap">
+        <div v-if="!ready && !a.categoryOptions.length" class="filters-inner-wrap">
           <q-skeleton type="rect" class="q-mb-md" />
         </div>
         <q-card v-else-if="a.categoryOptions.length" class="filters-inner-wrap q-pa-md q-mb-md">
@@ -23,7 +25,7 @@
       </template>
 
       <!-- Product attributes (taste, size…): after hydration only, the server doesn't list them. -->
-      <template v-if="d.show_attributes && a.isHydrated">
+      <template v-if="d.show_attributes && ready">
         <q-card v-for="attr in shownAttributes" :key="attr.taxonomy" class="filters-inner-wrap q-pa-md q-mb-md">
           <div class="text-subtitle1 q-mb-sm">{{ attr.name }}</div>
           <div v-if="d.attributes_style === 'chips'" class="filters-chips" role="group" :aria-label="attr.name">
@@ -54,16 +56,22 @@
         <q-toggle v-model="a.inStock" :label="t('In stock only')" color="secondary" />
       </q-card>
     </q-scroll-area>
+    <div class="filters-actions">
+      <q-btn flat no-caps class="filters-actions__clear" :label="t('Clear')" :disable="!hasFilters" @click="clearAll" />
+      <q-btn unelevated no-caps color="secondary" class="filters-actions__show" :label="showLabel" @click="a.filtersOpen = false" />
+    </div>
   </div>
 </template>
 
 <script setup>
 import { useFieldIds } from 'src/utils/field-id.js'
-import { computed, inject, onMounted } from 'vue'
+import { computed, inject, onMounted, ref } from 'vue'
 import { matClose } from '@quasar/extras/material-icons'
 import PriceFilterCard from 'components/shop/PriceFilterCard.vue'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { detailKeys, pickDetails } from 'src/utils/product-details.js'
+import { useSheetDrag } from 'src/composables/useSheetDrag.js'
+import { t, tn } from 'src/i18n/index.js'
 
 const fid = useFieldIds()
 
@@ -86,8 +94,29 @@ function toggle(tax, id) {
   const now = a.selectedAttributes[tax] || []
   setTerms(tax, now.includes(id) ? now.filter((x) => x !== id) : [...now, id])
 }
-onMounted(() => { if (d.value.show_attributes) a?.loadAttributeOptions?.() })
+// Its own flag, not the page's isHydrated: this block loads (and hydrates) after the page,
+// when isHydrated is already true, and the server drew the not-yet state.
+const ready = ref(false)
+onMounted(() => {
+  ready.value = true
+  if (d.value.show_attributes) a?.loadAttributeOptions?.()
+})
 // Content → Filter By These Details: some attributes, in that order (empty: all of them).
+// Phones: drag down to close, Clear, and "Show N products" (the list follows the filters as they change).
+const drag = useSheetDrag(() => { if (a) a.filtersOpen = false })
+const priceMoved = () => a.priceMin != null && a.priceMax != null && (a.priceRange?.min > a.priceMin || a.priceRange?.max < a.priceMax)
+const hasFilters = computed(() => !!a && (!!a.search || !!a.selectedCategory?.length || Object.values(a.selectedAttributes || {}).some((l) => l?.length) || !!a.inStock || priceMoved()))
+function clearAll() {
+  a.search = ''
+  if (a.mode === 'shop') a.selectedCategory = []
+  a.selectedAttributes = {}
+  a.inStock = false
+  if (priceMoved()) {
+    a.priceRange = { min: a.priceMin, max: a.priceMax }
+    a.onPriceChange()
+  }
+}
+const showLabel = computed(() => (a?.totalProducts != null ? tn('Show {n} product', 'Show {n} products', a.totalProducts) : t('Show products')))
 const shownAttributes = computed(() => {
   const all = a?.attributeOptions || []
   const only = detailKeys(d.value.attributes_only)
@@ -112,6 +141,7 @@ const shownAttributes = computed(() => {
   box-shadow: 0 0 15px #00000011;
 }
 .filters-close { display: none; }
+.filters-grip, .filters-actions { display: none; }
 .filters-backdrop { display: none; }
 :deep(.q-checkbox[aria-checked="true"] .q-checkbox__label) { font-weight: 600; }
 .filters-chips { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -139,30 +169,45 @@ const shownAttributes = computed(() => {
 }
 
 @media (max-width: 767px) {
+  /* A sheet from the bottom, like Sort's (the closed state is plain translateY: the same in both directions). */
   .filters-wrap {
     position: fixed;
-    top: 0;
-    left: 0;
-    padding: 10px;
+    inset: auto 0 0 0;
     z-index: 9999;
-    height: 100dvh;
-    background: var(--q-primary);
-    width: 85%;
-    box-shadow: 0 0 50px #00000050;
+    width: 100%;
+    height: auto;
+    max-height: 88dvh;
+    padding: 0 16px;
+    row-gap: 0;
+    background: #fff;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -10px 40px #00000030;
     opacity: 0;
     pointer-events: none;
     visibility: hidden;
-    transform: translateX(-100%);
-    transition: 0.3s ease;
+    transform: translateY(100%);
+    transition: transform .3s ease, opacity .3s ease, visibility .3s;
   }
-  /* [dir] matches the direction-specific rules postcss-rtlcss makes from the closed state. */
   [dir] .filters-wrap.shown {
-    transform: translateX(0);
+    transform: translateY(0);
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
   }
+  .filters-grip { display: flex; justify-content: center; padding: 10px 0 2px; touch-action: none; cursor: grab; }
+  .filters-grip span { width: 40px; height: 4px; border-radius: 4px; background: rgba(0, 0, 0, .2); }
+  .filters-drawer-header { touch-action: none; padding: 6px 0; box-shadow: none !important; }
+  /* The list scrolls between the title and the buttons. */
+  .filters-scroll { flex: 1 1 auto; height: 60dvh !important; }
   .filters-close { display: inline-flex; }
+  .filters-actions {
+    display: flex;
+    gap: 8px;
+    padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid rgba(0, 0, 0, .08);
+  }
+  .filters-actions__show { flex: 1 1 auto; min-height: 44px; border-radius: 8px; }
+  .filters-actions__clear { min-height: 44px; }
   .filters-backdrop {
     display: block;
     position: fixed;

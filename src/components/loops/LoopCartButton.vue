@@ -27,9 +27,10 @@
         v-bind="look"
         :style="btnVars"
         :to="url"
-        :icon="icon"
+        :icon="iconAtEnd ? undefined : icon"
+        :icon-right="iconAtEnd ? icon : undefined"
         :round="iconOnly"
-        :aria-label="iconOnly ? (d.options_text || t('Choose options')) : undefined"
+        :aria-label="optionsLabel"
         no-caps
     ><span v-if="!iconOnly" v-bind="labelBind">{{ d.options_text || t('Choose options') }}</span></q-btn>
     <q-btn
@@ -39,9 +40,10 @@
         v-bind="look"
         :style="btnVars"
         :loading="adding"
-        :icon="icon"
+        :icon="iconAtEnd ? undefined : icon"
+        :icon-right="iconAtEnd ? icon : undefined"
         :round="iconOnly"
-        :aria-label="iconOnly ? (d.text || t('Add to cart')) : undefined"
+        :aria-label="addLabel"
         no-caps
         @click.prevent.stop="add"
     ><span v-if="!iconOnly" v-bind="labelBind">{{ d.text || t('Add to cart') }}</span></q-btn>
@@ -62,8 +64,10 @@ import cart from 'src/stores/cart.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { useLoopItem, loopItemUrl } from './loop-item.js'
 import { zeroPriceButton, zeroPriceLink } from 'src/utils/zero-price.js'
+import { useAriaLabel } from 'src/utils/aria-label.js'
+import { t } from 'src/i18n/index.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
-import { alignToText, setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
+import { DEVICES, alignToText, asResponsive, setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -93,7 +97,12 @@ const alignVars = computed(() => {
 const ICONS = { add: matAdd, bag: matShoppingBag, cart: matShoppingCart }
 const icon = computed(() => ICONS[d.value.icon] || undefined)
 const iconOnly = computed(() => !!icon.value && !!d.value.icon_only)
-const btnClass = computed(() => ({ 'lt-cart-btn--full': !!d.value.full_width && !iconOnly.value, 'lt-cart-btn--round': iconOnly.value }))
+// Advanced → Screen Reader Label, else the button's text plus the product's name.
+const addLabel = useAriaLabel(() => d.value.aria_label, () => d.value.text || t('Add to cart'))
+const optionsLabel = useAriaLabel(() => d.value.aria_label, () => d.value.options_text || t('Choose options'))
+const iconAtEnd = computed(() => d.value.icon_position === 'end' && !iconOnly.value)
+const hasIconGap = computed(() => !iconOnly.value && DEVICES.some((device) => { const v = asResponsive(d.value.icon_gap)[device]; return v !== '' && v != null }))
+const btnClass = computed(() => ({ 'lt-cart-btn--full': !!d.value.full_width && !iconOnly.value, 'lt-cart-btn--round': iconOnly.value, 'has-icon-gap': hasIconGap.value }))
 const btnVars = computed(() => {
   const v = {}
   const r = toCssLength(d.value.radius)
@@ -102,6 +111,7 @@ const btnVars = computed(() => {
   if (size) v['--lt-btn-round'] = size
   const iconSize = toCssLength(d.value.icon_size)
   if (iconSize) v['--lt-btn-icon'] = iconSize
+  setResponsiveVar(v, '--lt-btn-gap', d.value.icon_gap, toCssLength)
   const lined = d.value.button_style === 'outline' || d.value.button_style === 'link'
   // A second colour makes a filled button a gradient.
   const bg = lined ? resolveGlobalColor(d.value.btn_bg) : gradientOf(d.value.btn_bg, d.value.btn_bg2, d.value.gradient_angle ?? 90)

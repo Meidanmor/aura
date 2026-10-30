@@ -19,8 +19,10 @@
         </q-list>
       </q-menu>
       <q-dialog v-model="sheetOpen" position="bottom" class="sort-sheet-dialog">
-        <div class="sort-sheet" :class="menuClass" :style="menuStyle" role="listbox" :aria-label="labelText">
-          <div class="sort-sheet__title">{{ labelText }}</div>
+        <div class="sort-sheet" :class="menuClass" :style="menuStyle" role="listbox" :aria-label="labelText" data-sheet>
+          <!-- Drag the handle or the title down to close. -->
+          <div class="sort-sheet__grip" aria-hidden="true" v-on="sheetDrag"><span /></div>
+          <div class="sort-sheet__title" v-on="sheetDrag">{{ labelText }}</div>
           <q-list>
             <q-item v-for="o in options" :key="o.value" v-close-popup clickable role="option" :aria-selected="o.value === sortBy ? 'true' : 'false'" :active="o.value === sortBy" active-class="text-secondary" @click="$emit('update:sortBy', o.value)">
               <q-item-section>{{ o.label }}</q-item-section>
@@ -86,6 +88,7 @@
 
 <script setup>
 import { useFieldIds } from 'src/utils/field-id.js'
+import { useSheetDrag } from 'src/composables/useSheetDrag.js'
 import { computed, ref } from 'vue'
 import { matArrowDropDown, matAutorenew, matCheck, matClose, matFilterList, matExpandMore, matUnfoldMore, matSort, matSwapVert, matTune } from '@quasar/extras/material-icons'
 import ButtonBlock from 'components/blocks/ButtonBlock.vue'
@@ -230,6 +233,7 @@ const sortBtnData = computed(() => {
 })
 const menuOpen = ref(false)
 const sheetOpen = ref(false)
+const sheetDrag = useSheetDrag(() => { sheetOpen.value = false })
 function openChoices() {
   const phone = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
   if (phone) sheetOpen.value = true
@@ -372,5 +376,7 @@ const filtersStyle = computed(() => ({ '--so-fbg': color('filters_bg') || undefi
 /* The one button's sheet (phones), above the cookie banner (z-index 9999). */
 .sort-sheet-dialog { z-index: 10000; }
 .sort-sheet { background: #fff; color: inherit; width: 100%; max-width: 100vw; border-radius: 16px 16px 0 0; padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); }
-.sort-sheet__title { font-weight: 700; padding: 12px 16px 8px; }
+.sort-sheet__title { font-weight: 700; padding: 6px 16px 8px; touch-action: none; }
+.sort-sheet__grip { display: flex; justify-content: center; padding: 4px 0 6px; touch-action: none; cursor: grab; }
+.sort-sheet__grip span { width: 40px; height: 4px; border-radius: 4px; background: rgba(0, 0, 0, .2); }
 </style>

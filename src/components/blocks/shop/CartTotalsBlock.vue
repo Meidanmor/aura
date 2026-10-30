@@ -1,5 +1,5 @@
 <template>
-  <q-card v-if="c && !c.cart.state.offline && c.cart.hasItems.value && c.isHydrated" flat bordered class="q-pa-md relative-position cart-totals">
+  <q-card v-if="c && !c.cart.state.offline && c.cart.hasItems.value && ready" flat bordered class="q-pa-md relative-position cart-totals">
     <div v-if="c.cart.state.loading.cart" class="blockUi"></div>
     <template v-if="d.show_coupon !== false">
       <div class="text-subtitle1">{{ t('Coupon') }}</div>
@@ -40,9 +40,13 @@
 
 <script setup>
 import { useFieldIds } from 'src/utils/field-id.js'
-import { computed, inject } from 'vue'
+import { computed, inject, onMounted, ref } from 'vue'
 import { formatCurrency } from 'src/utils/formatters.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
+
+// Shown after this block mounts (not the page's isHydrated: the block hydrates after the page).
+const ready = ref(false)
+onMounted(() => { ready.value = true })
 
 const fid = useFieldIds()
 
