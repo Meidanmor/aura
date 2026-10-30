@@ -134,7 +134,8 @@ export function contentSecurityPolicy({ nonce, backend, dev, frameAncestors, cod
   return "default-src 'self'; " +
     `script-src 'self' 'nonce-${nonce}'${code?.eval ? " 'unsafe-eval'" : ''} https://accounts.google.com https://js.stripe.com https://hcaptcha.com https://*.hcaptcha.com${add('script')}${any('https:')}; ` +
     `style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com${add('style')}${any('https:')}; ` +
-    "img-src 'self' data: https:; " +
+    // The local dev store answers over plain http.
+    `img-src 'self' data: https:${dev && backend ? ` ${backend}` : ''}; ` +
     // The dev server's hot-reload websocket only exists locally.
     `connect-src 'self' ${backend || ''} https://api.stripe.com https://hcaptcha.com https://*.hcaptcha.com${add('connect')}${any('https: wss:')}${dev ? ' ws://localhost:* wss://localhost:*' : ''}; ` +
     `font-src 'self' https://fonts.gstatic.com${add('font')}${any('https: data:')}; ` +

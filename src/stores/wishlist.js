@@ -3,6 +3,7 @@ import { t } from 'src/i18n/index.js'
 import { fetchWithToken } from 'src/composables/useApiFetch.js'
 import { isLoggedIn } from 'src/stores/user'
 import { matFavorite } from '@quasar/extras/material-icons'
+import { queueDeviceSync } from 'src/services/push/shared.js'
 
 /* -------------------------
    Constants
@@ -46,6 +47,8 @@ function persist() {
   } catch (err) {
     if (DEBUG) console.warn('[cart] persistLocalWL failed', err)
   }
+  // Sale alerts go to shoppers who saved the product: the store keeps the list with the device.
+  queueDeviceSync()
 }
 
 function load() {

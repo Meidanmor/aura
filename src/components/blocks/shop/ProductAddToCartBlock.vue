@@ -113,12 +113,33 @@
         </q-btn>
       </div>
     </template>
+
+    <!-- Sold out: "Notify me when it's back" (a push notification; dashboard → Notifications → Back in stock). -->
+    <div v-else-if="notifyMe" class="product-buy__buttons">
+      <q-btn
+          :label="asked ? t('We\'ll let you know when it\'s back') : t('Notify me when it\'s back')"
+          :icon="asked ? matNotificationsActive : matNotificationsNone"
+          class="buy-btn"
+          :class="[buttonText.class, paddingVars.cls]"
+          :style="buttonText.style"
+          color="secondary"
+          outline
+          no-caps
+          :disable="asked"
+          :loading="asking"
+          @click="askBack"
+      />
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, inject } from 'vue'
-import { matAdd, matArrowDropDown, matCancel, matRemove } from '@quasar/extras/material-icons'
+import { computed, inject, onMounted, ref } from 'vue'
+import { useQuasar } from 'quasar'
+import { matAdd, matArrowDropDown, matCancel, matNotificationsActive, matNotificationsNone, matRemove } from '@quasar/extras/material-icons'
+import { getPushConfig, requestBackInStock, wantsBack } from 'src/services/push/shared.js'
+import { subscribeToWebPush } from 'src/services/push/push.js'
+import { t } from 'src/i18n/index.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { asResponsive, toCssLength } from 'src/composables/useSectionStyle.js'
@@ -134,6 +155,32 @@ const props = defineProps({ data: { type: Object, required: true }, blockId: { t
 const p = inject('productPage', null)
 const d = computed(() => props.data.data || {})
 const zero = computed(() => zeroPriceButton(p?.product, { onProductPage: true }))
+
+// "Notify me" shows only in a browser that can get notifications, when the store's Back in stock is on.
+const $q = useQuasar()
+const canNotify = ref(false)
+const asked = ref(false)
+const asking = ref(false)
+const notifyMe = computed(() => canNotify.value && !!p?.product && !p.product.is_in_stock)
+onMounted(async () => {
+  const cfg = await getPushConfig()
+  canNotify.value = cfg.notifyMe && !!cfg.key && 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window
+  asked.value = wantsBack(p?.product?.id)
+})
+async function askBack() {
+  asking.value = true
+  try {
+    const subscribed = await subscribeToWebPush()
+    const ok = subscribed && (await requestBackInStock(p.product.id))
+    asked.value = ok
+    $q.notify({
+      type: ok ? 'positive' : 'warning',
+      message: ok ? t('We\'ll send you a notification when it\'s back.') : t('Notifications are blocked on this device. Allow them in the browser\'s settings.'),
+    })
+  } finally {
+    asking.value = false
+  }
+}
 const buttonText = computed(() => textStyle(d.value, tsKeys('button'), 'buttons'))
 const buttonBg = computed(() => resolveGlobalColor(d.value.button_bg))
 const quickBg = computed(() => resolveGlobalColor(d.value.quick_bg))

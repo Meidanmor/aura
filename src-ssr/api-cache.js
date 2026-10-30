@@ -26,8 +26,8 @@ const MAX_BYTES = 48 * 1024 * 1024
 const MAX_ENTRY = 4 * 1024 * 1024
 const MAX_AGE_MS = 10 * 60 * 1000
 
-/** The same for everyone. */
-const PUBLIC_RE = /^\/wp-json\/qwoo\/v1\/(seo|blog|blog\/post|blog\/authors|reviews)(\?|$)/
+/** The same for everyone (pwa/config: the store's push key and when to ask, read once per visit). */
+const PUBLIC_RE = /^\/wp-json\/qwoo\/v1\/(seo|blog|blog\/post|blog\/authors|reviews|pwa\/config)(\?|$)/
 /** Products, categories, attributes and the price range: the same for everyone unless taxes follow the shopper's address. */
 const PRODUCTS_RE = /^\/wp-json\/(wc\/store\/v1\/products(\/[^?]*)?|qwoo\/v1\/products-meta)(\?|$)/
 /** SEO answers a missing page with 404: worth keeping too. */

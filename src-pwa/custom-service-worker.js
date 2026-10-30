@@ -353,10 +353,14 @@ self.addEventListener('push', event => {
     badge: notification.badge || '/icons/favicon-96x96.png',
     data: notification.data || {},
     tag: notification.tag || 'default',
-    requireInteraction: notification.requireInteraction ?? true,
+    requireInteraction: notification.requireInteraction ?? false,
     renotify: notification.renotify ?? true,
-    vibrate: notification.vibrate || ''
+    vibrate: notification.vibrate || [200, 100, 200]
   };
+  // The owner's photo (Android and computers), and Hebrew texts right to left.
+  if (notification.image) options.image = notification.image;
+  if (notification.dir) options.dir = notification.dir;
+  if (notification.lang) options.lang = notification.lang;
 
   event.waitUntil(
     self.registration.showNotification(notification.title, options)
@@ -365,10 +369,27 @@ self.addEventListener('push', event => {
 
 self.addEventListener('notificationclick', function (event) {
   event.notification.close();
-  const clickUrl = event.notification?.data?.url || '/';
+  const data = event.notification?.data || {};
+  const clickUrl = data.url || '/';
 
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+  // Counts the open for the owner's numbers (the store checks q against k; nothing about the shopper is sent).
+  const counted = data.q && data.k
+    ? fetch('/wp-json/qwoo/v1/pwa/opened', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ q: data.q, k: data.k }),
+        keepalive: true,
+      }).catch(() => {})
+    : Promise.resolve();
+
+  // A full address elsewhere opens in a new window.
+  if (/^https?:\/\//i.test(clickUrl) &&!clickUrl.startsWith(self.location.origin)) {
+    event.waitUntil(Promise.all([counted, clients.openWindow(clickUrl)]));
+    return;
+  }
+
+  event.waitUntil(counted.then(() =>
+    clients.matchAll({ type: 'window', includeUncontrolled: true })).then(clientList => {
       for (const client of clientList) {
         if (client.url.includes(self.location.origin)) {
           client.postMessage({ action: 'navigate', url: clickUrl });

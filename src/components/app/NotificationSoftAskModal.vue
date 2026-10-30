@@ -6,18 +6,18 @@
       seamless
   >
     <q-card class="notification-soft-ask q-pa-md" style="max-width: 420px; width: 100%;background-color: #ffffff">
-      <q-card-section class="row items-center q-pb-none">
+      <q-card-section class="row items-center no-wrap q-pb-none">
         <q-icon :name="matNotificationsActive" color="secondary" size="28px" class="q-mr-sm" />
-        <div class="text-h6">{{ t('Never miss an update') }}</div>
+        <div class="text-h6">{{ texts?.title || t('Never miss an update') }}</div>
       </q-card-section>
 
       <q-card-section class="text-body2 text-grey-8">
-        {{ t('Turn on notifications to hear about order updates, price drops, and abandoned cart reminders — you can turn them off anytime.') }}
+        {{ texts?.text || t('Turn on notifications to hear about order updates, price drops, and abandoned cart reminders — you can turn them off anytime.') }}
       </q-card-section>
 
       <q-card-actions align="right">
-        <q-btn flat no-caps color="grey-7" :label="t('Not now')" @click="emit('dismiss')" />
-        <q-btn unelevated no-caps color="secondary" :label="t('Enable notifications')" @click="emit('enable')" />
+        <q-btn flat no-caps color="grey-7" :label="texts?.no || t('Not now')" @click="emit('dismiss')" />
+        <q-btn unelevated no-caps color="secondary" :label="texts?.yes || t('Enable notifications')" @click="emit('enable')" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -30,6 +30,11 @@ defineProps({
   modelValue: {
     type: Boolean,
     required: true
+  },
+  // { title, text, yes, no } from the store's settings (in the shopper's language); null: the built-in texts.
+  texts: {
+    type: Object,
+    default: null
   }
 })
 

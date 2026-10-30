@@ -450,4 +450,12 @@ export default {
   "Sort": "מיון",
   "We use cookies": "אנחנו משתמשים בעוגיות",
   "We use cookies to run the store and to improve your experience.": "אנחנו משתמשים בעוגיות כדי להפעיל את החנות ולשפר את החוויה שלך.",
+  "Notify me when it's back": "עדכנו אותי כשיחזור",
+  "We'll let you know when it's back": "נעדכן אתכם כשיחזור",
+  "We'll send you a notification when it's back.": "נשלח לכם התראה כשהמוצר יחזור.",
+  "Notifications are blocked on this device. Allow them in the browser's settings.": "ההתראות חסומות במכשיר הזה. אפשר לאשר אותן בהגדרות הדפדפן.",
+  "Test notifications": "התראות בדיקה",
+  "Turn on notifications on this device to get the tests you send from your dashboard.": "הפעילו התראות במכשיר הזה כדי לקבל את הבדיקות שאתם שולחים מלוח הבקרה.",
+  "Turn on": "להפעיל",
+  "This device gets your test notifications now.": "המכשיר הזה מקבל עכשיו את התראות הבדיקה שלכם.",
 }

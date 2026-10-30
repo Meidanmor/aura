@@ -72,9 +72,17 @@
 
     <NotificationSoftAskModal
         v-if="uiHydrated"
-        :model-value="notificationSoftAskVisible"
+        :model-value="notificationSoftAskVisible && !ownerCode"
+        :texts="softAskTexts"
         @enable="handleSoftAskEnable"
         @dismiss="dismissNotificationSoftAsk"
+    />
+    <NotificationSoftAskModal
+        v-if="uiHydrated && ownerCode"
+        :model-value="true"
+        :texts="OWNER_TEXTS"
+        @enable="connectOwnerDevice"
+        @dismiss="ownerCode = ''"
     />
 
   </q-layout>
@@ -113,8 +121,11 @@ import { initSessionWatcher } from 'src/composables/useSessionWatcher.js'
 import {
   initNotificationSoftAskTracking,
   showNotificationSoftAsk,
-  dismissNotificationSoftAsk
+  dismissNotificationSoftAsk,
+  pushKeyReady,
+  softAskTexts
 } from 'src/composables/useNotificationSoftAsk.js'
+import { getPushConfig } from 'src/services/push/shared.js'
 import NotificationSoftAskModal from 'src/components/app/NotificationSoftAskModal.vue'
 import PopupHost from 'src/components/popups/PopupHost.vue'
 import SeoWait from 'src/components/app/SeoWait.js'
@@ -240,10 +251,24 @@ const _responsiveClasses = 'gt-sm lt-md gt-md lt-sm'
 
 const permission = ref('default')
 const supported = ref(false)
-const vapidConfigured = !!import.meta.env.VITE_VAPID_APP_PUBLIC_KEY
 const notificationSoftAskVisible = computed(() =>
-    vapidConfigured && supported.value && permission.value === 'default' && showNotificationSoftAsk.value
+    pushKeyReady.value && supported.value && permission.value === 'default' && showNotificationSoftAsk.value
 )
+// The owner's test link (dashboard → Notifications): /?qwoo_push_owner={code} offers to connect this device.
+const ownerCode = ref('')
+const OWNER_TEXTS = computed(() => ({
+  title: t('Test notifications'),
+  text: t('Turn on notifications on this device to get the tests you send from your dashboard.'),
+  yes: t('Turn on'),
+  no: t('Not now'),
+}))
+async function connectOwnerDevice() {
+  const code = ownerCode.value
+  ownerCode.value = ''
+  const ok = await subscribeToWebPush({ ownerCode: code })
+  permission.value = Notification.permission
+  $q.notify({ type: ok ? 'positive' : 'warning', message: ok ? t('This device gets your test notifications now.') : t('Notifications are blocked on this device. Allow them in the browser\'s settings.') })
+}
 const isSuperAdmin = isAdmin
 const $q = useQuasar()
 
@@ -636,7 +661,19 @@ onMounted(async () => {
         cart.fetchCartOnce()
         initLoadingBar(router)
         initAuthPopup(router)
-        if (vapidConfigured) initNotificationSoftAskTracking(router)
+        // The store's push key and when to ask (dashboard → Notifications → Settings).
+        getPushConfig().then((cfg) => {
+          pushKeyReady.value = !!cfg.key
+          softAskTexts.value = cfg.ask?.texts || null
+          if (cfg.key) initNotificationSoftAskTracking(router, cfg.ask)
+        })
+        const code = typeof route.query.qwoo_push_owner === 'string' ? route.query.qwoo_push_owner : ''
+        if (code && /^[a-z0-9]{24}$/.test(code) && !Platform.is.capacitor && 'Notification' in window) {
+          ownerCode.value = code
+          const query = { ...route.query }
+          delete query.qwoo_push_owner
+          router.replace({ query }).catch(() => {})
+        }
 
         initPush({router})
 

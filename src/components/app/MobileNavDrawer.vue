@@ -86,7 +86,8 @@ import {
   matPerson
 } from '@quasar/extras/material-icons'
 
-const vapidConfigured = !!import.meta.env.VITE_VAPID_APP_PUBLIC_KEY
+// The store has a push key (its own, else the build's): see MainLayout / getPushConfig().
+import { pushKeyReady as vapidConfigured } from 'src/composables/useNotificationSoftAsk.js'
 
 defineProps({
   // The header menu: [ { label, url, new_tab, external, children } ]; null before the store published one.
