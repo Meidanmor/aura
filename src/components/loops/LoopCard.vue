@@ -181,10 +181,11 @@ const shape = computed(() => {
 .lt-cart-btn.lt-cart-btn--round { width: var(--lt-btn-round, 44px); height: var(--lt-btn-round, 44px); min-height: 0; padding: 0; border-radius: 50%; }
 .lt-cart-btn .q-icon { font-size: var(--lt-btn-icon, 20px); }
 .lt-cart-btn.q-btn--outline::before { border-color: var(--lt-btn-border, currentColor); border-width: 2px; }
-/* Space Between Icon and Text, per screen size (logical margins replace Quasar's on-left / on-right). */
-.lt-cart-btn.has-icon-gap { --lt-gap-now: var(--lt-btn-gap, 12px); }
-@media (max-width: 1023px) { .lt-cart-btn.has-icon-gap { --lt-gap-now: var(--lt-btn-gap-t, var(--lt-btn-gap, 12px)); } }
-@media (max-width: 767px) { .lt-cart-btn.has-icon-gap { --lt-gap-now: var(--lt-btn-gap-m, var(--lt-btn-gap-t, var(--lt-btn-gap, 12px))); } }
-.lt-cart-btn.has-icon-gap .q-icon.on-left { margin-inline: 0 var(--lt-gap-now); }
-.lt-cart-btn.has-icon-gap .q-icon.on-right { margin-inline: var(--lt-gap-now) 0; }
+/* Space Between Icon and Text, per screen size (default 8px, the field's placeholder). The text is the
+   button's slot, not Quasar's label, so Quasar never marks the icon on-left / on-right: find it by place. */
+.lt-cart-btn { --lt-gap-now: var(--lt-btn-gap, 8px); }
+@media (max-width: 1023px) { .lt-cart-btn { --lt-gap-now: var(--lt-btn-gap-t, var(--lt-btn-gap, 8px)); } }
+@media (max-width: 767px) { .lt-cart-btn { --lt-gap-now: var(--lt-btn-gap-m, var(--lt-btn-gap-t, var(--lt-btn-gap, 8px))); } }
+.lt-cart-btn .q-btn__content > .q-icon:first-child:not(:last-child) { margin-inline: 0 var(--lt-gap-now); }
+.lt-cart-btn .q-btn__content > .q-icon:last-child:not(:first-child) { margin-inline: var(--lt-gap-now) 0; }
 </style>

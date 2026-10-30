@@ -68,7 +68,7 @@ import { useAriaLabel } from 'src/utils/aria-label.js'
 import { t } from 'src/i18n/index.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { iconAlign } from 'src/utils/icon-align.js'
-import { DEVICES, alignToText, asResponsive, setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
+import { alignToText, setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -102,10 +102,9 @@ const iconOnly = computed(() => !!icon.value && !!d.value.icon_only)
 const addLabel = useAriaLabel(() => d.value.aria_label, () => d.value.text || t('Add to cart'))
 const optionsLabel = useAriaLabel(() => d.value.aria_label, () => d.value.options_text || t('Choose options'))
 const iconAtEnd = computed(() => d.value.icon_position === 'end' && !iconOnly.value)
-const hasIconGap = computed(() => !iconOnly.value && DEVICES.some((device) => { const v = asResponsive(d.value.icon_gap)[device]; return v !== '' && v != null }))
 // Style → Icon Alignment / Icon Offset.
 const iconPlace = computed(() => iconAlign(icon.value ? d.value : {}))
-const btnClass = computed(() => ({ 'lt-cart-btn--full': !!d.value.full_width && !iconOnly.value, 'lt-cart-btn--round': iconOnly.value, 'has-icon-gap': hasIconGap.value, [iconPlace.value.cls]: !!iconPlace.value.cls }))
+const btnClass = computed(() => ({ 'lt-cart-btn--full': !!d.value.full_width && !iconOnly.value, 'lt-cart-btn--round': iconOnly.value,[iconPlace.value.cls]: !!iconPlace.value.cls }))
 const btnVars = computed(() => {
   const v = {}
   const r = toCssLength(d.value.radius)
