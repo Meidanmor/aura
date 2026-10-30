@@ -22,7 +22,7 @@
             :class="{ 'form-block__field--half': field.width === 'half' }"
         >
           <!-- Single checkbox (e.g. consent) -->
-          <q-field
+          <q-field :for="fid(`${field.key}-1`)"
               v-if="field.field_type === 'checkbox'"
               v-model="values[field.key]"
               borderless
@@ -37,7 +37,7 @@
           </q-field>
 
           <!-- Radio group / checkbox group -->
-          <q-field
+          <q-field :for="fid(`${field.key}-2`)"
               v-else-if="field.field_type === 'radio' || field.field_type === 'checkboxes'"
               v-model="values[field.key]"
               borderless
@@ -58,7 +58,7 @@
           </q-field>
 
           <!-- Dropdown -->
-          <q-select
+          <q-select :for="fid(`${field.key}-3`)"
               v-else-if="field.field_type === 'select'"
               v-model="values[field.key]"
               :options="optionValues(field)"
@@ -71,7 +71,7 @@
           />
 
           <!-- Text-like inputs -->
-          <q-input
+          <q-input :for="fid(`${field.key}-4`)"
               v-else
               v-model="values[field.key]"
               :type="inputType(field)"
@@ -116,6 +116,7 @@
 </template>
 
 <script setup>
+import { useFieldIds } from 'src/utils/field-id.js'
 import { computed, reactive, ref, watch } from 'vue'
 import { matCheckCircle } from '@quasar/extras/material-icons'
 import { useHoneypot } from 'src/composables/useHoneypot.js'
@@ -124,6 +125,8 @@ import { asResponsive, setResponsiveVar, toCssLength, alignToFlex } from 'src/co
 import { useI18n } from 'src/i18n/index.js'
 import { gradientOf } from 'src/utils/gradient.js'
 import { mergeBinds, textStyle, textVars, tsKeys } from 'src/utils/text-style.js'
+
+const fid = useFieldIds()
 
 const { t } = useI18n()
 

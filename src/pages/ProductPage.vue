@@ -95,8 +95,10 @@ const gallery = computed(() => {
   return list
 })
 
+// Not async: the slide count has to be there for the server render, or the server draws
+// no dots and the browser does (a hydration mismatch).
 const imagesCarousel = useCarousel(
-  async () => gallery.value,
+  () => gallery.value,
     {
       chunkSizes: { xs: 1, sm: 1, md: 1 }
     }

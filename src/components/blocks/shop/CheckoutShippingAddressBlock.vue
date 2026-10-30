@@ -1,17 +1,20 @@
 <template>
   <q-form v-if="c?.ready" ref="formEl" class="checkout-shipping-address" @submit.prevent="c.placeOrder">
     <CheckoutPart :data="d" :default-title="t('Shipping Address')">
-      <q-input v-model="c.form.shipping.address_1" v-bind="look" :label="t('Address *')" class="q-mb-sm" :rules="[val => !!val || t('Address is required')]" @blur="c.handleInputBlur" />
-      <q-input v-model="c.form.shipping.city" v-bind="look" :label="t('City *')" class="q-mb-sm" :rules="[val => !!val || t('City is required')]" @blur="c.handleInputBlur" />
-      <q-input v-model="c.form.shipping.postcode" v-bind="look" :label="t('Postcode')" class="q-mb-sm" :rules="[val => !!val || t('Postcode is required')]" @blur="c.handleInputBlur" />
-      <q-input v-model="c.form.shipping.country" v-bind="look" readonly :label="t('Country')" @blur="c.handleInputBlur" />
+      <q-input :for="fid('f1')" v-model="c.form.shipping.address_1" v-bind="look" :label="t('Address *')" class="q-mb-sm" :rules="[val => !!val || t('Address is required')]" @blur="c.handleInputBlur" />
+      <q-input :for="fid('f2')" v-model="c.form.shipping.city" v-bind="look" :label="t('City *')" class="q-mb-sm" :rules="[val => !!val || t('City is required')]" @blur="c.handleInputBlur" />
+      <q-input :for="fid('f3')" v-model="c.form.shipping.postcode" v-bind="look" :label="t('Postcode')" class="q-mb-sm" :rules="[val => !!val || t('Postcode is required')]" @blur="c.handleInputBlur" />
+      <q-input :for="fid('f4')" v-model="c.form.shipping.country" v-bind="look" readonly :label="t('Country')" @blur="c.handleInputBlur" />
     </CheckoutPart>
   </q-form>
 </template>
 
 <script setup>
+import { useFieldIds } from 'src/utils/field-id.js'
 import { computed, inject, onUnmounted, ref, watch } from 'vue'
 import CheckoutPart from './CheckoutPart.vue'
+
+const fid = useFieldIds()
 
 /** "Shipping Address" (checkout page template). Its form is checked by Place Order. */
 const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })

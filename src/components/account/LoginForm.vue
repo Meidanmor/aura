@@ -14,14 +14,14 @@
       />
     </div>
 
-    <q-input
+    <q-input :for="fid('f1')"
         v-model="username"
         :label="t('Username or Email')"
         v-bind="look"
         autocomplete="username"
         :disable="loading"
     />
-    <q-input
+    <q-input :for="fid('f2')"
         v-model="password"
         type="password"
         :label="t('Password')"
@@ -51,12 +51,15 @@
 </template>
 
 <script setup>
+import { useFieldIds } from 'src/utils/field-id.js'
 import { computed, ref } from 'vue'
 import cart from 'src/stores/cart.js'
 import wishlist from 'src/stores/wishlist.js'
 import { setUser } from 'src/stores/user.js'
 import { useHoneypot } from 'src/composables/useHoneypot.js'
 import { useI18n } from 'src/i18n/index.js'
+
+const fid = useFieldIds()
 
 const { t } = useI18n()
 

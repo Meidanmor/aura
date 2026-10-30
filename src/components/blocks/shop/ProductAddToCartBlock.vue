@@ -30,7 +30,7 @@
             <span v-if="!opt.disable && choicePriceOf(attribute.name, opt.value)" class="pb-choice__price" v-html="choicePriceOf(attribute.name, opt.value)" />
           </button>
         </div>
-        <q-select
+        <q-select :for="fid(`a${attribute.id}`)"
             v-else
             v-model="p.selectedVariations[attribute.name]"
             :options="p.getOptionsWithDisabled(attribute)"
@@ -68,7 +68,7 @@
     <template v-else-if="p.product.is_in_stock">
       <div v-if="d.show_quantity !== false" class="row items-center q-mb-md">
         <q-btn :aria-label="t('Decrease quantity')" flat round :icon="matRemove" @click="p.decreaseQty" />
-        <q-input
+        <q-input :for="fid('f2')"
             v-model.number="p.quantity"
             type="number"
             :min="p.product?.add_to_cart?.minimum"
@@ -134,6 +134,7 @@
 </template>
 
 <script setup>
+import { useFieldIds } from 'src/utils/field-id.js'
 import { computed, inject, onMounted, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { matAdd, matArrowDropDown, matCancel, matNotificationsActive, matNotificationsNone, matRemove } from '@quasar/extras/material-icons'
@@ -145,6 +146,8 @@ import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { asResponsive, toCssLength } from 'src/composables/useSectionStyle.js'
 import { gradientOf } from 'src/utils/gradient.js'
 import { zeroPriceButton, zeroPriceLink } from 'src/utils/zero-price.js'
+
+const fid = useFieldIds()
 
 /**
  * "Add To Cart" (product page template): the variant choices, the quantity,

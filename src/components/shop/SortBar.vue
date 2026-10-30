@@ -47,7 +47,7 @@
     </div>
 
     <!-- Show As: Dropdown list (the default). -->
-    <q-select
+    <q-select :for="fid('f1')"
         v-if="kinds.has('dropdown')"
         class="sort-main sort-kind sort-kind--dropdown sort-field"
         :class="fieldBinds.class"
@@ -85,6 +85,7 @@
 </template>
 
 <script setup>
+import { useFieldIds } from 'src/utils/field-id.js'
 import { computed, ref } from 'vue'
 import { matArrowDropDown, matAutorenew, matCheck, matClose, matFilterList, matExpandMore, matUnfoldMore, matSort, matSwapVert, matTune } from '@quasar/extras/material-icons'
 import ButtonBlock from 'components/blocks/ButtonBlock.vue'
@@ -92,6 +93,8 @@ import { useI18n } from 'src/i18n/index.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { textStyle, textVars, tsKeys, mergeBinds } from 'src/utils/text-style.js'
 import { DEVICES, asResponsive, toCssLength, alignToFlex } from 'src/composables/useSectionStyle.js'
+
+const fid = useFieldIds()
 
 /**
  * The shop's order picker: a dropdown (Quasar's select) or a row of buttons,

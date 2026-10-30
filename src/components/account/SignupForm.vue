@@ -7,12 +7,12 @@
     </div>
 
     <div class="signup-form__names">
-      <q-input v-model="firstName" :label="t('First Name')" v-bind="look" autocomplete="given-name" maxlength="60" :disable="loading" />
-      <q-input v-model="lastName" :label="t('Last Name')" v-bind="look" autocomplete="family-name" maxlength="60" :disable="loading" />
+      <q-input :for="fid('f1')" v-model="firstName" :label="t('First Name')" v-bind="look" autocomplete="given-name" maxlength="60" :disable="loading" />
+      <q-input :for="fid('f2')" v-model="lastName" :label="t('Last Name')" v-bind="look" autocomplete="family-name" maxlength="60" :disable="loading" />
     </div>
-    <q-input v-model="email" type="email" :label="t('Email')" v-bind="look" autocomplete="email" :disable="loading"
+    <q-input :for="fid('f3')" v-model="email" type="email" :label="t('Email')" v-bind="look" autocomplete="email" :disable="loading"
              :rules="[(v) => /^\S+@\S+\.\S+$/.test(v || '') || t('Please enter a valid email address.')]" lazy-rules />
-    <q-input v-model="password" type="password" :label="t('Password')" v-bind="look" autocomplete="new-password" :disable="loading"
+    <q-input :for="fid('f4')" v-model="password" type="password" :label="t('Password')" v-bind="look" autocomplete="new-password" :disable="loading"
              :hint="t('At least 8 characters')"
              :rules="[(v) => (v || '').length >= 8 || t('Password must be at least 8 characters.')]" lazy-rules />
 
@@ -31,12 +31,15 @@
 </template>
 
 <script setup>
+import { useFieldIds } from 'src/utils/field-id.js'
 import { computed, ref, useId } from 'vue'
 import cart from 'src/stores/cart.js'
 import wishlist from 'src/stores/wishlist.js'
 import { refreshNonce } from 'src/composables/useApiFetch.js'
 import { useHoneypot } from 'src/composables/useHoneypot.js'
 import { useI18n } from 'src/i18n/index.js'
+
+const fid = useFieldIds()
 
 /**
  * Making an account (Sign Up Form block): name, email and password, then the

@@ -3,7 +3,7 @@
     <CheckoutPart :data="d" :default-title="t('Coupon')">
       <div class="row items-center q-col-gutter-md">
         <div class="col">
-          <q-input v-model="c.couponCode" v-bind="look" :label="t('Coupon code')" @keydown.enter.stop.prevent="c.applyCoupon(c.couponCode)" />
+          <q-input :for="fid('f1')" v-model="c.couponCode" v-bind="look" :label="t('Coupon code')" @keydown.enter.stop.prevent="c.applyCoupon(c.couponCode)" />
         </div>
         <div class="col-auto">
           <q-btn :label="d.button_label || t('Apply')" :color="buttonBg ? undefined : 'secondary'" :style="buttonColors" :loading="c.loadingCoupon" @click="c.applyCoupon(c.couponCode)" />
@@ -22,9 +22,12 @@
 </template>
 
 <script setup>
+import { useFieldIds } from 'src/utils/field-id.js'
 import { computed, inject } from 'vue'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import CheckoutPart from './CheckoutPart.vue'
+
+const fid = useFieldIds()
 
 /** "Coupon Box" (checkout page template): enter a code, the codes in use. */
 const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })

@@ -2,9 +2,9 @@
   <template v-if="c">
     <q-form v-if="c.ready" ref="formEl" class="checkout-contact" @submit.prevent="c.placeOrder">
       <CheckoutPart :data="d" :default-title="t('Personal Details')">
-        <q-input v-model="c.form.first_name" v-bind="look" :label="t('First Name *')" class="q-mb-sm" :rules="[val => !!val || t('First Name is required')]" @blur="c.handleInputBlur" />
-        <q-input v-model="c.form.last_name" v-bind="look" :label="t('Last Name *')" class="q-mb-sm" :rules="[val => !!val || t('Last Name is required')]" @blur="c.handleInputBlur" />
-        <q-input
+        <q-input :for="fid('f1')" v-model="c.form.first_name" v-bind="look" :label="t('First Name *')" class="q-mb-sm" :rules="[val => !!val || t('First Name is required')]" @blur="c.handleInputBlur" />
+        <q-input :for="fid('f2')" v-model="c.form.last_name" v-bind="look" :label="t('Last Name *')" class="q-mb-sm" :rules="[val => !!val || t('Last Name is required')]" @blur="c.handleInputBlur" />
+        <q-input :for="fid('f3')"
             v-model="c.form.email"
             v-bind="look"
             :label="t('Email *')"
@@ -13,7 +13,7 @@
             :rules="[val => !!val || t('Email is required'), val => /^\S+@\S+\.\S+$/.test(val) || t('Please enter a valid email')]"
             @blur="c.handleInputBlur"
         />
-        <q-input v-model="c.form.phone" v-bind="look" :label="t('Phone *')" :rules="[val => !!val || t('Phone is required')]" @blur="c.handleInputBlur" />
+        <q-input :for="fid('f4')" v-model="c.form.phone" v-bind="look" :label="t('Phone *')" :rules="[val => !!val || t('Phone is required')]" @blur="c.handleInputBlur" />
       </CheckoutPart>
     </q-form>
 
@@ -30,8 +30,11 @@
 </template>
 
 <script setup>
+import { useFieldIds } from 'src/utils/field-id.js'
 import { computed, inject, onUnmounted, ref, watch } from 'vue'
 import CheckoutPart from './CheckoutPart.vue'
+
+const fid = useFieldIds()
 
 /**
  * "Contact Details" (checkout page template): name, email and phone; until

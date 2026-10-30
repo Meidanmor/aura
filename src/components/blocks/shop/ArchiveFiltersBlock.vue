@@ -9,7 +9,7 @@
       </div>
 
       <div v-if="d.show_search !== false" class="q-mb-md">
-        <q-input v-model="a.search" filled :label="t('Search products...')" debounce="300" />
+        <q-input :for="fid('f1')" v-model="a.search" filled :label="t('Search products...')" debounce="300" />
       </div>
 
       <template v-if="a.mode === 'shop' && d.show_categories !== false">
@@ -58,11 +58,14 @@
 </template>
 
 <script setup>
+import { useFieldIds } from 'src/utils/field-id.js'
 import { computed, inject, onMounted } from 'vue'
 import { matClose } from '@quasar/extras/material-icons'
 import PriceFilterCard from 'components/shop/PriceFilterCard.vue'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { detailKeys, pickDetails } from 'src/utils/product-details.js'
+
+const fid = useFieldIds()
 
 /**
  * "Filters" (All products / category page template): search, categories

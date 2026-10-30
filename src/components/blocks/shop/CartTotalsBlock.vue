@@ -4,7 +4,7 @@
     <template v-if="d.show_coupon !== false">
       <div class="text-subtitle1">{{ t('Coupon') }}</div>
       <div class="row items-center q-col-gutter-sm q-mb-sm">
-        <div class="col"><q-input v-model="c.couponCode" :label="t('Coupon code')" dense filled @keydown.enter.stop.prevent="c.applyCoupon(c.couponCode)" /></div>
+        <div class="col"><q-input :for="fid('f1')" v-model="c.couponCode" :label="t('Coupon code')" dense filled @keydown.enter.stop.prevent="c.applyCoupon(c.couponCode)" /></div>
         <div class="col-auto"><q-btn :label="t('Apply')" color="secondary" :loading="c.loadingCoupon" @click="c.applyCoupon(c.couponCode)" /></div>
       </div>
       <div v-if="c.couponError" class="text-negative">{{ c.couponError }}</div>
@@ -39,9 +39,12 @@
 </template>
 
 <script setup>
+import { useFieldIds } from 'src/utils/field-id.js'
 import { computed, inject } from 'vue'
 import { formatCurrency } from 'src/utils/formatters.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
+
+const fid = useFieldIds()
 
 /** "Cart Totals" (cart page template): coupon, shipping choice, total and the Checkout button. */
 const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })

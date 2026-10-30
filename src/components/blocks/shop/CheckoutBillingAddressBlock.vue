@@ -3,18 +3,21 @@
     <CheckoutPart :data="{ ...d, show_title: c.differentBillingAddress && d.show_title !== false }" :default-title="t('Billing Address')">
       <q-checkbox v-model="c.differentBillingAddress" :label="d.checkbox_label || t('Different billing address?')" color="secondary" :class="{ 'q-mb-sm': c.differentBillingAddress }" @update:model-value="c.handleCheckboxBlur" />
       <template v-if="c.differentBillingAddress">
-        <q-input v-model="c.form.billing.address_1" v-bind="look" :label="t('Billing Address *')" class="q-mb-sm" @blur="c.handleInputBlur" />
-        <q-input v-model="c.form.billing.city" v-bind="look" :label="t('City *')" class="q-mb-sm" @blur="c.handleInputBlur" />
-        <q-input v-model="c.form.billing.postcode" v-bind="look" :label="t('Postcode')" class="q-mb-sm" @blur="c.handleInputBlur" />
-        <q-input v-model="c.form.billing.country" v-bind="look" :label="t('Country')" @blur="c.handleInputBlur" />
+        <q-input :for="fid('f1')" v-model="c.form.billing.address_1" v-bind="look" :label="t('Billing Address *')" class="q-mb-sm" @blur="c.handleInputBlur" />
+        <q-input :for="fid('f2')" v-model="c.form.billing.city" v-bind="look" :label="t('City *')" class="q-mb-sm" @blur="c.handleInputBlur" />
+        <q-input :for="fid('f3')" v-model="c.form.billing.postcode" v-bind="look" :label="t('Postcode')" class="q-mb-sm" @blur="c.handleInputBlur" />
+        <q-input :for="fid('f4')" v-model="c.form.billing.country" v-bind="look" :label="t('Country')" @blur="c.handleInputBlur" />
       </template>
     </CheckoutPart>
   </q-form>
 </template>
 
 <script setup>
+import { useFieldIds } from 'src/utils/field-id.js'
 import { computed, inject, onUnmounted, ref, watch } from 'vue'
 import CheckoutPart from './CheckoutPart.vue'
+
+const fid = useFieldIds()
 
 /** "Billing Address" (checkout page template): "Different billing address?", then its fields. */
 const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
