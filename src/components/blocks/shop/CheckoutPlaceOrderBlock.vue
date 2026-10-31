@@ -1,10 +1,10 @@
 <template>
-  <component :is="d.card === false ? 'div' : QCard" v-if="c?.ready" class="checkout-place-order" :class="{ 'is-full': d.full_width, 'q-pa-md': d.card !== false }">
-    <q-card-section v-if="d.show_total !== false">
+  <div v-if="c?.ready" class="checkout-place-order" :class="{ 'is-full': d.full_width }">
+    <div v-if="d.show_total !== false">
       <div v-if="c.couponApplied">{{ t('Total discount: {amount}', { amount: formatCurrency(c.cartTotalDiscount) }) }}</div>
       <div class="text-h6">{{ t('Total:') }} <span v-if="c.couponApplied"><del>{{ formatCurrency(Number(c.cartTotalDiscount) + Number(c.cartTotal)) }}</del></span> {{ formatCurrency(c.cartTotal) }}</div>
-    </q-card-section>
-    <q-card-section v-if="(c.allowSignup && c.isLoggedIn === false) || c.termsRequired" class="checkout-agree" :class="{ 'q-pt-none': d.show_total !== false }">
+    </div>
+    <div v-if="(c.allowSignup && c.isLoggedIn === false) || c.termsRequired" class="checkout-agree">
       <q-checkbox v-if="c.allowSignup && c.isLoggedIn === false" v-model="c.createAccount" color="secondary" :label="t('Create an account (we\'ll email you a link to set your password)')" />
       <q-checkbox v-if="c.termsRequired" v-model="c.agreeTerms" color="secondary">
         <span>
@@ -15,16 +15,15 @@
           {{ t('of this store. *') }}
         </span>
       </q-checkbox>
-    </q-card-section>
-    <q-card-actions>
+    </div>
+    <div>
       <q-btn class="place-order-btn" :label="d.button_label || t('Place Order')" :color="buttonBg ? undefined : 'secondary'" :style="buttonColors" :disable="c.cart.state.offline" @click="c.placeOrder" />
-    </q-card-actions>
-  </component>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { computed, inject } from 'vue'
-import { QCard } from 'quasar'
 import { formatCurrency } from 'src/utils/formatters.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 
@@ -37,5 +36,7 @@ const buttonColors = computed(() => ({ ...(buttonBg.value ? { background: button
 </script>
 
 <style scoped>
+/* The card itself ("In a card") is the block wrapper's .sb-card. */
+.checkout-place-order { display: flex; flex-direction: column; gap: 12px; }
 .is-full .place-order-btn { width: 100%; }
 </style>

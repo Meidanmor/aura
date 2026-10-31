@@ -1151,4 +1151,43 @@ html.qa-editor .sb-aud-customers { outline: 1px dashed rgba(127, 127, 127, .6); 
 @media (max-width: 767px) { .has-icon-align { --ia-al-now: var(--ia-al-m, var(--ia-al-t, var(--ia-al, center))); --ia-off-now: var(--ia-off-m, var(--ia-off-t, var(--ia-off, 0px))); } }
 .q-btn.has-icon-align .q-btn__content { align-items: var(--ia-al-now); }
 .q-btn.has-icon-align .q-btn__content > .q-icon { translate: 0 var(--ia-off-now); }
+/* "In a card" blocks (checkout parts, Place Order, account parts, sign-in forms, cart
+   items and totals; CARD_BLOCKS in useSectionStyle.js): the card is the block's own wrapper.
+   --card-* are only defaults: any padding, border, corner radius or bottom margin set on the
+   Style / Advanced tabs replaces them (the --sb-* variables are empty unless set). */
+.sb-block.sb-card {
+    --card-p: 16px; --card-bw: 1px; --card-bc: #00000022; --card-r: 4px; --card-mb: 16px;
+    position: relative;
+    padding: var(--sb-pt, var(--card-p)) var(--sb-pr, var(--card-p)) var(--sb-pb, var(--card-p)) var(--sb-pl, var(--card-p));
+    border-style: var(--sb-bs, solid);
+    border-width: var(--sb-bw, var(--card-bw));
+    border-color: var(--sb-bc, var(--card-bc));
+    border-radius: var(--sb-radius, var(--card-r));
+    margin-bottom: var(--sbb-mb, var(--card-mb));
+}
+/* The cart page's blocks keep their old looks. */
+.sb-block--cart_items.sb-card { --card-p: 20px; --card-bc: var(--q-secondary); --card-r: 20px; --card-mb: 0px; }
+.sb-block--cart_totals.sb-card { --card-mb: 0px; }
+/* "Your cart is empty" sits in no card. */
+.sb-block.sb-card:has(> .empty-cart-msg) { --card-p: 0px; --card-bw: 0px; --card-r: 0px; }
+/* A part with nothing to show (empty cart, signed out…) leaves no empty card. */
+.sb-block.sb-card:empty { display: none; }
+@media (max-width: 1023px) {
+    .sb-block.sb-card {
+        padding: var(--sb-pt-t, var(--sb-pt, var(--card-p))) var(--sb-pr-t, var(--sb-pr, var(--card-p))) var(--sb-pb-t, var(--sb-pb, var(--card-p))) var(--sb-pl-t, var(--sb-pl, var(--card-p)));
+        border-width: var(--sb-bw-t, var(--sb-bw, var(--card-bw)));
+        border-color: var(--sb-bc-t, var(--sb-bc, var(--card-bc)));
+        border-radius: var(--sb-radius-t, var(--sb-radius, var(--card-r)));
+        margin-bottom: var(--sbb-mb-t, var(--sbb-mb, var(--card-mb)));
+    }
+}
+@media (max-width: 767px) {
+    .sb-block.sb-card {
+        padding: var(--sb-pt-m, var(--sb-pt-t, var(--sb-pt, var(--card-p)))) var(--sb-pr-m, var(--sb-pr-t, var(--sb-pr, var(--card-p)))) var(--sb-pb-m, var(--sb-pb-t, var(--sb-pb, var(--card-p)))) var(--sb-pl-m, var(--sb-pl-t, var(--sb-pl, var(--card-p))));
+        border-width: var(--sb-bw-m, var(--sb-bw-t, var(--sb-bw, var(--card-bw))));
+        border-color: var(--sb-bc-m, var(--sb-bc-t, var(--sb-bc, var(--card-bc))));
+        border-radius: var(--sb-radius-m, var(--sb-radius-t, var(--sb-radius, var(--card-r))));
+        margin-bottom: var(--sbb-mb-m, var(--sbb-mb-t, var(--sbb-mb, var(--card-mb))));
+    }
+}
 /* purgecss end ignore */

@@ -396,6 +396,21 @@ function setBorderVars(vars, s) {
 }
 
 /**
+ * The border of an "In a card" block when setBorderVars() wrote none: the
+ * card draws 1px by default (.sb-card), so a width of 0 must remove it and a
+ * colour or style alone must restyle it.
+ */
+function setCardBorderVars(vars, s) {
+  const w = asResponsive(s.border_width)
+  const given = (sides) => !!sides && typeof sides === 'object' && Object.values(sides).some((x) => x !== '' && x != null)
+  const widths = {}
+  for (const d of DEVICES) widths[d] = given(w[d]) ? (borderWidths(w[d]) || '0') : ''
+  setLookVars(vars, '--sb-bw', widths, 'var(--card-bw)')
+  if (BORDER_STYLES.has(s.border_style)) vars['--sb-bs'] = s.border_style
+  setLookVars(vars, '--sb-bc', perScreen(s, (x) => resolveGlobalColor(x.border_color) || ''), 'var(--card-bc)')
+}
+
+/**
  * Box shadow (SHADOW_FIELDS in the plugin): "x y blur spread color", with
  * "inset" in front when it sits inside the box. Null when it's off.
  */
@@ -517,6 +532,17 @@ export function sectionLink(s = {}) {
 /* Block wrappers (.sb-block around every block inside a container)    */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Blocks with an "In a card" switch: the card is their wrapper (.sb-card in
+ * app.css), a thin border, padding, corners and space below that the Style
+ * tab's own values replace.
+ */
+const CARD_BLOCKS = new Set([
+  'checkout_contact', 'checkout_shipping_address', 'checkout_billing_address', 'checkout_coupon',
+  'checkout_items', 'checkout_shipping', 'checkout_payment', 'checkout_totals', 'checkout_place_order',
+  'login_form', 'signup_form', 'account_orders', 'account_details', 'cart_items', 'cart_totals',
+])
+
 export function buildBlockWrapperStyle(block) {
   if (block?.type === 'section') {
     // A nested section's own style drives its wrapper: margins, width
@@ -558,10 +584,15 @@ export function buildBlockWrapperStyle(block) {
   if (s.animation && s.animation !== 'none' && delay > 0) vars['--sb-anim-delay'] = `${Math.min(1500, delay)}ms`
   const sticky = setStickyVars(vars, s)
   const ordered = setOrderVars(vars, s)
+  const card = CARD_BLOCKS.has(block?.type) && block?.data?.card !== false
+  if (card && !looks.border) setCardBorderVars(vars, s)
+  // Cart Items' own Frame Color (older than the Style tab's border): the card's colour.
+  if (card && block.data?.border_color) vars['--card-bc'] = resolveGlobalColor(block.data.border_color)
 
   return {
     classes: {
       [`sb-block--${block?.type}`]: true,
+      'sb-card': card,
       'sb-has-order': ordered,
       'sb-has-w': hasAny(s.width),
       'sb-has-maxw': hasAny(s.max_width),

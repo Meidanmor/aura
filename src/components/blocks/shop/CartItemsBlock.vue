@@ -5,7 +5,7 @@
     <div v-if="c.cartItems.length === 0" class="empty-cart-msg">
       {{ d.empty_text || t('Your cart is empty.') }} <router-link to="/products/">{{ d.link_text || t('Go to shop') }}</router-link>
     </div>
-    <div v-else-if="c.cart.hasItems.value && ready" class="cart-items-wrap" :style="frame">
+    <div v-else-if="c.cart.hasItems.value && ready" class="cart-items-wrap">
       <div v-for="item in c.cart.state.items" :key="item.id" class="q-pa-sm row items-center" :class="[item.key.includes('offline') ? 'offline-item' : '']">
         <div class="flex">
           <img v-if="item.images" :src="c.cart.state.offline === true ? item?.images[0]?.src : item.images[0]?.thumbnail" alt="" style="width: 70px; height: 70px; object-fit: cover" />
@@ -38,7 +38,6 @@
 import { computed, inject, onMounted, ref } from 'vue'
 import { matAdd, matClose, matRemove } from '@quasar/extras/material-icons'
 import { formatCurrency } from 'src/utils/formatters.js'
-import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 
 // Shown after this block mounts (not the page's isHydrated: the block hydrates after the page).
 const ready = ref(false)
@@ -48,5 +47,4 @@ onMounted(() => { ready.value = true })
 const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
 const c = inject('cartPage', null)
 const d = computed(() => props.data.data || {})
-const frame = computed(() => (d.value.border_color ? { borderColor: resolveGlobalColor(d.value.border_color) } : null))
 </script>

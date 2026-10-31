@@ -1,5 +1,6 @@
 <template>
-  <q-card v-if="c && !c.cart.state.offline && c.cart.hasItems.value && ready" flat bordered class="q-pa-md relative-position cart-totals">
+  <!-- The card ("In a card") is the block wrapper's .sb-card. -->
+  <div v-if="c && !c.cart.state.offline && c.cart.hasItems.value && ready" class="relative-position cart-totals">
     <div v-if="c.cart.state.loading.cart" class="blockUi"></div>
     <template v-if="d.show_coupon !== false">
       <div class="text-subtitle1">{{ t('Coupon') }}</div>
@@ -35,7 +36,7 @@
     <router-link to="/checkout/">
       <q-btn :color="buttonBg ? undefined : 'secondary'" :style="buttonColors" :label="d.button_label || t('Checkout')" />
     </router-link>
-  </q-card>
+  </div>
 </template>
 
 <script setup>

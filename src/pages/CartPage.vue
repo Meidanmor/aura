@@ -8,8 +8,9 @@
 
 <script setup>
 import cart from 'src/stores/cart';
-import { computed, markRaw, onMounted, provide, reactive, ref } from 'vue';
+import { computed, onMounted, provide, reactive, ref } from 'vue';
 import { useCartSummary } from 'src/composables/useCartSummary'
+import { usePreviewCart } from 'src/utils/sample-cart.js'
 import {useSeoMeta} from "src/composables/useSeo.js";
 import SectionRenderer from 'components/sections/SectionRenderer.vue'
 import { loadPageConfig } from 'src/utils/config-loader.js'
@@ -18,11 +19,14 @@ import { usePageConfig } from 'src/composables/usePageConfig.js'
 import { shopSections } from 'src/utils/shop-templates.js'
 import { t as i18nT } from 'src/i18n/index.js'
 
+// The Store builder's preview of an empty cart shows a sample one.
+const preview = usePreviewCart(cart)
+const shown = () => preview.cart.value
 const {
   displayCart, cartTotal, cartItems, cartTotalDiscount, couponApplied, shippingOptions,
   selectedShippingRateId, couponCode, couponError,
   fetchShippingRates, onShippingMethodChange, applyCoupon, removeCoupon, loadingCoupon
-} = useCartSummary()
+} = useCartSummary(shown)
 
 defineOptions({
   async preFetch ({ ssrContext }) {
@@ -58,9 +62,9 @@ useSeoMeta({ noindex: true })
 // Store builder → Shop pages → Cart.
 const cartConfig = usePageConfig('cart')
 const sections = computed(() => shopSections('cart', cartConfig.value))
-const increase = (id) => cart.increase(id)
-const decrease = (id) => cart.decrease(id)
-const remove = (itemKey=null, itemAPIkey=null) => cart.remove(itemKey,itemAPIkey)
+const increase = (id) => shown().increase(id)
+const decrease = (id) => shown().decrease(id)
+const remove = (itemKey=null, itemAPIkey=null) => shown().remove(itemKey,itemAPIkey)
 
 const getSlugFromPermalink = (permalink) => {
   if (!permalink) return ''
@@ -82,7 +86,7 @@ onMounted(() => {
 
 // What the template's blocks show and do (src/components/blocks/shop/Cart*Block.vue).
 provide('cartPage', reactive({
-  cart: markRaw(cart), displayCart, cartTotal, cartItems, cartTotalDiscount, couponApplied, shippingOptions,
+  cart: preview.cart, displayCart, cartTotal, cartItems, cartTotalDiscount, couponApplied, shippingOptions,
   selectedShippingRateId, couponCode, couponError, onShippingMethodChange, applyCoupon, removeCoupon, loadingCoupon,
   increase, decrease, remove, getSlugFromPermalink, getVariationQuery, isHydrated,
 }))
@@ -102,11 +106,6 @@ provide('cartPage', reactive({
 }
 .cart-items-wrap>.row:not(:last-child) {
     border-bottom: 1px solid;
-}
-.cart-items-wrap {
-    padding: 20px;
-    border: 1px solid var(--q-secondary);
-    border-radius: 20px;
 }
 .cart-items-wrap .flex {
   column-gap: 5px;

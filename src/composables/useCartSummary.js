@@ -4,7 +4,11 @@ import { fetchWithToken } from 'src/composables/useApiFetch.js'
 import { formatCurrency } from 'src/utils/formatters.js'
 import { t } from 'src/i18n/index.js'
 
-export function useCartSummary() {
+/**
+ * The cart's totals, shipping choice and codes. `cartOf`: the cart to read (the cart and
+ * checkout pages pass the Store builder preview's sample cart while it's on; see sample-cart.js).
+ */
+export function useCartSummary(cartOf = () => cart) {
     const couponCode = ref('')
     const couponError = ref(null)
     const selectedShippingRateId = ref(null)
@@ -12,24 +16,24 @@ export function useCartSummary() {
 
     const displayCart = computed(() => {
         return {
-            items: cart.state.items,
-            items_count: String(cart.state.items_count),
-            coupons: cart.state.coupons || [],
-            shipping_rates: cart.state.cart_array?.shipping_rates || [],
-            payment_methods: cart.state.cart_array?.payment_methods || ['cod'],
+            items: cartOf().state.items,
+            items_count: String(cartOf().state.items_count),
+            coupons: cartOf().state.coupons || [],
+            shipping_rates: cartOf().state.cart_array?.shipping_rates || [],
+            payment_methods: cartOf().state.cart_array?.payment_methods || ['cod'],
             billing_address:
-                cart.state.cart_array?.billing_address ||
-                cart.state.local_cart.billing_address ||
+                cartOf().state.cart_array?.billing_address ||
+                cartOf().state.local_cart.billing_address ||
                 {},
             shipping_address:
-                cart.state.cart_array?.shipping_address ||
-                cart.state.local_cart.shipping_address ||
+                cartOf().state.cart_array?.shipping_address ||
+                cartOf().state.local_cart.shipping_address ||
                 {},
-            totals: cart.state.totals,
-            _offline: cart.state.offline,
+            totals: cartOf().state.totals,
+            _offline: cartOf().state.offline,
             // Handy flag for the UI if you ever want to show a subtle
             // "estimated" indicator while waiting on server confirmation
-            _local: !!cart.state.totals?._local
+            _local: !!cartOf().state.totals?._local
         }
     })
 
@@ -60,9 +64,9 @@ export function useCartSummary() {
     })
 
     const fetchShippingRates = async () => {
-        if (!cart.state.cart_array) return
+        if (!cartOf().state.cart_array) return
 
-        const rates = cart.state.cart_array.shipping_rates?.[0]?.shipping_rates || []
+        const rates = cartOf().state.cart_array.shipping_rates?.[0]?.shipping_rates || []
         if (!rates.length) return
 
         const selectedRate = rates.find(r => r.selected) || rates[0]
@@ -71,8 +75,9 @@ export function useCartSummary() {
 
     const onShippingMethodChange = async (newRateId) => {
         // Delivery prices come from the store: offline the choice stays as it was.
-        if (cart.isOffline()) return
-        cart.state.loading.cart = true
+        // The preview's sample cart only moves the choice.
+        if (cartOf().sample || cartOf().isOffline()) return
+        cartOf().state.loading.cart = true
         try {
             const res = await fetchWithToken('/wp-json/wc/store/v1/cart/select-shipping-rate', {
                 method: 'POST',
@@ -80,14 +85,14 @@ export function useCartSummary() {
             })
 
             if(res.ok){
-                cart.applyCheckoutCart(await res.json())
+                cartOf().applyCheckoutCart(await res.json())
             } else {
-                await cart.fetchCart(true)
+                await cartOf().fetchCart(true)
             }
         } catch (error) {
             console.error('Error updating shipping method:', error)
         } finally {
-            cart.state.loading.cart = false
+            cartOf().state.loading.cart = false
         }
     }
 
@@ -96,11 +101,12 @@ export function useCartSummary() {
             couponError.value = t('Please type a coupon')
             return
         }
+        if (cartOf().sample) return
 
         loadingCoupon.value = true
         couponError.value = null
         try {
-            await cart.applyCoupon(coupon)
+            await cartOf().applyCoupon(coupon)
         } catch (err) {
             couponError.value = t(err.message || 'Failed to apply coupon')
         } finally {
@@ -109,8 +115,9 @@ export function useCartSummary() {
     }
 
     const removeCoupon = async (coupon) => {
+        if (cartOf().sample) return
         try {
-            await cart.removeCoupon(coupon)
+            await cartOf().removeCoupon(coupon)
         } catch (err) {
             couponError.value = t(err.message || 'Failed to remove coupon')
         }

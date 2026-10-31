@@ -54,6 +54,7 @@ import { loadPaymentConfig, paymentConfig } from 'src/payments/config'
 import { useHoneypot } from 'src/composables/useHoneypot.js'
 import { getStripe, resetStripe } from 'src/payments/adapters/stripe'
 import { useCartSummary } from 'src/composables/useCartSummary'
+import { usePreviewCart } from 'src/utils/sample-cart.js'
 import {useSeoMeta} from "src/composables/useSeo.js";
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
 import { signedIn } from 'src/composables/useAccount.js'
@@ -61,11 +62,13 @@ import { ecommerceOf, eventItem, track } from 'src/utils/custom-code.js'
 import { t as i18nT, useI18n } from 'src/i18n/index.js'
 
 const { t } = useI18n()
+// The Store builder's preview of an empty cart shows a sample one (never ordered).
+const preview = usePreviewCart(cart)
 const {
   displayCart, itemsCount, cartItems, cartTotal, cartTotalDiscount, couponApplied,
   shippingOptions, selectedShippingRateId, couponCode, couponError, loadingCoupon,
   fetchShippingRates, onShippingMethodChange, applyCoupon, removeCoupon
-} = useCartSummary()
+} = useCartSummary(() => preview.cart.value)
 
 defineOptions({
   async preFetch ({ ssrContext, currentRoute }) {
@@ -182,7 +185,8 @@ const paymentComponent = computed(() => {
   return asyncComponentCache.get(adapter.id)
 })
 const paymentMethods = computed(() => {
-  const methods = displayCart.value?.payment_methods || []
+  // The sample cart: the methods this store offers.
+  const methods = preview.previewing.value ? (Object.keys(paymentConfig.value?.methods || {}).length ? Object.keys(paymentConfig.value.methods) : ['cod']) : displayCart.value?.payment_methods || []
   return methods
     .filter(method => getAdapter(method))
     .map(method => ({
@@ -594,15 +598,18 @@ async function placeOrder() {
 }
 
 // What the template's blocks show and do (src/components/blocks/shop/Checkout*Block.vue).
+// The preview's sample cart is never ordered.
+const previewPlaceOrder = () => (preview.previewing.value ? undefined : placeOrder())
+const previewSubmitOrder = (...args) => (preview.previewing.value ? undefined : submitOrder(...args))
 provide('checkoutPage', reactive({
-  cart: markRaw(cart), ready, displayCart, itemsCount, cartItems, cartTotal, cartTotalDiscount, couponApplied,
+  cart: preview.cart, ready, displayCart, itemsCount, cartItems, cartTotal, cartTotalDiscount, couponApplied,
   shippingOptions, selectedShippingRateId, couponCode, couponError, loadingCoupon,
   onShippingMethodChange, applyCoupon, removeCoupon,
   isLoggedIn, checkoutReady, onLogin, googleLoginEnabled,
   form, handleInputBlur, handleCheckboxBlur, differentBillingAddress,
   paymentMethod, paymentMethods, paymentNote, paymentComponent, onCardReady,
   termsRequired, allowSignup, agreeTerms, createAccount, legal,
-  submitOrder, placeOrder, registerForm,
+  submitOrder: previewSubmitOrder, placeOrder: previewPlaceOrder, registerForm,
 }))
 </script>
 
