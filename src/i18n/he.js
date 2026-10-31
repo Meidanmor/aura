@@ -466,4 +466,7 @@ export default {
   "Card preview": "תצוגת כרטיס",
   "Card preview: your newest products.": "תצוגת כרטיס: המוצרים החדשים שלכם.",
   "Card preview with sample items. Your own items show here once you add them.": "תצוגת כרטיס עם פריטים לדוגמה. הפריטים שלכם יופיעו כאן אחרי שתוסיפו אותם.",
+  "Google sign-in didn't finish. Please try again.": "ההתחברות עם Google לא הסתיימה. נסו שוב.",
+  "Google sign-in didn't work. Please try again, or sign in with your email.": "ההתחברות עם Google לא הצליחה. נסו שוב, או התחברו עם האימייל.",
+  "This store doesn't use Google sign-in.": "החנות לא משתמשת בהתחברות עם Google.",
 }

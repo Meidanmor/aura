@@ -26,6 +26,7 @@ import cart from 'src/stores/cart.js'
 import wishlist from 'src/stores/wishlist.js'
 
 import { useSiteAccount } from 'src/composables/useAccount.js'
+import { GOOGLE_STATE_KEY } from 'src/utils/google-state.js'
 import { useI18n } from 'src/i18n/index.js'
 
 const { t } = useI18n()
@@ -113,10 +114,19 @@ async function sendTokenToBackend(idToken) {
   }
 }
 
-// Redirect fallback to Google OAuth
+// Google's own page, back to /auth/callback on this address (the owner lists it in Google Cloud).
+// `state` is a random value kept in this tab: the callback refuses a code this tab didn't ask for
+// (else another site could sign a shopper into its own account). Where to go afterwards stays here too.
 function redirectToGoogleLogin() {
-  const redirectUri = `${window.location.origin}/auth/callback`; // must match Google app redirect URI
-  const state = encodeURIComponent(props.returnTo ? window.location.origin + props.returnTo : window.location.href); // where to come back to
+  const redirectUri = `${window.location.origin}/auth/callback`;
+  const back = props.returnTo || (window.location.pathname + window.location.search + window.location.hash)
+  const bytes = crypto.getRandomValues(new Uint8Array(16))
+  const state = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+  try {
+    sessionStorage.setItem(GOOGLE_STATE_KEY, JSON.stringify({ state, back, time: Date.now() }))
+  } catch {
+    // Private mode without storage: the callback can't check the state, so it refuses.
+  }
 
   const url = `https://accounts.google.com/o/oauth2/v2/auth?` +
               `client_id=${encodeURIComponent(GOOGLE_WEB_CLIENT_ID.value)}` +
@@ -124,7 +134,7 @@ function redirectToGoogleLogin() {
               `&response_type=code` +
               `&scope=openid%20email%20profile` +
               `&state=${state}` +
-              `&prompt=select_account`; // optional: forces account selection
+              `&prompt=select_account`;
 
   window.location.href = url;
 }

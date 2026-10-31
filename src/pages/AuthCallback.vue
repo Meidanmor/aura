@@ -6,24 +6,40 @@
 
 <script setup>
 import { onMounted } from 'vue'
+import { useQuasar } from 'quasar'
 import { useSeoMeta } from 'src/composables/useSeo.js'
 import { useRouter } from 'vue-router'
 import cart from 'src/stores/cart.js'
 import { setLoggedIn, refreshNonce } from 'src/composables/useApiFetch.js'
 import wishlist from 'src/stores/wishlist.js'
 import { setUser } from 'src/stores/user.js'
+import { takeGoogleState } from 'src/utils/google-state.js'
+import { useI18n } from 'src/i18n/index.js'
 
 const router = useRouter()
+const $q = useQuasar()
+const { t } = useI18n()
 useSeoMeta({ noindex: true })
+
+function fail (message, back = '/') {
+  $q.notify({ type: 'warning', message: t(message), timeout: 6000 })
+  router.replace(back)
+}
 
 onMounted(async () => {
   const params = new URLSearchParams(window.location.search)
   const code = params.get('code')
-  let state = params.get('state') || '/'
+  // A sign-in this tab started (see GoogleLoginButton), else nothing happens.
+  const back = takeGoogleState(params.get('state'))
 
+  if (back === null) {
+    fail('Google sign-in didn\'t finish. Please try again.')
+    return
+  }
   if (!code) {
-    console.error('No code returned from Google')
-    router.replace('/')
+    // The shopper chose Cancel on Google's page (error=access_denied): quietly back.
+    if (params.get('error') === 'access_denied') router.replace(back)
+    else fail('Google sign-in didn\'t finish. Please try again.', back)
     return
   }
 
@@ -31,10 +47,10 @@ onMounted(async () => {
     const res = await fetch('/wp-json/qwoo/v1/google-login-redirect', {
       method: 'POST',
       credentials: 'include',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({code})
+      headers: { 'Content-Type': 'application/json' },
+      // Google swaps the code only for the same return address it was given.
+      body: JSON.stringify({ code, redirect_uri: `${window.location.origin}/auth/callback` })
     })
-
     const data = await res.json()
 
     if (data.success) {
@@ -43,30 +59,12 @@ onMounted(async () => {
       await refreshNonce()
       await cart.mergeLocalCartWithServer()
       await wishlist.mergeGuestWishlistOnLogin()
-
-// If state contains full URL, extract just the pathname
-      try {
-        if (state.startsWith('http')) {
-          const url = new URL(state)
-          state = url.pathname + url.search + url.hash
-        }
-      } catch (e) {
-        if(e.data){
-          console.warn(e.data);
-        }
-        console.warn('Invalid state URL, fallback to /')
-        state = '/'
-      }
-
-      // Redirect to original page from state, fallback to homepage
-      router.replace(state)
+      router.replace(back)
     } else {
-      console.error('Google redirect login failed', data)
-      router.replace('/')
+      fail(data.code === 'qwoo_signup_off' || data.code === 'qwoo_google_off' ? data.message : 'Google sign-in didn\'t work. Please try again, or sign in with your email.', back)
     }
-  } catch (err) {
-    console.error('Redirect login error', err)
-    router.replace('/')
+  } catch {
+    fail('Google sign-in didn\'t work. Please try again, or sign in with your email.', back)
   }
 })
 </script>
