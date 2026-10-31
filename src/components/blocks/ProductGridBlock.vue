@@ -1,12 +1,12 @@
 <template>
   <div class="product-grid-block" :style="cssVars">
-    <div v-if="products?.length" class="product-grid-block__grid">
-      <div v-for="(product, index) in products" :key="product.id" class="product-grid-block__cell">
+    <div v-if="shown?.length" class="product-grid-block__grid">
+      <div v-for="(product, index) in shown" :key="product.id" class="product-grid-block__cell">
         <LoopCard v-if="card" :sections="card" type="product" :item="product" :priority="picked && index < 3" />
         <ProductCard v-else :product="product" :priority="picked && index < 3" />
       </div>
     </div>
-    <div v-if="d.show_view_all && d.view_all_url && products?.length" class="product-grid-block__footer">
+    <div v-if="d.show_view_all && d.view_all_url && shown?.length" class="product-grid-block__footer">
       <q-btn
           :to="isInternal(d.view_all_url) ? d.view_all_url : undefined"
           :href="isInternal(d.view_all_url) ? undefined : d.view_all_url"
@@ -29,6 +29,7 @@ import { useBlockQuery } from 'src/composables/useBlockQuery.js'
 import { keyWithProduct, useExcludedProduct } from 'src/utils/current-product.js'
 import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
+import { useSampleFallback } from 'src/utils/sample-items.js'
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -54,6 +55,8 @@ const picked = usePriorityBlock(props.blockId)
 const { data: products } = useBlockQuery(keyWithProduct(props.blockId, excludeId.value), queryKey, (ssrContext) =>
     productsStore.queryProducts({ ...d.value, exclude_ids: excludeId.value ? [excludeId.value] : [] }, ssrContext)
 )
+// The Store builder preview of a store with no products yet: sample products.
+const shown = useSampleFallback(() => products.value, 'product', Math.min(4, Number(d.value.limit) || 4))
 
 const cssVars = computed(() => {
   const vars = {}

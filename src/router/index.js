@@ -4,6 +4,7 @@ import routes from './routes'
 import { initSwUpdates } from 'src/services/sw-updates'
 import { isEditorMode } from 'src/utils/config-loader'
 import { currentLang, isExtraLang, langFromPath, withLang } from 'src/i18n/lang.js'
+import { scrollPositionFor } from 'src/composables/useAnchorSpy.js'
 
 /**
  * On a page of an extra language, every link and navigation stays in it:
@@ -41,6 +42,11 @@ export default defineRouter(function (/* { store, ssrContext } */) {
       // 1. If user clicked "Back" or "Forward", restore exactly where they were
       if (savedPosition) {
         return savedPosition
+      }
+
+      // A link to a section of a page ("/#contact"): to that section, below a header that stays on screen.
+      if (to.hash && to.hash !== '#') {
+        return scrollPositionFor(to.hash)
       }
 
       // 2. If we are navigating to the EXACT same path (e.g., just changing a query ?color=red)

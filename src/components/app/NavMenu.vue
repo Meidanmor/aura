@@ -11,7 +11,7 @@
         class="nav-link no-decoration"
         :class="{ 'text-h6': !depth }"
       >{{ item.label }}</a>
-      <router-link v-else :to="item.url" class="nav-link no-decoration" :class="{ 'text-h6': !depth }" :target="item.new_tab ? '_blank' : null">
+      <router-link v-else :to="item.url" class="nav-link no-decoration" :class="{ 'text-h6': !depth }" :exact-active-class="spy.activeClass(item.url)" :target="item.new_tab ? '_blank' : null">
         {{ item.label }}
       </router-link>
       <NavMenu v-if="item.children?.length" :items="item.children" :depth="depth + 1" />
@@ -20,7 +20,11 @@
 </template>
 
 <script setup>
+import { useAnchorSpy } from 'src/composables/useAnchorSpy.js'
+
 defineOptions({ name: 'NavMenu' })
+// Links to a section of the page are active only when clicked or on screen.
+const spy = useAnchorSpy()
 defineProps({
   items: { type: Array, default: () => [] },
   depth: { type: Number, default: 0 },

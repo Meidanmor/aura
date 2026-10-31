@@ -2,7 +2,7 @@
   <div v-if="a" class="archive-products">
     <ProductResultsGrid
         :loading="a.productsStore.productsLoading.value"
-        :products="a.paginatedProducts"
+        :products="shown"
         :priority-count="priorityCount"
         :card="card"
         :empty-text="d.empty_text || ''"
@@ -35,6 +35,7 @@ import { computed, inject } from 'vue'
 import ProductResultsGrid from 'components/shop/ProductResultsGrid.vue'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { toCssLength } from 'src/composables/useSectionStyle.js'
+import { useSampleFallback } from 'src/utils/sample-items.js'
 
 /**
  * "Products Grid" (All products / category page template): the products, with the chosen loop
@@ -43,6 +44,9 @@ import { toCssLength } from 'src/composables/useSectionStyle.js'
 const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
 const a = inject('productArchive', null)
 const d = computed(() => props.data.data || {})
+// The Store builder preview of a store with no products yet: sample products.
+const withSamples = useSampleFallback(() => a?.paginatedProducts || [], 'product', 4)
+const shown = computed(() => (a?.productsStore.productsLoading.value ? a.paginatedProducts : withSamples.value))
 // The block's own loop template, else the one chosen for these pages.
 const card = computed(() => (Array.isArray(d.value.card) && d.value.card.length ? d.value.card : a?.shopSettings?.product_card || null))
 // The page's first image is above the grid (a section with a photo): it loads first, not the first cards.

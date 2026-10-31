@@ -11,6 +11,7 @@ import { t } from 'src/i18n/index.js'
 import WidgetButton from './WidgetButton.vue'
 import { menuIcons } from 'src/utils/builder-icons.js'
 import { useDrawer } from 'src/composables/useDrawers.js'
+import { useAnchorSpy } from 'src/composables/useAnchorSpy.js'
 
 defineOptions({ name: 'MenuWidget' })
 
@@ -26,6 +27,8 @@ const siteMenus = inject('siteMenus', null)
 const headerMenu = inject('headerMenu', null)
 
 const d = computed(() => props.data?.data || {})
+// Links to a section of the page are active only when clicked or on screen.
+const spy = useAnchorSpy()
 // Layout is per screen size ({ desktop, tablet, mobile }; older data: one value).
 // Sizes that differ get both lists, and CSS shows each one where it's chosen.
 const DEVICES = ['desktop', 'tablet', 'mobile']
@@ -198,6 +201,7 @@ const css = computed(() => {
           v-else
           :to="item.url"
           class="menu-v-link no-decoration"
+          :exact-active-class="spy.activeClass(item.url)"
           :target="item.new_tab ? '_blank' : null"
         >
           {{ item.label }}
@@ -216,6 +220,7 @@ const css = computed(() => {
               v-else
               :to="sub.url"
               class="menu-v-link no-decoration"
+              :exact-active-class="spy.activeClass(sub.url)"
               :target="sub.new_tab ? '_blank' : null"
             >
               {{ sub.label }}

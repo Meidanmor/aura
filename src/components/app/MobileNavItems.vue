@@ -20,16 +20,20 @@
 </template>
 
 <script setup>
+import { useAnchorSpy } from 'src/composables/useAnchorSpy.js'
+
 defineOptions({ name: 'MobileNavItems' })
 defineProps({
   items: { type: Array, default: () => [] },
   depth: { type: Number, default: 0 },
 })
 const emit = defineEmits(['navigate'])
+// Links to a section of the page are active only when clicked or on screen.
+const spy = useAnchorSpy()
 
 // Store addresses go through the router; anything else is a normal link.
 const linkProps = (item) =>
   item.external
     ? { href: item.url, tag: 'a', target: item.new_tab ? '_blank' : undefined, rel: item.new_tab ? 'noopener' : undefined }
-    : { to: item.url }
+    : { to: item.url, exactActiveClass: spy.activeClass(item.url, 'q-router-link--exact-active') }
 </script>

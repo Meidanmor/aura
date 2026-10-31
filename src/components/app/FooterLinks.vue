@@ -3,14 +3,18 @@
   <ul class="footer-links" :class="{ nested: depth }" role="list">
     <li v-for="(item, i) in items" :key="i">
       <a v-if="item.external" :href="item.url" :target="item.new_tab ? '_blank' : null" :rel="item.new_tab ? 'noopener' : null">{{ item.label }}</a>
-      <router-link v-else :to="item.url" :target="item.new_tab ? '_blank' : null">{{ item.label }}</router-link>
+      <router-link v-else :to="item.url" :exact-active-class="spy.activeClass(item.url)" :target="item.new_tab ? '_blank' : null">{{ item.label }}</router-link>
       <FooterLinks v-if="item.children?.length" :items="item.children" :depth="depth + 1" />
     </li>
   </ul>
 </template>
 
 <script setup>
+import { useAnchorSpy } from 'src/composables/useAnchorSpy.js'
+
 defineOptions({ name: 'FooterLinks' })
+// Links to a section of the page are active only when clicked or on screen.
+const spy = useAnchorSpy()
 defineProps({
   items: { type: Array, default: () => [] },
   depth: { type: Number, default: 0 },
