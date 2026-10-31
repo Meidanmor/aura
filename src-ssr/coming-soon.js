@@ -1,5 +1,6 @@
 /**
- * A hidden store (dashboard → Settings → General → Store visibility).
+ * A hidden store (dashboard → Settings → General → Store visibility), or one
+ * suspended by the platform ("This store is unavailable" for everyone, 503).
  *
  * Pages answer a small "Coming soon" page instead of the store. The owner's
  * private preview link (/?preview={key}) puts the key in a cookie on that
@@ -19,6 +20,11 @@ const TEXTS = {
   en: { title: 'Coming soon', line: "We're getting the store ready. Come back soon." },
   he: { title: 'בקרוב', line: 'אנחנו מכינים את החנות. חזרו אלינו בקרוב.' },
 }
+/** A store suspended by the platform: the same page for everyone, no way in. */
+const UNAVAILABLE = {
+  en: { title: 'This store is unavailable', line: "It can't be visited right now." },
+  he: { title: 'החנות לא זמינה', line: 'אי אפשר להיכנס אליה כרגע.' },
+}
 
 const sha = (value) => createHash('sha256').update(value).digest('hex')
 
@@ -32,8 +38,8 @@ function cookieOf(req, name) {
 
 const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
 
-function page({ name, lang }) {
-  const text = TEXTS[lang] || TEXTS.en
+function page({ name, lang }, texts = TEXTS) {
+  const text = texts[lang] || texts.en
   const title = name ? `${escapeHtml(name)} · ${text.title}` : text.title
   return `<!doctype html>
 <html lang="${lang}" dir="${lang === 'he' ? 'rtl' : 'ltr'}">
@@ -73,6 +79,7 @@ export function comingSoonMiddleware() {
   return (req, res, next) => {
     if ((req.method !== 'GET' && req.method !== 'HEAD') || NOT_PAGE_RE.test(req.path)) return next()
     const v = siteVisibility()
+    if (v?.suspended) return answer(req, res, page(v, UNAVAILABLE), 503)
     if (!v?.hidden) return next()
 
     // The preview link: remember the key on this browser, then the same address without it.
@@ -102,11 +109,16 @@ export function comingSoonMiddleware() {
       return next()
     }
 
-    noStore(res)
-    res.setHeader('X-Robots-Tag', 'noindex')
-    res.setHeader('Content-Type', 'text/html; charset=utf-8')
-    res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
-    res.status(200)
-    return req.method === 'HEAD' ? res.end() : res.end(page(v))
+    return answer(req, res, page(v), 200)
   }
+}
+
+/** The small page instead of the store: never cached, never indexed. */
+function answer(req, res, html, status) {
+  noStore(res)
+  res.setHeader('X-Robots-Tag', 'noindex')
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
+  res.status(status)
+  return req.method === 'HEAD' ? res.end() : res.end(html)
 }

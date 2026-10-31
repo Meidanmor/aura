@@ -147,6 +147,10 @@ const asPointer = (data, file = '') => ({
   ...(data?.hidden === true && /^[a-f0-9]{64}$/.test(data?.preview || '')
     ? { hidden: true, preview: data.preview, name: String(data.name || '').slice(0, 120), lang: data.lang === 'he' ? 'he' : 'en' }
     : {}),
+  // Suspended by the platform: "This store is unavailable" for everyone (coming-soon.js).
+  ...(data?.suspended === true
+    ? { suspended: true, name: String(data.name || '').slice(0, 120), lang: data.lang === 'he' ? 'he' : 'en' }
+    : {}),
 })
 
 /**
@@ -294,9 +298,9 @@ export function sharedAnswers() {
   return pointer?.shared !== false
 }
 
-/** Whether the store is hidden, from the last check (null before the first one). */
+/** Whether the store is hidden or suspended, from the last check (null before the first one). */
 export function siteVisibility() {
-  return pointer ? { hidden: !!pointer.hidden, preview: pointer.preview || '', name: pointer.name || '', lang: pointer.lang || 'en' } : null
+  return pointer ? { hidden: !!pointer.hidden, suspended: !!pointer.suspended, preview: pointer.preview || '', name: pointer.name || '', lang: pointer.lang || 'en' } : null
 }
 
 /** The page's view of the live version, for the browser (window.__QWOO_SITE__). */
