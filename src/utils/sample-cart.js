@@ -13,11 +13,18 @@ const he = () => typeof document !== 'undefined' && document.documentElement.lan
 const T = (en, hebrew) => (he() ? hebrew : en)
 const noop = async () => {}
 
-function sampleCart() {
+const MONEY_KEYS = ['currency_code', 'currency_symbol', 'currency_minor_unit', 'currency_decimal_separator', 'currency_thousand_separator', 'currency_prefix', 'currency_suffix']
+
+// `storeMoney`: the store's currency fields (from the real, empty cart), else a guess by language.
+function sampleCart(storeMoney) {
   const products = sampleProducts(2)
   const quantities = [1, 2]
-  const money = { ...products[0].prices }
-  delete money.price; delete money.regular_price; delete money.sale_price; delete money.price_range
+  const money = storeMoney || Object.fromEntries(MONEY_KEYS.map((k) => [k, products[0].prices[k]]))
+  const unit = 10 ** Number(money.currency_minor_unit ?? 2)
+  for (const p of products) {
+    const amount = String(Math.round((Number(p.prices.price) / 100) * unit))
+    p.prices = { ...p.prices, ...money, price: amount, regular_price: amount, sale_price: amount }
+  }
   const items = products.map((p, i) => ({
     key: `sample-${i}`, id: p.id, quantity: quantities[i], name: p.name, permalink: '', sample: true,
     images: p.images, variation: [],
@@ -25,7 +32,7 @@ function sampleCart() {
     totals: { ...money, line_total: String(Number(p.prices.price) * quantities[i]), line_subtotal: String(Number(p.prices.price) * quantities[i]) },
   }))
   const itemsTotal = items.reduce((sum, i) => sum + Number(i.totals.line_total), 0)
-  const shipping = 2000
+  const shipping = 20 * unit
   const totals = {
     ...money, total_items: String(itemsTotal), total_discount: '0', total_shipping: String(shipping),
     total_tax: '0', total_price: String(itemsTotal + shipping),
@@ -59,8 +66,14 @@ function sampleCart() {
 export function usePreviewCart(realCart) {
   const editor = ref(false)
   onMounted(() => { editor.value = isEditorMode() })
-  let sample = null
+  // The empty cart's totals carry the store's currency (formatCurrency reads them too): load it once.
+  onMounted(() => { if (editor.value && !realCart.state.cart_array?.totals) realCart.fetchCart?.().catch(() => {}) })
   const previewing = computed(() => editor.value && !realCart.hasItems.value)
-  const active = computed(() => (previewing.value ? (sample ||= sampleCart()) : markRaw(realCart)))
+  const storeMoney = computed(() => {
+    const totals = realCart.state.cart_array?.totals
+    return totals?.currency_code ? Object.fromEntries(MONEY_KEYS.map((k) => [k, totals[k]])) : null
+  })
+  const sample = computed(() => (previewing.value ? sampleCart(storeMoney.value) : null))
+  const active = computed(() => sample.value || markRaw(realCart))
   return { cart: active, previewing }
 }
