@@ -38,6 +38,11 @@ export function getPushConfig() {
                 key: cfg?.key || import.meta.env.VITE_VAPID_APP_PUBLIC_KEY || '',
                 ask: cfg?.ask || { when: 'views', views: 3, seconds: 20, texts: null },
                 notifyMe: !!cfg?.notify_me,
+                // The sold-out form (BackInStockForm): shown at all, and whether push can be offered.
+                // Older stores only send notify_me (push only, no email).
+                backForm: cfg ? !!(cfg.back_form ?? cfg.notify_me) : false,
+                backPush: cfg ? !!(cfg.back_push ?? cfg.notify_me) : false,
+                backEmail: !!cfg && 'back_form' in cfg,
             }))
     }
     return configPromise
@@ -184,6 +189,20 @@ export function queueDeviceSync() {
 const WANTS_KEY = 'qwoo_push_wants'
 export function wantsBack(productId) {
     try { return (JSON.parse(localStorage.getItem(WANTS_KEY) || '[]') || []).includes(Number(productId)) } catch { return false }
+}
+/** The email way (after push couldn't work): { ok, message }. website = the hidden field bots fill. */
+export async function requestBackInStockEmail(productId, email, website = '') {
+    try {
+        const res = await fetch('/wp-json/qwoo/v1/back-in-stock/email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product_id: Number(productId), email, website })
+        })
+        const body = await res.json().catch(() => ({}))
+        return { ok: res.ok && body?.success !== false, message: body?.message || '' }
+    } catch {
+        return { ok: false, message: '' }
+    }
 }
 export async function requestBackInStock(productId) {
     const res = await fetch('/wp-json/qwoo/v1/pwa/notify-me', {
