@@ -2,6 +2,7 @@
   <!-- Built in the Store builder (Header & footer → Footer), when it has sections. -->
   <footer v-if="sections.length" class="sb-footer">
     <SectionRenderer :sections="sections" page="footer" />
+    <MadeWithBadge />
   </footer>
   <footer v-else class="app-footer">
     <div class="container flex justify-between">
@@ -53,11 +54,13 @@
         <span>{{ copyright }}</span>
       </div>
     </div>
+    <MadeWithBadge />
   </footer>
 </template>
 <script setup>
 import FooterLinks from "./FooterLinks.vue"
 import SectionRenderer from "components/sections/SectionRenderer.vue"
+import MadeWithBadge from "./MadeWithBadge.vue"
 import { useI18n } from 'src/i18n/index.js'
 import { storeName as liveStoreName } from 'src/utils/site-info.js'
 

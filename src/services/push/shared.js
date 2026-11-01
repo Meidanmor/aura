@@ -35,7 +35,8 @@ export function getPushConfig() {
             .then((res) => (res.ok ? res.json() : null))
             .catch(() => null)
             .then((cfg) => ({
-                key: cfg?.key || import.meta.env.VITE_VAPID_APP_PUBLIC_KEY || '',
+                // push false: the Free plan, no push at all (not even the build's key).
+                key: cfg?.push === false ? '' : (cfg?.key || import.meta.env.VITE_VAPID_APP_PUBLIC_KEY || ''),
                 ask: cfg?.ask || { when: 'views', views: 3, seconds: 20, texts: null },
                 notifyMe: !!cfg?.notify_me,
                 // The sold-out form (BackInStockForm): shown at all, and whether push can be offered.

@@ -147,6 +147,8 @@ const asPointer = (data, file = '') => ({
   ...(data?.hidden === true && /^[a-f0-9]{64}$/.test(data?.preview || '')
     ? { hidden: true, preview: data.preview, name: String(data.name || '').slice(0, 120), lang: data.lang === 'he' ? 'he' : 'en' }
     : {}),
+  // The Free plan: "Made with YallaFlow" in the footer (MadeWithBadge.vue).
+  free: data?.free === true,
   // Suspended by the platform: "This store is unavailable" for everyone (coming-soon.js).
   ...(data?.suspended === true
     ? { suspended: true, name: String(data.name || '').slice(0, 120), lang: data.lang === 'he' ? 'he' : 'en' }
@@ -305,7 +307,7 @@ export function siteVisibility() {
 
 /** The page's view of the live version, for the browser (window.__QWOO_SITE__). */
 export function clientSite(s) {
-  return s ? { version: s.version, languages: s.languages, name: s.name, description: s.description } : null
+  return s ? { version: s.version, languages: s.languages, name: s.name, description: s.description, badge: !!pointer?.free } : null
 }
 
 /* ---------------- serving the files ---------------- */
@@ -457,6 +459,8 @@ export function siteContentMiddleware({ publicDir }) {
     const s = await currentSite(originOf(req))
     // One store per deployment: the render reads it from here.
     globalThis.__QWOO_SITE = s
+    // The same answer as window.__QWOO_SITE__.badge (clientSite), so the server and browser draw the same footer.
+    globalThis.__QWOO_BADGE = !!(s && pointer?.free)
     if (!s) {
       // The store couldn't be reached (a cold start at a slow moment…): the
       // build's copy answers, but must never be kept. It used to go out with

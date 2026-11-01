@@ -30,6 +30,7 @@ export default {
   "Address is required": "יש להזין כתובת",
   "All": "הכול",
   "All rights reserved.": "כל הזכויות שמורות.",
+  "Made with YallaFlow": "נבנה עם YallaFlow",
   "and the": "ואת",
   "Apply": "החלה",
   "as the payment reference.": "כאסמכתא לתשלום.",
