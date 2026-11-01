@@ -8,7 +8,7 @@
 // "Show To" setting of sections and blocks can show the right ones with CSS
 // (app.css), without changing what the server rendered.
 
-import { computed, inject, reactive } from 'vue'
+import { computed, inject, reactive, watch } from 'vue'
 import { fetchWithToken, getWasLoggedIn, setLoggedIn } from 'src/composables/useApiFetch.js'
 import { clearSessionState } from 'src/composables/useSessionCleanup.js'
 import { setUser, userState } from 'src/stores/user.js'
@@ -124,10 +124,12 @@ export function useAccount() {
   }
 }
 
-// Signing in or out in another tab (user.js syncs the customer itself).
+// Whoever changes the customer (Google's return page, another tab through user.js,
+// a form that calls setUser itself), <html> follows: else "Show To" kept the
+// guest sections after a Google sign-in.
 if (typeof window !== 'undefined') {
-  window.addEventListener('storage', (e) => {
-    if (e.key === 'user_session' && state.checked) markPage()
+  watch(() => userState.data?.id, () => {
+    if (state.checked) markPage()
   })
 }
 

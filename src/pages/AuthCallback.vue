@@ -12,7 +12,7 @@ import { useRouter } from 'vue-router'
 import cart from 'src/stores/cart.js'
 import { setLoggedIn, refreshNonce } from 'src/composables/useApiFetch.js'
 import wishlist from 'src/stores/wishlist.js'
-import { setUser } from 'src/stores/user.js'
+import { signedIn } from 'src/composables/useAccount.js'
 import { takeGoogleState } from 'src/utils/google-state.js'
 import { useI18n } from 'src/i18n/index.js'
 
@@ -54,8 +54,8 @@ onMounted(async () => {
     const data = await res.json()
 
     if (data.success) {
-      if (data.user) setUser(data.user)
-      setLoggedIn(true)
+      if (data.user) signedIn(data.user)
+      else setLoggedIn(true)
       await refreshNonce()
       await cart.mergeLocalCartWithServer()
       await wishlist.mergeGuestWishlistOnLogin()

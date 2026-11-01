@@ -58,6 +58,7 @@ import { usePreviewCart } from 'src/utils/sample-cart.js'
 import {useSeoMeta} from "src/composables/useSeo.js";
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
 import { signedIn } from 'src/composables/useAccount.js'
+import { isSaved, saveAddress as keepAddress } from 'src/composables/useSavedAddresses.js'
 import { ecommerceOf, eventItem, track } from 'src/utils/custom-code.js'
 import { t as i18nT, useI18n } from 'src/i18n/index.js'
 
@@ -335,6 +336,14 @@ const submitOrder = async (walletOverride = null) => {
     return
   }
 
+  // No payment method on: say so (else the order went out as "cod" and the store
+  // answered "Cash on delivery is not available for this order").
+  if (!paymentMethods.value.length) {
+    $q.notify({ type: 'negative', message: t("This store can't take payments yet, so orders can't be placed. Please contact the store."), icon: matError, position: 'top', timeout: 8000 })
+    walletOverride?.complete?.('fail')
+    return
+  }
+
   if (termsRequired.value && !agreeTerms.value) {
     $q.notify({ type: 'negative', message: t("Please tick the box to agree to the store's terms before placing your order."), icon: matError })
     walletOverride?.complete?.('fail')
@@ -426,6 +435,7 @@ const submitOrder = async (walletOverride = null) => {
 
     if (redirects) cartSnapshot = cart.snapshotLocalCart()
     const response = await cart.placeOrder(payload)
+    await rememberAddress()
 
     const adapter = getAdapter(method)
     let result = null
@@ -599,6 +609,39 @@ async function placeOrder() {
 
 // What the template's blocks show and do (src/components/blocks/shop/Checkout*Block.vue).
 // The preview's sample cart is never ordered.
+// Saved addresses (signed-in customers): "Use saved address" is drawn once, by the
+// highest address block on the page (blocks load in any order); a new address is
+// saved after the order when "Save this address" stays ticked.
+const pickerSpots = reactive(new Map())
+const pickerAt = computed(() => {
+  let best = ''
+  let bestEl = null
+  for (const [id, el] of pickerSpots) {
+    if (!bestEl || (el.compareDocumentPosition(bestEl) & Node.DOCUMENT_POSITION_FOLLOWING)) { best = id; bestEl = el }
+  }
+  return best
+})
+function claimPicker(id, el) {
+  if (!el) return () => {}
+  pickerSpots.set(id, markRaw(el))
+  return () => { if (pickerSpots.get(id) === el) pickerSpots.delete(id) }
+}
+const saveNewAddress = ref(true)
+const typedAddress = () => ({
+  first_name: form.first_name, last_name: form.last_name, phone: form.phone,
+  address_1: form.shipping.address_1, city: form.shipping.city, postcode: form.shipping.postcode, country: form.shipping.country,
+})
+const addressIsNew = computed(() => isLoggedIn.value && !!form.shipping.address_1 && !isSaved(typedAddress()))
+async function rememberAddress() {
+  if (!addressIsNew.value || !saveNewAddress.value) return
+  try {
+    // Never holds the order up for long (a payment page may be next).
+    await Promise.race([keepAddress(typedAddress()), new Promise((r) => setTimeout(r, 2500))])
+  } catch (err) {
+    console.warn('Address not saved:', err.message)
+  }
+}
+
 const previewPlaceOrder = () => (preview.previewing.value ? undefined : placeOrder())
 const previewSubmitOrder = (...args) => (preview.previewing.value ? undefined : submitOrder(...args))
 provide('checkoutPage', reactive({
@@ -610,6 +653,7 @@ provide('checkoutPage', reactive({
   paymentMethod, paymentMethods, paymentNote, paymentComponent, onCardReady,
   termsRequired, allowSignup, agreeTerms, createAccount, legal,
   submitOrder: previewSubmitOrder, placeOrder: previewPlaceOrder, registerForm,
+  pickerAt, claimPicker, saveNewAddress, addressIsNew,
 }))
 </script>
 
