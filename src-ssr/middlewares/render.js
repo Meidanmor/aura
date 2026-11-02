@@ -3,8 +3,8 @@ import { defineSsrMiddleware } from '#q-app/wrappers'
 import { BACKEND_USER_AGENT } from '../uploads.js'
 import { randomBytes } from 'crypto'
 import { AsyncLocalStorage } from 'node:async_hooks'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
+//import { readFileSync } from 'node:fs'
+//import { join } from 'node:path'
 import branding from '../../public/config/branding.json' // adjust path as needed
 import { allLangs, isExtraLang, langFromPath, mainLang, stripLang, withLang } from '../../src/i18n/lang.js'
 import { LANGUAGES } from '../../src/i18n/index.js'
@@ -274,8 +274,8 @@ function withoutLinks(data) {
  * Measured on yf-test-ceramics' homepage (phone Lighthouse, a local copy of the
  * page): ~60 → ~85.
  */
-const inlinedCss = new Map()
-function fasterFirstPaint(html, publicDir) {
+//const inlinedCss = new Map()
+/*function fasterFirstPaint(html, publicDir) {
     return html
         .replace(/<link rel="?modulepreload"?[^>]*>/g, '')
         // The entry script after the page's first image and fonts (it only makes the page interactive).
@@ -293,9 +293,9 @@ function fasterFirstPaint(html, publicDir) {
             // at the end of <head>, after the store's colours (Quasar's defaults won: 2026-10-21).
             return css ? `<style data-href="${href}">${css}</style><link rel="stylesheet" href="${href}" disabled>` : tag
         })
-}
+}*/
 
-export default defineSsrMiddleware(({ app, resolve, render, folders }) => {
+export default defineSsrMiddleware(({ app, resolve, render, /*folders*/ }) => {
     app.get(resolve.urlPath('*'), (req, res) => {
         if (isIgnoredRequest(req.url)) {
             return res.status(404).end()
@@ -493,8 +493,9 @@ export default defineSsrMiddleware(({ app, resolve, render, folders }) => {
                     ? page.replace(/<img\b[^>]*\bheader-logo\b[^>]*>/, (tag) => tag.replace('fetchpriority="high"', 'fetchpriority="auto"'))
                     : page
                 // The body first: the owner's code (added inside the head below) may hold "<body" or "</body>" as text.
-                let output = fasterFirstPaint(withLogo, process.env.PROD ? folders?.public : '')
+                //let output = fasterFirstPaint(withLogo, process.env.PROD ? folders?.public : '')
                     .replace(/<html\b([^>]*)>/, (tag, attrs) => `<html ${attrs.replace(/\s(lang|dir)=("[^"]*"|\S+)/g, '').trim()} ${langAttrs}>`.replace('<html  ', '<html '))
+                let output = withLogo.replace(/<html\b([^>]*)>/, (tag, attrs) => `<html ${attrs.replace(/\s(lang|dir)=("[^"]*"|\S+)/g, '').trim()} ${langAttrs}>`.replace('<html  ', '<html '))
                 const bodyEnd = output.lastIndexOf('</body>')
                 if (bodyEnd >= 0) output = output.slice(0, bodyEnd) + bodyBottom + (code?.bodyEnd || '') + output.slice(bodyEnd)
                 if (code?.bodyStart) output = output.replace(/<body\b[^>]*>/, (tag) => tag + code.bodyStart)
