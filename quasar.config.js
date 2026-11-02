@@ -423,7 +423,7 @@ devServer: {
 
       // pwaExtendGenerateSWOptions (cfg) {},
       // pwaExtendInjectManifestOptions (cfg) {}
-      criticalCSS: true,
+      criticalCSS: false,
       prodScriptNamedExport: 'app'
     },
 

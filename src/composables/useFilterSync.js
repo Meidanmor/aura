@@ -96,7 +96,8 @@ function pushToUrl(query) {
     }
   })
 
-  history.replaceState(history.state, '', url.toString())
+  //history.replaceState(history.state, '', url.toString())
+  history.pushState(history.state, '', url.toString())
 }
 
 // ✅ Replaces route.query — reads directly from the browser URL
