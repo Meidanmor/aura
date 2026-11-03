@@ -124,6 +124,14 @@ manages everything from the platform's dashboard at https://platform.meidanm.net
   the page rendered with; else inline as before. If it fails, `src/boot/shared-state.js` fetches
   the configs before hydration. Measured on Lumi's configs (2026-11-03): pages −65 KB raw,
   −3.7 KB gzipped; the file is 8 KB gzipped, once per publish.
+- **Shop filters and pages in the address** (`useFilterSync.js`, 2026-11-03): changes go through
+  `router.push` / `replace`, never `history.pushState` (Vue Router's next push rewrites the current
+  entry to its own idea of the address: Back from a product landed on page 1). Each page / sort /
+  category / attribute change is a history step; a price drag or a typed search is one step; the
+  automatic return to page 1 belongs to the change that caused it (`partOfLastStep`). Back /
+  Forward set the filters from the address (`applyAddress`, no page reset). The archive preFetch
+  skips query-only changes in the browser; the loading bar skips them too. Other parameters
+  (utm…) are kept; the Store builder preview never changes the address.
 - **Images:** logo, hero and section images are published as `{attachment id}-{name}`, with
   `logo_path` / `hero_image_path` in the config. Their `vercel.json` headers make them immutable
   for a year. Hashed `/assets/` files are immutable via `src-ssr/server.js`.

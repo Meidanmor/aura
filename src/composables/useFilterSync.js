@@ -1,6 +1,7 @@
 // src/composables/useFilterSync.js
 
 import { watch } from 'vue'
+import { isEditorMode } from 'src/utils/config-loader.js'
 
 // Attribute filters in the address: attr=pa_taste:12.13,pa_heat:5 (taxonomy: term ids).
 export function parseAttr(value) {
@@ -85,22 +86,22 @@ function buildQuery({ search, selectedCategory, priceRange, priceMin, priceMax, 
   return q
 }
 
-// ✅ Replaces router.replace — updates URL without triggering Vue Router navigation
-function pushToUrl(query) {
-  const url = new URL(window.location.href)
-  url.search = ''
 
-  Object.entries(query).forEach(([key, value]) => {
-    if (value !== null && value !== undefined && value !== '') {
-      url.searchParams.set(key, value)
-    }
-  })
+/** The address parameters the filters own; any other (utm_source…) is kept as it is. */
+const FILTER_KEYS = ['q', 'cat', 'attr', 'stock', 'sort', 'page', 'min_price', 'max_price']
 
-  //history.replaceState(history.state, '', url.toString())
-  history.pushState(history.state, '', url.toString())
+/** The filters' part of a query, as strings in a fixed order (to compare two addresses). */
+function filterPart(query) {
+  const out = {}
+  for (const key of FILTER_KEYS) {
+    const value = Array.isArray(query?.[key]) ? query[key][0] : query?.[key]
+    if (value !== null && value !== undefined && value !== '') out[key] = String(value)
+  }
+  return out
 }
+const sameFilters = (a, b) => JSON.stringify(filterPart(a)) === JSON.stringify(filterPart(b))
 
-// ✅ Replaces route.query — reads directly from the browser URL
+/** The query of the page's current address. */
 function getUrlQuery() {
   const params = new URLSearchParams(window.location.search)
   const query = {}
@@ -111,35 +112,67 @@ function getUrlQuery() {
 }
 
 /**
- * @param {object} refs    - { search, selectedCategory, priceRange, priceMin, priceMax, sortBy, currentPage }
- * @param {object} _router - no longer used, kept for backwards compatibility so call sites don't break
- * @param {object} _route  - no longer used, kept for backwards compatibility
- * @param {object} options
+ * Keeps the filters (search, categories, price, sort, page…) and the page's address in step,
+ * through the router, so each change is a step in the browser's history like a page change:
+ * Back after opening a product returns to page 2, and Back / Forward between filter states
+ * shows each one again.
+ *
+ * Changes made while dragging the price or typing a search are one step, not one per move:
+ * a price-only or search-only change right after one of the same kind replaces the last step.
+ *
+ * @param {object} refs  - { search, selectedCategory, priceRange, priceMin, priceMax, sortBy, currentPage, attributes, inStock }
+ * @param {object} router
+ * @param {object} route
+ * @param {object} options - syncPrice: false to ignore the price in the address;
+ *                           onAddress(): called after the filters were set from the address (Back / Forward)
  */
-export function useFilterSync(refs, _router, _route, options = {}) {
+export function useFilterSync(refs, router, route, options = {}) {
   const { search, selectedCategory, priceRange, priceMin, priceMax, sortBy, currentPage, attributes, inStock } = refs
+
+  function priceFrom(filters) {
+    const range = filters.priceRange
+    if (!range || options.syncPrice === false) return { min: priceMin.value, max: priceMax.value }
+    return {
+      min: range.min !== null ? Math.max(range.min, priceMin.value ?? range.min) : priceMin.value,
+      max: range.max !== null ? Math.min(range.max, priceMax.value ?? range.max) : priceMax.value,
+    }
+  }
 
   function initFromQuery() {
     const filters = parseQueryFilters(getUrlQuery()) // ✅ reads from window.location
 
     if (filters.search !== undefined)           search.value            = filters.search
-    if (filters.selectedCategory !== undefined) selectedCategory.value  = filters.selectedCategory
+    if (filters.selectedCategory !== undefined && selectedCategory) selectedCategory.value = filters.selectedCategory
     if (filters.sortBy !== undefined)           sortBy.value            = filters.sortBy
     if (filters.currentPage !== undefined)      currentPage.value       = filters.currentPage
     if (filters.attributes !== undefined && attributes) attributes.value = filters.attributes
     if (filters.inStock !== undefined && inStock)       inStock.value    = filters.inStock
 
-    if (filters.priceRange && options.syncPrice !== false) {
-      const clampedMin = filters.priceRange.min !== null
-        ? Math.max(filters.priceRange.min, priceMin.value ?? filters.priceRange.min)
-        : priceMin.value
+    if (filters.priceRange && options.syncPrice !== false) priceRange.value = priceFrom(filters)
+  }
 
-      const clampedMax = filters.priceRange.max !== null
-        ? Math.min(filters.priceRange.max, priceMax.value ?? filters.priceRange.max)
-        : priceMax.value
+  // Back / Forward to another filter state of this page: every filter as the address says,
+  // and the ones it doesn't mention back to their defaults.
+  let fromAddress = false
+  function applyAddress(query) {
+    const filters = parseQueryFilters(query)
+    fromAddress = true
+    search.value = filters.search ?? ''
+    if (selectedCategory) selectedCategory.value = filters.selectedCategory ?? []
+    sortBy.value = filters.sortBy ?? 'menu_order'
+    currentPage.value = filters.currentPage ?? 1
+    if (attributes) attributes.value = filters.attributes ?? {}
+    if (inStock) inStock.value = !!filters.inStock
+    if (options.syncPrice !== false) priceRange.value = priceFrom(filters)
+    options.onAddress?.()
+  }
 
-      priceRange.value = { min: clampedMin, max: clampedMax }
-    }
+  let last = { kind: '', at: 0 }
+  let pageReset = false // the page went back to 1 because another filter changed (partOfLastStep)
+  function kindOf(changed) {
+    if (changed.length && changed.every((key) => key === 'priceMin' || key === 'priceMax')) return 'price'
+    if (changed.length === 1 && changed[0] === 'search') return 'search'
+    return 'other'
   }
 
   function startWatching() {
@@ -154,18 +187,55 @@ export function useFilterSync(refs, _router, _route, options = {}) {
         attributes:       attributes ? attrToString(attributes.value) : '',
         inStock:          !!inStock?.value,
       }),
-      () => {
-        const newQuery    = buildQuery({ search, selectedCategory, priceRange, priceMin, priceMax, sortBy, currentPage, attributes, inStock })
-        const currentQuery = getUrlQuery()                              // ✅ reads from window.location
+      (next, prev) => {
+        // Set from the address (Back / Forward): the address is already right, unless the
+        // filters had to correct it (a price outside the range…): then it's corrected in place.
+        const fromBack = fromAddress
+        fromAddress = false
+        // Inside the Store builder's preview the address keeps its editor parameters.
+        if (isEditorMode()) return
 
-        const isSame = JSON.stringify(newQuery) === JSON.stringify(currentQuery)
-        if (!isSame) {
-          pushToUrl(newQuery)                                           // ✅ history.replaceState, not router.replace
-        }
+        const newQuery = buildQuery({ search, selectedCategory, priceRange, priceMin, priceMax, sortBy, currentPage, attributes, inStock })
+        if (sameFilters(newQuery, route.query)) return
+
+        const now = Date.now()
+        const reset = pageReset
+        pageReset = false
+        let changed = Object.keys(next).filter((key) => JSON.stringify(next[key]) !== JSON.stringify(prev?.[key]))
+        // Back to page 1 because another filter changed: part of that change, in the same update
+        // (a search) or in the next one (the end of a price drag).
+        if (reset && next.currentPage === 1 && changed.length > 1) changed = changed.filter((key) => key !== 'currentPage')
+        const resetOnly = reset && changed.length === 1 && changed[0] === 'currentPage'
+        const kind = resetOnly ? last.kind : kindOf(changed)
+        // One step for a whole price drag or a typed search.
+        const replace = fromBack || resetOnly || (kind !== 'other' && kind === last.kind && now - last.at < 1500)
+        last = { kind, at: now }
+
+        const kept = {}
+        for (const [key, value] of Object.entries(route.query)) if (!FILTER_KEYS.includes(key)) kept[key] = value
+        const to = { path: route.path, query: { ...kept, ...filterPart(newQuery) }, hash: route.hash }
+        ;(replace ? router.replace(to) : router.push(to)).catch(() => {})
       },
       { deep: true }
     )
+
+    // Back / Forward between this page's filter states (an address change that also changes the
+    // path, to another category or a product, isn't one).
+    watch(
+      () => [route.path, route.fullPath],
+      ([path], [oldPath]) => {
+        if (path !== oldPath || sameFilters(route.query, currentFilters())) return
+        applyAddress(route.query)
+      }
+    )
   }
 
-  return { initFromQuery, startWatching }
+  // The page goes back to page 1 because another filter changed: the address keeps it in that step.
+  function partOfLastStep() {
+    pageReset = true
+  }
+
+  const currentFilters = () => buildQuery({ search, selectedCategory, priceRange, priceMin, priceMax, sortBy, currentPage, attributes, inStock })
+
+  return { initFromQuery, startWatching, partOfLastStep }
 }

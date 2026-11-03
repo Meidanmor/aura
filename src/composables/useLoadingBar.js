@@ -21,7 +21,8 @@ export function initLoadingBar(router) {
     setLoadingBarDefaults()
 
     router.beforeEach((to, from, next) => {
-        LoadingBar.start()
+        // Only the query changed (a shop filter or page): the page shows its own loading state.
+        if (to.path !== from.path) LoadingBar.start()
         next()
     })
 
