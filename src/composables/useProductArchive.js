@@ -42,7 +42,9 @@ export const sortOptions = [
  *       'category' -> category is locked to route.params.slug
  */
 export function createArchivePreFetch(mode) {
-    return async function preFetch({ ssrContext, currentRoute, redirect }) {
+    return async function preFetch({ ssrContext, currentRoute, previousRoute, redirect }) {
+        // Only the filters changed (same page, another query): the page loads the products itself.
+        if (!ssrContext && previousRoute?.matched?.length && previousRoute.path === currentRoute.path) return
 
         const isPreview = currentRoute.query.preview === 'true'
         const origin = getApiOrigin(ssrContext)
@@ -203,11 +205,17 @@ export function useProductArchive(mode) {
         }
     }
 
-    const { initFromQuery, startWatching } = useFilterSync(
+    const { initFromQuery, startWatching, partOfLastStep } = useFilterSync(
         mode === 'category'
             ? { search, priceRange, priceMin, priceMax, sortBy, currentPage, attributes: selectedAttributes, inStock }
             : { search, selectedCategory, priceRange, priceMin, priceMax, sortBy, currentPage, attributes: selectedAttributes, inStock },
-        router, route
+        router, route,
+        {
+            onAddress() {
+                filtersFromAddress = true
+                priceChanged.value++
+            }
+        }
     )
 
 
@@ -291,6 +299,16 @@ export function useProductArchive(mode) {
     }
 
     let requestId = 0
+    // Set by Back / Forward (useFilterSync): the address says the page too, so a new search or
+    // category doesn't send it back to page 1, and its price stays as the address says.
+    let filtersFromAddress = false
+    const priceFromAddress = () => {
+        const range = parseQueryFilters(route.query).priceRange
+        return {
+            min: range?.min != null ? Math.max(range.min, priceMin.value) : priceMin.value,
+            max: range?.max != null ? Math.min(range.max, priceMax.value) : priceMax.value,
+        }
+    }
     watch(
         () => ({
             category: selectedCategory.value,
@@ -302,6 +320,8 @@ export function useProductArchive(mode) {
             inStock: inStock.value,
         }),
         async (filters, prev) => {
+            const fromAddress = filtersFromAddress
+            filtersFromAddress = false
             if (isInitialising.value || !isReady.value || priceRange.value.min === null || priceRange.value.max === null) return
 
             const currentRequest = ++requestId
@@ -319,11 +339,15 @@ export function useProductArchive(mode) {
                 await fetchPriceMeta(filters.category)
                 priceMin.value = pendingPriceRange.value.min
                 priceMax.value = pendingPriceRange.value.max
-                priceRange.value = { ...pendingPriceRange.value }
+                priceRange.value = fromAddress ? priceFromAddress() : { ...pendingPriceRange.value }
             }
 
             if (currentRequest !== requestId) return
-            if (shouldResetPage && currentPage.value !== 1) { currentPage.value = 1; return }
+            if (shouldResetPage && !fromAddress && currentPage.value !== 1) {
+                partOfLastStep()
+                currentPage.value = 1
+                return
+            }
 
             const sortParams = getSortParams(filters.sort)
 
@@ -341,7 +365,7 @@ export function useProductArchive(mode) {
             if (categoryChanged) {
                 priceMin.value = pendingPriceRange.value.min
                 priceMax.value = pendingPriceRange.value.max
-                priceRange.value = { ...pendingPriceRange.value }
+                priceRange.value = fromAddress ? priceFromAddress() : { ...pendingPriceRange.value }
             }
         }
     )
