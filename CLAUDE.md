@@ -198,8 +198,10 @@ manages everything from the platform's dashboard at https://platform.meidanm.net
 - **Cloud sessions (claude.ai/code):** there's no Windows PC, only the aura repo (and
   qwoo-core-platform if added). aura work is committed to the session's `claude/…` branch and
   pushed (the container is wiped), and the user merges it with a pull request. Locally the
-  "leave aura uncommitted" rule still applies. This file is in the aura repo too: after merging,
-  copy it to `C:\Users\meida\PhpstormProjects\CLAUDE.md` so both stay the same.
+  "leave aura uncommitted" rule still applies. **This file is an old, short copy** of the user's
+  real guide (`C:\Users\meida\PhpstormProjects\CLAUDE.md`, much newer). Never copy it over the
+  real one; never put the real one in this repo (the repo is public). Ask the user for current
+  status, and bring a session's notes into the real file with a script that only adds lines.
 
 ## Local testing
 
