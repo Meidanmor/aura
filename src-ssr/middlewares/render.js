@@ -9,6 +9,7 @@ import branding from '../../public/config/branding.json' // adjust path as neede
 import { allLangs, isExtraLang, langFromPath, mainLang, stripLang, withLang } from '../../src/i18n/lang.js'
 import { LANGUAGES } from '../../src/i18n/index.js'
 import { clientSite, originOf } from '../site-content.js'
+import { SHARED_KEYS, sharedScriptPath, sharedState, stateJson } from '../shared-state.js'
 import { cacheablePath, cachedAnswer } from '../api-cache.js'
 import { brandFontPreloads, brandFontsCss } from '../../src/utils/brand-fonts.js'
 import { contentSecurityPolicy, pageCode } from '../custom-code.js'
@@ -402,7 +403,6 @@ export default defineSsrMiddleware(({ app, resolve, render, /*folders*/ }) => {
 
                 const states = {
                     productData,
-                    heroData,
                     brandConfig: ssrContext.brandConfig || [],
                     headerConfig: ssrContext.headerConfig || [],
                     footerConfig: ssrContext.footerConfig || null,
@@ -415,7 +415,6 @@ export default defineSsrMiddleware(({ app, resolve, render, /*folders*/ }) => {
                     pageConfig: ssrContext.pageConfig || {},
                     selectedCategoryData: ssrContext.selectedCategoryData || {},
                     priceMeta: ssrContext.priceMeta || {},
-                    ssrQuery: ssrContext.ssrQuery || {},
                     seoData: ssrContext.seoData || null,
                     blogData: ssrContext.blogData || null,
                     // window.__QWOO_SITE__: the languages and the store's name, as published.
@@ -467,17 +466,29 @@ export default defineSsrMiddleware(({ app, resolve, render, /*folders*/ }) => {
           ${fontsHead(site, pageLang)}
         `
 
-                const bodyBottom = Object.entries(states)
-                    .map(([key, value]) => {
-                        const globalName = `__${key.replace(/([A-Z])/g, '_$1').toUpperCase()}__`
-                        return `<script nonce="${nonce}">window.${globalName} = ${JSON.stringify(value).replace(/</g, '\\u003c')}</script>`
-                    })
-                    .join('\n')
-
                 const withNonce = html.replace(
                     /<script((?:(?!src=|nonce=)[^>])*)>/g,
                     (match, attrs) => `<script${attrs} nonce="${nonce}">`
                 )
+
+                const stateText = Object.fromEntries(Object.entries(states).map(([key, value]) => [key, stateJson(value)]))
+                // The header, footer and branding configs are the same on every page: linked as one
+                // cached script (src-ssr/shared-state.js) when it holds exactly what this page was
+                // rendered with, and loaded before the app (ahead of its entry script); else inline.
+                const shared = sharedState(site, pageLang)
+                const entryScript = /<script type="?module"?/
+                const useShared = !!shared && entryScript.test(withNonce) &&
+                    Object.keys(SHARED_KEYS).every((key) => shared.json[key] === stateText[key])
+                const bodyBottom = Object.keys(states)
+                    .filter((key) => !(useShared && key in SHARED_KEYS))
+                    .map((key) => {
+                        const globalName = `__${key.replace(/([A-Z])/g, '_$1').toUpperCase()}__`
+                        return `<script nonce="${nonce}">window.${globalName} = ${stateText[key]}</script>`
+                    })
+                    .join('\n')
+                const withShared = useShared
+                    ? withNonce.replace(entryScript, (tag) => `<script defer src="${sharedScriptPath(site, pageLang)}" data-qwoo-shared nonce="${nonce}"></script>${tag}`)
+                    : withNonce
 
                 // Append (not replace) — Quasar's own head content stays intact.
                 // The page's language and direction, from its address (Quasar
@@ -486,15 +497,13 @@ export default defineSsrMiddleware(({ app, resolve, render, /*folders*/ }) => {
                 const langAttrs = `lang="${pageLang}" dir="${LANGUAGES[pageLang]?.dir || 'ltr'}"`
                 // The live version's favicon and theme colour replace the built-in ones.
                 const page = site
-                    ? withNonce.replace(/<link\s+rel="(icon|apple-touch-icon)"[^>]*>/g, '').replace(/<meta\s+name="theme-color"[^>]*>/g, '')
-                    : withNonce
+                    ? withShared.replace(/<link\s+rel="(icon|apple-touch-icon)"[^>]*>/g, '').replace(/<meta\s+name="theme-color"[^>]*>/g, '')
+                    : withShared
                 // A section image comes first: the header logo stops competing with it.
                 const withLogo = ssrContext.sectionPriority
                     ? page.replace(/<img\b[^>]*\bheader-logo\b[^>]*>/, (tag) => tag.replace('fetchpriority="high"', 'fetchpriority="auto"'))
                     : page
                 // The body first: the owner's code (added inside the head below) may hold "<body" or "</body>" as text.
-                //let output = fasterFirstPaint(withLogo, process.env.PROD ? folders?.public : '')
-                    .replace(/<html\b([^>]*)>/, (tag, attrs) => `<html ${attrs.replace(/\s(lang|dir)=("[^"]*"|\S+)/g, '').trim()} ${langAttrs}>`.replace('<html  ', '<html '))
                 let output = withLogo.replace(/<html\b([^>]*)>/, (tag, attrs) => `<html ${attrs.replace(/\s(lang|dir)=("[^"]*"|\S+)/g, '').trim()} ${langAttrs}>`.replace('<html  ', '<html '))
                 const bodyEnd = output.lastIndexOf('</body>')
                 if (bodyEnd >= 0) output = output.slice(0, bodyEnd) + bodyBottom + (code?.bodyEnd || '') + output.slice(bodyEnd)
