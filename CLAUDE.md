@@ -118,6 +118,12 @@ manages everything from the platform's dashboard at https://platform.meidanm.net
   (`homePageOf()`), with a fallback to the old `home.json` hero, and default "Our products"
   sections when there are none.
 - **Hydration:** every `window.__X__` used at hydration must be in render.js states.
+  The branding, header and footer configs (the same on every page) go out as one cached script,
+  `/__site/s/{version}/{lang}.js` (`src-ssr/shared-state.js`, served by `site-content.js` from the
+  live version, immutable), linked `defer` before the entry script, only when it holds exactly what
+  the page rendered with; else inline as before. If it fails, `src/boot/shared-state.js` fetches
+  the configs before hydration. Measured on Lumi's configs (2026-11-03): pages −65 KB raw,
+  −3.7 KB gzipped; the file is 8 KB gzipped, once per publish.
 - **Images:** logo, hero and section images are published as `{attachment id}-{name}`, with
   `logo_path` / `hero_image_path` in the config. Their `vercel.json` headers make them immutable
   for a year. Hashed `/assets/` files are immutable via `src-ssr/server.js`.

@@ -23,6 +23,8 @@ import { join } from 'node:path'
 import { createHmac } from 'node:crypto'
 import { slimConfig } from '../src/utils/slim-config.js'
 import { BACKEND_USER_AGENT } from './uploads.js'
+import { sharedState } from './shared-state.js'
+import { allLangs } from '../src/i18n/lang.js'
 
 const BACKEND = (process.env.WP_BACKEND_URL || '').replace(/\/+$/, '')
 const SECRET = process.env.PROXY_SHARED_SECRET || ''
@@ -461,6 +463,25 @@ export function siteContentMiddleware({ publicDir }) {
     globalThis.__QWOO_SITE = s
     // The same answer as window.__QWOO_SITE__.badge (clientSite), so the server and browser draw the same footer.
     globalThis.__QWOO_BADGE = !!(s && pointer?.free)
+
+    // The header, footer and branding configs pages link instead of carrying (shared-state.js).
+    const shared = req.path.match(/^\/__site\/s\/([a-f0-9]{20,40})\/([a-z]{2,3}(?:-[A-Za-z]{2,4})?)\.js$/)
+    if (shared) {
+      const state = s && shared[1] === s.version && allLangs().includes(shared[2]) ? sharedState(s, shared[2]) : null
+      if (!state) {
+        // Another version (this server instance hasn't caught up, or a very old page): never kept,
+        // the browser asks for the configs itself (src/boot/shared-state.js).
+        res.setHeader('Cache-Control', 'no-store')
+        res.setHeader('Vercel-CDN-Cache-Control', 'no-store')
+        return res.status(404).end()
+      }
+      res.setHeader('Content-Type', 'text/javascript; charset=utf-8')
+      res.setHeader('X-Content-Type-Options', 'nosniff')
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+      res.setHeader('Vercel-CDN-Cache-Control', 'max-age=31536000, immutable')
+      return req.method === 'HEAD' ? res.end() : res.end(state.script)
+    }
+
     if (!s) {
       // The store couldn't be reached (a cold start at a slow moment…): the
       // build's copy answers, but must never be kept. It used to go out with
