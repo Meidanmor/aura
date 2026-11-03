@@ -155,6 +155,19 @@ manages everything from the platform's dashboard at https://platform.meidanm.net
   WordPress tagline) and an "Our products" button.
 - **Store builder hero button** uses the `secondary` colour, because templates keep `primary`
   light.
+- **Page size (measured on Lumi, 2026-11-03):** the homepage is 291 KB raw / 38.5 KB gzipped,
+  normal for a server-rendered store. Decided / found:
+  - **Keep the Store builder wrappers** (`sb-container` / `sb-inner` / `sb-block`, about a third
+    of the 833 homepage elements): the builder needs them (user). Don't propose removing or
+    merging them.
+  - **Owner SVG icons stay inline** (`BuilderSvg.vue`) for now: the user found drawing large ones
+    from their file "tricky". For the record: Lumi's logo is inlined twice (header + footer),
+    ~21 KB raw / ~9 KB gzipped of every page.
+  - **Slimming `__PAGE_CONFIG__` / `__SECTIONS_DATA__` isn't worth it:** dropping empty values
+    saves 15 KB raw but only 0.9 KB gzipped, the site's own address in URLs 0.08 KB gzipped.
+    Same-value desktop/tablet/mobile triples can't be collapsed in general (some readers don't
+    inherit from desktop, e.g. a button's `tablet === 'stretch'`). `style` objects are already
+    slimmed (`slim-config.js`).
 - **Set aside for now (2026-10-08):** caching storefront HTML at Vercel, and moving store backends
   to real subdomains. Don't build them unless the user brings them back.
 - **Public launch (user, 2026-10-10):** no public sign-ups until the roadmap's "Launch readiness"
@@ -182,6 +195,11 @@ manages everything from the platform's dashboard at https://platform.meidanm.net
   with `node`. Files may be CRLF, so scripts replace `\n` with the file's newline. Python isn't
   installed.
 - **Stop local servers after testing**, and rebuild aura without the test env vars.
+- **Cloud sessions (claude.ai/code):** there's no Windows PC, only the aura repo (and
+  qwoo-core-platform if added). aura work is committed to the session's `claude/…` branch and
+  pushed (the container is wiped), and the user merges it with a pull request. Locally the
+  "leave aura uncommitted" rule still applies. This file is in the aura repo too: after merging,
+  copy it to `C:\Users\meida\PhpstormProjects\CLAUDE.md` so both stay the same.
 
 ## Local testing
 
@@ -216,6 +234,16 @@ manages everything from the platform's dashboard at https://platform.meidanm.net
   2. Copy the published pages in with `node qp/round2-publish-local.mjs`.
   3. Serve with `node scratchpad/seo-serve.mjs` on port 9600.
   4. Stop the server before rebuilding (it locks dist), and rebuild normally afterwards.
+- **Storefront without WordPress (cloud session, 2026-11-03):** copy a live store's published
+  version (`curl https://<store>/__site/current`, then `/__site/m/{version}`) and serve it from
+  a small fake store on :9500 that answers `qwoo/v1/site`, the manifest, Store API products /
+  categories (with `X-WP-Total` headers), `products-meta` and `seo`. Notes:
+  - `WP_BACKEND_URL` and `PROXY_SHARED_SECRET` are needed when the server runs too, not only at
+    build (`site-content.js` reads them at run time; without them nothing loads and pages
+    render in a loop).
+  - The production build doesn't listen on a port (it exports the Express app for Vercel): run
+    `import { app } from 'dist/ssr/index.js'; app.listen(9600)`.
+  - Stop the servers by process id: `pkill -f <name>` also matches its own shell and kills it.
 
 ## Current status (2026-10-10, round 11)
 
@@ -282,6 +310,18 @@ Round 13 (2026-10-11): **brand fonts**, tested locally by me. qwoo-platform **0.
 only), qwoo-core-platform **1e563d5** (pushed), aura uncommitted (builds). Order: upload 0.36.0,
 Update all stores, publish, then push aura (old aura ignores the new fields; new aura with an old
 store shows Roboto as before). See "Round 13 notes" below.
+
+**This status list stops at round 13, but the code is newer:** the user built more since then
+(e.g. aura's back-in-stock form, saved addresses, removing the inlined app CSS from render.js) and
+didn't record it here. Read the code and `git log` before assuming something isn't built.
+
+aura, 2026-11-03 (cloud session, **merged into main by the user**: PR #1 and #2, main d297e56):
+- **Shared configs as one cached script** (97be656): see "Hydration" in the storefront notes.
+  Also removed the unused `heroData` and `ssrQuery` page states and a leftover `.replace` line
+  under the commented-out `fasterFirstPaint` in render.js. Live: Lumi's homepage went from
+  358 KB to 291 KB of HTML (user).
+- **Shop filters and pages as real history steps** (1934374): see "Shop filters and pages in
+  the address" in the storefront notes. Being tested live by the user.
 
 **Waiting on the user:** uploading 0.34.1. Not tried yet: a big store. When a round changes the store plugin, always say where to
 update: platform wp-admin → Stores → **Update all stores** (or a store's Store plugin card); stores
