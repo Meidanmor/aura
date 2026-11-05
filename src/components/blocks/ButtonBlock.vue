@@ -1,6 +1,7 @@
 <template>
   <div v-if="(d.text || (run && btnIcon) || (d.url && btnIcon)) && (d.url || run)" class="btn-block" :class="fullWidthClasses" :style="wrapVars">
     <q-btn
+        data-sb-part="Button"
         v-bind="run ? {} : linkAttrs"
         :icon="btnIcon && !iconAtEnd ? btnIcon : undefined"
         :icon-right="btnIcon && iconAtEnd ? btnIcon : undefined"

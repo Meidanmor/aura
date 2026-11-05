@@ -116,7 +116,12 @@ export function subscribeToLiveConfig(page, callback, options = {}) {
  * { type: 'focus', id, scroll } for the section or block being edited. It's
  * outlined by a style rule on its data-section-id / data-block-id (so the
  * outline survives re-renders), and scrolled into view when asked (once it
- * exists: a new section shows up with the next state).
+ * exists: a new section shows up with the next state). `part` and `ts` name the
+ * part of the block that's open in the dashboard: outlined as well.
+ *
+ * A click on a section or block tells the dashboard { type: 'pick', id, ts, part }.
+ * Clicking a marked part or a link only selects it, so the preview stays on this
+ * page; other controls (arrows, tabs) keep working.
  */
 let focusInstalled = false
 function installEditorFocus(trustedOrigin) {
@@ -124,7 +129,27 @@ function installEditorFocus(trustedOrigin) {
   focusInstalled = true
   const style = document.createElement('style')
   style.id = 'qwoo-editor-focus'
+  const HOVER = '[data-sb-part]:hover, [data-ts]:hover { outline: 2px dashed #2563eb; outline-offset: 3px; cursor: pointer; }'
+  style.textContent = HOVER
   document.head.appendChild(style)
+  document.addEventListener('click', (e) => {
+    const target = e.target
+    const host = target.closest?.('[data-block-id], [data-section-id]')
+    if (!host) return
+    const mark = target.closest('[data-sb-part], [data-ts]')
+    const own = mark && host.contains(mark) ? mark : null
+    if (own || target.closest('a[href]')) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    window.parent.postMessage({
+      source: 'qwoo-frontend',
+      type: 'pick',
+      id: host.dataset.blockId || host.dataset.sectionId,
+      ts: own?.dataset.ts || '',
+      part: own?.dataset.sbPart || '',
+    }, trustedOrigin)
+  }, true)
   let pending = ''
   let tries = 0
   const find = (id) => document.querySelector(`[data-section-id="${id}"], [data-block-id="${id}"]`)
@@ -154,9 +179,13 @@ function installEditorFocus(trustedOrigin) {
     if (!data || data.source !== 'qwoo-admin' || data.type !== 'focus') return
     const id = typeof data.id === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(data.id) ? data.id : ''
     const sel = `[data-section-id="${id}"], [data-block-id="${id}"]`
-    style.textContent = id
-      ? `${sel} { outline: 2px solid #2563eb !important; outline-offset: -2px; }`
-      : ''
+    const part = typeof data.part === 'string' && /^[\w &/-]{1,60}$/.test(data.part) ? data.part : ''
+    const ts = (Array.isArray(data.ts) ? data.ts : []).filter((x) => typeof x === 'string' && /^[a-z0-9_]{1,40}$/.test(x))
+    const inside = (rule) => `[data-section-id="${id}"] ${rule}, [data-block-id="${id}"] ${rule}`
+    const parts = [...(part ? [inside(`[data-sb-part="${part}"]`)] : []), ...ts.map((x) => inside(`[data-ts="${x}"]`))]
+    style.textContent = HOVER + (id
+      ? `${sel} { outline: 2px solid #2563eb !important; outline-offset: -2px; }${parts.length ? `${parts.join(', ')} { outline: 2px solid #2563eb !important; outline-offset: 3px; }` : ''}`
+      : '')
     if (id && data.scroll) {
       pending = id
       tries = 0

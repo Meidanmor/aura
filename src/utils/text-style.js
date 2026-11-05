@@ -9,6 +9,7 @@
  *                v-bind. Font, weight and color are inline; sizes and line
  *                heights per screen size use the ts-sz-* / ts-lh-* classes in
  *                app.css (--ts-size, --ts-size-t, --ts-size-m).
+ *                Also data-ts (the prefix): a click in the Live Preview opens that text's settings.
  *   textVars()   for text drawn inside other components (Quasar fields, cards):
  *                CSS variables --ts-{name}-font|weight|color|size|lh|case|ls and classes
  *                ts-{name}-font… that the block's own CSS reads.
@@ -45,7 +46,7 @@ function cascade(map) {
 
 /** The data keys of a text style: "{prefix}_{part}", or the older names in `over`. */
 export function tsKeys(prefix, over = {}) {
-  return { font: `${prefix}_font`, size: `${prefix}_size`, weight: `${prefix}_weight`, lh: `${prefix}_line_height`, color: `${prefix}_color`, spacing: `${prefix}_spacing`, textCase: `${prefix}_case`, ...over }
+  return { prefix, font: `${prefix}_font`, size: `${prefix}_size`, weight: `${prefix}_weight`, lh: `${prefix}_line_height`, color: `${prefix}_color`, spacing: `${prefix}_spacing`, textCase: `${prefix}_case`, ...over }
 }
 
 function parts(d, keys, defaultFont) {
@@ -79,7 +80,7 @@ export function textStyle(d, keys, defaultFont = 'text') {
     for (const [device, v] of Object.entries(c.vars)) style[`${varName}${SUFFIX[device]}`] = v
     for (const device of Object.keys(c.has)) cls[`${clsName}-${DEVICE[device]}`] = true
   }
-  return { class: cls, style }
+  return keys.prefix ? { class: cls, style, 'data-ts': keys.prefix } : { class: cls, style }
 }
 
 /** v-bind on a wrapper: variables for text drawn deeper down (the block's CSS uses them). */
