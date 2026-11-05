@@ -147,6 +147,9 @@ function structuredData(ssrContext, req) {
         const offers = range && range.min_amount !== range.max_amount
             ? { '@type': 'AggregateOffer', priceCurrency: prices.currency_code, lowPrice: money(range.min_amount, prices), highPrice: money(range.max_amount, prices), offerCount: product.variations?.length || undefined, availability }
             : { '@type': 'Offer', priceCurrency: prices.currency_code, price: money(range ? range.min_amount : prices.price, prices), availability, url }
+        // A product that isn't sold at a price (Settings → Products with no price) offers nothing to Google.
+        const zeroPrice = product.extensions?.qwoo?.zero_price
+        const hasOffer = !zeroPrice || zeroPrice.action === 'buy'
         out.push({
             '@context': 'https://schema.org',
             '@type': 'Product',
@@ -155,7 +158,7 @@ function structuredData(ssrContext, req) {
             image: (product.images || []).map((image) => image.src).filter(Boolean),
             ...(product.sku ? { sku: product.sku } : {}),
             url,
-            offers,
+            ...(hasOffer ? { offers } : {}),
             // Approved reviews' average, when the store shows reviews.
             ...(product.extensions?.qwoo?.reviews === true && Number(product.review_count) > 0
                 ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: Number(product.average_rating).toFixed(1), reviewCount: Number(product.review_count), bestRating: '5', worstRating: '1' } }

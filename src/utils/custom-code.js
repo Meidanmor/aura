@@ -121,6 +121,7 @@ function runAllowed() {
 
 /* ---------------- events ---------------- */
 
+const TIKTOK = { view_item: 'ViewContent', add_to_cart: 'AddToCart', begin_checkout: 'InitiateCheckout', purchase: 'CompletePayment' }
 const META = { page_view: 'PageView', view_item: 'ViewContent', add_to_cart: 'AddToCart', begin_checkout: 'InitiateCheckout', purchase: 'Purchase' }
 
 function pageInfo() {
@@ -134,6 +135,12 @@ function toVendors(name, data) {
   const e = data.ecommerce
   if (s.ga4 && a.analytics && typeof window.gtag === 'function') {
     window.gtag('event', name, { ...(e || {}), ...(name === 'page_view' ? { page_location: data.page_location, page_title: data.page_title } : {}), send_to: s.ga4 })
+  }
+  if (s.tiktok && a.marketing && window.ttq) {
+    if (name === 'page_view') window.ttq.page()
+    else if (TIKTOK[name]) {
+      window.ttq.track(TIKTOK[name], e ? { value: Number(e.value) || 0, currency: e.currency, contents: (e.items || []).map((i) => ({ content_id: String(i.item_id), quantity: i.quantity, price: i.price })), content_type: 'product' } : {}, e?.transaction_id ? { event_id: `order_${e.transaction_id}` } : undefined)
+    }
   }
   if (s.meta && a.marketing && typeof window.fbq === 'function' && META[name]) {
     if (!e) return window.fbq('track', META[name])

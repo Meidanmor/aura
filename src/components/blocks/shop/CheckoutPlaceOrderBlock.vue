@@ -4,8 +4,9 @@
       <div v-if="c.couponApplied">{{ t('Total discount: {amount}', { amount: formatCurrency(c.cartTotalDiscount) }) }}</div>
       <div class="text-h6">{{ t('Total:') }} <span v-if="c.couponApplied"><del>{{ formatCurrency(Number(c.cartTotalDiscount) + Number(c.cartTotal)) }}</del></span> {{ formatCurrency(c.cartTotal) }}</div>
     </div>
-    <div v-if="(c.allowSignup && c.isLoggedIn === false) || c.termsRequired" class="checkout-agree">
+    <div v-if="(c.allowSignup && c.isLoggedIn === false) || c.termsRequired || c.marketingOptin?.on" class="checkout-agree">
       <q-checkbox v-if="c.allowSignup && c.isLoggedIn === false" v-model="c.createAccount" color="secondary" :label="t('Create an account (we\'ll email you a link to set your password)')" />
+      <q-checkbox v-if="c.marketingOptin?.on" v-model="c.wantsMarketing" color="secondary" :label="c.marketingOptin.text" />
       <q-checkbox v-if="c.termsRequired" v-model="c.agreeTerms" color="secondary">
         <span>
           {{ t('I have read and agree to the') }}

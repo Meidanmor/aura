@@ -35,6 +35,7 @@
 </template>
 
 <script setup>
+import { currentSource } from 'src/utils/traffic-source.js'
 import { ref, computed, reactive, watch, onMounted, onUnmounted, useSSRContext, provide, markRaw } from 'vue';
 import cart from 'src/stores/cart';
 import { useRouter, onBeforeRouteLeave } from 'vue-router';
@@ -135,6 +136,9 @@ if (process.env.CLIENT && window.__PAGE_CONFIG__ && Object.keys(window.__PAGE_CO
 const sections = computed(() => shopSections('checkout', pageConfig.value || null))
 const legal = computed(() => pageConfig.value?.legal || {})
 const termsRequired = computed(() => pageConfig.value?.require_terms !== false && !!(legal.value.terms || legal.value.privacy))
+// "Send me offers": only when the owner offers it, and never ticked in advance.
+const marketingOptin = computed(() => pageConfig.value?.marketing_optin || {})
+const wantsMarketing = ref(false)
 const allowSignup = computed(() => !!pageConfig.value && pageConfig.value.allow_signup !== false)
 const agreeTerms = ref(false)
 const createAccount = ref(false)
@@ -428,7 +432,7 @@ const submitOrder = async (walletOverride = null) => {
       payment_method: method,
       payment_data: paymentData,
       // The store checks the agreement (only sent when it asks for one).
-      extensions: termsRequired.value ? { qwoo: { terms: agreeTerms.value } } : {},
+      extensions: { qwoo: { ...(termsRequired.value ? { terms: agreeTerms.value } : {}), ...currentSource(), ...(marketingOptin.value.on && wantsMarketing.value ? { marketing: true } : {}) } },
       billing_same_as_shipping: !differentBillingAddress.value,
       ...(allowSignup.value && isLoggedIn.value === false && createAccount.value ? { create_account: true } : {}),
     }
@@ -651,7 +655,7 @@ provide('checkoutPage', reactive({
   isLoggedIn, checkoutReady, onLogin, googleLoginEnabled,
   form, handleInputBlur, handleCheckboxBlur, differentBillingAddress,
   paymentMethod, paymentMethods, paymentNote, paymentComponent, onCardReady,
-  termsRequired, allowSignup, agreeTerms, createAccount, legal,
+  termsRequired, allowSignup, agreeTerms, createAccount, legal, marketingOptin, wantsMarketing,
   submitOrder: previewSubmitOrder, placeOrder: previewPlaceOrder, registerForm,
   pickerAt, claimPicker, saveNewAddress, addressIsNew,
 }))

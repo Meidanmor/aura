@@ -104,6 +104,8 @@ import CountdownBlock from '../blocks/CountdownBlock.vue'
 import ProductGridBlock from '../blocks/ProductGridBlock.vue'
 import CarouselBlock from '../blocks/CarouselBlock.vue'
 import SocialLinksBlock from '../blocks/SocialLinksBlock.vue'
+import SocialFeedBlock from '../blocks/SocialFeedBlock.vue'
+import SocialEmbedBlock from '../blocks/SocialEmbedBlock.vue'
 import SectionBgVideo from './SectionBgVideo.vue'
 import SectionBgSlides from './SectionBgSlides.vue'
 import ProductTags from './ProductTags.vue'
@@ -173,6 +175,8 @@ const blockComponents = {
   product_grid: ProductGridBlock,
   carousel: CarouselBlock,
   social_links: SocialLinksBlock,
+  social_feed: SocialFeedBlock,
+  social_embed: SocialEmbedBlock,
   menu_widget: MenuWidget,
   language_switcher: LanguageSwitcherBlock,
   mini_cart: MiniCartBlock,

@@ -120,7 +120,11 @@ watch(active, async (i) => {
 }
 .pt-item.is-active::after { opacity: 1; }
 .pt-dim .pt-item:not(.is-active) { opacity: .6; }
-.pt-dim .pt-item:not(.is-active):hover { opacity: .9; }
+/* Only with a real mouse: a touch leaves :hover on the last thumbnail tapped, which then stayed sharp
+   after the photos moved on. */
+@media (hover: hover) and (pointer: fine) {
+  .pt-dim .pt-item:not(.is-active):hover { opacity: .9; }
+}
 .pt-item:focus-visible { outline: 2px solid var(--pt-active, var(--q-secondary)); outline-offset: 2px; }
 .pt-video { display: grid; place-items: center; width: 100%; height: 100%; background: #111; color: #fff; }
 .pt-video svg { width: 40%; height: 40%; }

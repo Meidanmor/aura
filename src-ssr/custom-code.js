@@ -145,7 +145,7 @@ export function contentSecurityPolicy({ nonce, backend, dev, frameAncestors, cod
     `media-src 'self' ${backend || ''}${add('media')}${any('https: blob:')}; ` +
     // Video embeds: only the two exact player hosts the frontend
     // builds URLs for (privacy-enhanced YouTube + Vimeo), plus the owner's trackers.
-    `frame-src https://accounts.google.com https://js.stripe.com https://hooks.stripe.com https://hcaptcha.com https://*.hcaptcha.com https://www.youtube-nocookie.com https://player.vimeo.com${add('frame')}${any('https:')}; ` +
+    `frame-src https://accounts.google.com https://js.stripe.com https://hooks.stripe.com https://hcaptcha.com https://*.hcaptcha.com https://www.youtube-nocookie.com https://player.vimeo.com https://www.instagram.com https://www.tiktok.com${add('frame')}${any('https:')}; ` +
     // No plugins (<object>/<embed>), no <base> hijacking, and forms
     // may only submit to this site (the app posts via fetch; Google
     // sign-in and Stripe use redirects / their own iframes).

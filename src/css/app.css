@@ -526,6 +526,21 @@ body section {
     .sb-row-m > .sb-block.sb-sticky-m { align-self: flex-start; }
 }
 
+/* Advanced > Position "Absolute" (setAbsoluteVars()): inside the parent section
+   (.sb-container is position: relative). Start / end, so it flips with the language. */
+@media (min-width: 1024px) {
+    .sb-block.sb-abs-d { position: absolute; z-index: var(--sb-az, 5); top: var(--sb-at, auto); bottom: var(--sb-ab, auto); inset-inline-start: var(--sb-as, auto); inset-inline-end: var(--sb-ae, auto); }
+    .sb-clip-d { overflow: hidden; overflow: clip; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+    .sb-block.sb-abs-t { position: absolute; z-index: var(--sb-az, 5); top: var(--sb-at-t, var(--sb-at, auto)); bottom: var(--sb-ab-t, var(--sb-ab, auto)); inset-inline-start: var(--sb-as-t, var(--sb-as, auto)); inset-inline-end: var(--sb-ae-t, var(--sb-ae, auto)); }
+    .sb-clip-t { overflow: hidden; overflow: clip; }
+}
+@media (max-width: 767px) {
+    .sb-block.sb-abs-m { position: absolute; z-index: var(--sb-az, 5); top: var(--sb-at-m, var(--sb-at-t, var(--sb-at, auto))); bottom: var(--sb-ab-m, var(--sb-ab-t, var(--sb-ab, auto))); inset-inline-start: var(--sb-as-m, var(--sb-as-t, var(--sb-as, auto))); inset-inline-end: var(--sb-ae-m, var(--sb-ae-t, var(--sb-ae, auto))); }
+    .sb-clip-m { overflow: hidden; overflow: clip; }
+}
+
 @media (min-width: 1024px) {
     .sb-hide-d { display: none !important; }
     .sb-bg-fixed { background-attachment: fixed; }

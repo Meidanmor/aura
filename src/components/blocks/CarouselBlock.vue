@@ -5,7 +5,7 @@
         v-if="slides.length"
         v-model="slideIndex"
         class="cb-hero"
-        :class="arrowsShow !== 'both' ? `cb-only-${arrowsShow}` : ''"
+        :class="arrowClasses"
         animated
         swipeable
         height="auto"
@@ -37,6 +37,7 @@
               :loading="picked && idx === 0 ? 'eager' : 'lazy'"
               :fetchpriority="picked && idx === 0 ? 'high' : undefined"
               decoding="async"
+              draggable="false"
           />
         </picture>
         <div class="cb-slide__overlay" :style="overlayStyle(slide)" />
@@ -95,6 +96,7 @@
       <div
           ref="trackRef"
           class="cb-row__track"
+          :class="{ 'can-drag': pages > 1 }"
           tabindex="0"
           role="region"
           aria-roledescription="carousel"
@@ -208,6 +210,7 @@ import LoopCard from '../loops/LoopCard.vue'
 import ProductTags from '../sections/ProductTags.vue'
 import productsStore from 'src/stores/products'
 import { useBlockQuery } from 'src/composables/useBlockQuery.js'
+import { useDragScroll } from 'src/composables/useDragScroll.js'
 import { keyWithProduct, useExcludedProduct } from 'src/utils/current-product.js'
 import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
@@ -293,10 +296,15 @@ const SHORT = { desktop: 'd', tablet: 't', mobile: 'm' }
 const arrowsAt = computed(() => (ARROWS_AT.has(d.value.arrows_position) ? d.value.arrows_position : 'sides'))
 const arrowLook = computed(() => (ARROW_LOOKS.has(d.value.arrow_style) ? d.value.arrow_style : 'plain'))
 const showArrows = computed(() => !!d.value.arrows && pages.value > 1)
-// "Arrows to Show": both, or only one of them.
-const arrowsShow = computed(() => (d.value.arrows_show === 'next' || d.value.arrows_show === 'prev' ? d.value.arrows_show : 'both'))
-const showPrev = computed(() => arrowsShow.value !== 'next')
-const showNext = computed(() => arrowsShow.value !== 'prev')
+// "Arrows to Show", per screen size: both, or only one of them. An arrow is drawn when any
+// screen size shows it; CSS hides it on the others, so the server and browser draw the same.
+const arrowsShown = computed(() => {
+  const r = asResponsive(d.value.arrows_show || 'both')
+  return DEVICES.map((device) => [device, r[device] === 'next' || r[device] === 'prev' ? r[device] : 'both'])
+})
+const showPrev = computed(() => arrowsShown.value.some(([, kind]) => kind !== 'next'))
+const showNext = computed(() => arrowsShown.value.some(([, kind]) => kind !== 'prev'))
+const arrowClasses = computed(() => Object.fromEntries(arrowsShown.value.filter(([, kind]) => kind !== 'both').map(([device, kind]) => [`cb-only-${kind}-${SHORT[device]}`, true])))
 const dotsCustom = computed(() => d.value.dots_position === 'custom')
 // Below the row, the dots sit in the arrows' row (unless they have a place of their own).
 const dotsInNav = computed(() => showArrows.value && !dotsCustom.value && (arrowsAt.value === 'bottom_end' || arrowsAt.value === 'bottom_center'))
@@ -339,6 +347,7 @@ const rowClasses = computed(() => {
     'cb-arrows--own-hover': !!(d.value.arrow_hover_bg || d.value.arrow_hover_color),
     'cb-noarrows-m': d.value.arrows_mobile === false,
     'cb-bleed-m': !!d.value.bleed_mobile,
+    ...arrowClasses.value,
   }
   for (const device of DEVICES) cls[`cb-st-${ROW_STYLES.has(styles[device]) ? styles[device] : 'whole'}-${SHORT[device]}`] = true
   return cls
@@ -363,6 +372,7 @@ const barStyle = computed(() => (heroAutoplay.value
 /* ---------- Scroll-snap row ---------- */
 
 const trackRef = ref(null)
+useDragScroll(trackRef)
 const pages = ref(1)
 const page = ref(0)
 let resizeObserver = null
@@ -525,9 +535,19 @@ const cssVars = computed(() => {
 .cb-slide__btn--outline { color: #fff !important; }
 .cb-hero :deep(.q-carousel__navigation .q-btn) { color: var(--cb-control, #fff); }
 .cb-hero :deep(.q-carousel__arrow .q-btn) { color: var(--cb-arrow-c, var(--cb-control, #fff)); }
-/* "Arrows to Show": one of them. */
-.cb-only-next :deep(.q-carousel__prev-arrow),
-.cb-only-prev :deep(.q-carousel__next-arrow) { display: none; }
+/* "Arrows to Show", per screen size: one of them. */
+@media (min-width: 1024px) {
+  .cb-only-next-d :deep(.q-carousel__prev-arrow), .cb-only-next-d .cb-row__arrow--prev,
+  .cb-only-prev-d :deep(.q-carousel__next-arrow), .cb-only-prev-d .cb-row__arrow--next { display: none; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .cb-only-next-t :deep(.q-carousel__prev-arrow), .cb-only-next-t .cb-row__arrow--prev,
+  .cb-only-prev-t :deep(.q-carousel__next-arrow), .cb-only-prev-t .cb-row__arrow--next { display: none; }
+}
+@media (max-width: 767px) {
+  .cb-only-next-m :deep(.q-carousel__prev-arrow), .cb-only-next-m .cb-row__arrow--prev,
+  .cb-only-prev-m :deep(.q-carousel__next-arrow), .cb-only-prev-m .cb-row__arrow--next { display: none; }
+}
 
 /* Slow zoom: the shown slide's photo grows a little while it's on screen. */
 .cb-zoom :deep(.q-carousel__slide) .cb-slide__media img { animation: cb-zoom 9s ease-out forwards; }
@@ -598,6 +618,11 @@ const cssVars = computed(() => {
   scrollbar-width: none;
 }
 .cb-row__track::-webkit-scrollbar { display: none; }
+/* A mouse drags the row (useDragScroll). */
+@media (hover: hover) and (pointer: fine) {
+  .cb-row__track.can-drag { cursor: grab; }
+}
+.cb-row__track.is-dragging, .cb-row__track.is-dragging * { cursor: grabbing; user-select: none; }
 .cb-row__track:focus-visible { outline: 2px solid var(--cb-control, currentColor); outline-offset: 4px; }
 .cb-row__item { scroll-snap-align: start; min-width: 0; }
 

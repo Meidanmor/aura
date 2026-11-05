@@ -501,4 +501,7 @@ export default {
   "Google sign-in didn't finish. Please try again.": "ההתחברות עם Google לא הסתיימה. נסו שוב.",
   "Google sign-in didn't work. Please try again, or sign in with your email.": "ההתחברות עם Google לא הצליחה. נסו שוב, או התחברו עם האימייל.",
   "This store doesn't use Google sign-in.": "החנות לא משתמשת בהתחברות עם Google.",
+  "Follow us": "עקבו אחרינו",
+  "Watch on TikTok": "צפייה בטיקטוק",
+  "See on Instagram": "צפייה באינסטגרם",
 }

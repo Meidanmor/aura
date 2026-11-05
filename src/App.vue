@@ -20,6 +20,7 @@
 import {matWifiOff} from '@quasar/extras/material-icons'
 import cart from "src/stores/cart.js";
 import { onMounted } from "vue";
+import { rememberSource } from "src/utils/traffic-source.js";
 import { useMeta } from 'quasar'
 import { useI18n } from 'src/i18n/index.js'
 
@@ -31,6 +32,7 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 
 onMounted(async () => {
+  rememberSource();
   if (!cart.state.offline) return
 
   const navEntries = performance.getEntriesByType('navigation')

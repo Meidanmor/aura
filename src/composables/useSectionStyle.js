@@ -120,6 +120,32 @@ export function setStickyVars(vars, s = {}) {
   return { 'sb-sticky-d': on.desktop, 'sb-sticky-t': on.tablet, 'sb-sticky-m': on.mobile }
 }
 
+const ABSOLUTE_SIDES = { pos_top: '--sb-at', pos_bottom: '--sb-ab', pos_start: '--sb-as', pos_end: '--sb-ae' }
+
+/**
+ * Advanced → Position "Absolute" (nested sections and blocks), per screen size:
+ * classes sb-abs-d/-t/-m, and every distance set for every size, so nothing is
+ * inherited from an absolute parent. CSS: app.css .sb-block.sb-abs-*.
+ */
+export function setAbsoluteVars(vars, s = {}) {
+  const pos = asResponsive(s.position)
+  const on = Object.fromEntries(DEVICES.map((device) => [device, pos[device] === 'absolute']))
+  if (!DEVICES.some((device) => on[device])) return {}
+  for (const [key, name] of Object.entries(ABSOLUTE_SIDES)) {
+    const side = asResponsive(s[key])
+    for (const device of DEVICES) vars[name + SUFFIX[device]] = toCssLength(side[device]) || 'auto'
+  }
+  const layer = Number(s.pos_z)
+  vars['--sb-az'] = s.pos_z !== '' && s.pos_z != null && layer >= 0 ? String(Math.min(100, layer)) : '5'
+  return { 'sb-abs-d': on.desktop, 'sb-abs-t': on.tablet, 'sb-abs-m': on.mobile }
+}
+
+/** Advanced → Overflow on a section, per screen size: classes sb-clip-d/-t/-m. */
+function overflowClasses(value) {
+  const v = asResponsive(value)
+  return { 'sb-clip-d': v.desktop === 'hidden', 'sb-clip-t': v.tablet === 'hidden', 'sb-clip-m': v.mobile === 'hidden' }
+}
+
 /**
  * Advanced → Order (blocks and nested sections): the item's place in its
  * section's flex box per screen size, without changing the saved order (an
@@ -481,7 +507,7 @@ export function buildContainerStyle(style = {}) {
 
   // Sticky: on the section itself (top level) or its wrapper (nested), like margins.
   const stickyVars = {}
-  const stickyClasses = setStickyVars(stickyVars, s)
+  const stickyClasses = { ...setStickyVars(stickyVars, s), ...setAbsoluteVars(stickyVars, s) }
 
   return {
     outerClasses: {
@@ -493,6 +519,7 @@ export function buildContainerStyle(style = {}) {
       ...(hover ? { [`sb-hover-${hover}`]: true } : {}),
       'sb-has-link': !!link,
       'sb-has-mx': sideways,
+      ...overflowClasses(s.overflow),
       ...visibilityClasses(s.hide_on, s.audience),
     },
     outerVars,
@@ -582,7 +609,7 @@ export function buildBlockWrapperStyle(block) {
   // Entrance animation's delay (the animation itself: src/utils/entrance.js).
   const delay = Number(s.animation_delay)
   if (s.animation && s.animation !== 'none' && delay > 0) vars['--sb-anim-delay'] = `${Math.min(1500, delay)}ms`
-  const sticky = setStickyVars(vars, s)
+  const sticky = { ...setStickyVars(vars, s), ...setAbsoluteVars(vars, s) }
   const ordered = setOrderVars(vars, s)
   const card = CARD_BLOCKS.has(block?.type) && block?.data?.card !== false
   if (card && !looks.border) setCardBorderVars(vars, s)

@@ -646,28 +646,6 @@ watch(
   }
 )
 
-const isDragging = ref(false)
-const dragStartX = ref(0)
-const dragStartY = ref(0)
-
-const mouseDownTime = ref(0)
-
-function onImageMouseDown() {
-  mouseDownTime.value = Date.now()
-}
-
-function onImageMouseMove(e) {
-  const dx = Math.abs(e.clientX - dragStartX.value)
-  const dy = Math.abs(e.clientY - dragStartY.value)
-  if (dx > 5 || dy > 5) isDragging.value = true
-}
-
-function onImageClick(index) {
-  const elapsed = Date.now() - mouseDownTime.value
-  if (elapsed > 200) return // was a drag, not a click
-  openLightbox(index)
-}
-
 
 // What the template's blocks show and do (src/components/blocks/shop/Product*Block.vue).
 // Objects holding refs of their own (the carousel, the stores) stay raw: a reactive
@@ -679,7 +657,7 @@ provide('productPage', reactive({
   choicePrice, choicePricesDiffer, loadExtras,
   onVariationChange, variationError, isVariable, quantity, decreaseQty, increaseQty,
   shouldDisableCartButtons, addToCartHandler, addCurrentToCart, showChoices, addToWishlist,
-  onImageMouseDown, onImageMouseMove, onImageClick,
+  openLightbox,
 }))
 </script>
 
