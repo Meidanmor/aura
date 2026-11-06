@@ -132,7 +132,7 @@ export function contentSecurityPolicy({ nonce, backend, dev, frameAncestors, cod
   }
   const any = (value) => (relaxed ? ` ${value}` : '')
   return "default-src 'self'; " +
-    `script-src 'self' 'nonce-${nonce}'${code?.eval ? " 'unsafe-eval'" : ''} https://accounts.google.com https://js.stripe.com https://hcaptcha.com https://*.hcaptcha.com${add('script')}${any('https:')}; ` +
+    `script-src 'self' 'nonce-${nonce}'${code?.eval ? " 'unsafe-eval'" : ''} https://accounts.google.com https://js.stripe.com https://hcaptcha.com https://*.hcaptcha.com https://www.tiktok.com${add('script')}${any('https:')}; ` +
     `style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com${add('style')}${any('https:')}; ` +
     // The local dev store answers over plain http.
     `img-src 'self' data: https:${dev && backend ? ` ${backend}` : ''}; ` +
