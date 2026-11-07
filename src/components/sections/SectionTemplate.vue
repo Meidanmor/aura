@@ -5,6 +5,7 @@
       class="sb-container"
       :class="[nested ? 'sb-nested' : 'sb-section', container.outerClasses, nested ? null : container.stickyClasses]"
       :style="outerStyle"
+      v-entrance="nested ? '' : entranceOf(data.style)"
       :data-section-id="data.id"
   >
     <SectionBgVideo v-if="container.video" :video="container.video" />
@@ -25,7 +26,7 @@
       <div
           v-for="block in enabledBlocks"
           :key="block.id"
-          v-entrance="block.type !== 'section' ? block.style?.animation : ''"
+          v-entrance="entranceOf(block.style)"
           :id="wrappers[block.id].anchorId"
           class="sb-block"
           :data-block-id="block.type !== 'section' ? block.id : undefined"
@@ -112,7 +113,7 @@ import SectionBgSlides from './SectionBgSlides.vue'
 import ProductTags from './ProductTags.vue'
 import MenuWidget from '../blocks/MenuWidget.vue'
 import LanguageSwitcherBlock from '../blocks/LanguageSwitcherBlock.vue'
-import { buildContainerStyle, buildBlockWrapperStyle } from 'src/composables/useSectionStyle.js'
+import { buildContainerStyle, buildBlockWrapperStyle, entranceOf } from 'src/composables/useSectionStyle.js'
 import LoopImage from '../loops/LoopImage.vue'
 import LoopText from '../loops/LoopText.vue'
 import LoopPrice from '../loops/LoopPrice.vue'

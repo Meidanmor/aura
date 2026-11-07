@@ -459,6 +459,22 @@ export function buildShadow(style = {}) {
  * Styles for a container element (background, padding, min-height, text
  * color, radius) and its inner flex box (width, direction, gap, alignment).
  */
+/**
+ * Entrance animation's delay (the animation itself: src/utils/entrance.js). Set even when it's 0,
+ * so a block never takes the delay of an animated section around it (custom properties inherit).
+ */
+function setAnimDelayVar(vars, s) {
+  if (!s.animation || s.animation === 'none') return
+  const delay = Number(s.animation_delay)
+  vars['--sb-anim-delay'] = `${delay > 0 ? Math.min(1500, delay) : 0}ms`
+}
+
+/** The v-entrance value for a section's or block's style: "name:delay", '' when none. */
+export function entranceOf(s) {
+  if (!s?.animation || s.animation === 'none') return ''
+  return `${s.animation}:${Number(s.animation_delay) || 0}`
+}
+
 export function buildContainerStyle(style = {}) {
   const s = style || {}
   const outerVars = {}
@@ -474,6 +490,7 @@ export function buildContainerStyle(style = {}) {
   // Background
   const bg = buildBackground(s)
   Object.assign(outerVars, bg.vars)
+  setAnimDelayVar(outerVars, s)
 
   // Text color, radius and shadow (each may differ per screen size)
   const looks = setBoxLooks(outerVars, s, 'border_radius', 'text_color')
@@ -606,9 +623,7 @@ export function buildBlockWrapperStyle(block) {
   const shadow = looks.shadow
   const bg = buildBackground(s)
   Object.assign(vars, bg.vars)
-  // Entrance animation's delay (the animation itself: src/utils/entrance.js).
-  const delay = Number(s.animation_delay)
-  if (s.animation && s.animation !== 'none' && delay > 0) vars['--sb-anim-delay'] = `${Math.min(1500, delay)}ms`
+  setAnimDelayVar(vars, s)
   const sticky = { ...setStickyVars(vars, s), ...setAbsoluteVars(vars, s) }
   const ordered = setOrderVars(vars, s)
   const card = CARD_BLOCKS.has(block?.type) && block?.data?.card !== false
