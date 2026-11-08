@@ -119,9 +119,15 @@ export function subscribeToLiveConfig(page, callback, options = {}) {
  * exists: a new section shows up with the next state). `part` and `ts` name the
  * part of the block that's open in the dashboard: outlined as well.
  *
- * A click on a section or block tells the dashboard { type: 'pick', id, ts, part }.
+ * A click on a section or block tells the dashboard { type: 'pick', id, ts, part, ids }.
+ * `ids`: the blocks and sections around it, innermost first. A card drawn from a card
+ * design (product grid, carousel, any Loop Template) has that design's own ids inside,
+ * which the page being edited doesn't have: the dashboard opens the first id it knows.
  * Clicking a marked part or a link only selects it, so the preview stays on this
  * page; other controls (arrows, tabs) keep working.
+ *
+ * qwoo_view=1 (the preview of an AI app's change, only to look at): no outline
+ * and no picks; links still don't leave the page.
  */
 let focusInstalled = false
 function installEditorFocus(trustedOrigin) {
@@ -129,6 +135,13 @@ function installEditorFocus(trustedOrigin) {
   focusInstalled = true
   const style = document.createElement('style')
   style.id = 'qwoo-editor-focus'
+  const viewOnly = new URLSearchParams(window.location.search).get('qwoo_view') === '1'
+  if (viewOnly) {
+    document.addEventListener('click', (e) => {
+      if (e.target.closest?.('a[href]')) e.preventDefault()
+    }, true)
+    return
+  }
   const HOVER = '[data-sb-part]:hover, [data-ts]:hover { outline: 2px dashed #2563eb; outline-offset: 3px; cursor: pointer; }'
   style.textContent = HOVER
   document.head.appendChild(style)
@@ -142,12 +155,17 @@ function installEditorFocus(trustedOrigin) {
       e.preventDefault()
       e.stopPropagation()
     }
+    const ids = []
+    for (let el = host; el && ids.length < 20; el = el.parentElement?.closest('[data-block-id], [data-section-id]')) {
+      ids.push(el.dataset.blockId || el.dataset.sectionId)
+    }
     window.parent.postMessage({
       source: 'qwoo-frontend',
       type: 'pick',
-      id: host.dataset.blockId || host.dataset.sectionId,
+      id: ids[0],
       ts: own?.dataset.ts || '',
       part: own?.dataset.sbPart || '',
+      ids,
     }, trustedOrigin)
   }, true)
   let pending = ''
