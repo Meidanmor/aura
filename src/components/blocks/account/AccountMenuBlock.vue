@@ -23,6 +23,7 @@ import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { useAccountView } from 'src/composables/useAccount.js'
 import { ACCOUNT_PARTS, partPath, useAccountLogout } from './account-parts.js'
 import { useI18n } from 'src/i18n/index.js'
+import { useMyGiftCards } from 'src/composables/useMyGiftCards.js'
 
 /**
  * "Account Menu" (My account): links to the account's parts (their own
@@ -37,9 +38,11 @@ const accountPage = inject('accountPage', null)
 const current = computed(() => accountPage?.part || 'dashboard')
 const { busy, logout } = useAccountLogout()
 
-const LABELS = { dashboard: 'Dashboard', orders: 'My Orders', details: 'Account Details' }
+const LABELS = { dashboard: 'Dashboard', orders: 'My Orders', giftcards: 'Gift cards', details: 'Account Details' }
+const gifts = useMyGiftCards()
 const items = computed(() => ACCOUNT_PARTS
   .filter((part) => d.value[`show_${part}`] !== false)
+  .filter((part) => part !== 'giftcards' || gifts.hasAny.value || current.value === 'giftcards')
   .map((part) => ({ part, label: d.value[`${part}_label`] || t(LABELS[part]) })))
 
 const layoutClasses = computed(() => {
