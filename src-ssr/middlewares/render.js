@@ -92,6 +92,13 @@ const EDITOR_ORIGINS = [WP_BACKEND_URL, process.env.QWOO_EDITOR_ORIGIN || ''].ma
     }
 }).filter(Boolean)
 
+// Claude's and ChatGPT's pages and the frames they show an app's view in (MCP Apps).
+// Keep in step with YFAI_View::FRAME_HOSTS in the yallaflow-ai plugin.
+const AI_APP_FRAME_HOSTS = [
+    'https://claude.ai', 'https://*.claude.ai', 'https://*.claudemcpcontent.com', 'https://*.claudeusercontent.com',
+    'https://chatgpt.com', 'https://*.chatgpt.com', 'https://*.oaiusercontent.com',
+]
+
 const isIgnoredRequest = (url) => {
     return (
         // Published files that don't exist (static files are served before
@@ -329,7 +336,13 @@ export default defineSsrMiddleware(({ app, resolve, render, /*folders*/ }) => {
             req.query?.qwoo_editor === '1' &&
             EDITOR_ORIGINS.includes(editorOrigin)
 
-        const frameAncestors = isEditorRequest ? `'self' ${editorOrigin}` : "'self'"
+        // The view-only preview of an AI app's change (qwoo_view=1) can also be shown inside
+        // Claude or ChatGPT: there the dashboard's preview page sits in the app's own frames,
+        // and frame-ancestors checks every frame above, up to the app's page. Only the
+        // dashboard (the direct parent, checked by origin in config-loader.js) can send the draft.
+        const frameAncestors = isEditorRequest
+            ? `'self' ${editorOrigin}${req.query?.qwoo_view === '1' ? ' ' + AI_APP_FRAME_HOSTS.join(' ') : ''}`
+            : "'self'"
 
         // The page's own rules (src-ssr/custom-code.js); the owner's tracking
         // addresses are added after the render, once the page is known.
