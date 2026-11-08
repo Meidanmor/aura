@@ -33,9 +33,13 @@
       <div v-if="c.couponApplied">{{ t('Total discount: {amount}', { amount: formatCurrency(c.cartTotalDiscount) }) }}</div>
       <div class="text-h6">{{ t('Total: {amount}', { amount: formatCurrency(c.cartTotal) }) }}</div>
     </div>
-    <router-link to="/checkout/">
-      <q-btn :color="buttonBg ? undefined : 'secondary'" :style="buttonColors" :label="d.button_label || t('Checkout')" />
-    </router-link>
+    <div class="cart-totals__buttons">
+      <router-link to="/checkout/">
+        <q-btn :color="buttonBg ? undefined : 'secondary'" :style="buttonColors" :label="d.button_label || t('Checkout')" />
+      </router-link>
+      <!-- "A View cart button too" (handy in the cart drawer). -->
+      <q-btn v-if="d.view_cart" to="/cart/" outline no-caps :label="t('View Cart')" />
+    </div>
   </div>
 </template>
 
@@ -58,3 +62,7 @@ const d = computed(() => props.data.data || {})
 const buttonBg = computed(() => resolveGlobalColor(d.value.button_bg))
 const buttonColors = computed(() => ({ ...(buttonBg.value ? { background: buttonBg.value } : {}), ...(d.value.button_text ? { color: resolveGlobalColor(d.value.button_text) } : {}) }))
 </script>
+
+<style scoped>
+.cart-totals__buttons { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+</style>

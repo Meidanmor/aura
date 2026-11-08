@@ -30,6 +30,7 @@ import { keyWithProduct, useExcludedProduct } from 'src/utils/current-product.js
 import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
 import { useSampleFallback } from 'src/utils/sample-items.js'
+import { useCartSuggestions } from 'src/utils/cart-suggestions.js'
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -45,15 +46,18 @@ const isInternal = (url) => String(url).startsWith('/') && !String(url).startsWi
 const excludeId = useExcludedProduct(() => d.value)
 
 // Everything that changes which products are shown.
+// "Suggestions for the cart": the cart's cross-sells (browser only), and what's in it, left out.
+const suggestions = useCartSuggestions(() => d.value)
 const queryKey = () => JSON.stringify([
   excludeId.value, d.value.query_type, d.value.category_ids, d.value.tag_ids, d.value.product_ids, d.value.limit, d.value.hide_out_of_stock,
+  suggestions.value,
 ])
 
 // The page's first images (src/utils/priority-image.js): its first cards.
 const picked = usePriorityBlock(props.blockId)
 
 const { data: products } = useBlockQuery(keyWithProduct(props.blockId, excludeId.value), queryKey, (ssrContext) =>
-    productsStore.queryProducts({ ...d.value, exclude_ids: excludeId.value ? [excludeId.value] : [] }, ssrContext)
+    productsStore.queryProducts({ ...d.value, cart_ids: suggestions.value.ids, exclude_ids: [...(excludeId.value ? [excludeId.value] : []), ...suggestions.value.exclude] }, ssrContext)
 )
 // The Store builder preview of a store with no products yet: sample products.
 const shown = useSampleFallback(() => products.value, 'product', Math.min(4, Number(d.value.limit) || 4))

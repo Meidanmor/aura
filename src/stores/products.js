@@ -127,6 +127,14 @@ async function queryProducts(q = {}, ssrContext = null) {
     return keep(await getFeaturedProducts((q.product_ids || []).filter((id) => !exclude.includes(Number(id))), ssrContext))
   }
 
+  // Suggestions for the cart (src/utils/cart-suggestions.js): its cross-sells (cart_ids), else the
+  // block's chosen products. The server doesn't know the shopper's cart: null, the browser asks.
+  if (type === 'cart') {
+    if (import.meta.env.SSR) return null
+    const ids = (q.cart_ids?.length ? q.cart_ids : q.product_ids || []).map(Number).filter((id) => id && !exclude.includes(id))
+    return ids.length ? keep(await getFeaturedProducts(ids.slice(0, limit), ssrContext)) : []
+  }
+
   const query = new URLSearchParams()
   query.append('per_page', limit)
   switch (type) {

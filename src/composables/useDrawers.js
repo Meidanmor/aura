@@ -7,13 +7,24 @@
  * Cart is shown, and each Menu widget has its own drawer with its own menu.
  *
  *   key    'cart' | 'wishlist' | 'menu:{block id}'
- *   entry  { kind: 'cart' | 'wishlist' | 'menu', items?, title, bg, color,
- *            showLanguages?, showNotifications?, swipe: auto | none | left | right }
+ *   entry  { kind: 'cart' | 'wishlist' | 'menu', blockId, items?, title, bg, color,
+ *            showLanguages?, showNotifications?, swipe: auto | none | left | right,
+ *            width ('' or a length), sections (a drawer built from blocks: the
+ *            widget's own sections, drawn by DrawerSections.vue; null = the standard one) }
  *
  * Drawers are drawn in the browser only (after hydration), so widgets add
  * them on mount.
  */
 import { inject, onBeforeUnmount, onMounted, provide, reactive, watch } from 'vue'
+
+/**
+ * A widget's drawer built from blocks: its sections while "Drawer Content" is
+ * "Built from blocks" and it has some (else null: the standard drawer).
+ */
+export function drawerSections(block) {
+  const list = block?.data?.drawer_content === 'blocks' && Array.isArray(block?.blocks) ? block.blocks.filter((s) => s && s.enabled !== false) : []
+  return list.length ? list : null
+}
 
 const KEY = Symbol('qwoo-drawers')
 let ownerSeq = 0

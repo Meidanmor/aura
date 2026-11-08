@@ -11,7 +11,7 @@ import WidgetButton from './WidgetButton.vue'
 import { cartIcons } from 'src/utils/builder-icons.js'
 import { formatCurrency } from 'src/utils/formatters.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
-import { useDrawer } from 'src/composables/useDrawers.js'
+import { drawerSections, useDrawer } from 'src/composables/useDrawers.js'
 import { useI18n } from 'src/i18n/index.js'
 
 const props = defineProps({
@@ -29,6 +29,9 @@ const drawer = useDrawer(
   () => (toPage.value ? '' : 'cart'),
   () => ({
     kind: 'cart',
+    blockId: props.blockId,
+    sections: drawerSections(props.data),
+    width: d.value.drawer_width || '',
     title: d.value.drawer_title ?? t('Cart'),
     bg: resolveGlobalColor(d.value.drawer_bg) || '',
     color: resolveGlobalColor(d.value.drawer_text_color) || '',

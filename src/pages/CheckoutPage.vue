@@ -153,6 +153,8 @@ const wantsMarketing = ref(false)
 const allowSignup = computed(() => !!pageConfig.value && pageConfig.value.allow_signup !== false)
 const agreeTerms = ref(false)
 const createAccount = ref(false)
+// The Order Note block: the customer's note, sent with the order (WooCommerce's customer note).
+const orderNote = ref('')
 
 const syncError = ref(null);
 
@@ -445,6 +447,7 @@ const submitOrder = async (walletOverride = null) => {
       // The store checks the agreement (only sent when it asks for one).
       extensions: { qwoo: { ...(termsRequired.value ? { terms: agreeTerms.value } : {}), ...currentSource(), ...(marketingOptin.value.on && wantsMarketing.value ? { marketing: true } : {}) } },
       billing_same_as_shipping: !differentBillingAddress.value,
+      ...(orderNote.value.trim() ? { customer_note: orderNote.value.trim().slice(0, 1000) } : {}),
       ...(allowSignup.value && isLoggedIn.value === false && createAccount.value ? { create_account: true } : {}),
     }
 
@@ -698,7 +701,7 @@ provide('checkoutPage', reactive({
   isLoggedIn, checkoutReady, onLogin, googleLoginEnabled,
   form, handleInputBlur, handleCheckboxBlur, differentBillingAddress,
   paymentMethod, paymentMethods, paymentNote, paymentComponent, onCardReady,
-  termsRequired, allowSignup, agreeTerms, createAccount, legal, marketingOptin, wantsMarketing,
+  termsRequired, allowSignup, agreeTerms, createAccount, legal, marketingOptin, wantsMarketing, orderNote,
   submitOrder: previewSubmitOrder, placeOrder: previewPlaceOrder, registerForm,
   pickerAt, claimPicker, saveNewAddress, addressIsNew,
 }))

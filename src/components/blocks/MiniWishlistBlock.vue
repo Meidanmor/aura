@@ -8,7 +8,7 @@ import wishlist from 'stores/wishlist.js'
 import WidgetButton from './WidgetButton.vue'
 import { wishlistIcons } from 'src/utils/builder-icons.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
-import { useDrawer } from 'src/composables/useDrawers.js'
+import { drawerSections, useDrawer } from 'src/composables/useDrawers.js'
 import { useI18n } from 'src/i18n/index.js'
 
 const props = defineProps({
@@ -24,6 +24,9 @@ const drawer = useDrawer(
   () => 'wishlist',
   () => ({
     kind: 'wishlist',
+    blockId: props.blockId,
+    sections: drawerSections(props.data),
+    width: d.value.drawer_width || '',
     title: d.value.drawer_title ?? t('Wishlist'),
     bg: resolveGlobalColor(d.value.drawer_bg) || '',
     color: resolveGlobalColor(d.value.drawer_text_color) || '',

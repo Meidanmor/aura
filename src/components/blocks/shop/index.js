@@ -12,10 +12,12 @@ const SHOP_BLOCKS = {
   archive_count: 'ArchiveCountBlock', archive_sort: 'ArchiveSortBlock', archive_filters_button: 'ArchiveFiltersButtonBlock', archive_products: 'ArchiveProductsBlock',
   archive_pagination: 'ArchivePaginationBlock',
   cart_title: 'CartTitleBlock', cart_items: 'CartItemsBlock', cart_totals: 'CartTotalsBlock',
+  // Any page, and the cart / wishlist drawers built from blocks.
+  free_shipping_bar: 'FreeShippingBarBlock', wishlist_items: 'WishlistItemsBlock',
   checkout_title: 'CheckoutTitleBlock', checkout_login: 'CheckoutLoginBlock', checkout_details: 'CheckoutDetailsBlock',
   checkout_summary: 'CheckoutSummaryBlock', checkout_place_order: 'CheckoutPlaceOrderBlock',
   checkout_contact: 'CheckoutContactBlock', checkout_shipping_address: 'CheckoutShippingAddressBlock', checkout_billing_address: 'CheckoutBillingAddressBlock',
-  checkout_coupon: 'CheckoutCouponBlock', checkout_items: 'CheckoutItemsBlock', checkout_shipping: 'CheckoutShippingBlock',
+  checkout_coupon: 'CheckoutCouponBlock', checkout_note: 'CheckoutNoteBlock', checkout_items: 'CheckoutItemsBlock', checkout_shipping: 'CheckoutShippingBlock',
   checkout_payment: 'CheckoutPaymentBlock', checkout_totals: 'CheckoutTotalsBlock',
 }
 export const shopBlocks = {}

@@ -505,4 +505,13 @@ export default {
   "Watch on TikTok": "צפייה בטיקטוק",
   "See on Instagram": "צפייה באינסטגרם",
   "Secure payment": "תשלום מאובטח",
+  "Remove {name} from the wishlist": "הסרת {name} מהמועדפים",
+  "These products need a choice first (a size, a colour…): open each one to add it.": "המוצרים האלה צריכים בחירה קודם (מידה, צבע…): פתחו כל אחד כדי להוסיף אותו.",
+  "{n} added to the cart. The others need a choice first: open each one to add it.": "{n} נוספו לסל. האחרים צריכים בחירה קודם: פתחו כל אחד כדי להוסיף אותו.",
+  "{n} added to the cart.": "{n} נוספו לסל.",
+  "Add {amount} more for free shipping": "עוד {amount} למשלוח חינם",
+  "You get free shipping!": "קיבלתם משלוח חינם!",
+  "Order Note": "הערה להזמנה",
+  "Text in the Field": "הטקסט בשדה",
+  "Notes about your order, e.g. delivery instructions": "הערות להזמנה, למשל הוראות למשלוח",
 }

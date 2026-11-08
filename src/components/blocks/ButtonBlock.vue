@@ -6,7 +6,7 @@
         :icon="btnIcon && !iconAtEnd ? btnIcon : undefined"
         :icon-right="btnIcon && iconAtEnd ? btnIcon : undefined"
         :aria-label="ariaLabel || ownLabel || (!d.text && d.label) || undefined"
-        :loading="adding"
+        :loading="adding || wishlistAdding"
         @click="run && run()"
         class="btn-block__btn"
         :class="[`btn-block__btn--${variant}`, `btn-block__btn--${size}`, labelText.class, paddingVars.cls, iconPlace.cls, { 'has-icon-gap': hasIconGap }]"
@@ -25,8 +25,10 @@
 <script setup>
 import { zeroPriceButton } from 'src/utils/zero-price.js'
 import { useAriaLabel } from 'src/utils/aria-label.js'
-import { computed, inject, ref } from 'vue'
+import { computed, inject, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import wishlist from 'src/stores/wishlist.js'
+import { addWishlistToCart, addingWishlist } from 'src/utils/wishlist-cart.js'
 import cart from 'src/stores/cart.js'
 import { fetchProductById } from 'src/api/woocommerce.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
@@ -111,7 +113,19 @@ async function addCurrent() {
   if (!(await productPage.addCurrentToCart({ checkout: buyNow.value }))) return
   if (buyNow.value) await router.push('/checkout')
 }
-const run = computed(() => props.action || (cartProductId.value ? addProduct : null))
+// "Close the drawer it's in" (a drawer built from blocks provides it; elsewhere the button hides).
+const closeDrawer = inject('closeDrawer', null)
+// "Add the whole wishlist to the cart": hidden while the wishlist is empty (known in the browser only).
+const mounted = ref(false)
+onMounted(() => { mounted.value = true })
+const wishlistCount = computed(() => (mounted.value ? (wishlist.state.items || []).length : 0))
+const wishlistAdding = computed(() => d.value.click_action === 'wishlist_to_cart' && addingWishlist.value)
+const run = computed(() => {
+  if (props.action) return props.action
+  if (d.value.click_action === 'close_drawer') return closeDrawer
+  if (d.value.click_action === 'wishlist_to_cart') return wishlistCount.value ? addWishlistToCart : null
+  return cartProductId.value ? addProduct : null
+})
 
 const VARIANTS = new Set(['primary', 'secondary', 'outline', 'flat', 'link'])
 const variant = computed(() => (VARIANTS.has(d.value.style) ? d.value.style : 'primary'))

@@ -27,13 +27,22 @@
           overlay
           behavior="mobile"
           no-swipe-open
-          :width="drawerWidth"
-          :class="['widget-drawer', `widget-drawer--${dr.kind}`, { 'cart-drawer': dr.kind === 'cart' }]"
+          :width="widthOf(dr)"
+          :class="['widget-drawer', `widget-drawer--${dr.kind}`, { 'cart-drawer': dr.kind === 'cart', 'widget-drawer--blocks': !!dr.sections }]"
           :style="{ background: dr.bg || undefined, color: dr.color || undefined }"
           @update:model-value="(v) => (v ? drawers.open(dr.key) : drawers.close(dr.key))"
       >
+        <!-- Built from blocks (the widget's Drawer Content): the owner's sections. -->
+        <DrawerSections
+            v-if="dr.sections"
+            :entry="dr"
+            :supported="supported"
+            :permission="permission"
+            @close="drawers.close()"
+            @subscribe="handleSubscribe"
+        />
         <MobileNavDrawer
-            v-if="dr.kind === 'menu'"
+            v-else-if="dr.kind === 'menu'"
             :menu="Array.isArray(dr.items) ? dr.items : null"
             :title="dr.title"
             :show-languages="dr.showLanguages !== false"
@@ -93,7 +102,7 @@
 
 <script setup>
 import {ref, computed, watch, onMounted, onUnmounted, useSSRContext, provide} from 'vue'
-import { loadPageConfig, subscribeToLiveConfig } from 'src/utils/config-loader'
+import { isEditorMode, loadPageConfig, subscribeToLiveConfig } from 'src/utils/config-loader'
 import { resolveHeroImageSrc } from 'src/utils/resolve-hero-image'
 import { applyBrandFonts } from 'src/utils/brand-fonts.js'
 import { provideDrawers } from 'src/composables/useDrawers.js'
@@ -105,6 +114,7 @@ import { isAdmin } from 'src/stores/user'
 import WishlistDrawer from '../components/app/WishlistDrawer.vue'
 import CartDrawer from '../components/app/CartDrawer.vue'
 import MobileNavDrawer from '../components/app/MobileNavDrawer.vue'
+import DrawerSections from '../components/app/DrawerSections.vue'
 import AppHeader from '../components/app/AppHeader.vue'
 import AppFooter from '../components/app/AppFooter.vue'
 import AnnouncementBar from '../components/app/AnnouncementBar.vue'
@@ -278,6 +288,14 @@ const isSuperAdmin = isAdmin
 const $q = useQuasar()
 
 const drawerWidth = computed(() => Math.min(400, $q.screen.width * 0.9))
+// A widget's own Drawer Width (px, % or vw of the screen), never wider than the screen.
+function widthOf(dr) {
+  const m = String(dr?.width || '').trim().match(/^(\d+(?:\.\d+)?)(px|%|vw)?$/)
+  if (!m) return drawerWidth.value
+  const n = Number(m[1])
+  const px = m[2] === '%' || m[2] === 'vw' ? ($q.screen.width * n) / 100 : n
+  return Math.round(Math.max(200, Math.min(px, $q.screen.width)))
+}
 
 /*
  * Swipes: each Menu, Mini Cart and Mini Wishlist widget says whether its
@@ -540,6 +558,23 @@ if (process.env.CLIENT) {
 }
 const shownFooter = computed(() => pickChrome(footerSettings.value, route))
 
+// Going to another page closes the open drawer (links inside drawers built from blocks too).
+watch(() => route.fullPath, () => drawers.close())
+// The Store builder's preview: the drawer being edited opens (once its widget has added it).
+const previewDrawer = ref('')
+let previewOpened = ''
+watch([previewDrawer, () => drawerList.value.map((dr) => `${dr.key}:${dr.blockId || ''}`).join(',')], () => {
+  const id = previewDrawer.value
+  const dr = id ? drawerList.value.find((x) => x.blockId === id) : null
+  if (dr) {
+    if (drawers.state.open !== dr.key) drawers.open(dr.key)
+    previewOpened = dr.key
+  } else if (previewOpened) {
+    drawers.close(previewOpened)
+    previewOpened = ''
+  }
+})
+
 const noDelayRoutes = ['/checkout/', '/cart/', '/my-account/']
 
 const shouldDelayHydration = computed(() => {
@@ -639,6 +674,10 @@ onMounted(async () => {
       subscribeToLiveConfig('header', (data) => { headerSettings.value = data }),
       subscribeToLiveConfig('footer', (data) => { footerSettings.value = data })
   )
+  // The Store builder's drawer editor: the drawer being edited (its widget's id) stays open.
+  if (isEditorMode()) {
+    liveConfigUnsubscribers.push(subscribeToLiveConfig('preview_drawer', (id) => { previewDrawer.value = typeof id === 'string' ? id : '' }))
+  }
 
   if (!('serviceWorker' in navigator)) return
   const warm = () => {

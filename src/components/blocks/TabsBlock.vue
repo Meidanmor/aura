@@ -2,10 +2,10 @@
   <div
       v-if="items.length"
       class="tabs-block"
-      :class="[`tabs-block--${d.style || 'underline'}`, { 'tabs-block--accordion-m': d.mobile_display !== 'tabs' }, alignClasses]"
+      :class="[`tabs-block--${d.style || 'underline'}`, { 'tabs-block--accordion-m': d.mobile_display !== 'tabs' && !single, 'tabs-block--single': single, 'tabs-block--sections': fromBlocks }, alignClasses]"
       :style="cssVars"
   >
-    <div class="tabs-block__list" role="tablist" @keydown="onKeydown">
+    <div v-if="!single" class="tabs-block__list" role="tablist" @keydown="onKeydown">
       <button
           v-for="(item, idx) in items"
           :id="`${uid}-tab-${idx}`"
@@ -33,6 +33,7 @@
     >
       <!-- Accordion header: only visible on mobile in accordion mode. -->
       <button
+          v-if="!single"
           type="button"
           class="tabs-block__acc-header"
           v-bind="tabText"
@@ -43,7 +44,18 @@
         <span>{{ item.title }}</span>
         <span class="tabs-block__chevron" aria-hidden="true" />
       </button>
+      <!-- "Blocks" content: the tab's own section (its name is the tab's title). -->
       <div
+          v-if="item.section"
+          :id="`${uid}-panel-${idx}`"
+          class="tabs-block__panel"
+          :role="single ? undefined : 'tabpanel'"
+          :aria-labelledby="single ? undefined : `${uid}-tab-${idx}`"
+      >
+        <SectionTemplate :data="item.section" :page="page" nested />
+      </div>
+      <div
+          v-else
           :id="`${uid}-panel-${idx}`"
           class="tabs-block__panel"
           v-bind="contentText"
@@ -62,14 +74,24 @@ import { sanitizeBuilderHtml } from 'src/utils/sanitizeHtml.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { asResponsive, alignToFlex } from 'src/composables/useSectionStyle.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
+// Tabs built from blocks draw their sections like any section (it renders this block too:
+// used only while rendering, so the two files importing each other is fine).
+import SectionTemplate from 'components/sections/SectionTemplate.vue'
 
 const props = defineProps({
   data: { type: Object, required: true },
   blockId: { type: String, default: '' },
+  page: { type: String, default: 'home' },
 })
 
 const d = computed(() => props.data.data || {})
-const items = computed(() => (d.value.items || []).filter((i) => i.title))
+// "Tab Content: Blocks": each tab is an inner section in the block's `blocks`, titled by its name.
+const fromBlocks = computed(() => d.value.content_type === 'blocks')
+const items = computed(() => (fromBlocks.value
+  ? (props.data.blocks || []).filter((s) => s && s.enabled !== false && String(s.label || '').trim()).map((s) => ({ title: s.label, section: s }))
+  : (d.value.items || []).filter((i) => i.title)))
+// One tab built from blocks: just its content, no tab bar.
+const single = computed(() => fromBlocks.value && items.value.length === 1)
 const uid = computed(() => `tabs-${props.blockId}`)
 
 // Tab titles keep their active / pill colors: their color stays the block's --tb-text.
@@ -172,6 +194,9 @@ const cssVars = computed(() => {
 .tabs-block__panel :deep(p:last-child) { margin-bottom: 0; }
 .tabs-block__item.is-active .tabs-block__panel { display: block; }
 .tabs-block__acc-header { display: none; }
+/* Tabs built from blocks: the tab's section brings its own spacing; one tab shows just its content. */
+.tabs-block--sections .tabs-block__panel { padding: 12px 0 0; line-height: inherit; }
+.tabs-block--single .tabs-block__panel { display: block; padding: 0; }
 
 @media (min-width: 1024px) {
   .tb-stretch-d .tabs-block__tab { flex: 1 1 0; }

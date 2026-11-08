@@ -10,8 +10,9 @@ import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { t } from 'src/i18n/index.js'
 import WidgetButton from './WidgetButton.vue'
 import { menuIcons } from 'src/utils/builder-icons.js'
-import { useDrawer } from 'src/composables/useDrawers.js'
+import { drawerSections, useDrawer } from 'src/composables/useDrawers.js'
 import { useAnchorSpy } from 'src/composables/useAnchorSpy.js'
+import MobileNavItems from 'components/app/MobileNavItems.vue'
 
 defineOptions({ name: 'MenuWidget' })
 
@@ -33,12 +34,17 @@ const spy = useAnchorSpy()
 // Sizes that differ get both lists, and CSS shows each one where it's chosen.
 const DEVICES = ['desktop', 'tablet', 'mobile']
 const DEVICE_MEDIA = { desktop: '(min-width: 1024px)', tablet: '(min-width: 768px) and (max-width: 1023px)', mobile: '(max-width: 767px)' }
+// Folding list: the menu like the phone drawer's (sub-items open on tap), for a drawer built from blocks.
 const layouts = computed(() => {
   const r = asResponsive(d.value.layout)
-  return Object.fromEntries(DEVICES.map((device) => [device, r[device] === 'vertical' ? 'vertical' : 'horizontal']))
+  return Object.fromEntries(DEVICES.map((device) => [device, ['vertical', 'folding'].includes(r[device]) ? r[device] : 'horizontal']))
 })
 const showsVertical = computed(() => DEVICES.some((device) => layouts.value[device] === 'vertical'))
 const showsHorizontal = computed(() => DEVICES.some((device) => layouts.value[device] === 'horizontal'))
+const showsFolding = computed(() => DEVICES.some((device) => layouts.value[device] === 'folding'))
+// Each layout's element, for hiding the ones a screen size doesn't use.
+const LAYOUT_CLASS = { horizontal: '.hm-horizontal', vertical: '.menu-vertical', folding: '.menu-folding' }
+const closeDrawer = inject('closeDrawer', null)
 
 // Resolved menu items
 const menuItems = computed(() => {
@@ -79,6 +85,9 @@ const drawer = useDrawer(
   () => (mobileMenuEnabled.value && breakpoint.value !== null ? `menu:${props.blockId || 'menu'}` : ''),
   () => ({
     kind: 'menu',
+    blockId: props.blockId,
+    sections: drawerSections(props.data),
+    width: d.value.drawer_width || '',
     items: menuItems.value,
     title: d.value.drawer_title ?? t('Menu'),
     bg: colorValue(d.value.drawer_bg),
@@ -95,10 +104,11 @@ const css = computed(() => {
   const s = `.${scope.value}`
   const rules = []
 
-  if (showsVertical.value && showsHorizontal.value) {
+  const shown = Object.keys(LAYOUT_CLASS).filter((l) => DEVICES.some((device) => layouts.value[device] === l))
+  if (shown.length > 1) {
     for (const device of DEVICES) {
-      const hidden = layouts.value[device] === 'vertical' ? '.hm-horizontal' : '.menu-vertical'
-      rules.push(`@media ${DEVICE_MEDIA[device]} { ${s} ${hidden} { display: none !important; } }`)
+      const hidden = shown.filter((l) => l !== layouts.value[device]).map((l) => `${s} ${LAYOUT_CLASS[l]}`)
+      if (hidden.length) rules.push(`@media ${DEVICE_MEDIA[device]} { ${hidden.join(', ')} { display: none !important; } }`)
     }
   }
 
@@ -125,7 +135,7 @@ const css = computed(() => {
   }
 
   // Style → Menu Links: font, weight, letter case, and size / line height / spacing per screen size.
-  const links = `${s} .nav-link, ${s} .menu-v-link`
+  const links = `${s} .nav-link, ${s} .menu-v-link, ${s} .menu-folding .q-item`
   const linkFont = brandFontVar(d.value.link_font, 'text')
   const own = []
   if (linkFont) own.push(`font-family: ${linkFont}`)
@@ -147,12 +157,12 @@ const css = computed(() => {
 
   if (d.value.link_color) {
     const c = colorValue(d.value.link_color)
-    if (c) rules.push(`${s} .nav-link, ${s} .menu-v-link { color: ${c} !important; }`)
+    if (c) rules.push(`${s} .nav-link, ${s} .menu-v-link, ${s} .menu-folding .q-item { color: ${c} !important; }`)
   }
 
   if (d.value.link_hover_color) {
     const c = colorValue(d.value.link_hover_color)
-    if (c) rules.push(`${s} .nav-link:hover, ${s} .menu-v-link:hover { color: ${c} !important; }`)
+    if (c) rules.push(`${s} .nav-link:hover, ${s} .menu-v-link:hover, ${s} .menu-folding .q-item:hover { color: ${c} !important; }`)
   }
 
   // The link of the page the visitor is on.
@@ -229,6 +239,11 @@ const css = computed(() => {
         </ul>
       </li>
     </ul>
+
+    <!-- Folding list (a drawer built from blocks, side columns): sub-items open on tap. -->
+    <q-list v-if="showsFolding && Array.isArray(menuItems) && menuItems.length" class="menu-folding">
+      <MobileNavItems :items="menuItems" @navigate="closeDrawer?.()" />
+    </q-list>
 
     <!-- Horizontal Navbar Layout (Dropdowns, Top Bars, Header) -->
     <div v-if="showsHorizontal && Array.isArray(menuItems)" class="hm-horizontal">

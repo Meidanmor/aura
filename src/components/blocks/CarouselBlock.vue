@@ -210,6 +210,7 @@ import LoopCard from '../loops/LoopCard.vue'
 import ProductTags from '../sections/ProductTags.vue'
 import productsStore from 'src/stores/products'
 import { useBlockQuery } from 'src/composables/useBlockQuery.js'
+import { useCartSuggestions } from 'src/utils/cart-suggestions.js'
 import { useDragScroll } from 'src/composables/useDragScroll.js'
 import { keyWithProduct, useExcludedProduct } from 'src/utils/current-product.js'
 import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
@@ -262,13 +263,15 @@ const slides = computed(() => (d.value.slides || [])
 
 // On the product page template: the product being viewed is left out (unless turned off).
 const excludeId = useExcludedProduct(() => (source.value === 'products' && !props.products ? d.value : { exclude_current: false }))
+// "Suggestions for the cart": the cart's cross-sells (browser only), and what's in it, left out.
+const suggestions = useCartSuggestions(() => (source.value === 'products' && !props.products ? d.value : null))
 const queryKey = () => JSON.stringify([
   excludeId.value, source.value, d.value.query_type, d.value.category_ids, d.value.tag_ids, d.value.product_ids,
-  d.value.limit, d.value.hide_out_of_stock, d.value.slide_category_ids,
+  d.value.limit, d.value.hide_out_of_stock, d.value.slide_category_ids, suggestions.value,
 ])
 const { data: fetched } = useBlockQuery(keyWithProduct(props.blockId, excludeId.value), queryKey, (ssrContext) => {
   if (props.products) return Promise.resolve(null)
-  if (source.value === 'products') return productsStore.queryProducts({ ...d.value, exclude_ids: excludeId.value ? [excludeId.value] : [] }, ssrContext)
+  if (source.value === 'products') return productsStore.queryProducts({ ...d.value, cart_ids: suggestions.value.ids, exclude_ids: [...(excludeId.value ? [excludeId.value] : []), ...suggestions.value.exclude] }, ssrContext)
   if (source.value === 'categories') return productsStore.queryCategories(d.value.slide_category_ids || [], ssrContext)
   return Promise.resolve([])
 })
