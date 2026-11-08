@@ -14,6 +14,7 @@ import compression from 'compression'
 import { createProxyMiddleware } from 'http-proxy-middleware'
 import { siteContentMiddleware } from './site-content.js'
 import { comingSoonMiddleware } from './coming-soon.js'
+import { payReturnMiddleware } from './pay-return.js'
 import { codeTestMiddleware } from './custom-code.js'
 import { uploadsHandler, BACKEND_USER_AGENT } from './uploads.js'
 import { apiCacheMiddleware } from './api-cache.js'
@@ -44,6 +45,8 @@ export const create = defineSsrCreate(({ folders }) => {
   // The store's published files, read while running (before the built-in
   // static files, which they replace). See site-content.js.
   app.use(siteContentMiddleware({ publicDir: folders?.public || '' }))
+  // A payment page inside the checkout (Cardcom) hands the window back here (pay-return.js).
+  app.use(payReturnMiddleware())
   // A hidden store: pages answer "Coming soon", except for its preview link.
   app.use(comingSoonMiddleware())
   // The owner's private link for custom code in Testing (custom-code.js).

@@ -504,4 +504,5 @@ export default {
   "Follow us": "עקבו אחרינו",
   "Watch on TikTok": "צפייה בטיקטוק",
   "See on Instagram": "צפייה באינסטגרם",
+  "Secure payment": "תשלום מאובטח",
 }

@@ -31,6 +31,17 @@
         {{ syncError }}
         <q-btn :label="t('Retry Sync')" color="secondary" @click="syncCart" class="q-ml-md" />
       </div>
+
+      <!-- Cardcom's card form inside the checkout (the owner's choice in Settings → Payments) -->
+      <q-dialog :model-value="!!payFrame" persistent :maximized="$q.screen.lt.sm" @escape-key="closePayFrame">
+        <div v-if="payFrame" class="pay-frame">
+          <div class="pay-frame__head">
+            <b>{{ t('Secure payment') }}</b>
+            <q-btn flat round dense :icon="matClose" :aria-label="t('Close')" :loading="payFrameClosing" @click="closePayFrame" />
+          </div>
+          <iframe :src="payFrame.url" class="pay-frame__body" :title="t('Secure payment')" allow="payment" referrerpolicy="no-referrer-when-downgrade" />
+        </div>
+      </q-dialog>
     </div>
 </template>
 
@@ -45,7 +56,7 @@ import SectionRenderer from 'components/sections/SectionRenderer.vue';
 import { loadPageConfig, subscribeToLiveConfig } from 'src/utils/config-loader'
 
 let unsubscribeConfigUpdates = () => {}
-import { matError } from '@quasar/extras/material-icons'
+import { matError, matClose } from '@quasar/extras/material-icons'
 import { shopSections } from 'src/utils/shop-templates.js'
 import { getWasLoggedIn } from 'src/composables/useApiFetch.js'
 import { defineAsyncComponent } from 'vue'
@@ -446,6 +457,14 @@ const submitOrder = async (walletOverride = null) => {
     if (adapter?.handlePaymentResult) {
       result = await adapter.handlePaymentResult(response, { controller: paymentController.value })
     }
+    if (result?.frame) {
+      // Cardcom's card form in a window over the checkout. When it's done, it moves this whole
+      // page on (/__pay-return): to the thank-you page, or back here to try again.
+      rememberGrowPayment({ orderId: response.order_id, key: response.order_key, email: response.billing_address?.email || form.email, pm: method, items: cartSnapshot })
+      payFrame.value = { url: result.frame, orderId: response.order_id, key: response.order_key, email: response.billing_address?.email || form.email, pm: method }
+      isProcessingOrder.value = false
+      return
+    }
     if (result?.redirect) {
       // To the payment page; the checkout form stays filled in for when they come back.
       rememberGrowPayment({ orderId: response.order_id, key: response.order_key, email: response.billing_address?.email || form.email, pm: method, items: cartSnapshot })
@@ -567,7 +586,7 @@ onMounted(async () => {
   // thank-you page; otherwise the cart comes back (placing the order emptied it).
   const growBack = takeGrowPayment()
   if (growBack) {
-    const status = await checkGrowPayment(growBack.orderId, growBack.key)
+    const status = await checkGrowPayment(growBack.orderId, growBack.key, growBack.pm)
     if (status?.paid) {
       router.replace({ name: 'thank-you', query: { orderId: growBack.orderId, billing_email: growBack.email, order_key: growBack.key, pm: growBack.pm } })
       return
@@ -596,6 +615,30 @@ function registerForm(form) {
   return () => forms.delete(form)
 }
 const ready = computed(() => !!displayCart.value && itemsCount.value !== '0')
+// The payment window (Cardcom inside the checkout): { url, orderId, key, email, pm } while open.
+const payFrame = ref(null)
+const payFrameClosing = ref(false)
+/** Closing the window without paying: paid after all → thank-you; otherwise the cart comes back. */
+async function closePayFrame() {
+  const p = payFrame.value
+  if (!p || payFrameClosing.value) return
+  payFrameClosing.value = true
+  try {
+    const status = await checkGrowPayment(p.orderId, p.key, p.pm)
+    const back = takeGrowPayment()
+    payFrame.value = null
+    if (status?.paid) {
+      router.replace({ name: 'thank-you', query: { orderId: p.orderId, billing_email: p.email, order_key: p.key, pm: p.pm } })
+      return
+    }
+    if (back && cart.restoreLocalCart(back.items)) {
+      $q.notify({ type: 'info', message: t("Your payment wasn't completed, so your cart is back. You can try again or choose another way to pay."), position: 'top', timeout: 8000 })
+    }
+  } finally {
+    payFrameClosing.value = false
+  }
+}
+
 async function placeOrder() {
   for (const form of forms) {
     const valid = await form.validate(true)
@@ -662,6 +705,11 @@ provide('checkoutPage', reactive({
 </script>
 
 <style>
+/* Cardcom's card form in a window over the checkout. */
+.pay-frame { display: flex; flex-direction: column; width: min(560px, 100vw); height: min(760px, 92vh); background: #fff; color: #111; border-radius: 12px; overflow: hidden; }
+.q-dialog__inner--maximized .pay-frame { width: 100vw; height: 100%; border-radius: 0; }
+.pay-frame__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 8px 8px 16px; border-bottom: 1px solid rgba(0, 0, 0, .1); }
+.pay-frame__body { flex: 1; width: 100%; border: 0; }
 /* Shared by the checkout blocks (not scoped: they're in child components). */
 /* purgecss start ignore */
 .checkout-page .q-field__label {

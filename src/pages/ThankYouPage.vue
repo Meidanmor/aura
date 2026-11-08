@@ -93,7 +93,7 @@ import {useRoute} from 'vue-router'
 import {fetchWithToken} from 'src/composables/useApiFetch.js';
 import {formatCurrency} from 'src/utils/formatters.js'
 import {loadPaymentConfig, paymentConfig} from 'src/payments/config'
-import {takeGrowPayment, waitForGrowPayment} from 'src/payments/grow-return'
+import {takeGrowPayment, waitForGrowPayment, paysElsewhere} from 'src/payments/grow-return'
 import { useI18n } from 'src/i18n/index.js'
 import { ecommerceOf, eventItem, trackPurchaseOnce } from 'src/utils/custom-code.js'
 
@@ -147,10 +147,10 @@ onMounted(async () => {
 
   // Back from Grow's payment page: the store asks Grow, which can take a few seconds.
   let paidLater = null
-  if (String(route.query.pm || '').startsWith('grow_') && orderID && order_key) {
+  if (paysElsewhere(route.query.pm) && orderID && order_key) {
     takeGrowPayment() // paid here: no cart to put back on checkout
     growState.value = 'checking'
-    paidLater = waitForGrowPayment(orderID, order_key).then((paid) => { growState.value = paid ? 'paid' : 'waiting'; return paid })
+    paidLater = waitForGrowPayment(orderID, order_key, { pm: String(route.query.pm) }).then((paid) => { growState.value = paid ? 'paid' : 'waiting'; return paid })
   }
 
   try {
