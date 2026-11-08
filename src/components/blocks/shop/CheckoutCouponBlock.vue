@@ -11,6 +11,7 @@
       </div>
       <div v-if="c.couponApplied" class="text-positive q-mt-sm">{{ t('Coupon applied successfully!') }}</div>
       <div v-if="c.couponError" class="text-negative q-mt-sm">{{ c.couponError }}</div>
+      <GiftCardsApplied mode="chips" />
       <div v-if="c.cart.state?.cart_array?.coupons?.length">
         <div v-for="coupon in c.cart.state.cart_array.coupons" :key="coupon.code" class="q-mb-sm row items-center">
           <q-chip color="secondary" text-color="white" class="q-mr-sm">{{ coupon.code }}</q-chip>
@@ -26,6 +27,7 @@ import { useFieldIds } from 'src/utils/field-id.js'
 import { computed, inject } from 'vue'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import CheckoutPart from './CheckoutPart.vue'
+import GiftCardsApplied from 'src/components/shop/GiftCardsApplied.vue'
 
 const fid = useFieldIds()
 

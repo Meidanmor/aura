@@ -1,5 +1,7 @@
 <template>
-  <div v-if="p?.product" class="product-gallery" :class="[`pg-${heightMode}`, { 'is-rounded': d.rounded }]" :style="heightVars">
+  <!-- A gift card: the email it sends, filled in as the shopper types. -->
+  <GiftCardPreview v-if="p?.product && gift" :product="p.product" class="product-gallery product-gallery--gift" />
+  <div v-else-if="p?.product" class="product-gallery" :class="[`pg-${heightMode}`, { 'is-rounded': d.rounded }]" :style="heightVars">
     <div v-if="p.gallery.length > 1" class="pg-carousel" :class="{ 'has-dots': d.show_dots !== false }">
       <!-- Scrolls natively, so a swipe follows the finger; a mouse drags it (useDragScroll). -->
       <div
@@ -108,12 +110,16 @@
 import { computed, inject, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useDragScroll } from 'src/composables/useDragScroll.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
+import GiftCardPreview from 'src/components/product/GiftCardPreview.vue'
+import { giftSettings } from 'src/utils/gift-card.js'
 
 /** "Product Photos" (product page template): photos and videos in the owner's order, full screen on click. */
 const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
 const p = inject('productPage', null)
 const d = computed(() => props.data.data || {})
 const zoom = computed(() => d.value.zoom !== false)
+// A gift card shows its email here instead of photos.
+const gift = computed(() => !!giftSettings(p?.product))
 const trackEl = ref(null)
 useDragScroll(trackEl)
 

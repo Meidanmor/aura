@@ -1,5 +1,14 @@
 <template>
   <div v-if="p?.product" class="product-buy" :class="[{ 'is-full': d.full_width || d.buttons_layout === 'stack' }, `product-buy--${d.buttons_layout || 'auto'}`]" :style="[radiusVar, paddingVars.vars]">
+    <!-- A gift card: its amount, recipient and email instead (src/utils/gift-card.js). -->
+    <GiftCardForm
+        v-if="gift"
+        :product="p.product"
+        :button-class="[buttonText.class, paddingVars.cls]"
+        :button-style="[buttonText.style, buttonColors]"
+        :button-color="buttonBg ? undefined : 'secondary'"
+    />
+    <template v-else>
     <!-- Variations Selection for Variable Product -->
     <div v-if="p.isVariable" class="q-mb-md">
       <div v-for="attribute in p.availableAttributes" :key="attribute.id" class="q-mb-sm">
@@ -119,6 +128,7 @@
     <!-- Sold out: "Notify me when it's back" with the built-in look, unless the page has a
          Back In Stock Form block (app.css hides this copy then). -->
     <BackInStockForm v-else class="bis-fallback" :product="p.product" />
+    </template>
   </div>
 </template>
 
@@ -128,6 +138,8 @@ import { computed, inject } from 'vue'
 import { matAdd, matArrowDropDown, matCancel, matRemove, matShoppingBag, matShoppingCart } from '@quasar/extras/material-icons'
 import { iconAlign } from 'src/utils/icon-align.js'
 import BackInStockForm from 'src/components/product/BackInStockForm.vue'
+import GiftCardForm from 'src/components/product/GiftCardForm.vue'
+import { giftSettings } from 'src/utils/gift-card.js'
 import { t } from 'src/i18n/index.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
@@ -146,6 +158,7 @@ const props = defineProps({ data: { type: Object, required: true }, blockId: { t
 const p = inject('productPage', null)
 const d = computed(() => props.data.data || {})
 const zero = computed(() => zeroPriceButton(p?.product, { onProductPage: true }))
+const gift = computed(() => !!giftSettings(p?.product))
 
 const buttonText = computed(() => textStyle(d.value, tsKeys('button'), 'buttons'))
 const buttonBg = computed(() => resolveGlobalColor(d.value.button_bg))

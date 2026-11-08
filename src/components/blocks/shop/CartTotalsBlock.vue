@@ -9,6 +9,7 @@
         <div class="col-auto"><q-btn :label="t('Apply')" color="secondary" :loading="c.loadingCoupon" @click="c.applyCoupon(c.couponCode)" /></div>
       </div>
       <div v-if="c.couponError" class="text-negative">{{ c.couponError }}</div>
+      <GiftCardsApplied mode="chips" />
       <div v-if="c.couponApplied" class="text-positive q-mt-sm">{{ t('Coupon applied successfully!') }}</div>
       <div v-if="c.couponApplied">
         <div v-for="coupon in c.displayCart.coupons" :key="coupon.code" class="row items-center q-mb-sm">
@@ -31,6 +32,7 @@
     </template>
     <div class="q-mt-md">
       <div v-if="c.couponApplied">{{ t('Total discount: {amount}', { amount: formatCurrency(c.cartTotalDiscount) }) }}</div>
+      <GiftCardsApplied />
       <div class="text-h6">{{ t('Total: {amount}', { amount: formatCurrency(c.cartTotal) }) }}</div>
     </div>
     <div class="cart-totals__buttons">
@@ -48,6 +50,7 @@ import { useFieldIds } from 'src/utils/field-id.js'
 import { computed, inject, onMounted, ref } from 'vue'
 import { formatCurrency } from 'src/utils/formatters.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
+import GiftCardsApplied from 'src/components/shop/GiftCardsApplied.vue'
 
 // Shown after this block mounts (not the page's isHydrated: the block hydrates after the page).
 const ready = ref(false)

@@ -117,7 +117,9 @@ function itemSignature(itemLike) {
       .filter(Boolean)
       .sort()
       .join('|')
-  return `${id}::${varSig}`
+  // Each gift card is its own line: its key (local item, or the store's extensions.qwoo_giftcard).
+  const giftKey = itemLike.gift?.key || itemLike.extensions?.qwoo_giftcard?.key || ''
+  return `${id}::${varSig}${giftKey ? `::g${giftKey}` : ''}`
 }
 
 function buildSig(productId, variationArr) {
@@ -593,7 +595,8 @@ async function _runSync() {
               payload: {
                 id: localItem.id,
                 quantity: Number(localItem.quantity),
-                variation: localItem.variation
+                variation: localItem.variation,
+                ...(localItem.gift ? { qwoo_gift: localItem.gift } : {})
               }
             })
           }
@@ -605,7 +608,8 @@ async function _runSync() {
           payload: {
             id: localItem.id,
             quantity: Number(localItem.quantity),
-            variation: localItem.variation
+            variation: localItem.variation,
+                ...(localItem.gift ? { qwoo_gift: localItem.gift } : {})
           }
         })
       }
@@ -763,6 +767,7 @@ function hydrateLocalCartFromServer(serverCart) {
     permalink: serverItem.permalink,
     quantity: serverItem.quantity,
     variation: normalizeVariation(serverItem.variation || []),
+    ...(serverItem.extensions?.qwoo_giftcard?.key ? { gift: { ...serverItem.extensions.qwoo_giftcard } } : {}),
 
     // Data used by the UI
     prices: serverItem.prices || {},
@@ -835,7 +840,8 @@ async function mergeLocalCartWithServer() {
               payload: {
                 id: localItem.id,
                 quantity: Number(localItem.quantity),
-                variation: localItem.variation
+                variation: localItem.variation,
+                ...(localItem.gift ? { qwoo_gift: localItem.gift } : {})
               }
             })
           }
@@ -849,7 +855,8 @@ async function mergeLocalCartWithServer() {
           payload: {
             id: localItem.id,
             quantity: Number(localItem.quantity),
-            variation: localItem.variation
+            variation: localItem.variation,
+                ...(localItem.gift ? { qwoo_gift: localItem.gift } : {})
           }
         })
       }
@@ -1120,6 +1127,24 @@ async function add(productId, quantity = 1, _variationId = null, variation = {},
   return result
 }
 
+/**
+ * A gift card (src/utils/gift-card.js): its own line, quantity 1, priced at
+ * the chosen amount; the store checks the details when it's synced.
+ */
+async function addGiftCard(product, gift, $q = null) {
+  markCartChanged()
+  const item = buildLocalItemFromProduct(product, [], 1, null)
+  const mu = product?.prices?.currency_minor_unit ?? 2
+  const amount = String(Math.round(Number(gift.amount) * 10 ** mu))
+  item.prices = { ...(product?.prices || {}), price: amount, regular_price: amount, sale_price: amount }
+  item.quantity_limits = { ...item.quantity_limits, maximum: 1, editable: false }
+  item.gift = { ...gift }
+  item.key = generateLocalKeyForSig(itemSignature(item))
+  state.local_cart.items.push(item)
+  _finishAdd($q, true)
+  trackAdd(itemSignature(item), 1)
+}
+
 /** The owner's trackers (Settings → Tracking & code): what was just added. */
 function trackAdd(sig, quantity) {
   const item = state.local_cart.items.find(i => itemSignature(i) === sig) || (state.cart_array?.items || []).find(i => itemSignature(i) === sig)
@@ -1371,8 +1396,44 @@ async function resetCartIdentity() {
 /** Codes, sign-in and orders need the store: offline they say so instead of failing. */
 const isOffline = () => state.offline || (typeof navigator !== 'undefined' && navigator.onLine === false)
 
+// A gift card's code (16 letters and numbers in four groups); anything else is a discount code.
+const GIFT_CODE_RE = /^[A-HJ-NP-Z2-9]{4}-?[A-HJ-NP-Z2-9]{4}-?[A-HJ-NP-Z2-9]{4}-?[A-HJ-NP-Z2-9]{4}$/i
+
+/** Gift cards in the cart: cart/extensions, namespace qwoo-giftcard (Qwoo_Gift_Cards::cart_update). */
+async function giftCardAction(action, code) {
+  const res = await fetchWithToken(`${storeApiBase(null)}/cart/extensions`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ namespace: 'qwoo-giftcard', data: { action, code } })
+  })
+  const data = await res.json().catch(() => null)
+  if (!res.ok) {
+    const err = new Error(data?.message ? new DOMParser().parseFromString(data.message, 'text/html').documentElement.textContent : t('Something went wrong. Please try again.'))
+    err.code = data?.code || ''
+    throw err
+  }
+  applyServerSnapshot(data || null)
+}
+
+async function removeGiftCard(code) {
+  if (isOffline()) throw new Error(t("You're offline. Connect to the internet to change the code."))
+  await giftCardAction('remove', code)
+}
+
 async function applyCoupon(code) {
   if (isOffline()) throw new Error(t("You're offline. Connect to the internet to use a code."))
+  const plain = String(code || '').replace(/\s+/g, '')
+  if (GIFT_CODE_RE.test(plain)) {
+    // The store's cart must have the items first: the card pays for them.
+    await syncLocalCartWithServer()
+    try {
+      return await giftCardAction('apply', plain)
+    } catch (err) {
+      if (err.code !== 'qwoo_giftcard_unknown') throw err
+      // Not a gift card after all: try it as a discount code.
+    }
+  }
   try {
     const res = await fetchWithToken(`${storeApiBase(null)}/cart/apply-coupon`, {
       method: 'POST',
@@ -1550,6 +1611,8 @@ export default {
   applyCoupon,
   isOffline,
   removeCoupon,
+  addGiftCard,
+  removeGiftCard,
   placeOrder,
   syncLocalCartWithServer,
   mergeLocalCartWithServer,

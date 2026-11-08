@@ -24,6 +24,7 @@
               {{ item.name }}
             </router-link>
           </div>
+          <div v-if="item.gift" class="cart-gift-line">{{ giftLine(item.gift) }}</div>
           <div v-if="item.variation && item.variation.length > 0">
             <div
                 v-for="(variation, index) in item.variation"
@@ -100,6 +101,7 @@
 <script setup>
 import {useQuasar} from "quasar"
 import {formatCurrency} from 'src/utils/formatters.js'
+import { giftLine } from 'src/utils/gift-card.js'
 import cart from 'src/stores/cart.js'
 import {
   matAdd,
