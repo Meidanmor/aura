@@ -1,12 +1,11 @@
 <template>
-  <ArchivePagination v-if="a" v-model="a.currentPage" :total-pages="a.totalPages" @page-change="a.scrollToTop" />
+  <span v-if="false" />
 </template>
 
 <script setup>
-import { inject } from 'vue'
-import ArchivePagination from 'components/shop/ArchivePagination.vue'
-
-/** "Page Numbers" (All products / category page template). */
+/**
+ * The old "Page Numbers" block: page numbers are the Products Grid's own now (Pagination).
+ * The store removes this block from the list; a config published before that still has it: nothing shows.
+ */
 defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
-const a = inject('productArchive', null)
 </script>

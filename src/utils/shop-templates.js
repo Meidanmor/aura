@@ -94,7 +94,6 @@ export function shopTemplateSections(page, old = []) {
             ...inside('before_products_grid'),
             block('archive_products'),
             ...inside('after_products_grid'),
-            block('archive_pagination'),
           ], rwd('75%', '75%', '100%'), { gap: rwd('16px') }),
         ], { ...pad('0', '16', '20', '16'), direction: rwd('row', 'row', 'column'), gap: rwd('20px') }),
         ...top('after_pagination'),
@@ -153,6 +152,30 @@ export function shopSections(page, config, match = () => false) {
   if (!config || (typeof config === 'object' && !Object.keys(config).length)) return shopTemplateSections(page)
   const picked = pickSections(config, match)
   return config.template ? picked : shopTemplateSections(page, picked)
+}
+
+const GRID_MODES = ['numbers', 'button', 'scroll', 'none']
+
+/**
+ * The Products Grid's paging (Products Per Page, More Products) on a shop page's sections:
+ * { perPage: 1–48 (6), mode: 'numbers' | 'button' | 'scroll' | 'none' }.
+ */
+export function archiveGrid(sections) {
+  let found = null
+  const walk = (nodes) => {
+    for (const n of nodes || []) {
+      if (found || !n || typeof n !== 'object') continue
+      if (n.type === 'archive_products' && n.enabled !== false && n.enabled !== 'false') { found = n; return }
+      if (Array.isArray(n.blocks)) walk(n.blocks)
+    }
+  }
+  walk(sections)
+  const d = found?.data || {}
+  const n = parseInt(d.per_page, 10)
+  return {
+    perPage: Number.isFinite(n) ? Math.max(1, Math.min(48, n)) : 6,
+    mode: GRID_MODES.includes(d.pagination) ? d.pagination : 'numbers',
+  }
 }
 
 /** The block's data value for this screen size's first value (responsive fields come as { desktop, … }). */

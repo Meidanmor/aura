@@ -125,6 +125,8 @@ function getUrlQuery() {
  * @param {object} route
  * @param {object} options - syncPrice: false to ignore the price in the address;
  *                           onAddress(): called after the filters were set from the address (Back / Forward)
+ *                           replacePage(): true when a change of the page only replaces the address
+ *                           (Load more: Back leaves the list, it doesn't step back through it)
  */
 export function useFilterSync(refs, router, route, options = {}) {
   const { search, selectedCategory, priceRange, priceMin, priceMax, sortBy, currentPage, attributes, inStock } = refs
@@ -208,7 +210,9 @@ export function useFilterSync(refs, router, route, options = {}) {
         const resetOnly = reset && changed.length === 1 && changed[0] === 'currentPage'
         const kind = resetOnly ? last.kind : kindOf(changed)
         // One step for a whole price drag or a typed search.
-        const replace = fromBack || resetOnly || (kind !== 'other' && kind === last.kind && now - last.at < 1500)
+        const pageOnly = changed.length === 1 && changed[0] === 'currentPage'
+        const replace = fromBack || resetOnly || (pageOnly && !!options.replacePage?.()) ||
+          (kind !== 'other' && kind === last.kind && now - last.at < 1500)
         last = { kind, at: now }
 
         const kept = {}

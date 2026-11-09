@@ -27,12 +27,44 @@
         </div>
       </template>
     </ProductResultsGrid>
+
+    <!-- Pagination: page numbers, or more products under these (a real link to the next page for Google). -->
+    <ArchivePagination
+        v-if="mode === 'numbers'"
+        v-model="a.currentPage"
+        :total-pages="a.totalPages"
+        @page-change="a.scrollToTop"
+    />
+    <div v-else-if="appends && loaded && !a.productsStore.productsLoading.value" class="ap-more" :style="moreVars">
+      <div v-if="d.show_progress !== false && d.show_progress !== 'false'" class="ap-more__count">
+        {{ t('Showing {n} of {total}', { n: loaded, total: a.totalProducts || loaded }) }}
+      </div>
+      <template v-if="hasMore">
+        <a
+            v-if="mode === 'button'"
+            class="ap-more__btn"
+            :class="{ 'ap-more__btn--busy': a.loadingMore }"
+            :href="nextHref"
+            :aria-busy="a.loadingMore ? 'true' : 'false'"
+            @click.prevent="a.loadMore()"
+        >
+          <q-spinner v-if="a.loadingMore" size="1.1em" class="ap-more__spin" />
+          <span>{{ d.more_text || t('Load more') }}</span>
+        </a>
+        <template v-else>
+          <q-spinner v-if="a.loadingMore" size="28px" color="secondary" />
+          <a ref="sentinel" class="ap-more__next" :href="nextHref" @click.prevent="a.loadMore()">{{ t('Load more') }}</a>
+        </template>
+      </template>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, inject } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import ProductResultsGrid from 'components/shop/ProductResultsGrid.vue'
+import ArchivePagination from 'components/shop/ArchivePagination.vue'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { toCssLength } from 'src/composables/useSectionStyle.js'
 import { useSampleFallback } from 'src/utils/sample-items.js'
@@ -56,10 +88,43 @@ const priorityCount = computed(() => {
   return pr?.any && !pr.blocks?.has(props.blockId) ? 0 : 3
 })
 
-// Promo card: after product N (0 = before the first), first page only.
+// Pagination (Products Grid → Pagination): 'numbers' | 'button' | 'scroll' | 'none'.
+const mode = computed(() => a?.grid?.mode || 'numbers')
+const appends = computed(() => mode.value === 'button' || mode.value === 'scroll')
+const loaded = computed(() => (a?.paginatedProducts || []).length)
+const hasMore = computed(() => Number(a?.currentPage || 1) < Number(a?.totalPages || 1))
+const route = useRoute()
+const router = useRouter()
+const nextHref = computed(() => router.resolve({ path: route.path, query: { ...route.query, page: String(Number(a?.currentPage || 1) + 1) } }).href)
+const moreVars = computed(() => {
+  const v = {}
+  const set = (name, value) => { if (value) v[name] = value }
+  set('--am-bg', resolveGlobalColor(d.value.more_bg))
+  set('--am-text', resolveGlobalColor(d.value.more_color))
+  set('--am-border', resolveGlobalColor(d.value.more_border))
+  set('--am-radius', toCssLength(d.value.more_radius))
+  return v
+})
+
+// Load while scrolling: the next page comes when the end of the list is near.
+const sentinel = ref(null)
+let observer = null
+onMounted(() => {
+  if (typeof IntersectionObserver === 'undefined') return
+  observer = new IntersectionObserver((entries) => {
+    if (entries.some((e) => e.isIntersecting) && mode.value === 'scroll') a?.loadMore()
+  }, { rootMargin: '0px 0px 600px 0px' })
+  watch(sentinel, (el, old) => {
+    if (old) observer.unobserve(old)
+    if (el) observer.observe(el)
+  }, { immediate: true })
+})
+onBeforeUnmount(() => observer?.disconnect())
+
+// Promo card: after product N (0 = before the first), on the first page (with Load more, always: page 1 is in the list).
 const promoAt = computed(() => {
   if (!d.value.promo || (!d.value.promo_title && !d.value.promo_text)) return -1
-  if (Number(a?.currentPage || 1) !== 1) return -1
+  if (!appends.value && Number(a?.currentPage || 1) !== 1) return -1
   return Math.max(0, Math.min(24, Number(d.value.promo_position) || 0))
 })
 const promoLink = computed(() => {
@@ -97,6 +162,23 @@ const promoVars = computed(() => {
 .ap-promo__title { margin: 0; font-size: 1.6em; line-height: 1.2; color: var(--ap-title, inherit); font-family: var(--qf-headings, var(--qf-default)); }
 .ap-promo__body { margin: 10px 0 0; opacity: .9; }
 .ap-promo__btn { align-self: flex-start; background: var(--ap-btn-bg, var(--q-primary)) !important; color: var(--ap-btn-text, var(--q-secondary)) !important; border-radius: 999px; padding: 8px 22px; font-weight: 700; }
+.ap-more { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 28px; }
+.ap-more__count { opacity: .75; font-size: .95em; }
+.ap-more__btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 28px; min-height: 44px;
+  border: 1px solid var(--am-border, var(--q-secondary));
+  border-radius: var(--am-radius, 999px);
+  background: var(--am-bg, transparent);
+  color: var(--am-text, var(--q-secondary));
+  font-weight: 700; text-decoration: none; cursor: pointer;
+  transition: opacity .2s;
+}
+.ap-more__btn:hover { opacity: .85; }
+.ap-more__btn--busy { pointer-events: none; opacity: .7; }
+/* Load while scrolling: the link is there for Google and keyboards, out of sight. */
+.ap-more__next { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ap-more__next:focus { position: static; width: auto; height: auto; clip: auto; }
 @media (max-width: 767px) {
   .ap-promo { padding: 20px; min-height: 0; }
   .ap-promo__btn { align-self: stretch; }

@@ -18,7 +18,7 @@ const { selectedAttributes, inStock, attributeOptions, loadAttributeOptions,
   search, selectedCategory, currentPage, sortBy, filtersOpen,
   priceMin, priceMax, priceRange, isHydrated,
   categoryOptions, paginatedProducts, totalPages, totalProducts,
-  sortOptions, onPriceChange, scrollToTop, productsStore, shopSettings
+  sortOptions, onPriceChange, scrollToTop, productsStore, shopSettings, grid, loadingMore, loadMore
 } = useProductArchive('shop')
 
 const sections = computed(() => shopSections('shop', shopSettings.value))
@@ -28,6 +28,6 @@ provide('productArchive', reactive({
   mode: 'shop', search, selectedCategory, selectedCategoryOBJ: null, safeCategoryName: '', currentPage, sortBy, filtersOpen,
   priceMin, priceMax, priceRange, isHydrated, categoryOptions, paginatedProducts, totalPages, totalProducts,
   sortOptions, onPriceChange, scrollToTop, productsStore: markRaw(productsStore), shopSettings,
-  selectedAttributes, inStock, attributeOptions, loadAttributeOptions,
+  selectedAttributes, inStock, attributeOptions, loadAttributeOptions, grid, loadingMore, loadMore,
 }))
 </script>

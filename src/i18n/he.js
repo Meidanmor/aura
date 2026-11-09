@@ -187,6 +187,8 @@ export default {
   "No orders yet.": "עוד אין הזמנות.",
   "No posts yet. Check back soon.": "עוד אין פוסטים. כדאי לחזור בקרוב.",
   "No products found": "לא נמצאו מוצרים",
+  "Load more": "טעינת מוצרים נוספים",
+  "Showing {n} of {total}": "מוצגים {n} מתוך {total} מוצרים",
   "No reviews yet.": "עוד אין ביקורות.",
   "Not now": "לא עכשיו",
   "of this store. *": "של החנות. *",

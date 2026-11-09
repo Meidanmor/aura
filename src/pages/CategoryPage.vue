@@ -22,7 +22,7 @@ const { selectedAttributes, inStock, attributeOptions, loadAttributeOptions,
   search, selectedCategoryOBJ, currentPage, sortBy, filtersOpen,
   priceMin, priceMax, priceRange, isHydrated,
   paginatedProducts, totalPages, totalProducts,
-  sortOptions, onPriceChange, scrollToTop, productsStore, shopSettings, notFound
+  sortOptions, onPriceChange, scrollToTop, productsStore, shopSettings, grid, loadingMore, loadMore, notFound
 } = useProductArchive('category')
 // The category's layout (Store builder): one made for this category, else the default.
 const categorySections = computed(() => shopSections('category', shopSettings.value, categoryMatch(selectedCategoryOBJ.value)))
@@ -34,6 +34,6 @@ provide('productArchive', reactive({
   mode: 'category', search, selectedCategory: [], selectedCategoryOBJ, safeCategoryName, currentPage, sortBy, filtersOpen,
   priceMin, priceMax, priceRange, isHydrated, categoryOptions: [], paginatedProducts, totalPages, totalProducts,
   sortOptions, onPriceChange, scrollToTop, productsStore: markRaw(productsStore), shopSettings,
-  selectedAttributes, inStock, attributeOptions, loadAttributeOptions,
+  selectedAttributes, inStock, attributeOptions, loadAttributeOptions, grid, loadingMore, loadMore,
 }))
 </script>

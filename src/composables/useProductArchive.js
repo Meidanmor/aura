@@ -8,6 +8,8 @@ import productsStore from 'src/stores/products'
 import { sameSlug } from 'src/utils/slug.js'
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
 import {loadPageConfig, subscribeToLiveConfig} from "src/utils/config-loader.js";
+import { archiveGrid, shopSections } from 'src/utils/shop-templates.js'
+import { categoryMatch } from 'src/utils/layouts.js'
 
 const { setVerticalScrollPosition } = scroll
 let unsubscribeLiveConfig = () => {}
@@ -37,6 +39,15 @@ export const sortOptions = [
 ]
 
 
+/** The Products Grid's paging on this page (its layout for the category): { perPage, mode }. */
+export function archiveGridFor(mode, config, category = null) {
+    const page = mode === 'category' ? 'category' : 'shop'
+    return archiveGrid(shopSections(page, config, mode === 'category' ? categoryMatch(category) : undefined))
+}
+
+/** Load more / Load while scrolling: the list holds pages 1…current, not one page. */
+export const gridAppends = (grid) => grid?.mode === 'button' || grid?.mode === 'scroll'
+
 /**
  * mode: 'shop'     -> category comes from URL (checkbox multi-select)
  *       'category' -> category is locked to route.params.slug
@@ -60,7 +71,9 @@ export function createArchivePreFetch(mode) {
         const configPromise = loadPageConfig((mode === 'category' ? 'category' : 'shop'), isPreview, origin)
         const categoriesPromise = productsStore.prefetchCategories(ssrContext)
         const seoPromise = fetchSeoForPath(seoPath, origin)
-        const shopListPromise = mode === 'category' ? null : listFor(urlFilters.selectedCategory?.length ? urlFilters.selectedCategory : null)
+        // The Products Grid says how many products a page has (the config is in memory: no wait).
+        const shopListPromise = mode === 'category' ? null : configPromise.then((cfg) =>
+            listFor(urlFilters.selectedCategory?.length ? urlFilters.selectedCategory : null, archiveGridFor(mode, cfg)))
 
         const [configData, categories, seo] = await Promise.all([configPromise, categoriesPromise, seoPromise])
         // The owner changed the category's address: send visitors to the new one.
@@ -75,27 +88,29 @@ export function createArchivePreFetch(mode) {
             : null
 
         // The products and their price range (a category page needs its id first).
-        function listFor(category) {
+        // Load more opened at ?page=3: pages 1 to 3 (Back from a product shows the same list).
+        function listFor(category, grid) {
+            const params = {
+                api: true,
+                per_page: grid.perPage,
+                search: urlFilters.search || undefined,
+                category: Array.isArray(category) ? category.join(',') : (category ?? undefined),
+                min_amount: urlFilters.priceRange?.min ?? undefined,
+                max_amount: urlFilters.priceRange?.max ?? undefined,
+                attributes: urlFilters.attributes,
+                in_stock: !!urlFilters.inStock,
+                ssrContext,
+                ...sortParams
+            }
             return Promise.all([
-                productsStore.preFetchProducts({
-                    api: true,
-                    page: requestedPage,
-                    per_page: 6,
-                    dryRun: true,
-                    search: urlFilters.search || undefined,
-                    category: Array.isArray(category) ? category.join(',') : (category ?? undefined),
-                    min_amount: urlFilters.priceRange?.min ?? undefined,
-                    max_amount: urlFilters.priceRange?.max ?? undefined,
-                    attributes: urlFilters.attributes,
-                    in_stock: !!urlFilters.inStock,
-                    ssrContext,
-                    ...sortParams
-                }),
+                gridAppends(grid) && requestedPage > 1
+                    ? productsStore.fetchProductPages(params, requestedPage)
+                    : productsStore.preFetchProducts({ ...params, page: requestedPage, dryRun: true }),
                 productsStore.prefetchPriceMeta(category, ssrContext),
             ])
         }
 
-        const [result, priceMeta] = await (shopListPromise || listFor(currentCat?.id ?? null))
+        const [result, priceMeta] = await (shopListPromise || listFor(currentCat?.id ?? null, archiveGridFor(mode, configData, currentCat)))
 
         // ✅ shared page-existence guard
         const totalPages = result.totalPages || 1
@@ -146,7 +161,6 @@ export function useProductArchive(mode) {
     const selectedCategoryOBJ = ref(null) // meaningful only in 'category' mode
     const search              = ref('')
     const currentPage         = ref(1)
-    const perPage             = 6
     const sortBy              = ref('menu_order')
     const filtersOpen         = ref(false)
     const isReady             = ref(false)
@@ -171,6 +185,12 @@ export function useProductArchive(mode) {
             ? window.__PAGE_CONFIG__
             : null
     )
+
+    // Products Grid → Pagination: products per page and how more of them come.
+    const grid        = computed(() => archiveGridFor(mode, shopSettings.value, selectedCategoryOBJ.value))
+    const perPage     = () => grid.value.perPage
+    const appends     = () => gridAppends(grid.value)
+    const loadingMore = ref(false)
 
     const { seoData } = useSeoMeta()
     // No such category: the page shows the 404 page and answers 404.
@@ -211,6 +231,8 @@ export function useProductArchive(mode) {
             : { search, selectedCategory, priceRange, priceMin, priceMax, sortBy, currentPage, attributes: selectedAttributes, inStock },
         router, route,
         {
+            // Load more: the address follows the list without a history step of its own.
+            replacePage: appends,
             onAddress() {
                 filtersFromAddress = true
                 priceChanged.value++
@@ -318,6 +340,7 @@ export function useProductArchive(mode) {
             priceTrigger: priceChanged.value,
             attributes: attrToString(selectedAttributes.value),
             inStock: inStock.value,
+            grid: `${grid.value.perPage}:${grid.value.mode}`,
         }),
         async (filters, prev) => {
             const fromAddress = filtersFromAddress
@@ -331,7 +354,7 @@ export function useProductArchive(mode) {
 
             const shouldResetPage = prev && (
                 filters.search !== prev.search || filters.priceTrigger !== prev.priceTrigger || categoryChanged ||
-                filters.attributes !== prev.attributes || filters.inStock !== prev.inStock
+                filters.attributes !== prev.attributes || filters.inStock !== prev.inStock || filters.grid !== prev.grid
             )
 
             if (categoryChanged) {
@@ -355,11 +378,38 @@ export function useProductArchive(mode) {
                 ? (selectedCategoryOBJ.value?.id ?? null)
                 : (filters.category.length ? filters.category.join(',') : null)
 
-            await productsStore.preFetchProducts({
-                api: true, page: currentPage.value, per_page: perPage,
+            const params = {
+                api: true, per_page: perPage(),
                 min_amount: priceRange.value.min, max_amount: priceRange.value.max, category: categoryArg,
                 search: filters.search, attributes: selectedAttributes.value, in_stock: inStock.value, ...sortParams
-            })
+            }
+            const nextOnly = prev && !shouldResetPage && !categoryChanged && !fromAddress &&
+                filters.sort === prev.sort && filters.page === prev.page + 1
+
+            if (!appends()) {
+                loadingMore.value = false
+                await productsStore.preFetchProducts({ ...params, page: currentPage.value })
+            } else if (nextOnly) {
+                // Load more: the next page joins the list.
+                loadingMore.value = true
+                const r = await productsStore.preFetchProducts({ ...params, page: filters.page, dryRun: true })
+                if (currentRequest !== requestId) return
+                loadingMore.value = false
+                const have = new Set((productsStore.products.value || []).map((p) => p.id))
+                productsStore.products.value = [...(productsStore.products.value || []), ...(r.products || []).filter((p) => !have.has(p.id))]
+                productsStore.totalProducts.value = r.total
+                productsStore.totalPages.value = r.totalPages
+            } else {
+                // Anything else: pages 1…current again.
+                loadingMore.value = false
+                productsStore.productsLoading.value = true
+                const r = await productsStore.fetchProductPages(params, currentPage.value)
+                if (currentRequest !== requestId) return
+                productsStore.products.value = r.products
+                productsStore.totalProducts.value = r.total
+                productsStore.totalPages.value = r.totalPages
+                productsStore.productsLoading.value = false
+            }
 
             if (currentRequest !== requestId) return
             if (categoryChanged) {
@@ -394,7 +444,7 @@ export function useProductArchive(mode) {
                 priceMax.value = pendingPriceRange.value.max
                 priceRange.value = { ...pendingPriceRange.value }
 
-                await productsStore.preFetchProducts({ api: true, page: 1, per_page: perPage, category: cat.id })
+                await productsStore.preFetchProducts({ api: true, page: 1, per_page: perPage(), category: cat.id })
                 productsStore.productsLoading.value = false
             }
         )
@@ -438,7 +488,7 @@ export function useProductArchive(mode) {
         } else if (!productsStore.initialized.value) {
             productsStore.productsLoading.value = true
             await productsStore.preFetchProducts({
-                api: true, page: 1, per_page: perPage,
+                api: true, page: 1, per_page: perPage(),
                 category: mode === 'category' ? (selectedCategoryOBJ.value?.id || null) : undefined
             })
         }
@@ -466,12 +516,20 @@ export function useProductArchive(mode) {
         unsubscribeLiveConfig()
     })
 
+    /** Load more / Load while scrolling: the next page joins the list (the address says ?page=N). */
+    function loadMore() {
+        if (loadingMore.value || productsStore.productsLoading.value) return
+        if (currentPage.value >= (productsStore.totalPages.value || 1)) return
+        currentPage.value++
+    }
+
 
     return {
         search, selectedCategory, selectedCategoryOBJ, currentPage, sortBy, filtersOpen,
         priceMin, priceMax, priceRange, isHydrated,
         selectedAttributes, inStock, attributeOptions, loadAttributeOptions,
         categoryOptions, paginatedProducts, totalPages, totalProducts,
-        sortOptions, onPriceChange, scrollToTop, productsStore, shopSettings, notFound
+        sortOptions, onPriceChange, scrollToTop, productsStore, shopSettings, notFound,
+        grid, loadingMore, loadMore
     }
 }

@@ -606,6 +606,22 @@ async function prefetchPriceMeta(cat = null, ssrContext = null) {
   return priceMeta.value;
 }
 
+/**
+ * Pages 1…upTo of a list at once (Load more / Load while scrolling, opened at ?page=3):
+ * { products, total, totalPages } with totalPages counted at per_page.
+ */
+export async function fetchProductPages(ctx = {}, upTo = 1) {
+  const per = Math.max(1, Number(ctx.per_page) || 6)
+  const last = Math.max(1, Math.min(50, Number(upTo) || 1))
+  const pages = (r) => Math.max(1, Math.ceil((r.total || 0) / per))
+  if (per * last <= 100) {
+    const r = await preFetchProducts({ ...ctx, page: 1, per_page: per * last, dryRun: true })
+    return { products: r.products || [], total: r.total || 0, totalPages: pages(r) }
+  }
+  const all = await Promise.all(Array.from({ length: last }, (_, i) => preFetchProducts({ ...ctx, page: i + 1, per_page: per, dryRun: true })))
+  return { products: all.flatMap((r) => r?.products || []), total: all[0]?.total || 0, totalPages: pages(all[0] || {}) }
+}
+
 export default {
   products,
   categories,
@@ -615,6 +631,7 @@ export default {
   productsLoading,
   initialized,
   preFetchProducts,
+  fetchProductPages,
   fetchAttributeOptions,
   fetchProductsIfNeeded,
   getById,
