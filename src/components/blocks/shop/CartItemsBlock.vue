@@ -15,7 +15,7 @@
                 {{ item.name }}
               </router-link>
             </div>
-            <div v-if="item.gift" class="cart-gift-line">{{ giftLine(item.gift) }}</div>
+            <GiftLineDetails v-if="item.gift" :gift="item.gift" />
             <div v-if="item.variation && item.variation.length > 0">
               <div v-for="(variation, index) in item.variation" :key="index">{{ variation.attribute }}: {{ variation.value }}</div>
             </div>
@@ -39,7 +39,7 @@
 import { computed, inject, onMounted, ref } from 'vue'
 import { matAdd, matClose, matRemove } from '@quasar/extras/material-icons'
 import { formatCurrency } from 'src/utils/formatters.js'
-import { giftLine } from 'src/utils/gift-card.js'
+import GiftLineDetails from 'src/components/shop/GiftLineDetails.vue'
 
 // Shown after this block mounts (not the page's isHydrated: the block hydrates after the page).
 const ready = ref(false)

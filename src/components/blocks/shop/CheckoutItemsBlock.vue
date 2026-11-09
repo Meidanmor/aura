@@ -9,7 +9,7 @@
         <div class="flex">
           <div class="item-name">
             {{ item.name }}
-            <div v-if="item.gift" class="cart-gift-line">{{ giftLine(item.gift) }}</div>
+            <GiftLineDetails v-if="item.gift" :gift="item.gift" />
             <div v-if="item.variation && item.variation.length > 0">
               <div v-for="(variation, index) in item.variation" :key="index">{{ variation.attribute }}: {{ variation.value }}</div>
             </div>
@@ -24,7 +24,7 @@
 <script setup>
 import { computed, inject, toRaw } from 'vue'
 import { formatCurrency } from 'src/utils/formatters.js'
-import { giftLine } from 'src/utils/gift-card.js'
+import GiftLineDetails from 'src/components/shop/GiftLineDetails.vue'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { toCssLength } from 'src/composables/useSectionStyle.js'
 import CheckoutPart from './CheckoutPart.vue'

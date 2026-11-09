@@ -41,6 +41,7 @@ export function giftState(product) {
       message: '',
       when: 'now',
       send_on: '',
+      send_time: '09:00',
     }))
   }
   return states.get(product.id)
@@ -60,6 +61,10 @@ export function giftMoney(amount, prices = {}) {
 export const todayIso = () => {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+export const nowTime = () => {
+  const d = new Date()
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 export const inAYearIso = () => {
   const d = new Date()
@@ -100,18 +105,39 @@ export function giftDetails(s, g) {
     from: s.from.trim(),
     message: s.message.slice(0, g.max_message || 300),
     send_on: s.when === 'date' ? s.send_on : '',
+    send_time: s.when === 'date' ? s.send_time : '',
     design: s.design,
+    // For the cart line only (the store keeps its own): what the shopper chose, by name.
+    design_name: (g.designs || []).find((d) => d.id === s.design)?.name || '',
+    image_url: s.imageUrl,
     color: s.color,
     image: s.image,
     key: Math.random().toString(36).slice(2, 14),
   }
 }
 
-/** A cart line's short description: "To Noa · 24 November 2026". */
+/** Half-hour send times: "00:00" … "23:30" (the store's time). */
+export const SEND_TIMES = Array.from({ length: 48 }, (_, i) => `${String(Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`)
+
+/** "24 November 2026, 09:00", or "Right after payment". */
+export function sendLabel(gift) {
+  if (!gift?.send_on) return t('Right after payment')
+  return gift.send_time ? `${dateLabel(gift.send_on)}, ${gift.send_time}` : dateLabel(gift.send_on)
+}
+
+/** A cart line's short description: "To Noa · 24 November 2026, 09:00". */
 export function giftLine(gift) {
   if (!gift) return ''
-  const when = gift.send_on ? dateLabel(gift.send_on) : t('Right after payment')
-  return t('To {name} · {when}', { name: gift.to_name, when })
+  return t('To {name} · {when}', { name: gift.to_name, when: sendLabel(gift) })
+}
+
+/** The shopper's time zone isn't the store's: the time picker says whose time it is. */
+export function otherTimeZone(g) {
+  try {
+    return !!g?.timezone && Intl.DateTimeFormat().resolvedOptions().timeZone !== g.timezone
+  } catch {
+    return false
+  }
 }
 
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))

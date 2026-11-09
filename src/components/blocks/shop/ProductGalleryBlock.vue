@@ -1,7 +1,8 @@
 <template>
-  <!-- A gift card: the email it sends, filled in as the shopper types. -->
-  <GiftCardPreview v-if="p?.product && gift" :product="p.product" class="product-gallery product-gallery--gift" />
-  <div v-else-if="p?.product" class="product-gallery" :class="[`pg-${heightMode}`, { 'is-rounded': d.rounded }]" :style="heightVars">
+  <!-- A gift card: the email it sends, filled in as the shopper types, on computers in place of the
+       photos or under them (the owner's choice). On phones the photos stay and the form shows the email. -->
+  <GiftCardPreview v-if="p?.product && gift && giftPreview === 'replace'" :product="p.product" class="product-gallery product-gallery--gift gc-desk-only" />
+  <div v-if="p?.product" class="product-gallery" :class="[`pg-${heightMode}`, { 'is-rounded': d.rounded, 'gc-phone-only': gift && giftPreview === 'replace' }]" :style="heightVars">
     <div v-if="p.gallery.length > 1" class="pg-carousel" :class="{ 'has-dots': d.show_dots !== false }">
       <!-- Scrolls natively, so a swipe follows the finger; a mouse drags it (useDragScroll). -->
       <div
@@ -104,6 +105,7 @@
       />
     </div>
   </div>
+  <GiftCardPreview v-if="p?.product && gift && giftPreview === 'below'" :product="p.product" class="product-gallery--gift gc-desk-only gc-below" />
 </template>
 
 <script setup>
@@ -120,6 +122,7 @@ const d = computed(() => props.data.data || {})
 const zoom = computed(() => d.value.zoom !== false)
 // A gift card shows its email here instead of photos.
 const gift = computed(() => !!giftSettings(p?.product))
+const giftPreview = computed(() => (giftSettings(p?.product)?.preview === 'below' ? 'below' : 'replace'))
 const trackEl = ref(null)
 useDragScroll(trackEl)
 
@@ -227,6 +230,12 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.gc-desk-only { display: none; }
+.gc-below { margin-top: 16px; }
+@media (min-width: 1024px) {
+  .gc-desk-only { display: block; }
+  .gc-phone-only { display: none !important; }
+}
 .gallery-img {
   display: block;
   max-width: 100%;

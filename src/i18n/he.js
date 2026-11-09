@@ -582,4 +582,10 @@ export default {
   "Used up": "נוצל",
   "Expired": "פג תוקף",
   "Not active": "לא פעיל",
+  "At": "בשעה",
+  "This time has passed. Choose a later one.": "השעה הזו כבר עברה. צריך לבחור שעה מאוחרת יותר.",
+  "Times are in the store's time zone ({tz}).": "השעות לפי אזור הזמן של החנות ({tz}).",
+  "To": "אל",
+  "Sends": "נשלח",
+  "Email design": "עיצוב המייל",
 }

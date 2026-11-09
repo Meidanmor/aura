@@ -60,20 +60,32 @@
         <button type="button" role="radio" class="gc-chip" :class="{ 'is-on': s.when === 'now' }" :aria-checked="s.when === 'now' ? 'true' : 'false'" @click="s.when = 'now'">{{ t('Right after payment') }}</button>
         <button type="button" role="radio" class="gc-chip" :class="{ 'is-on': s.when === 'date' }" :aria-checked="s.when === 'date' ? 'true' : 'false'" @click="pickDate">{{ t('On a date') }}</button>
       </div>
-      <q-input
-          v-if="s.when === 'date'"
-          :for="fid('send-on')"
-          v-model="s.send_on"
-          class="q-mt-sm"
-          outlined
-          dense
-          type="date"
-          :min="minDate"
-          :max="maxDate"
-          :label="t('Send on')"
-          :error="tried && !dateOk"
-          :error-message="t('Choose a day from today to a year from now.')"
-      />
+      <div v-if="s.when === 'date'" class="gc-two q-mt-sm">
+        <q-input
+            :for="fid('send-on')"
+            v-model="s.send_on"
+            outlined
+            dense
+            type="date"
+            :min="minDate"
+            :max="maxDate"
+            :label="t('Send on')"
+            :error="tried && !dateOk"
+            :error-message="t('Choose a day from today to a year from now.')"
+        />
+        <q-select
+            :for="fid('send-time')"
+            v-model="s.send_time"
+            outlined
+            dense
+            :options="SEND_TIMES"
+            :dropdown-icon="matArrowDropDown"
+            :label="t('At')"
+            :error="tried && timePassed"
+            :error-message="t('This time has passed. Choose a later one.')"
+        />
+      </div>
+      <div v-if="s.when === 'date' && otherTimeZone(g)" class="gc-fine">{{ t('Times are in the store\'s time zone ({tz}).', { tz: g.timezone }) }}</div>
     </div>
 
     <details class="gc-acc">
@@ -144,7 +156,7 @@
 
     <q-btn
         type="button"
-        class="gc-see"
+        class="gc-see gc-desk-only"
         flat
         no-caps
         :label="t('See the email')"
@@ -165,6 +177,9 @@
     <div v-if="tried && !ready" class="text-negative text-caption q-mt-xs">{{ t('Fill in the fields marked above.') }}</div>
     <p class="gc-fine">{{ fineText }}</p>
 
+    <!-- Phones and tablets: the email under the button (the photos stay on top). -->
+    <GiftCardPreview :product="product" class="gc-inline gc-phone-only" />
+
     <q-dialog v-model="previewOpen">
       <q-card class="gc-dialog">
         <q-card-section class="row items-center no-wrap">
@@ -180,11 +195,11 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useQuasar } from 'quasar'
-import { matClose } from '@quasar/extras/material-icons'
+import { matArrowDropDown, matClose } from '@quasar/extras/material-icons'
 import { useFieldIds } from 'src/utils/field-id.js'
 import { t } from 'src/i18n/index.js'
 import cart from 'src/stores/cart'
-import { chosenAmount, giftDetails, giftMoney, giftSettings, giftState, inAYearIso, todayIso, uploadPhoto } from 'src/utils/gift-card.js'
+import { SEND_TIMES, chosenAmount, giftDetails, giftMoney, giftSettings, giftState, inAYearIso, nowTime, otherTimeZone, todayIso, uploadPhoto } from 'src/utils/gift-card.js'
 import GiftCardPreview from './GiftCardPreview.vue'
 
 /**
@@ -214,7 +229,9 @@ const maxDate = inAYearIso()
 const amount = computed(() => chosenAmount(s, g.value))
 const emailOk = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s.to_email.trim()))
 const dateOk = computed(() => s.when !== 'date' || (!!s.send_on && s.send_on >= minDate && s.send_on <= maxDate))
-const ready = computed(() => !!amount.value && !!s.to_name.trim() && emailOk.value && dateOk.value && !uploading.value)
+// Today at a time that has passed (in the shopper's clock; the store sends right away if it's past there).
+const timePassed = computed(() => s.when === 'date' && s.send_on === minDate && !otherTimeZone(g.value) && s.send_time <= nowTime())
+const ready = computed(() => !!amount.value && !!s.to_name.trim() && emailOk.value && dateOk.value && !timePassed.value && !uploading.value)
 
 const designSummary = computed(() => {
   const d = g.value.designs.find((x) => x.id === s.design)
@@ -303,4 +320,10 @@ async function add() {
 .gc-see { justify-self: start; margin: 2px 0 8px; text-decoration: underline; }
 .gc-fine { font-size: 13px; opacity: .7; margin: 8px 0 0; }
 .gc-dialog { width: 600px; max-width: 94vw; }
+.gc-inline { margin-top: 18px; }
+.gc-desk-only { display: none; }
+@media (min-width: 1024px) {
+  .gc-desk-only { display: inline-flex; }
+  .gc-phone-only { display: none; }
+}
 </style>

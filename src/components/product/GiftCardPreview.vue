@@ -21,9 +21,9 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { t } from 'src/i18n/index.js'
-import { dateLabel, fillPreview, giftSettings, giftState, loadTemplate } from 'src/utils/gift-card.js'
+import { fillPreview, giftSettings, giftState, loadTemplate, sendLabel } from 'src/utils/gift-card.js'
 
 /**
  * The gift card email as the recipient will get it, filled in as the shopper
@@ -40,17 +40,22 @@ const frame = ref(null)
 const height = ref(640)
 
 const html = computed(() => fillPreview(template.value, s.value, g.value, props.product))
-const whenText = computed(() => (s.value?.when === 'date' && s.value.send_on ? t('Sent on {date}', { date: dateLabel(s.value.send_on) }) : t('Sent right after payment')))
+const whenText = computed(() => (s.value?.when === 'date' && s.value.send_on ? t('Sent on {date}', { date: sendLabel(s.value) }) : t('Sent right after payment')))
 
 function measure() {
   try {
     const doc = frame.value?.contentDocument
-    if (doc?.body) height.value = Math.max(320, Math.min(2400, doc.documentElement.scrollHeight))
+    // Hidden at this screen size (the other copy shows): nothing to measure.
+    if (doc?.body && frame.value.offsetParent !== null) height.value = Math.max(320, Math.min(2400, doc.documentElement.scrollHeight))
   } catch { /* the frame keeps its height */ }
 }
 watch(html, () => nextTick(() => setTimeout(measure, 60)))
 
+// A copy that becomes visible (the screen turned or got wider) measures itself then.
+const onResize = () => measure()
+onBeforeUnmount(() => removeEventListener('resize', onResize))
 onMounted(async () => {
+  addEventListener('resize', onResize)
   mounted.value = true
   template.value = await loadTemplate(props.product.id)
   failed.value = !template.value
