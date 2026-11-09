@@ -20,6 +20,7 @@ const SHOP_BLOCKS = {
   checkout_contact: 'CheckoutContactBlock', checkout_shipping_address: 'CheckoutShippingAddressBlock', checkout_billing_address: 'CheckoutBillingAddressBlock',
   checkout_coupon: 'CheckoutCouponBlock', checkout_note: 'CheckoutNoteBlock', checkout_items: 'CheckoutItemsBlock', checkout_shipping: 'CheckoutShippingBlock',
   checkout_payment: 'CheckoutPaymentBlock', checkout_totals: 'CheckoutTotalsBlock',
+  checkout_order_summary: 'CheckoutOrderSummaryBlock', checkout_delivery_mode: 'CheckoutDeliveryModeBlock', checkout_steps: 'CheckoutStepsBlock',
 }
 export const shopBlocks = {}
 for (const [type, name] of Object.entries(SHOP_BLOCKS)) shopBlocks[type] = shopBlock(name)

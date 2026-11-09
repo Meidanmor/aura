@@ -158,7 +158,9 @@ const GRID_MODES = ['numbers', 'button', 'scroll', 'none']
 
 /**
  * The Products Grid's paging (Products Per Page, More Products) on a shop page's sections:
- * { perPage: 1–48 (6), mode: 'numbers' | 'button' | 'scroll' | 'none' }.
+ * { perPage: 1–48 (6), mode: 'numbers' | 'button' | 'scroll' | 'none', lead }.
+ * lead: places the first page gives to cards that aren't products (the Promo card: 1), so a page of
+ * 9 is 8 products + the promo card, and the next pages are 9 products each.
  */
 export function archiveGrid(sections) {
   let found = null
@@ -172,9 +174,12 @@ export function archiveGrid(sections) {
   walk(sections)
   const d = found?.data || {}
   const n = parseInt(d.per_page, 10)
+  const perPage = Number.isFinite(n) ? Math.max(1, Math.min(48, n)) : 6
+  const promo = !!d.promo && d.promo !== 'false' && !!(d.promo_title || d.promo_text)
   return {
-    perPage: Number.isFinite(n) ? Math.max(1, Math.min(48, n)) : 6,
+    perPage,
     mode: GRID_MODES.includes(d.pagination) ? d.pagination : 'numbers',
+    lead: promo && perPage > 1 ? 1 : 0,
   }
 }
 

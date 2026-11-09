@@ -142,9 +142,22 @@ function installEditorFocus(trustedOrigin) {
     }, true)
     return
   }
-  const HOVER = '[data-sb-part]:hover, [data-ts]:hover { outline: 2px dashed #2563eb; outline-offset: 3px; cursor: pointer; }'
+  // Hovering marks only the innermost thing a click would pick (a block's part, a block, a
+  // section): dashed; the one being edited stays solid (its rule below wins with !important).
+  const HOVER = '[data-qe-hover] { outline: 2px dashed #2563eb; outline-offset: -2px; cursor: pointer; }'
+    + ' [data-qe-hover="part"] { outline-offset: 3px; }'
   style.textContent = HOVER
   document.head.appendChild(style)
+  const HOVERABLE = '[data-sb-part], [data-ts], [data-block-id], [data-section-id]'
+  let hovered = null
+  const setHover = (el) => {
+    if (el === hovered) return
+    hovered?.removeAttribute('data-qe-hover')
+    hovered = el
+    el?.setAttribute('data-qe-hover', el.matches('[data-sb-part], [data-ts]') ? 'part' : 'box')
+  }
+  document.addEventListener('mouseover', (e) => setHover(e.target.closest?.(HOVERABLE) || null), true)
+  document.addEventListener('mouseout', (e) => { if (!e.relatedTarget) setHover(null) }, true)
   document.addEventListener('click', (e) => {
     const target = e.target
     const host = target.closest?.('[data-block-id], [data-section-id]')

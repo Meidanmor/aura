@@ -1,5 +1,5 @@
 <template>
-  <q-form v-if="c?.ready" ref="formEl" class="checkout-billing-address" @submit.prevent="c.placeOrder">
+  <q-form v-if="c?.ready && c.addressNeeded" ref="formEl" class="checkout-billing-address" @submit.prevent="c.placeOrder">
     <CheckoutPart :data="{ ...d, show_title: c.differentBillingAddress && d.show_title !== false }" :default-title="t('Billing Address')">
       <q-checkbox v-model="c.differentBillingAddress" :label="d.checkbox_label || t('Different billing address?')" color="secondary" :class="{ 'q-mb-sm': c.differentBillingAddress }" @update:model-value="c.handleCheckboxBlur" />
       <template v-if="c.differentBillingAddress">

@@ -30,6 +30,8 @@ export function useCartSummary(cartOf = () => cart) {
                 cartOf().state.local_cart.shipping_address ||
                 {},
             totals: cartOf().state.totals,
+            // false: nothing in the cart ships (gift cards, digital products). Unknown (offline, sample): true.
+            needs_shipping: cartOf().state.cart_array?.needs_shipping !== false,
             _offline: cartOf().state.offline,
             // Handy flag for the UI if you ever want to show a subtle
             // "estimated" indicator while waiting on server confirmation
@@ -62,6 +64,9 @@ export function useCartSummary(cartOf = () => cart) {
             value: rate.rate_id
         }))
     })
+    // The rates that are local pickup (Settings → Shipping): they need no address.
+    const pickupRateIds = computed(() => (displayCart.value?.shipping_rates?.[0]?.shipping_rates || [])
+        .filter(rate => ['local_pickup', 'pickup_location'].includes(rate.method_id)).map(rate => rate.rate_id))
 
     const fetchShippingRates = async () => {
         if (!cartOf().state.cart_array) return
@@ -125,7 +130,7 @@ export function useCartSummary(cartOf = () => cart) {
 
     return {
         displayCart, itemsCount, cartItems, cartTotal, cartItemsTotal, cartTotalDiscount, couponApplied,
-        shippingOptions, selectedShippingRateId, couponCode, couponError,
+        shippingOptions, pickupRateIds, selectedShippingRateId, couponCode, couponError,
         fetchShippingRates, onShippingMethodChange, applyCoupon, removeCoupon, loadingCoupon
     }
 }

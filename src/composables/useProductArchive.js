@@ -93,6 +93,7 @@ export function createArchivePreFetch(mode) {
             const params = {
                 api: true,
                 per_page: grid.perPage,
+                lead: grid.lead,
                 search: urlFilters.search || undefined,
                 category: Array.isArray(category) ? category.join(',') : (category ?? undefined),
                 min_amount: urlFilters.priceRange?.min ?? undefined,
@@ -189,6 +190,8 @@ export function useProductArchive(mode) {
     // Products Grid → Pagination: products per page and how more of them come.
     const grid        = computed(() => archiveGridFor(mode, shopSettings.value, selectedCategoryOBJ.value))
     const perPage     = () => grid.value.perPage
+    // The promo card counts as one of page 1's cards (8 products + the card on a page of 9).
+    const lead        = () => grid.value.lead || 0
     const appends     = () => gridAppends(grid.value)
     const loadingMore = ref(false)
 
@@ -340,7 +343,7 @@ export function useProductArchive(mode) {
             priceTrigger: priceChanged.value,
             attributes: attrToString(selectedAttributes.value),
             inStock: inStock.value,
-            grid: `${grid.value.perPage}:${grid.value.mode}`,
+            grid: `${grid.value.perPage}:${grid.value.mode}:${grid.value.lead}`,
         }),
         async (filters, prev) => {
             const fromAddress = filtersFromAddress
@@ -379,7 +382,7 @@ export function useProductArchive(mode) {
                 : (filters.category.length ? filters.category.join(',') : null)
 
             const params = {
-                api: true, per_page: perPage(),
+                api: true, per_page: perPage(), lead: lead(),
                 min_amount: priceRange.value.min, max_amount: priceRange.value.max, category: categoryArg,
                 search: filters.search, attributes: selectedAttributes.value, in_stock: inStock.value, ...sortParams
             }
@@ -444,7 +447,7 @@ export function useProductArchive(mode) {
                 priceMax.value = pendingPriceRange.value.max
                 priceRange.value = { ...pendingPriceRange.value }
 
-                await productsStore.preFetchProducts({ api: true, page: 1, per_page: perPage(), category: cat.id })
+                await productsStore.preFetchProducts({ api: true, page: 1, per_page: perPage(), lead: lead(), category: cat.id })
                 productsStore.productsLoading.value = false
             }
         )
@@ -488,7 +491,7 @@ export function useProductArchive(mode) {
         } else if (!productsStore.initialized.value) {
             productsStore.productsLoading.value = true
             await productsStore.preFetchProducts({
-                api: true, page: 1, per_page: perPage(),
+                api: true, page: 1, per_page: perPage(), lead: lead(),
                 category: mode === 'category' ? (selectedCategoryOBJ.value?.id || null) : undefined
             })
         }

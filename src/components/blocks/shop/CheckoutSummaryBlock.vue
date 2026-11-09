@@ -23,10 +23,10 @@
     </q-card>
 
     <!-- Shipping Method -->
-    <q-card class="q-mb-md">
+    <q-card v-if="c.needsShipping" class="q-mb-md">
       <q-card-section class="q-pa-md">
         <div class="text-h6">{{ t('Choose Shipping Method') }}</div>
-        <q-option-group v-model="c.selectedShippingRateId" :options="c.shippingOptions" type="radio" color="secondary" @update:model-value="c.onShippingMethodChange" />
+        <q-option-group v-model="c.selectedShippingRateId" :options="c.deliveryOptions" type="radio" color="secondary" @update:model-value="c.onShippingMethodChange" />
       </q-card-section>
     </q-card>
 

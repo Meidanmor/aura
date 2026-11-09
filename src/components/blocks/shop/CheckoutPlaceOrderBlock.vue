@@ -4,7 +4,7 @@
       <div v-if="c.couponApplied">{{ t('Total discount: {amount}', { amount: formatCurrency(c.cartTotalDiscount) }) }}</div>
       <div class="text-h6">{{ t('Total:') }} <span v-if="c.couponApplied"><del>{{ formatCurrency(Number(c.cartTotalDiscount) + Number(c.cartTotal)) }}</del></span> {{ formatCurrency(c.cartTotal) }}</div>
     </div>
-    <div v-if="(c.allowSignup && c.isLoggedIn === false) || c.termsRequired || c.marketingOptin?.on" class="checkout-agree">
+    <div v-if="c.lastStep && ((c.allowSignup && c.isLoggedIn === false) || c.termsRequired || c.marketingOptin?.on)" class="checkout-agree">
       <q-checkbox v-if="c.allowSignup && c.isLoggedIn === false" v-model="c.createAccount" color="secondary" :label="t('Create an account (we\'ll email you a link to set your password)')" />
       <q-checkbox v-if="c.marketingOptin?.on" v-model="c.wantsMarketing" color="secondary" :label="c.marketingOptin.text" />
       <q-checkbox v-if="c.termsRequired" v-model="c.agreeTerms" color="secondary">
@@ -17,8 +17,10 @@
         </span>
       </q-checkbox>
     </div>
-    <div>
-      <q-btn class="place-order-btn" :label="d.button_label || t('Place Order')" :color="buttonBg ? undefined : 'secondary'" :style="buttonColors" :disable="c.cart.state.offline" @click="c.placeOrder" />
+    <!-- The checkout in steps: Continue until the last step, and Back. -->
+    <div class="checkout-place-order__buttons">
+      <q-btn v-if="c.stepsOn && c.stepIndex > 0" flat no-caps class="checkout-back-btn" :label="t('Back')" @click="c.goStep(c.stepIndex - 1)" />
+      <q-btn class="place-order-btn" :label="c.lastStep ? d.button_label || t('Place Order') : d.continue_label || t('Continue')" :color="buttonBg ? undefined : 'secondary'" :style="buttonColors" :disable="c.cart.state.offline" @click="c.placeOrder" />
     </div>
   </div>
 </template>
@@ -39,5 +41,7 @@ const buttonColors = computed(() => ({ ...(buttonBg.value ? { background: button
 <style scoped>
 /* The card itself ("In a card") is the block wrapper's .sb-card. */
 .checkout-place-order { display: flex; flex-direction: column; gap: 12px; }
-.is-full .place-order-btn { width: 100%; }
+.checkout-place-order__buttons { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.is-full .place-order-btn { flex: 1 1 100%; }
+.is-full .checkout-back-btn { order: 2; }
 </style>

@@ -287,6 +287,12 @@ export async function preFetchProducts(ctx = {}) {
       in_stock,
       ssrContext = null,
     } = ctx
+    // lead: places on page 1 that aren't products (the Products Grid's promo card). Page 1 has
+    // per_page - lead products, the next pages per_page each, starting right after them.
+    const lead = Math.max(0, Math.min(Number(per_page) - 1, Number(ctx.lead) || 0))
+    const take = page <= 1 ? per_page - lead : per_page
+    const skip = page <= 1 ? 0 : (page - 1) * per_page - lead
+    const pagesOf = (total) => (lead ? Math.max(1, Math.ceil((total + lead) / per_page)) : null)
     // Attribute filters { pa_taste: [termId…] } (any of a list's values, every list).
     const attrFilters = Object.entries(attributes || {}).filter(([, ids]) => Array.isArray(ids) && ids.length)
 
@@ -301,8 +307,12 @@ export async function preFetchProducts(ctx = {}) {
     const max_price = hasMax ? Math.ceil(Number(max_amount) * scale) : undefined
 
     const query = new URLSearchParams()
-    query.append('page', page)
-    query.append('per_page', per_page)
+    if (lead && page > 1) {
+      query.append('offset', skip)
+    } else {
+      query.append('page', page)
+    }
+    query.append('per_page', take)
     if (min_price !== undefined) query.append('min_price', min_price)
     if (max_price !== undefined) query.append('max_price', max_price)
     if (category)  query.append('category', category)
@@ -327,18 +337,20 @@ export async function preFetchProducts(ctx = {}) {
       const total       = res.headers.get('X-WP-Total')
       const totalPagesH = res.headers.get('X-WP-TotalPages')
       learnMinorUnit(data)
+      const totalN = total ? parseInt(total) : 0
+      const pagesN = pagesOf(totalN) ?? (totalPagesH ? parseInt(totalPagesH) : 1)
 
       if (ctx.dryRun) {
         return {
           products:   data || [],
-          total:      total       ? parseInt(total)       : 0,
-          totalPages: totalPagesH ? parseInt(totalPagesH) : 1,
+          total:      totalN,
+          totalPages: pagesN,
         }
       }
 
       products.value      = data || []
-      totalProducts.value = total       ? parseInt(total)       : 0
-      totalPages.value    = totalPagesH ? parseInt(totalPagesH) : 1
+      totalProducts.value = totalN
+      totalPages.value    = pagesN
 
       return products.value
 
@@ -424,8 +436,8 @@ export async function preFetchProducts(ctx = {}) {
 
       // pagination
       const total     = localProducts.length
-      const pages     = Math.ceil(total / per_page)
-      const paginated = localProducts.slice((page - 1) * per_page, page * per_page)
+      const pages     = pagesOf(total) ?? Math.ceil(total / per_page)
+      const paginated = localProducts.slice(skip, skip + take)
 
       if (ctx.dryRun) {
         return { products: paginated, total, totalPages: pages }
@@ -613,9 +625,11 @@ async function prefetchPriceMeta(cat = null, ssrContext = null) {
 export async function fetchProductPages(ctx = {}, upTo = 1) {
   const per = Math.max(1, Number(ctx.per_page) || 6)
   const last = Math.max(1, Math.min(50, Number(upTo) || 1))
-  const pages = (r) => Math.max(1, Math.ceil((r.total || 0) / per))
+  // lead: page 1 has that many fewer products (the promo card takes the place).
+  const lead = Math.max(0, Math.min(per - 1, Number(ctx.lead) || 0))
+  const pages = (r) => Math.max(1, Math.ceil(((r.total || 0) + lead) / per))
   if (per * last <= 100) {
-    const r = await preFetchProducts({ ...ctx, page: 1, per_page: per * last, dryRun: true })
+    const r = await preFetchProducts({ ...ctx, lead: 0, page: 1, per_page: per * last - lead, dryRun: true })
     return { products: r.products || [], total: r.total || 0, totalPages: pages(r) }
   }
   const all = await Promise.all(Array.from({ length: last }, (_, i) => preFetchProducts({ ...ctx, page: i + 1, per_page: per, dryRun: true })))

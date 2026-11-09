@@ -25,6 +25,11 @@
         {{ t('You\'re offline. Your details are kept on this device. Connect to the internet to choose delivery and place your order.') }}
       </div>
 
+      <!-- Settings → Checkout: no header and footer, and the checkout in steps (blocks of other
+           steps hidden by their data-block-id). A style element, so the server's page has it too. -->
+      <component :is="'style'" v-if="pageCss">{{ pageCss }}</component>
+      <CheckoutStepsBlock v-if="stepsOn && !hasStepsBlock" :data="{ data: {} }" class="checkout-steps--auto" />
+
       <SectionRenderer :sections="sections" page="checkout" />
 
       <div v-if="syncError" class="text-negative q-my-md text-center">
@@ -47,12 +52,14 @@
 
 <script setup>
 import { currentSource } from 'src/utils/traffic-source.js'
-import { ref, computed, reactive, watch, onMounted, onUnmounted, useSSRContext, provide, markRaw } from 'vue';
+import { ref, computed, reactive, watch, onMounted, onUnmounted, useSSRContext, provide, markRaw, nextTick } from 'vue';
 import cart from 'src/stores/cart';
 import { useRouter, onBeforeRouteLeave } from 'vue-router';
 import { useQuasar } from 'quasar';
 import {fetchWithToken} from 'src/composables/useApiFetch.js';
 import SectionRenderer from 'components/sections/SectionRenderer.vue';
+import CheckoutStepsBlock from 'components/blocks/shop/CheckoutStepsBlock.vue';
+import { useRoute } from 'vue-router';
 import { loadPageConfig, subscribeToLiveConfig } from 'src/utils/config-loader'
 
 let unsubscribeConfigUpdates = () => {}
@@ -79,7 +86,7 @@ const { t } = useI18n()
 const preview = usePreviewCart(cart)
 const {
   displayCart, itemsCount, cartItems, cartTotal, cartTotalDiscount, couponApplied,
-  shippingOptions, selectedShippingRateId, couponCode, couponError, loadingCoupon,
+  shippingOptions, pickupRateIds, selectedShippingRateId, couponCode, couponError, loadingCoupon,
   fetchShippingRates, onShippingMethodChange, applyCoupon, removeCoupon
 } = useCartSummary(() => preview.cart.value)
 
@@ -421,23 +428,26 @@ const submitOrder = async (walletOverride = null) => {
       }
     }
 
+    // Pickup or nothing that ships: the address blocks are hidden, so no address goes with the order.
+    const noAddress = !addressNeeded.value
+    const billingFrom = noAddress ? { address_1: '', city: '', postcode: '', country: form.shipping.country || 'IL' } : differentBillingAddress.value ? form.billing : form.shipping
     const payload = {
       billing_address: {
         first_name: form.first_name,
         last_name: form.last_name,
         email: form.email,
         phone: form.phone,
-        address_1: differentBillingAddress.value ? form.billing.address_1 : form.shipping.address_1,
-        city: differentBillingAddress.value ? form.billing.city : form.shipping.city,
-        postcode: differentBillingAddress.value ? form.billing.postcode : form.shipping.postcode,
-        country: differentBillingAddress.value ? form.billing.country : form.shipping.country,
+        address_1: billingFrom.address_1,
+        city: billingFrom.city,
+        postcode: billingFrom.postcode,
+        country: billingFrom.country,
       },
       shipping_address: {
         first_name: form.first_name,
         last_name: form.last_name,
-        address_1: form.shipping.address_1,
-        city: form.shipping.city,
-        postcode: form.shipping.postcode,
+        address_1: noAddress ? '' : form.shipping.address_1,
+        city: noAddress ? '' : form.shipping.city,
+        postcode: noAddress ? '' : form.shipping.postcode,
         country: form.shipping.country,
         phone: form.phone,
         email: form.email,
@@ -446,7 +456,7 @@ const submitOrder = async (walletOverride = null) => {
       payment_data: paymentData,
       // The store checks the agreement (only sent when it asks for one).
       extensions: { qwoo: { ...(termsRequired.value ? { terms: agreeTerms.value } : {}), ...currentSource(), ...(marketingOptin.value.on && wantsMarketing.value ? { marketing: true } : {}) } },
-      billing_same_as_shipping: !differentBillingAddress.value,
+      billing_same_as_shipping: noAddress || !differentBillingAddress.value,
       ...(orderNote.value.trim() ? { customer_note: orderNote.value.trim().slice(0, 1000) } : {}),
       ...(allowSignup.value && isLoggedIn.value === false && createAccount.value ? { create_account: true } : {}),
     }
@@ -643,7 +653,14 @@ async function closePayFrame() {
 }
 
 async function placeOrder() {
+  if (stepsOn.value && !lastStep.value) return nextStep()
   for (const form of forms) {
+    const step = stepsOn.value ? stepOfElement(form.$el) : null
+    if (step !== null && step !== currentStep.value) {
+      if (await form.validate(false)) continue
+      currentStep.value = step
+      await nextTick()
+    }
     const valid = await form.validate(true)
     if (!valid) {
       // Quasar focuses the first field that needs fixing: bring it into view.
@@ -692,7 +709,137 @@ async function rememberAddress() {
   }
 }
 
-const previewPlaceOrder = () => (preview.previewing.value ? undefined : placeOrder())
+/* ---------- Delivery or pickup, and carts with nothing to ship ---------- */
+
+// false: nothing in the cart ships (gift cards, digital products): no address, no delivery options.
+const needsShipping = computed(() => displayCart.value?.needs_shipping !== false)
+const isPickupRate = (id) => pickupRateIds.value.includes(id)
+// The "Delivery or Pickup" blocks on the page (they register while shown).
+const modeBlocks = ref(0)
+function registerModeBlock() {
+  modeBlocks.value++
+  return () => { modeBlocks.value-- }
+}
+// Both kinds offered: the block shows, and the Delivery Options list only the chosen kind.
+const pickupOffered = computed(() => needsShipping.value && pickupRateIds.value.length > 0 && shippingOptions.value.some((o) => !isPickupRate(o.value)))
+const deliveryMode = ref('delivery')
+watch(() => isPickupRate(selectedShippingRateId.value), (pickup) => {
+  if (selectedShippingRateId.value) deliveryMode.value = pickup ? 'pickup' : 'delivery'
+}, { immediate: true })
+const modeOn = computed(() => modeBlocks.value > 0 && pickupOffered.value)
+const deliveryOptions = computed(() => (modeOn.value
+  ? shippingOptions.value.filter((o) => isPickupRate(o.value) === (deliveryMode.value === 'pickup'))
+  : shippingOptions.value))
+function setDeliveryMode(mode) {
+  deliveryMode.value = mode === 'pickup' ? 'pickup' : 'delivery'
+  if (deliveryOptions.value.some((o) => o.value === selectedShippingRateId.value)) return
+  const first = deliveryOptions.value[0]
+  if (first) {
+    selectedShippingRateId.value = first.value
+    onShippingMethodChange(first.value)
+  }
+}
+// The address is needed only when something is delivered (not picked up).
+const addressNeeded = computed(() => needsShipping.value && !isPickupRate(selectedShippingRateId.value) && !(modeOn.value && deliveryMode.value === 'pickup'))
+
+/* ---------- Checkout in steps (Settings → Checkout) ---------- */
+
+const route = useRoute()
+const stepsOn = computed(() => !!pageConfig.value?.steps)
+// Each block's step ("auto" by its kind; the title, items, totals and summaries in every step).
+const AUTO_STEP = {
+  checkout_login: 1, checkout_contact: 1, checkout_delivery_mode: 1, checkout_shipping_address: 1, checkout_note: 1,
+  checkout_shipping: 2,
+  checkout_billing_address: 3, checkout_coupon: 3, checkout_payment: 3,
+}
+const blockStep = (b) => {
+  const s = String(b?.data?.step ?? 'auto')
+  if (s === 'all') return 'all'
+  if (s === '1' || s === '2' || s === '3') return Number(s)
+  return AUTO_STEP[b?.type] || 'all'
+}
+// Blocks that hide themselves for this cart don't make a step of their own.
+const blockHidden = (type) => {
+  if (!needsShipping.value && ['checkout_shipping', 'checkout_delivery_mode', 'checkout_shipping_address'].includes(type)) return true
+  if (!addressNeeded.value && ['checkout_shipping_address', 'checkout_billing_address'].includes(type)) return true
+  if (type === 'checkout_delivery_mode' && !pickupOffered.value) return true
+  return false
+}
+const stepBlocks = computed(() => {
+  const out = []
+  const walk = (list) => {
+    for (const b of Array.isArray(list) ? list : []) {
+      if (!b || b.enabled === false) continue
+      if (b.type && b.type !== 'section') out.push({ id: b.id, type: b.type, step: blockStep(b) })
+      if (Array.isArray(b.blocks)) walk(b.blocks)
+    }
+  }
+  walk(sections.value)
+  return out
+})
+const hasStepsBlock = computed(() => stepBlocks.value.some((b) => b.type === 'checkout_steps'))
+// The steps this checkout has (1 Details, 2 Delivery, 3 Payment), without empty ones.
+const stepList = computed(() => {
+  const used = new Set(stepBlocks.value.filter((b) => b.step !== 'all' && !blockHidden(b.type)).map((b) => b.step))
+  const list = [1, 2, 3].filter((n) => used.has(n))
+  return list.length ? list : [1]
+})
+const stepIndex = ref(0)
+const currentStep = computed({
+  get: () => stepList.value[Math.min(stepIndex.value, stepList.value.length - 1)],
+  set: (n) => { const i = stepList.value.indexOf(n); if (i >= 0) stepIndex.value = i },
+})
+const lastStep = computed(() => !stepsOn.value || stepIndex.value >= stepList.value.length - 1)
+const stepOfElement = (el) => {
+  const id = el?.closest?.('[data-block-id]')?.dataset.blockId
+  const b = id && stepBlocks.value.find((x) => x.id === id)
+  return b && b.step !== 'all' ? b.step : null
+}
+function scrollToCheckoutTop() {
+  if (typeof window === 'undefined') return
+  const el = document.querySelector('.checkout-page')
+  if (el) window.scrollTo({ top: Math.max(0, window.scrollY + el.getBoundingClientRect().top - 80), behavior: 'smooth' })
+}
+async function goStep(i) {
+  if (i < 0 || i >= stepList.value.length) return
+  stepIndex.value = i
+  await nextTick()
+  scrollToCheckoutTop()
+}
+// "Continue": this step's forms (the ones shown) must be right first.
+async function nextStep() {
+  for (const form of forms) {
+    const el = form.$el
+    if (!el || el.offsetParent === null) continue
+    if (!(await form.validate(true))) {
+      requestAnimationFrame(() => document.activeElement?.scrollIntoView?.({ behavior: 'smooth', block: 'center' }))
+      return
+    }
+  }
+  if (currentStep.value === 2 && needsShipping.value && deliveryOptions.value.length && !selectedShippingRateId.value) {
+    $q.notify({ type: 'negative', message: t('Please choose how to get your order.'), icon: matError })
+    return
+  }
+  return goStep(stepIndex.value + 1)
+}
+// The Store builder preview: any step can be opened from the bar.
+const inPreview = computed(() => route.query.preview === 'true')
+
+const pageCss = computed(() => {
+  let css = ''
+  if (pageConfig.value?.hide_chrome) {
+    css += '.q-layout > .announcement-bar, .q-layout > .above-header, .q-layout > .q-header, .q-layout > footer { display: none !important; }'
+  }
+  if (stepsOn.value) {
+    const now = currentStep.value
+    const hide = stepBlocks.value.filter((b) => b.step !== 'all' && b.step !== now).map((b) => `[data-block-id="${String(b.id).replace(/[^\w-]/g, '')}"]`)
+    if (hide.length) css += hide.join(', ') + ' { display: none !important; }'
+  }
+  return css
+})
+
+// The preview's sample cart is never ordered, but Continue still moves through the steps.
+const previewPlaceOrder = () => (preview.previewing.value ? (lastStep.value ? undefined : goStep(stepIndex.value + 1)) : placeOrder())
 const previewSubmitOrder = (...args) => (preview.previewing.value ? undefined : submitOrder(...args))
 provide('checkoutPage', reactive({
   cart: preview.cart, ready, displayCart, itemsCount, cartItems, cartTotal, cartTotalDiscount, couponApplied,
@@ -704,6 +851,8 @@ provide('checkoutPage', reactive({
   termsRequired, allowSignup, agreeTerms, createAccount, legal, marketingOptin, wantsMarketing, orderNote,
   submitOrder: previewSubmitOrder, placeOrder: previewPlaceOrder, registerForm,
   pickerAt, claimPicker, saveNewAddress, addressIsNew,
+  needsShipping, addressNeeded, pickupOffered, deliveryMode, deliveryOptions, setDeliveryMode, registerModeBlock,
+  stepsOn, stepList, stepIndex, lastStep, goStep, nextStep, inPreview,
 }))
 </script>
 

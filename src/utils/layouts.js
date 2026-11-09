@@ -5,6 +5,21 @@
 
 const has = (list, value) => Array.isArray(list) && value !== undefined && value !== null && list.map(String).includes(String(value))
 
+// A condition list the owner filled (not the slugs or addresses the store adds to them).
+const isList = (key, value) => key !== 'exclude' && key !== 'page_paths' && !key.endsWith('_slugs') && Array.isArray(value) && value.length > 0
+const anyList = (c) => Object.entries(c || {}).some(([k, v]) => isList(k, v))
+
+/**
+ * Include and Exclude rows (Store builder → a layout's conditions): `exclude` has the same
+ * lists. A page an Exclude row matches never gets the layout; with only Exclude rows, every
+ * other page does.
+ */
+export const withExclude = (match) => (c) => {
+  const ex = c?.exclude
+  if (anyList(ex) && match(ex)) return false
+  return anyList(c) ? match(c) : anyList(ex)
+}
+
 /** The sections to show for a page's config, given a matcher for layout conditions. */
 export function pickSections(config, match) {
   if (!config) return []
@@ -14,7 +29,7 @@ export function pickSections(config, match) {
     if (editing) return editing.sections || []
   }
   for (const layout of layouts) {
-    if (match(layout.conditions || {})) return layout.sections || []
+    if (withExclude(match)(layout.conditions || {})) return layout.sections || []
   }
   return config.sections || []
 }
@@ -81,7 +96,7 @@ export function pickChrome(config, route) {
   if (config.preview_layout) chosen = layouts.find((l) => l.id === config.preview_layout) || null
   if (!chosen) {
     const where = chromeTarget(route)
-    chosen = layouts.find((l) => chromeMatch(l.conditions, where)) || null
+    chosen = layouts.find((l) => withExclude((c) => chromeMatch(c, where))(l.conditions || {})) || null
   }
   if (!chosen) return config
   return { ...config, sections: chosen.sections || [], settings: chosen.settings || config.settings, template: chosen.id }

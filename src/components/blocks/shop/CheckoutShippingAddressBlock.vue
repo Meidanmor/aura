@@ -1,5 +1,5 @@
 <template>
-  <q-form v-if="c?.ready" ref="formEl" class="checkout-shipping-address" @submit.prevent="c.placeOrder">
+  <q-form v-if="c?.ready && c.addressNeeded" ref="formEl" class="checkout-shipping-address" @submit.prevent="c.placeOrder">
     <CheckoutPart :data="d" :default-title="t('Shipping Address')">
       <SavedAddressPicker v-if="showPicker" />
       <q-input :for="fid('f1')" v-model="c.form.shipping.address_1" v-bind="look" :label="t('Address *')" class="q-mb-sm" :rules="[val => !!val || t('Address is required')]" @blur="c.handleInputBlur" />

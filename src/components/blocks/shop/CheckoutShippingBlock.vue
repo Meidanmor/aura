@@ -1,9 +1,9 @@
 <template>
-  <div v-if="c?.ready" class="checkout-shipping" :style="choiceVars">
+  <div v-if="c?.ready && c.needsShipping" class="checkout-shipping" :style="choiceVars">
     <CheckoutPart :data="d" :default-title="t('Choose Shipping Method')">
       <q-option-group
           v-model="c.selectedShippingRateId"
-          :options="c.shippingOptions"
+          :options="c.deliveryOptions"
           type="radio"
           :color="choice ? undefined : 'secondary'"
           :class="[optionText.class, { 'co-choice': choice }]"
