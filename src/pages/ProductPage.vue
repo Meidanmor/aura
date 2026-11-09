@@ -238,24 +238,51 @@ const variationPrices = computed(() => {
   return map
 })
 
-// The price shown on a choice: what the product costs with this option and the
-// options already chosen. One price (with the old one when on sale), else
-// "From" the lowest; '' when unknown or the same for every option.
-function choicePrice(attrName, value) {
-  if (!variationPrices.value.size || value == null) return ''
-  const hypothetical = { ...selectedVariations.value, [attrName]: value }
+// The prices of the variants that fit these picks (an "any" choice fits every pick).
+function fittingPrices(picks) {
   const found = []
-  for (const variation of product.value.variations || []) {
-    const fits = Object.entries(hypothetical).every(([name, selected]) => {
+  for (const variation of product.value?.variations || []) {
+    const fits = Object.entries(picks).every(([name, selected]) => {
       if (!selected) return true
       const attr = variation.attributes.find(a => a.name === name)
       if (!attr) return false
-      if (attr.value === null) return true
+      if (attr.value === null || attr.value === '') return true
       return sameChoice(name, attr.value, selected)
     })
     const prices = fits && variationPrices.value.get(Number(variation.id))
     if (prices) found.push(prices)
   }
+  return found
+}
+// The options whose choices change the price, with the options already chosen:
+// Weight does on a coffee sold by weight, its Coffee type doesn't (every type
+// leads to the same prices), so a type shows no "From" price.
+const optionsChangingPrice = computed(() => {
+  const changing = new Set()
+  if (!variationPrices.value.size) return changing
+  for (const attr of product.value?.attributes || []) {
+    const seen = new Set()
+    for (const term of attr.terms || []) {
+      const found = fittingPrices({ ...selectedVariations.value, [attr.name]: term.name })
+      if (found.length) seen.add([...new Set(found.map(p => `${p.price}/${p.regular_price}`))].sort().join(','))
+    }
+    if (seen.size > 1) changing.add(attr.name)
+  }
+  return changing
+})
+// A choice that costs the same as the other choices of its option (see above).
+function choiceSamePrice(attrName, value) {
+  if (!variationPrices.value.size || value == null || optionsChangingPrice.value.has(attrName)) return false
+  return fittingPrices({ ...selectedVariations.value, [attrName]: value }).length > 0
+}
+
+// The price shown on a choice: what the product costs with this option and the
+// options already chosen. One price (with the old one when on sale), else
+// "From" the lowest; '' when unknown, or when the option doesn't change the price.
+function choicePrice(attrName, value) {
+  if (!variationPrices.value.size || value == null) return ''
+  if (!optionsChangingPrice.value.has(attrName)) return ''
+  const found = fittingPrices({ ...selectedVariations.value, [attrName]: value })
   if (!found.length) return ''
   const amounts = found.map(p => Number(p.price))
   const low = Math.min(...amounts)
@@ -657,7 +684,7 @@ provide('productPage', reactive({
   product, gallery, imagesCarousel: markRaw(imagesCarousel), cart: markRaw(cart), wishlist: markRaw(wishlist),
   reviewsOn, scrollToReviews, safeCategoryName, safePrice, safeVariationPrice, safeDescription,
   variationLoading, selectedVariation, selectedVariations, availableAttributes, getOptionsWithDisabled,
-  choicePrice, choicePricesDiffer, loadExtras,
+  choicePrice, choicePricesDiffer, choiceSamePrice, loadExtras,
   onVariationChange, variationError, isVariable, quantity, decreaseQty, increaseQty,
   shouldDisableCartButtons, addToCartHandler, addCurrentToCart, showChoices, addToWishlist,
   openLightbox,

@@ -228,9 +228,17 @@ const choiceVars = computed(() => {
 // A price on each choice when the options cost different amounts (from the
 // store's variation prices). Otherwise only the chosen card shows the price;
 // older stores send no variation prices, so it waits for the chosen variation.
+const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 function choicePriceOf(name, value) {
   const chosen = p.selectedVariations[name] === value
-  if (p.choicePricesDiffer) return p.choicePrice(name, value)
+  if (p.choicePricesDiffer) {
+    // An option that doesn't change the price (a coffee type when only the
+    // weight does) shows the owner's text instead, or nothing.
+    const price = p.choicePrice(name, value)
+    if (price) return price
+    const text = String(d.value.same_price_text || '').trim()
+    return text && p.choiceSamePrice?.(name, value) ? escapeHtml(text) : ''
+  }
   if (choiceStyle.value !== 'cards' || !chosen) return ''
   return p.choicePrice(name, value) || (p.selectedVariation && !p.variationLoading ? p.safeVariationPrice : '')
 }
