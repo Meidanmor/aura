@@ -480,13 +480,11 @@ const handlePointerUp = (e) => {
     el.querySelector('aside').style.transform = 'translateX(0)'
     if (activeBackdrop) activeBackdrop.style.backgroundColor = `rgba(0,0,0,${MAX_BACKDROP_OPACITY})`
 
-    // Open once the touch has fully ended (pointerup comes before touchend), like a
-    // tap on the menu icon. Opening locks the page's scrolling; doing that while the
-    // finger is still down makes phones swallow the next tap on a drawer link.
-    setTimeout(() => {
-      resetDrag(el)
-      drawers.open(drawer)
-    }, 0)
+    // Hand over to Quasar in this same task: the styles above and Quasar's own
+    // collapse into one change, so the slide doesn't restart halfway.
+    resetDrag(el)
+
+    drawers.open(drawer)
   } else {
     el.querySelector('aside').style.transform = edge === 'left' ? `translateX(-${width}px)` : `translateX(${width}px)`
     if (activeBackdrop) {
