@@ -59,7 +59,7 @@
     </template>
 
     <q-page-container style="padding-top: 0">
-      <main>
+      <main :data-clarity-mask="privatePage ? 'True' : null">
         <router-view />
       </main>
     </q-page-container>
@@ -559,6 +559,10 @@ async function handleSoftAskEnable() {
 const uiHydrated = ref(false)              // Deferred functional UI
 const route = useRoute()
 const router = useRouter()
+// Pages with shoppers' personal details: session recorders (Microsoft Clarity) hide every text and
+// number on them, whatever the owner's Clarity project settings (form fields are hidden everywhere already).
+const PRIVATE_PAGE = /(^|\/)(checkout|thank-you|my-account|forgot-password|reset-password|review)(\/|$)/
+const privatePage = computed(() => PRIVATE_PAGE.test(route.path))
 if (process.env.SERVER) {
   // Which page this is, for the owner's custom code (src-ssr/custom-code.js).
   const ssr = useSSRContext()
