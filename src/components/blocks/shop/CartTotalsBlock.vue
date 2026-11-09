@@ -31,7 +31,9 @@
       <div v-else class="text-caption">{{ t('Enter your address at checkout to see shipping options') }}</div>
     </template>
     <div class="q-mt-md">
+      <div v-if="d.line_subtotal">{{ t('Subtotal') }}: <span dir="ltr">{{ formatCurrency(c.displayCart?.totals?.total_items || '0') }}</span></div>
       <div v-if="c.couponApplied">{{ t('Total discount: {amount}', { amount: formatCurrency(c.cartTotalDiscount) }) }}</div>
+      <div v-if="shippingLine">{{ t('Shipping') }}: <span dir="ltr">{{ shippingLine }}</span></div>
       <GiftCardsApplied />
       <div class="text-h6">{{ t('Total: {amount}', { amount: formatCurrency(c.cartTotal) }) }}</div>
     </div>
@@ -51,6 +53,7 @@ import { computed, inject, onMounted, ref } from 'vue'
 import { formatCurrency } from 'src/utils/formatters.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import GiftCardsApplied from 'src/components/shop/GiftCardsApplied.vue'
+import { t } from 'src/i18n/index.js'
 
 // Shown after this block mounts (not the page's isHydrated: the block hydrates after the page).
 const ready = ref(false)
@@ -63,6 +66,14 @@ const props = defineProps({ data: { type: Object, required: true }, blockId: { t
 const c = inject('cartPage', null)
 const d = computed(() => props.data.data || {})
 const buttonBg = computed(() => resolveGlobalColor(d.value.button_bg))
+// "Shipping price" line: once the store worked out a rate (an address or a single zone).
+const shippingLine = computed(() => {
+  if (!d.value.line_shipping) return ''
+  const totals = c?.displayCart?.totals || {}
+  const rates = c?.displayCart?.shipping_rates?.[0]?.shipping_rates || []
+  if (!rates.length || totals.total_shipping == null) return ''
+  return Number(totals.total_shipping) > 0 ? formatCurrency(totals.total_shipping) : t('Free')
+})
 const buttonColors = computed(() => ({ ...(buttonBg.value ? { background: buttonBg.value } : {}), ...(d.value.button_text ? { color: resolveGlobalColor(d.value.button_text) } : {}) }))
 </script>
 

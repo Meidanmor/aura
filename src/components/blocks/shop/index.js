@@ -12,7 +12,7 @@ const SHOP_BLOCKS = {
   archive_count: 'ArchiveCountBlock', archive_sort: 'ArchiveSortBlock', archive_filters_button: 'ArchiveFiltersButtonBlock', archive_products: 'ArchiveProductsBlock',
   archive_pagination: 'ArchivePaginationBlock',
   cart_title: 'CartTitleBlock', cart_items: 'CartItemsBlock', cart_totals: 'CartTotalsBlock',
-  cart_coupon: 'CartCouponBlock', cart_suggestions: 'CartSuggestionsBlock', cart_shipping: 'CartShippingBlock', cart_summary: 'CartSummaryBlock',
+  cart_coupon: 'CheckoutCouponBlock', cart_suggestions: 'CartSuggestionsBlock', cart_shipping: 'CartShippingBlock', cart_summary: 'CartSummaryBlock',
   // Any page, and the cart / wishlist drawers built from blocks.
   free_shipping_bar: 'FreeShippingBarBlock', wishlist_items: 'WishlistItemsBlock',
   checkout_title: 'CheckoutTitleBlock', checkout_login: 'CheckoutLoginBlock', checkout_details: 'CheckoutDetailsBlock',

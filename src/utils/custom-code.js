@@ -290,6 +290,8 @@ function testBadge() {
 /** From MainLayout, once the page is in the browser. */
 export function initCustomCode(router) {
   if (typeof window === 'undefined' || cfg) return
+  // Never in the Store builder's preview: the owner's edits aren't visits (the server sends none there either).
+  if (new URLSearchParams(window.location.search).get('qwoo_editor') === '1') return
   const state = window.__QWOO_CODE__
   if (!state || !Array.isArray(state.snippets)) return
   cfg = state

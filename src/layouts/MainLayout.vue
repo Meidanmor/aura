@@ -480,10 +480,13 @@ const handlePointerUp = (e) => {
     el.querySelector('aside').style.transform = 'translateX(0)'
     if (activeBackdrop) activeBackdrop.style.backgroundColor = `rgba(0,0,0,${MAX_BACKDROP_OPACITY})`
 
-    // only the cleanup waits for the CSS transition to visually finish
-    resetDrag(el)
-
-    drawers.open(drawer)
+    // Open once the touch has fully ended (pointerup comes before touchend), like a
+    // tap on the menu icon. Opening locks the page's scrolling; doing that while the
+    // finger is still down makes phones swallow the next tap on a drawer link.
+    setTimeout(() => {
+      resetDrag(el)
+      drawers.open(drawer)
+    }, 0)
   } else {
     el.querySelector('aside').style.transform = edge === 'left' ? `translateX(-${width}px)` : `translateX(${width}px)`
     if (activeBackdrop) {
@@ -579,7 +582,9 @@ watch([previewDrawer, () => drawerList.value.map((dr) => `${dr.key}:${dr.blockId
 
 const noDelayRoutes = ['/checkout/', '/cart/', '/my-account/']
 
+// The Store builder's preview (and the AI app's view) never waits for a scroll or a move.
 const shouldDelayHydration = computed(() => {
+  if (route.query.qwoo_editor === '1') return false
   return !noDelayRoutes.includes(stripLang(route.path))
 })
 
@@ -711,7 +716,7 @@ onMounted(async () => {
         getPushConfig().then((cfg) => {
           pushKeyReady.value = !!cfg.key
           softAskTexts.value = cfg.ask?.texts || null
-          if (cfg.key) initNotificationSoftAskTracking(router, cfg.ask)
+          if (cfg.key && route.query.qwoo_editor !== '1') initNotificationSoftAskTracking(router, cfg.ask)
         })
         const code = typeof route.query.qwoo_push_owner === 'string' ? route.query.qwoo_push_owner : ''
         if (code && /^[a-z0-9]{24}$/.test(code) && !Platform.is.capacitor && 'Notification' in window) {
