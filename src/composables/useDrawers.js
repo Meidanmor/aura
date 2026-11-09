@@ -15,7 +15,7 @@
  * Drawers are drawn in the browser only (after hydration), so widgets add
  * them on mount.
  */
-import { inject, onBeforeUnmount, onMounted, provide, reactive, watch } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, provide, reactive, watch } from 'vue'
 
 /**
  * A widget's drawer built from blocks: its sections while "Drawer Content" is
@@ -24,6 +24,50 @@ import { inject, onBeforeUnmount, onMounted, provide, reactive, watch } from 'vu
 export function drawerSections(block) {
   const list = block?.data?.drawer_content === 'blocks' && Array.isArray(block?.blocks) ? block.blocks.filter((s) => s && s.enabled !== false) : []
   return list.length ? list : null
+}
+
+const FIND = Symbol('qwoo-find-widget')
+
+/** In the layout: how a widget finds another one by id (the header and footer shown on this page). */
+export function provideWidgetFinder(getLists) {
+  provide(FIND, (id) => {
+    if (!id) return null
+    const walk = (nodes) => {
+      for (const n of Array.isArray(nodes) ? nodes : []) {
+        if (!n || typeof n !== 'object') continue
+        if (n.id === id) return n
+        const found = walk(n.blocks)
+        if (found) return found
+      }
+      return null
+    }
+    for (const list of getLists()) {
+      const found = walk(list)
+      if (found) return found
+    }
+    return null
+  })
+}
+
+/**
+ * The widget whose drawer this widget opens: itself, or with Drawer Content
+ * "Same as another widget" the chosen widget of the same type (its content,
+ * title, width, colours and swipe). A missing widget, another type, or one
+ * that itself points elsewhere: this widget's own standard drawer.
+ * Returns a computed { node, id, linked }.
+ */
+export function useDrawerSource(props) {
+  const find = inject(FIND, null)
+  return computed(() => {
+    const self = props.data || {}
+    const d = self.data || {}
+    if (d.drawer_content !== 'same') return { node: self, id: props.blockId, linked: false }
+    const other = d.drawer_source && d.drawer_source !== props.blockId && find ? find(d.drawer_source) : null
+    if (!other || other.type !== self.type || other.enabled === false || other.data?.drawer_content === 'same') {
+      return { node: { ...self, data: { ...d, drawer_content: 'standard' } }, id: props.blockId, linked: false }
+    }
+    return { node: other, id: other.id, linked: true }
+  })
 }
 
 const KEY = Symbol('qwoo-drawers')

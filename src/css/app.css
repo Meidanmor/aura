@@ -526,6 +526,20 @@ body section {
     .sb-row-m > .sb-block.sb-sticky-m { align-self: flex-start; }
 }
 
+/* "Stick To: The bottom": the same distance variables, from the bottom edge. */
+@media (min-width: 1024px) {
+    .sb-container.sb-sticky-d.sb-sticky-bottom, .sb-block.sb-sticky-d.sb-sticky-bottom { top: auto; bottom: var(--sb-st, 0px); }
+    .sb-row-d > .sb-block.sb-sticky-d.sb-sticky-bottom { align-self: flex-end; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+    .sb-container.sb-sticky-t.sb-sticky-bottom, .sb-block.sb-sticky-t.sb-sticky-bottom { top: auto; bottom: var(--sb-st-t, var(--sb-st, 0px)); }
+    .sb-row-t > .sb-block.sb-sticky-t.sb-sticky-bottom { align-self: flex-end; }
+}
+@media (max-width: 767px) {
+    .sb-container.sb-sticky-m.sb-sticky-bottom, .sb-block.sb-sticky-m.sb-sticky-bottom { top: auto; bottom: var(--sb-st-m, var(--sb-st-t, var(--sb-st, 0px))); }
+    .sb-row-m > .sb-block.sb-sticky-m.sb-sticky-bottom { align-self: flex-end; }
+}
+
 /* Advanced > Position "Absolute" (setAbsoluteVars()): inside the parent section
    (.sb-container is position: relative). Start / end, so it flips with the language. */
 @media (min-width: 1024px) {

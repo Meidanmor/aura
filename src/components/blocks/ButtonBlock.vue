@@ -1,5 +1,5 @@
 <template>
-  <div v-if="(d.text || (run && btnIcon) || (d.url && btnIcon)) && (d.url || run)" class="btn-block" :class="fullWidthClasses" :style="wrapVars">
+  <div v-if="!hiddenForCart && (d.text || (run && btnIcon) || (url && btnIcon)) && (url || run)" class="btn-block" :class="fullWidthClasses" :style="wrapVars">
     <q-btn
         data-sb-part="Button"
         v-bind="run ? {} : linkAttrs"
@@ -11,7 +11,7 @@
         class="btn-block__btn"
         :class="[`btn-block__btn--${variant}`, `btn-block__btn--${size}`, labelText.class, paddingVars.cls, iconPlace.cls, { 'has-icon-gap': hasIconGap }]"
         :style="btnVars"
-        :label="d.text || undefined"
+        :label="buttonText || undefined"
         :outline="variant === 'outline'"
         :flat="variant === 'flat' || variant === 'link'"
         :unelevated="variant === 'primary' || variant === 'secondary'"
@@ -30,6 +30,7 @@ import { useRoute, useRouter } from 'vue-router'
 import wishlist from 'src/stores/wishlist.js'
 import { addWishlistToCart, addingWishlist } from 'src/utils/wishlist-cart.js'
 import cart from 'src/stores/cart.js'
+import { formatCurrency } from 'src/utils/formatters.js'
 import { fetchProductById } from 'src/api/woocommerce.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { brandFontVar } from 'src/utils/brand-fonts.js'
@@ -138,8 +139,24 @@ const qColor = computed(() => {
   return variant.value === 'secondary' ? 'secondary' : 'primary'
 })
 
+// "Go to checkout" / "Go to the cart page": hidden while the cart is empty (known in the
+// browser only), {total} in the text becomes the cart total.
+const CART_LINKS = { checkout: '/checkout/', cart_page: '/cart/' }
+const cartLink = computed(() => CART_LINKS[d.value.click_action] || '')
+const url = computed(() => cartLink.value || d.value.url || '')
+// The cart page / cart drawer's cart (the Store builder preview's sample one), else the shopper's.
+const cartPage = inject('cartPage', null)
+const shownCart = () => cartPage?.cart || cart
+const hiddenForCart = computed(() => !!cartLink.value && !(mounted.value && Number(shownCart().state?.items_count) > 0))
+const buttonText = computed(() => {
+  const text = d.value.text || ''
+  if (!cartLink.value || !text.includes('{total}')) return text
+  const totals = shownCart().state?.totals || {}
+  return text.split('{total}').join(formatCurrency(totals.total_price ?? '0'))
+})
+
 const linkAttrs = computed(() => {
-  const url = d.value.url || ''
+  const url = cartLink.value || d.value.url || ''
   const newTab = !!d.value.new_tab
 
   if (url.startsWith('#')) {

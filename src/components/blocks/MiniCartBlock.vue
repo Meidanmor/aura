@@ -11,7 +11,7 @@ import WidgetButton from './WidgetButton.vue'
 import { cartIcons } from 'src/utils/builder-icons.js'
 import { formatCurrency } from 'src/utils/formatters.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
-import { drawerSections, useDrawer } from 'src/composables/useDrawers.js'
+import { drawerSections, useDrawer, useDrawerSource } from 'src/composables/useDrawers.js'
 import { useI18n } from 'src/i18n/index.js'
 
 const props = defineProps({
@@ -25,18 +25,24 @@ const router = useRouter()
 const d = computed(() => props.data?.data || {})
 const toPage = computed(() => d.value.click_action === 'page')
 
+const source = useDrawerSource(props)
 const drawer = useDrawer(
   () => (toPage.value ? '' : 'cart'),
-  () => ({
-    kind: 'cart',
-    blockId: props.blockId,
-    sections: drawerSections(props.data),
-    width: d.value.drawer_width || '',
-    title: d.value.drawer_title ?? t('Cart'),
-    bg: resolveGlobalColor(d.value.drawer_bg) || '',
-    color: resolveGlobalColor(d.value.drawer_text_color) || '',
-    swipe: d.value.swipe || 'auto',
-  }),
+  () => {
+    // Its own drawer, or with "Same as another widget" that widget's.
+    const node = source.value.node
+    const sd = node.data || {}
+    return {
+      kind: 'cart',
+      blockId: source.value.id,
+      sections: drawerSections(node),
+      width: sd.drawer_width || '',
+      title: sd.drawer_title ?? t('Cart'),
+      bg: resolveGlobalColor(sd.drawer_bg) || '',
+      color: resolveGlobalColor(sd.drawer_text_color) || '',
+      swipe: sd.swipe || 'auto',
+    }
+  },
 )
 
 // The cart is known in the browser only: the server's page and the first

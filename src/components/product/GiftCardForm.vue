@@ -80,6 +80,8 @@
             dense
             :options="SEND_TIMES"
             :dropdown-icon="matArrowDropDown"
+            popup-content-class="gc-time-menu"
+            options-selected-class="gc-time-on"
             :label="t('At')"
             :error="tried && timePassed"
             :error-message="t('This time has passed. Choose a later one.')"
@@ -183,10 +185,10 @@
     <q-dialog v-model="previewOpen">
       <q-card class="gc-dialog">
         <q-card-section class="row items-center no-wrap">
-          <div class="text-subtitle1 col">{{ t('The email they\'ll get') }}</div>
+          <div class="text-subtitle1 col">{{ t('Gift card email preview') }}</div>
           <q-btn flat round dense :icon="matClose" :aria-label="t('Close')" @click="previewOpen = false" />
         </q-card-section>
-        <q-card-section class="q-pt-none"><GiftCardPreview :product="product" /></q-card-section>
+        <q-card-section class="q-pt-none"><GiftCardPreview :product="product" bare /></q-card-section>
       </q-card>
     </q-dialog>
   </div>
@@ -290,6 +292,12 @@ async function add() {
 
 <style scoped>
 .gc-form { display: grid; gap: 4px; }
+/* purgecss start ignore */
+/* Focused fields take the page's text colour, not the store's main colour (often near white in templates). */
+.gc-form :deep(.q-field--highlighted .q-field__control),
+.gc-form :deep(.q-field--highlighted .q-field__label),
+.gc-form :deep(.q-field--highlighted .q-field__marginal) { color: inherit; }
+/* purgecss end ignore */
 .gc-step { margin-bottom: 14px; }
 .gc-label { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
 .gc-label small { font-weight: 400; opacity: .65; }
@@ -326,4 +334,11 @@ async function add() {
   .gc-desk-only { display: inline-flex; }
   .gc-phone-only { display: none; }
 }
+</style>
+
+<style>
+/* purgecss start ignore */
+/* The send-time list (drawn outside the form): the chosen time in the text colour, bold, on a soft band. */
+.gc-time-menu .q-item.gc-time-on { color: inherit; font-weight: 700; background: rgba(0, 0, 0, .07); }
+/* purgecss end ignore */
 </style>

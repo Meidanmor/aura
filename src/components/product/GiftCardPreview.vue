@@ -1,9 +1,6 @@
 <template>
   <div class="gc-preview">
-    <div class="gc-preview__head">
-      <b>{{ t('The email they\'ll get') }}</b>
-      <span>{{ whenText }}</span>
-    </div>
+    <div v-if="!bare" class="gc-preview__head"><b>{{ t('Gift card email preview') }}</b></div>
     <div class="gc-preview__inbox">
       <iframe
           v-if="mounted && html"
@@ -11,7 +8,7 @@
           class="gc-preview__frame"
           :srcdoc="html"
           sandbox="allow-same-origin"
-          :title="t('The email they\'ll get')"
+          :title="t('Gift card email preview')"
           :style="{ height: `${height}px` }"
           @load="measure"
       />
@@ -23,14 +20,15 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { t } from 'src/i18n/index.js'
-import { fillPreview, giftSettings, giftState, loadTemplate, sendLabel } from 'src/utils/gift-card.js'
+import { fillPreview, giftSettings, giftState, loadTemplate } from 'src/utils/gift-card.js'
 
 /**
  * The gift card email as the recipient will get it, filled in as the shopper
  * types (the store's own email, see Qwoo_Gift_Cards::rest_preview). Drawn in
  * a frame that runs no scripts. Only in the browser (its own mounted flag).
  */
-const props = defineProps({ product: { type: Object, required: true } })
+// bare: no heading (the dialog has its own).
+const props = defineProps({ product: { type: Object, required: true }, bare: { type: Boolean, default: false } })
 const g = computed(() => giftSettings(props.product))
 const s = computed(() => giftState(props.product))
 const template = ref('')
@@ -40,7 +38,6 @@ const frame = ref(null)
 const height = ref(640)
 
 const html = computed(() => fillPreview(template.value, s.value, g.value, props.product))
-const whenText = computed(() => (s.value?.when === 'date' && s.value.send_on ? t('Sent on {date}', { date: sendLabel(s.value) }) : t('Sent right after payment')))
 
 function measure() {
   try {

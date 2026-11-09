@@ -14,6 +14,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, useSSRContext, watch, provide, reactive, markRaw } from 'vue'
+import { rememberViewed } from 'src/utils/recently-viewed.js'
 import { ecommerceOf, eventItem, track } from 'src/utils/custom-code.js'
 import { useRoute, useRouter, onBeforeRouteUpdate } from 'vue-router'
 import { fetchProductById } from 'src/api/woocommerce.js'
@@ -581,6 +582,8 @@ const safeCategoryName = useSanitizedText(() => product.value?.categories?.[0]?.
 function trackView() {
   const p = product.value
   if (p?.id) track('view_item', { ecommerce: ecommerceOf([eventItem(p, 1)], p.prices?.currency_code) })
+  // "Recently viewed" product lists (kept in this browser).
+  if (p?.id) rememberViewed(p.id)
 }
 
 onMounted(async() => {

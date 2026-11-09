@@ -122,17 +122,29 @@ async function queryProducts(q = {}, ssrContext = null) {
 
   const exclude = (q.exclude_ids || []).map(Number).filter(Boolean)
   const keep = (list) => (exclude.length ? (list || []).filter((p) => !exclude.includes(Number(p.id))) : list)
+  const inStock = (list) => (q.hide_out_of_stock ? (list || []).filter((p) => p.is_in_stock !== false) : list)
 
   if (type === 'manual') {
     return keep(await getFeaturedProducts((q.product_ids || []).filter((id) => !exclude.includes(Number(id))), ssrContext))
   }
 
-  // Suggestions for the cart (src/utils/cart-suggestions.js): its cross-sells (cart_ids), else the
-  // block's chosen products. The server doesn't know the shopper's cart: null, the browser asks.
+  // Suggestions for the cart (src/utils/cart-suggestions.js): its cross-sells (cart_ids), else
+  // "When There Are None" (cart_fallback): the newest products, the block's chosen products, or
+  // nothing. Blocks saved before that choice: their chosen products, else the newest.
+  // The server doesn't know the shopper's cart: null, the browser asks.
   if (type === 'cart') {
     if (import.meta.env.SSR) return null
-    const ids = (q.cart_ids?.length ? q.cart_ids : q.product_ids || []).map(Number).filter((id) => id && !exclude.includes(id))
-    return ids.length ? keep(await getFeaturedProducts(ids.slice(0, limit), ssrContext)) : []
+    const fallback = ['newest', 'manual', 'none'].includes(q.cart_fallback) ? q.cart_fallback : (q.product_ids?.length ? 'manual' : 'newest')
+    const ids = (q.cart_ids?.length ? q.cart_ids : fallback === 'manual' ? q.product_ids || [] : []).map(Number).filter((id) => id && !exclude.includes(id))
+    if (!q.cart_ids?.length && fallback === 'newest') return queryProducts({ ...q, query_type: 'newest', cart_ids: [] }, ssrContext)
+    return ids.length ? inStock(keep(await getFeaturedProducts(ids.slice(0, limit), ssrContext))) : []
+  }
+
+  // Recently viewed (src/utils/recently-viewed.js): kept in the shopper's browser, newest first.
+  if (type === 'recent') {
+    if (import.meta.env.SSR) return null
+    const ids = (q.recent_ids || []).map(Number).filter((id) => id && !exclude.includes(id)).slice(0, limit)
+    return ids.length ? inStock(keep(await getFeaturedProducts(ids, ssrContext))) : []
   }
 
   const query = new URLSearchParams()

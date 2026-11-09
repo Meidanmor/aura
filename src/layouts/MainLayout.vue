@@ -105,7 +105,7 @@ import {ref, computed, watch, onMounted, onUnmounted, useSSRContext, provide} fr
 import { isEditorMode, loadPageConfig, subscribeToLiveConfig } from 'src/utils/config-loader'
 import { resolveHeroImageSrc } from 'src/utils/resolve-hero-image'
 import { applyBrandFonts } from 'src/utils/brand-fonts.js'
-import { provideDrawers } from 'src/composables/useDrawers.js'
+import { provideDrawers, provideWidgetFinder } from 'src/composables/useDrawers.js'
 import { isNativeApp, liveUrl } from 'src/utils/native-app'
 import { useQuasar } from 'quasar'
 import cart from 'src/stores/cart'
@@ -237,6 +237,8 @@ provide('brandSettings', brandSettings)
 provide('headerMenu', headerMenu)
 // The page's drawers: each Menu, Mini Cart and Mini Wishlist widget adds its own.
 const drawers = provideDrawers()
+// "Same as another widget": a widget opens the drawer of another one in the header or footer.
+provideWidgetFinder(() => [shownHeader.value?.sections, shownFooter.value?.sections])
 const drawerList = computed(() => drawers.state.order.map((key) => ({ key, ...drawers.state.entries[key] })))
 // For widgets written before the drawer list (they emit these).
 provide('layoutActions', {

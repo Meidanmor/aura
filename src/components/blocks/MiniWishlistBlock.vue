@@ -8,7 +8,7 @@ import wishlist from 'stores/wishlist.js'
 import WidgetButton from './WidgetButton.vue'
 import { wishlistIcons } from 'src/utils/builder-icons.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
-import { drawerSections, useDrawer } from 'src/composables/useDrawers.js'
+import { drawerSections, useDrawer, useDrawerSource } from 'src/composables/useDrawers.js'
 import { useI18n } from 'src/i18n/index.js'
 
 const props = defineProps({
@@ -20,18 +20,24 @@ const props = defineProps({
 const { t } = useI18n()
 const d = computed(() => props.data?.data || {})
 
+const source = useDrawerSource(props)
 const drawer = useDrawer(
   () => 'wishlist',
-  () => ({
-    kind: 'wishlist',
-    blockId: props.blockId,
-    sections: drawerSections(props.data),
-    width: d.value.drawer_width || '',
-    title: d.value.drawer_title ?? t('Wishlist'),
-    bg: resolveGlobalColor(d.value.drawer_bg) || '',
-    color: resolveGlobalColor(d.value.drawer_text_color) || '',
-    swipe: d.value.swipe || 'none',
-  }),
+  () => {
+    // Its own drawer, or with "Same as another widget" that widget's.
+    const node = source.value.node
+    const sd = node.data || {}
+    return {
+      kind: 'wishlist',
+      blockId: source.value.id,
+      sections: drawerSections(node),
+      width: sd.drawer_width || '',
+      title: sd.drawer_title ?? t('Wishlist'),
+      bg: resolveGlobalColor(sd.drawer_bg) || '',
+      color: resolveGlobalColor(sd.drawer_text_color) || '',
+      swipe: sd.swipe || 'none',
+    }
+  },
 )
 
 // Saved in the browser only: the server's page and the first render agree.

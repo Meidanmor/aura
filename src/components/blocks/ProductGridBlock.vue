@@ -6,6 +6,7 @@
         <ProductCard v-else :product="product" :priority="picked && index < 3" />
       </div>
     </div>
+    <EmptyProducts :d="d" :empty="empty" />
     <div v-if="d.show_view_all && d.view_all_url && shown?.length" class="product-grid-block__footer">
       <q-btn
           :to="isInternal(d.view_all_url) ? d.view_all_url : undefined"
@@ -31,6 +32,8 @@ import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
 import { useSampleFallback } from 'src/utils/sample-items.js'
 import { useCartSuggestions } from 'src/utils/cart-suggestions.js'
+import { useRecentlyViewed } from 'src/utils/recently-viewed.js'
+import EmptyProducts from '../shop/EmptyProducts.vue'
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -48,19 +51,23 @@ const excludeId = useExcludedProduct(() => d.value)
 // Everything that changes which products are shown.
 // "Suggestions for the cart": the cart's cross-sells (browser only), and what's in it, left out.
 const suggestions = useCartSuggestions(() => d.value)
+// "Recently viewed": the shopper's list (browser only), less this page's product.
+const recent = useRecentlyViewed(() => d.value)
 const queryKey = () => JSON.stringify([
   excludeId.value, d.value.query_type, d.value.category_ids, d.value.tag_ids, d.value.product_ids, d.value.limit, d.value.hide_out_of_stock,
-  suggestions.value,
+  d.value.cart_fallback, suggestions.value, recent.value,
 ])
 
 // The page's first images (src/utils/priority-image.js): its first cards.
 const picked = usePriorityBlock(props.blockId)
 
 const { data: products } = useBlockQuery(keyWithProduct(props.blockId, excludeId.value), queryKey, (ssrContext) =>
-    productsStore.queryProducts({ ...d.value, cart_ids: suggestions.value.ids, exclude_ids: [...(excludeId.value ? [excludeId.value] : []), ...suggestions.value.exclude] }, ssrContext)
+    productsStore.queryProducts({ ...d.value, cart_ids: suggestions.value.ids, recent_ids: recent.value.ids, exclude_ids: [...(excludeId.value ? [excludeId.value] : []), ...suggestions.value.exclude] }, ssrContext)
 )
 // The Store builder preview of a store with no products yet: sample products.
 const shown = useSampleFallback(() => products.value, 'product', Math.min(4, Number(d.value.limit) || 4))
+// Nothing viewed yet: the owner's message, or the block / its section hidden.
+const empty = computed(() => d.value.query_type === 'recent' && recent.value.ready && Array.isArray(shown.value) && !shown.value.length)
 
 const cssVars = computed(() => {
   const vars = {}

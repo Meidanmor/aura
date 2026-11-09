@@ -199,6 +199,7 @@
       />
     </div>
   </div>
+  <EmptyProducts v-else-if="source === 'products' && !products" :d="d" :empty="emptyRecent" />
 </template>
 
 <script setup>
@@ -211,6 +212,8 @@ import ProductTags from '../sections/ProductTags.vue'
 import productsStore from 'src/stores/products'
 import { useBlockQuery } from 'src/composables/useBlockQuery.js'
 import { useCartSuggestions } from 'src/utils/cart-suggestions.js'
+import { useRecentlyViewed } from 'src/utils/recently-viewed.js'
+import EmptyProducts from '../shop/EmptyProducts.vue'
 import { useDragScroll } from 'src/composables/useDragScroll.js'
 import { keyWithProduct, useExcludedProduct } from 'src/utils/current-product.js'
 import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
@@ -265,13 +268,15 @@ const slides = computed(() => (d.value.slides || [])
 const excludeId = useExcludedProduct(() => (source.value === 'products' && !props.products ? d.value : { exclude_current: false }))
 // "Suggestions for the cart": the cart's cross-sells (browser only), and what's in it, left out.
 const suggestions = useCartSuggestions(() => (source.value === 'products' && !props.products ? d.value : null))
+// "Recently viewed": the shopper's list (browser only), less this page's product.
+const recent = useRecentlyViewed(() => (source.value === 'products' && !props.products ? d.value : null))
 const queryKey = () => JSON.stringify([
   excludeId.value, source.value, d.value.query_type, d.value.category_ids, d.value.tag_ids, d.value.product_ids,
-  d.value.limit, d.value.hide_out_of_stock, d.value.slide_category_ids, suggestions.value,
+  d.value.limit, d.value.hide_out_of_stock, d.value.slide_category_ids, d.value.cart_fallback, suggestions.value, recent.value,
 ])
 const { data: fetched } = useBlockQuery(keyWithProduct(props.blockId, excludeId.value), queryKey, (ssrContext) => {
   if (props.products) return Promise.resolve(null)
-  if (source.value === 'products') return productsStore.queryProducts({ ...d.value, cart_ids: suggestions.value.ids, exclude_ids: [...(excludeId.value ? [excludeId.value] : []), ...suggestions.value.exclude] }, ssrContext)
+  if (source.value === 'products') return productsStore.queryProducts({ ...d.value, cart_ids: suggestions.value.ids, recent_ids: recent.value.ids, exclude_ids: [...(excludeId.value ? [excludeId.value] : []), ...suggestions.value.exclude] }, ssrContext)
   if (source.value === 'categories') return productsStore.queryCategories(d.value.slide_category_ids || [], ssrContext)
   return Promise.resolve([])
 })
@@ -286,6 +291,9 @@ const items = computed(() => {
   if (source.value === 'products' || source.value === 'categories') return fetched.value || []
   return []
 })
+
+// Nothing viewed yet: the owner's message, or the block / its section hidden.
+const emptyRecent = computed(() => recent.value.ready && Array.isArray(fetched.value) && !fetched.value.length)
 
 // A card design chosen for the products / categories (Store builder → Card designs), published with it.
 const card = computed(() => (Array.isArray(d.value.card) && d.value.card.length ? d.value.card : null))

@@ -103,21 +103,24 @@ function hasAny(value) {
  * parent). The first build had one value plus "Not Sticky On" (sticky_off).
  * "Stay below the header" adds the header's height on screen
  * (--qwoo-header-stuck, measured by AppHeader). CSS: app.css .sb-sticky-*.
+ * "Stick To: The bottom" (sticky_edge): sb-sticky-bottom, and the distance from
+ * the bottom (sticky_bottom) in the same variables.
  */
 export function setStickyVars(vars, s = {}) {
   const pos = asResponsive(s.position)
   const off = s.sticky_off || {}
   const on = Object.fromEntries(DEVICES.map((device) => [device, pos[device] === 'sticky' && !off[device]]))
   if (!DEVICES.some((device) => on[device])) return {}
-  const top = asResponsive(s.sticky_top)
+  const bottom = s.sticky_edge === 'bottom'
+  const top = asResponsive(bottom ? s.sticky_bottom : s.sticky_top)
   let last = '0px'
   for (const device of DEVICES) {
     const v = toCssLength(top[device])
     if (v) last = v
     vars[`--sb-st${device === 'desktop' ? '' : '-' + DEVICE_SHORT[device]}`] = last
   }
-  vars['--sb-sth'] = s.sticky_below_header === false ? '0px' : 'var(--qwoo-header-stuck, 0px)'
-  return { 'sb-sticky-d': on.desktop, 'sb-sticky-t': on.tablet, 'sb-sticky-m': on.mobile }
+  vars['--sb-sth'] = bottom || s.sticky_below_header === false ? '0px' : 'var(--qwoo-header-stuck, 0px)'
+  return { 'sb-sticky-d': on.desktop, 'sb-sticky-t': on.tablet, 'sb-sticky-m': on.mobile, 'sb-sticky-bottom': bottom }
 }
 
 const ABSOLUTE_SIDES = { pos_top: '--sb-at', pos_bottom: '--sb-ab', pos_start: '--sb-as', pos_end: '--sb-ae' }
@@ -585,6 +588,7 @@ const CARD_BLOCKS = new Set([
   'checkout_contact', 'checkout_shipping_address', 'checkout_billing_address', 'checkout_coupon',
   'checkout_items', 'checkout_shipping', 'checkout_payment', 'checkout_totals', 'checkout_place_order',
   'login_form', 'signup_form', 'account_orders', 'account_details', 'cart_items', 'cart_totals',
+  'cart_coupon', 'cart_shipping', 'cart_summary',
 ])
 
 export function buildBlockWrapperStyle(block) {

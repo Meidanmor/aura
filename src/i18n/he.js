@@ -545,6 +545,7 @@ export default {
   "Add to cart · {amount}": "הוספה לעגלה · {amount}",
   "Fill in the fields marked above.": "צריך למלא את השדות המסומנים למעלה.",
   "The email they'll get": "המייל שהם יקבלו",
+  "Gift card email preview": "תצוגה מקדימה של מייל כרטיס המתנה",
   "your photo": "התמונה שלך",
   "with an image": "עם תמונה",
   "no image": "בלי תמונה",
@@ -588,4 +589,10 @@ export default {
   "To": "אל",
   "Sends": "נשלח",
   "Email design": "עיצוב המייל",
+  "Have a coupon?": "יש לכם קופון?",
+  "Subtotal": "סכום המוצרים",
+  "Discount": "הנחה",
+  "Free": "חינם",
+  "You may also like": "אולי יעניין אתכם גם",
+  "Add {name} to the cart": "הוספת {name} לסל",
 }

@@ -10,7 +10,7 @@ import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { t } from 'src/i18n/index.js'
 import WidgetButton from './WidgetButton.vue'
 import { menuIcons } from 'src/utils/builder-icons.js'
-import { drawerSections, useDrawer } from 'src/composables/useDrawers.js'
+import { drawerSections, useDrawer, useDrawerSource } from 'src/composables/useDrawers.js'
 import { useAnchorSpy } from 'src/composables/useAnchorSpy.js'
 import MobileNavItems from 'components/app/MobileNavItems.vue'
 
@@ -46,12 +46,12 @@ const showsFolding = computed(() => DEVICES.some((device) => layouts.value[devic
 const LAYOUT_CLASS = { horizontal: '.hm-horizontal', vertical: '.menu-vertical', folding: '.menu-folding' }
 const closeDrawer = inject('closeDrawer', null)
 
-// Resolved menu items
-const menuItems = computed(() => {
-  if (Array.isArray(props.menu) && props.menu.length) {
+// Resolved menu items (of this widget, or of the widget whose drawer it opens)
+const itemsFor = (data, own) => {
+  if (own && Array.isArray(props.menu) && props.menu.length) {
     return props.menu
   }
-  const menuId = d.value.menu_id
+  const menuId = data.menu_id
   const menusMap = siteMenus?.value || {}
   if (menuId && Array.isArray(menusMap[menuId])) {
     return menusMap[menuId]
@@ -64,7 +64,8 @@ const menuItems = computed(() => {
     return firstMenu
   }
   return []
-})
+}
+const menuItems = computed(() => itemsFor(d.value, true))
 
 const mobileMenuEnabled = computed(() => showsHorizontal.value && !!d.value.enable_mobile_menu)
 
@@ -80,22 +81,28 @@ const breakpoint = computed(() => {
 // Class that scopes the generated CSS to this block instance.
 const scope = computed(() => `hm-${(props.blockId || 'x').replace(/[^\w-]/g, '')}`)
 
-// This widget's own drawer (useDrawers.js), only while its phone button can show it.
+// This widget's drawer (useDrawers.js), only while its phone button can show it: its own,
+// or with "Same as another widget" that widget's (one drawer, opened by both).
+const source = useDrawerSource(props)
 const drawer = useDrawer(
-  () => (mobileMenuEnabled.value && breakpoint.value !== null ? `menu:${props.blockId || 'menu'}` : ''),
-  () => ({
-    kind: 'menu',
-    blockId: props.blockId,
-    sections: drawerSections(props.data),
-    width: d.value.drawer_width || '',
-    items: menuItems.value,
-    title: d.value.drawer_title ?? t('Menu'),
-    bg: colorValue(d.value.drawer_bg),
-    color: colorValue(d.value.drawer_text_color),
-    showLanguages: d.value.drawer_show_languages !== false,
-    showNotifications: d.value.drawer_show_notifications !== false,
-    swipe: d.value.swipe || 'auto',
-  }),
+  () => (mobileMenuEnabled.value && breakpoint.value !== null ? `menu:${source.value.id || 'menu'}` : ''),
+  () => {
+    const node = source.value.node
+    const sd = node.data || {}
+    return {
+      kind: 'menu',
+      blockId: source.value.id,
+      sections: drawerSections(node),
+      width: sd.drawer_width || '',
+      items: source.value.linked ? itemsFor(sd, false) : menuItems.value,
+      title: sd.drawer_title ?? t('Menu'),
+      bg: colorValue(sd.drawer_bg),
+      color: colorValue(sd.drawer_text_color),
+      showLanguages: sd.drawer_show_languages !== false,
+      showNotifications: sd.drawer_show_notifications !== false,
+      swipe: sd.swipe || 'auto',
+    }
+  },
 )
 
 const colorValue = (c) => (c ? resolveGlobalColor(c) || c : '')

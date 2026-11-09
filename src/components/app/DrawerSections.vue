@@ -1,12 +1,14 @@
 <template>
   <!-- A header widget's drawer built from blocks (Store builder → Menu / Mini Cart / Mini
        Wishlist → Drawer Content → Built from blocks): its title, then the owner's sections. -->
-  <q-scroll-area :visible="false" class="fit drawer-sections" :class="`drawer-sections--${entry.kind}`">
+  <!-- Sections with "Keep at the bottom of the drawer" sit under the scrolling part. -->
+  <div class="fit column no-wrap drawer-sections" :class="`drawer-sections--${entry.kind}`">
+  <q-scroll-area :visible="false" class="col drawer-sections__scroll">
     <div class="drawer-sections__head sticky flex justify-between items-center no-wrap" :style="entry.bg ? { background: entry.bg } : null">
       <div v-if="entry.title !== ''" class="text-h6">{{ entry.title ?? t(TITLES[entry.kind] || 'Menu') }}</div><span v-else />
       <q-btn flat dense padding="none" :aria-label="t(CLOSE[entry.kind] || 'Close')" :icon="matClose" @click="emit('close')" />
     </div>
-    <SectionRenderer :sections="entry.sections" page="drawer" no-priority />
+    <SectionRenderer :sections="scrolling" page="drawer" no-priority />
     <q-banner
         v-if="entry.kind === 'menu' && entry.showNotifications !== false && vapidConfigured && supported && permission !== 'granted' && permission !== 'denied'"
         class="bg-secondary text-white q-ma-md rounded-borders shadow-2"
@@ -18,10 +20,14 @@
       </template>
     </q-banner>
   </q-scroll-area>
+  <div v-if="pinned.length" class="drawer-sections__bottom" :style="entry.bg ? { background: entry.bg } : null">
+    <SectionRenderer :sections="pinned" page="drawer" no-priority />
+  </div>
+  </div>
 </template>
 
 <script setup>
-import { provide } from 'vue'
+import { computed, provide } from 'vue'
 import { matClose } from '@quasar/extras/material-icons'
 import SectionRenderer from 'components/sections/SectionRenderer.vue'
 import { provideCartPage } from 'src/composables/useCartPage.js'
@@ -37,6 +43,10 @@ const props = defineProps({
 const emit = defineEmits(['close', 'subscribe'])
 const { t } = useI18n()
 
+// "Keep at the bottom of the drawer" (a section's Advanced → Position).
+const pinned = computed(() => (props.entry.sections || []).filter((s) => s?.style?.drawer_pin))
+const scrolling = computed(() => (props.entry.sections || []).filter((s) => !s?.style?.drawer_pin))
+
 const TITLES = { menu: 'Menu', cart: 'Cart', wishlist: 'Wishlist' }
 const CLOSE = { menu: 'Close menu', cart: 'Close cart drawer', wishlist: 'Close wishlist drawer' }
 
@@ -47,6 +57,14 @@ provide('closeDrawer', () => emit('close'))
 </script>
 
 <style scoped>
+.drawer-sections__scroll {
+  min-height: 0;
+}
+.drawer-sections__bottom {
+  flex: none;
+  max-height: 70%;
+  overflow-y: auto;
+}
 .drawer-sections__head {
   position: sticky;
   top: 0;

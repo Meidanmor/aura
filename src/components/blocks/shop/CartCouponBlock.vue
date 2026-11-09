@@ -1,0 +1,55 @@
+<template>
+  <!-- "Cart Coupon" (cart page / cart drawer): Cart Totals' coupon box on its own. -->
+  <div v-if="c && !c.cart.state.offline && c.cart.hasItems.value && ready" class="cart-coupon">
+    <div v-if="title" class="text-subtitle1 q-mb-xs">{{ title }}</div>
+    <button v-if="folded && !opened && !c.couponApplied" type="button" class="cart-coupon__open" @click="opened = true">{{ t('Have a coupon?') }}</button>
+    <template v-else>
+      <div class="row items-center q-col-gutter-sm">
+        <div class="col"><q-input :for="fid('f1')" v-model="c.couponCode" v-bind="look" dense :label="t('Coupon code')" @keydown.enter.stop.prevent="c.applyCoupon(c.couponCode)" /></div>
+        <div class="col-auto"><q-btn :label="d.button_label || t('Apply')" :color="buttonBg ? undefined : 'secondary'" :style="buttonColors" :loading="c.loadingCoupon" @click="c.applyCoupon(c.couponCode)" /></div>
+      </div>
+      <div v-if="c.couponError" class="text-negative q-mt-xs">{{ c.couponError }}</div>
+      <GiftCardsApplied mode="chips" />
+      <div v-for="coupon in c.displayCart.coupons || []" :key="coupon.code" class="row items-center q-mt-xs">
+        <q-chip color="secondary" text-color="white">{{ coupon.code }}</q-chip>
+        <q-btn flat dense no-caps color="negative" :label="t('Remove')" @click="c.removeCoupon(coupon.code)" />
+      </div>
+    </template>
+  </div>
+</template>
+
+<script setup>
+import { computed, inject, onMounted, ref } from 'vue'
+import { useFieldIds } from 'src/utils/field-id.js'
+import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
+import GiftCardsApplied from 'src/components/shop/GiftCardsApplied.vue'
+import { t } from 'src/i18n/index.js'
+
+const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
+const c = inject('cartPage', null)
+const d = computed(() => props.data.data || {})
+const fid = useFieldIds()
+// Shown after this block mounts (the cart is known in the browser only).
+const ready = ref(false)
+onMounted(() => { ready.value = true })
+const opened = ref(false)
+const folded = computed(() => !!d.value.folded)
+// Show a title: the owner's, else "Coupon".
+const title = computed(() => (d.value.show_title === false ? '' : String(d.value.title || '').trim() || t('Coupon')))
+const LOOKS = new Set(['filled', 'outlined', 'standard', 'borderless'])
+const look = computed(() => { const l = LOOKS.has(d.value.field_look) ? d.value.field_look : 'filled'; return l === 'standard' ? {} : { [l]: true } })
+const buttonBg = computed(() => resolveGlobalColor(d.value.button_bg))
+const buttonColors = computed(() => ({ ...(buttonBg.value ? { background: buttonBg.value } : {}), ...(d.value.button_text ? { color: resolveGlobalColor(d.value.button_text) } : {}) }))
+</script>
+
+<style scoped>
+.cart-coupon__open {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+</style>
