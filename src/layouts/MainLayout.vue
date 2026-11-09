@@ -502,6 +502,22 @@ const handlePointerUp = (e) => {
   activeEdge = null
   activeEl = null
 }
+// Pointer events can't tell the phone that a swipe was ours: it still treats the
+// touch as its own gesture (a scroll that's still settling) and spends the next tap
+// stopping it, so the first tap on a drawer link did nothing. Cancelling the touch
+// events of a swipe that moves a drawer tells it the page used them.
+let swipeTouched = false
+const handleTouchMove = (e) => {
+  if (dragging && activeEl) {
+    swipeTouched = true
+    if (e.cancelable) e.preventDefault()
+  }
+}
+const handleTouchEnd = (e) => {
+  if (!swipeTouched) return
+  swipeTouched = false
+  if (e.cancelable) e.preventDefault()
+}
 const handlePointerCancel = (e) => {
   if (activePointerId === null || e.pointerId !== activePointerId) return
   activePointerId = null
@@ -746,6 +762,8 @@ onMounted(async () => {
         window.addEventListener('pointermove', handlePointerMove, { passive: false })
         window.addEventListener('pointerup', handlePointerUp, { passive: true })
         window.addEventListener('pointercancel', handlePointerCancel, { passive: true })
+        window.addEventListener('touchmove', handleTouchMove, { passive: false })
+        window.addEventListener('touchend', handleTouchEnd, { passive: false })
       })
 
     } catch (e) {
@@ -787,6 +805,8 @@ onUnmounted(() => {
   window.removeEventListener('pointermove', handlePointerMove)
   window.removeEventListener('pointerup', handlePointerUp)
   window.removeEventListener('pointercancel', handlePointerCancel)
+  window.removeEventListener('touchmove', handleTouchMove)
+  window.removeEventListener('touchend', handleTouchEnd)
 
   liveConfigUnsubscribers.forEach(fn => fn())
   liveConfigUnsubscribers = []
