@@ -284,9 +284,11 @@ export async function preFetchProducts(ctx = {}) {
       orderby,
       order,
       attributes,
-      in_stock,
       ssrContext = null,
     } = ctx
+    // The Products Grid's Query (gridQuery()): { params, inStock }.
+    const rules = ctx.rules || null
+    const in_stock = !!ctx.in_stock || !!rules?.inStock
     // lead: places on page 1 that aren't products (the Products Grid's promo card). Page 1 has
     // per_page - lead products, the next pages per_page each, starting right after them.
     const lead = Math.max(0, Math.min(Number(per_page) - 1, Number(ctx.lead) || 0))
@@ -326,6 +328,7 @@ export async function preFetchProducts(ctx = {}) {
     })
     if (attrFilters.length > 1) query.append('attribute_relation', 'and')
     if (in_stock) query.append('stock_status[]', 'instock')
+    for (const [k, v] of Object.entries(rules?.params || {})) query.append(k, v)
 
     const url = `${storeApiBase(ssrContext)}/products?${query.toString()}`
 
@@ -397,6 +400,18 @@ export async function preFetchProducts(ctx = {}) {
       }
 
       if (in_stock) localProducts = localProducts.filter(p => p.is_in_stock !== false)
+
+      // The Products Grid's Query, as near as the saved list allows.
+      const rp = rules?.params || {}
+      const idsOf = (v) => String(v || '').split(',').map(Number).filter(Boolean)
+      const termIn = (list, ids) => (list || []).some((t) => ids.includes(Number(t.id)))
+      if (rp.qq_ids) localProducts = localProducts.filter(p => idsOf(rp.qq_ids).includes(p.id))
+      if (rp.qq_cats) localProducts = localProducts.filter(p => termIn(p.categories, idsOf(rp.qq_cats)))
+      if (rp.qq_tags) localProducts = localProducts.filter(p => termIn(p.tags, idsOf(rp.qq_tags)))
+      if (rp.qq_not_ids) localProducts = localProducts.filter(p => !idsOf(rp.qq_not_ids).includes(p.id))
+      if (rp.qq_not_cats) localProducts = localProducts.filter(p => !termIn(p.categories, idsOf(rp.qq_not_cats)))
+      if (rp.qq_not_tags) localProducts = localProducts.filter(p => !termIn(p.tags, idsOf(rp.qq_not_tags)))
+      if (rp.on_sale) localProducts = localProducts.filter(p => p.on_sale)
 
       if (min_price !== undefined) {
         localProducts = localProducts.filter(p => parseFloat(p.prices?.price || 0) >= min_price)

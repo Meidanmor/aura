@@ -78,7 +78,8 @@ const a = inject('productArchive', null)
 const d = computed(() => props.data.data || {})
 // The Store builder preview of a store with no products yet: sample products.
 const withSamples = useSampleFallback(() => a?.paginatedProducts || [], 'product', 4)
-const shown = computed(() => (a?.productsStore.productsLoading.value ? a.paginatedProducts : withSamples.value))
+// With a Query of its own (Content → Query), an empty list is the answer: no sample products.
+const shown = computed(() => (a?.productsStore.productsLoading.value || a?.grid?.query?.active ? a.paginatedProducts : withSamples.value))
 // The block's own loop template, else the one chosen for these pages.
 const card = computed(() => (Array.isArray(d.value.card) && d.value.card.length ? d.value.card : a?.shopSettings?.product_card || null))
 // The page's first image is above the grid (a section with a photo): it loads first, not the first cards.

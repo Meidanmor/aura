@@ -180,7 +180,37 @@ export function archiveGrid(sections) {
     perPage,
     mode: GRID_MODES.includes(d.pagination) ? d.pagination : 'numbers',
     lead: promo && perPage > 1 ? 1 : 0,
+    query: gridQuery(d),
   }
+}
+
+const idList = (v) => (Array.isArray(v) ? v : []).map(Number).filter((n) => Number.isInteger(n) && n > 0)
+
+/**
+ * The Products Grid's Query (Content → Query) as Store API parameters:
+ * { params, replacesPage, active, key }. params go on every product list request (the store plugin's
+ * Qwoo_Product_List_Rules reads the qq_* ones). replacesPage: Show isn't "This page's products", so a
+ * category page doesn't add its own category. Show with nothing chosen yet counts as "This page's products".
+ */
+export function gridQuery(d = {}) {
+  const params = {}
+  const set = (name, ids) => { if (ids.length) params[name] = ids.join(',') }
+  let replacesPage = false
+  const src = d.query_source || 'current'
+  const chosen = { products: ['qq_ids', d.query_product_ids], categories: ['qq_cats', d.query_category_ids], tags: ['qq_tags', d.query_tag_ids] }[src]
+  if (chosen && idList(chosen[1]).length) {
+    set(chosen[0], idList(chosen[1]))
+    replacesPage = true
+  } else if (src === 'on_sale' || src === 'featured') {
+    params[src] = 'true'
+    replacesPage = true
+  }
+  set('qq_not_ids', idList(d.exclude_product_ids))
+  set('qq_not_cats', idList(d.exclude_category_ids))
+  set('qq_not_tags', idList(d.exclude_tag_ids))
+  const inStock = d.hide_out_of_stock === true || d.hide_out_of_stock === 'true'
+  const key = JSON.stringify([params, inStock])
+  return { params, inStock, replacesPage, active: replacesPage || inStock || Object.keys(params).length > 0, key }
 }
 
 /** The block's data value for this screen size's first value (responsive fields come as { desktop, … }). */
