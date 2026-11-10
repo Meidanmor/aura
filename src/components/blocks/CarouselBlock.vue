@@ -272,11 +272,11 @@ const suggestions = useCartSuggestions(() => (source.value === 'products' && !pr
 const recent = useRecentlyViewed(() => (source.value === 'products' && !props.products ? d.value : null))
 const queryKey = () => JSON.stringify([
   excludeId.value, source.value, d.value.query_type, d.value.category_ids, d.value.tag_ids, d.value.product_ids,
-  d.value.limit, d.value.hide_out_of_stock, d.value.slide_category_ids, d.value.cart_fallback, suggestions.value, recent.value,
+  d.value.limit, d.value.hide_out_of_stock, d.value.slide_category_ids, d.value.cart_fallback, d.value.for_you_fallback, suggestions.value, recent.value,
 ])
 const { data: fetched } = useBlockQuery(keyWithProduct(props.blockId, excludeId.value), queryKey, (ssrContext) => {
   if (props.products) return Promise.resolve(null)
-  if (source.value === 'products') return productsStore.queryProducts({ ...d.value, cart_ids: suggestions.value.ids, recent_ids: recent.value.ids, exclude_ids: [...(excludeId.value ? [excludeId.value] : []), ...suggestions.value.exclude] }, ssrContext)
+  if (source.value === 'products') return productsStore.queryProducts({ ...d.value, cart_ids: suggestions.value.ids, recent_ids: recent.value.ids, interest_category_ids: recent.value.category_ids, exclude_ids: [...(excludeId.value ? [excludeId.value] : []), ...suggestions.value.exclude] }, ssrContext)
   if (source.value === 'categories') return productsStore.queryCategories(d.value.slide_category_ids || [], ssrContext)
   return Promise.resolve([])
 })
@@ -293,7 +293,7 @@ const items = computed(() => {
 })
 
 // Nothing viewed yet: the owner's message, or the block / its section hidden.
-const emptyRecent = computed(() => recent.value.ready && Array.isArray(fetched.value) && !fetched.value.length)
+const emptyRecent = computed(() => ['recent', 'for_you'].includes(d.value.query_type) && recent.value.ready && Array.isArray(fetched.value) && !fetched.value.length)
 
 // A card design chosen for the products / categories (Store builder → Card designs), published with it.
 const card = computed(() => (Array.isArray(d.value.card) && d.value.card.length ? d.value.card : null))

@@ -56,25 +56,26 @@ const router = useRouter()
 // Show: "cart" (bought together with the cart's products) or "recent" (recently viewed).
 const d = computed(() => {
   const data = props.data.data || {}
-  return { ...data, query_type: data.query_type === 'recent' ? 'recent' : 'cart', limit: data.limit || 6, hide_out_of_stock: data.hide_out_of_stock !== false }
+  return { ...data, query_type: ['recent', 'for_you'].includes(data.query_type) ? data.query_type : 'cart', limit: data.limit || 6, hide_out_of_stock: data.hide_out_of_stock !== false }
 })
 const title = computed(() => (d.value.show_title === false ? '' : String(d.value.title || '').trim() || t('You may also like')))
 
 const excludeId = useExcludedProduct(() => d.value)
 const suggestions = useCartSuggestions(() => d.value)
 const recent = useRecentlyViewed(() => d.value)
-const queryKey = () => JSON.stringify([excludeId.value, d.value.query_type, d.value.cart_fallback, d.value.product_ids, d.value.limit, d.value.hide_out_of_stock, suggestions.value, recent.value])
+const queryKey = () => JSON.stringify([excludeId.value, d.value.query_type, d.value.cart_fallback, d.value.for_you_fallback, d.value.product_ids, d.value.limit, d.value.hide_out_of_stock, suggestions.value, recent.value])
 const { data: products } = useBlockQuery(keyWithProduct(props.blockId, excludeId.value), queryKey, (ssrContext) =>
   productsStore.queryProducts({
     ...d.value,
     cart_ids: suggestions.value.ids,
     recent_ids: recent.value.ids,
+    interest_category_ids: recent.value.category_ids,
     exclude_ids: [...(excludeId.value ? [excludeId.value] : []), ...suggestions.value.exclude],
   }, ssrContext),
 )
 // The Store builder preview with nothing to show: sample products.
 const shown = useSampleFallback(() => products.value, 'product', 4)
-const empty = computed(() => d.value.query_type === 'recent' && recent.value.ready && Array.isArray(shown.value) && !shown.value.length)
+const empty = computed(() => ['recent', 'for_you'].includes(d.value.query_type) && recent.value.ready && Array.isArray(shown.value) && !shown.value.length)
 
 const row = ref(null)
 useDragScroll(row)

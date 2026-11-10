@@ -28,6 +28,10 @@
           :aria-label="t('Close')"
       />
       <SectionRenderer :sections="current.sections || []" page="popup" />
+      <div v-if="s.coupon_code" class="qwoo-popup__offer">
+        <code>{{ s.coupon_code }}</code>
+        <q-btn dense no-caps outline :label="copied ? t('Copied') : t('Copy code')" @click="copyCoupon" />
+      </div>
     </div>
   </q-dialog>
 </template>
@@ -50,7 +54,8 @@ import { chromeTarget } from 'src/utils/layouts.js'
 import { checkSession, useAccount } from 'src/composables/useAccount.js'
 import { asResponsive, toCssLength } from 'src/composables/useSectionStyle.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
-import { countView, markShown, mayOpenBySelf, popupIdOf } from 'src/utils/popups.js'
+import { countView, markShown, matchesInterestAudience, mayOpenBySelf, popupIdOf } from 'src/utils/popups.js'
+import { getInterestedCategoryIds } from 'src/utils/recently-viewed.js'
 import { useI18n } from 'src/i18n/index.js'
 
 const { t } = useI18n()
@@ -59,8 +64,10 @@ const router = useRouter()
 const { signedIn } = useAccount()
 
 const popups = ref([])
+const interestCategories = ref([])
 const current = ref(null)
 const shown = ref(false)
+const copied = ref(false)
 let previewId = ''
 
 const s = computed(() => current.value?.settings || {})
@@ -105,11 +112,27 @@ const closeStyle = computed(() => {
   return c ? { color: c } : {}
 })
 
-function open(popup) {
+async function open(popup) {
   if (!popup) return
+  if (!previewId && popup.settings?.audience === 'interest') {
+    interestCategories.value = await getInterestedCategoryIds()
+    if (!matchesInterestAudience(popup, interestCategories.value)) return
+  }
   current.value = popup
   shown.value = true
+  copied.value = false
   markShown(popup.id)
+}
+async function copyCoupon() {
+  const code = String(s.value.coupon_code || '')
+  if (!code) return
+  try {
+    await navigator.clipboard.writeText(code)
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 1800)
+  } catch {
+    copied.value = false
+  }
 }
 function openById(id) {
   open(popups.value.find((p) => p.id === id))
@@ -143,7 +166,12 @@ async function arm() {
   if (previewId || !popups.value.length) return
   const views = countView()
   await checkSession() // "Show To" needs to know who this is
-  const ctx = { where: chromeTarget(route), signedIn: signedIn.value, views }
+  if (popups.value.some((popup) => popup.settings?.audience === 'interest')) {
+    interestCategories.value = await getInterestedCategoryIds()
+  } else {
+    interestCategories.value = []
+  }
+  const ctx = { where: chromeTarget(route), signedIn: signedIn.value, views, interestCategories: interestCategories.value }
   for (const popup of popups.value) {
     if (!mayOpenBySelf(popup, ctx)) continue
     const st = popup.settings
@@ -215,8 +243,8 @@ onMounted(async () => {
   if (!isEditorMode()) {
     const config = await loadPageConfig('popups', false).catch(() => null)
     popups.value = Array.isArray(config?.popups) ? config.popups : []
+    await arm()
     openFromHash()
-    arm()
   }
 })
 onBeforeUnmount(() => {

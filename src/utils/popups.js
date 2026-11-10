@@ -80,6 +80,7 @@ export function mayOpenBySelf(popup, ctx) {
   if (s.end_date && day > s.end_date) return false
   if (s.audience === 'guests' && ctx.signedIn) return false
   if (s.audience === 'customers' && !ctx.signedIn) return false
+  if (!matchesInterestAudience(popup, ctx.interestCategories)) return false
   if (s.hide_on?.[deviceNow()]) return false
   if (s.where === 'chosen' && !chromeMatch({ targets: s.targets, page_paths: s.page_paths }, ctx.where)) return false
   if ((s.exclude || []).length && chromeMatch({ targets: s.exclude, page_paths: s.exclude_paths }, ctx.where)) return false
@@ -92,4 +93,13 @@ export function mayOpenBySelf(popup, ctx) {
     case 'days': return !last || Date.now() - last > (Number(s.days) || 7) * 864e5
     default: return !read(sessionStorage, SESSION_KEY)[popup.id] // once per visit
   }
+}
+
+/** Applies the new category-interest audience to both automatic and link-opened popups. */
+export function matchesInterestAudience(popup, categoryIds = []) {
+  const s = popup?.settings || {}
+  if (s.audience !== 'interest') return true
+  const wanted = (Array.isArray(s.interest_category_ids) ? s.interest_category_ids : []).map(Number).filter((id) => Number.isSafeInteger(id) && id > 0)
+  const interests = Array.isArray(categoryIds) ? categoryIds.map(Number) : []
+  return wanted.length > 0 && wanted.some((id) => interests.includes(id))
 }

@@ -607,4 +607,6 @@ export default {
   "Back": "חזרה",
   "Continue": "המשך",
   "Please choose how to get your order.": "נא לבחור איך לקבל את ההזמנה.",
+  "Copy code": "העתקת קוד",
+  "Copied": "הועתק",
 }

@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { getApiOrigin } from 'src/utils/server/get-api-origin'
 import { plainSlug, sameSlug, slugOfPermalink } from 'src/utils/slug.js'
+import { getPublicProductCatalog } from 'src/utils/product-catalog.js'
 
 // STORE_API_BASE is no longer a module-level constant — it depended on
 // process.env.VITE_API_BASE, which is fixed once at server boot and shared
@@ -145,6 +146,36 @@ async function queryProducts(q = {}, ssrContext = null) {
     if (import.meta.env.SSR) return null
     const ids = (q.recent_ids || []).map(Number).filter((id) => id && !exclude.includes(id)).slice(0, limit)
     return ids.length ? inStock(keep(await getFeaturedProducts(ids, ssrContext))) : []
+  }
+
+  // "For you" is browser-only so one shopper's profile is never used during SSR.
+  // Interest categories are derived from product categories already saved in this browser.
+  if (type === 'for_you') {
+    if (import.meta.env.SSR) return null
+    const categoryIds = [...new Set((q.interest_category_ids || []).map(Number).filter((id) => Number.isSafeInteger(id) && id > 0))].slice(0, 20)
+    const fallback = ['best_selling', 'newest', 'none'].includes(q.for_you_fallback) ? q.for_you_fallback : 'best_selling'
+    let recommended = []
+    if (categoryIds.length) {
+      try {
+        // Category affinity stays in the browser: rank the store's public catalog
+        // locally rather than sending the shopper's interest categories to an API.
+        const catalog = await getPublicProductCatalog()
+        const rank = new Map(categoryIds.map((id, i) => [id, categoryIds.length - i]))
+        recommended = (Array.isArray(catalog) ? catalog : [])
+          .filter((p) => !exclude.includes(Number(p.id)) && (!q.hide_out_of_stock || p.is_in_stock !== false))
+          .map((p, index) => ({ p, index, score: Math.max(0, ...(p.categories || []).map((c) => rank.get(Number(c.id)) || 0)) }))
+          .filter((x) => x.score > 0)
+          .sort((a, b) => b.score - a.score || a.index - b.index)
+          .map((x) => x.p)
+          .slice(0, limit)
+      } catch (err) {
+        console.warn('[products store] for-you query failed', err)
+      }
+    }
+    if (recommended.length >= limit || fallback === 'none') return recommended
+    const used = new Set([...exclude, ...recommended.map((p) => Number(p.id))])
+    const more = await queryProducts({ ...q, query_type: fallback, limit: limit - recommended.length, exclude_ids: [...used] }, ssrContext)
+    return [...recommended, ...(Array.isArray(more) ? more.filter((p) => !used.has(Number(p.id))) : [])].slice(0, limit)
   }
 
   const query = new URLSearchParams()

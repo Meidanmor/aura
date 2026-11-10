@@ -54,7 +54,7 @@ const suggestions = useCartSuggestions(() => d.value)
 // "Recently viewed": the shopper's list (browser only), less this page's product.
 const recent = useRecentlyViewed(() => d.value)
 const queryKey = () => JSON.stringify([
-  excludeId.value, d.value.query_type, d.value.category_ids, d.value.tag_ids, d.value.product_ids, d.value.limit, d.value.hide_out_of_stock,
+  excludeId.value, d.value.query_type, d.value.category_ids, d.value.tag_ids, d.value.product_ids, d.value.limit, d.value.hide_out_of_stock, d.value.for_you_fallback,
   d.value.cart_fallback, suggestions.value, recent.value,
 ])
 
@@ -62,12 +62,12 @@ const queryKey = () => JSON.stringify([
 const picked = usePriorityBlock(props.blockId)
 
 const { data: products } = useBlockQuery(keyWithProduct(props.blockId, excludeId.value), queryKey, (ssrContext) =>
-    productsStore.queryProducts({ ...d.value, cart_ids: suggestions.value.ids, recent_ids: recent.value.ids, exclude_ids: [...(excludeId.value ? [excludeId.value] : []), ...suggestions.value.exclude] }, ssrContext)
+    productsStore.queryProducts({ ...d.value, cart_ids: suggestions.value.ids, recent_ids: recent.value.ids, interest_category_ids: recent.value.category_ids, exclude_ids: [...(excludeId.value ? [excludeId.value] : []), ...suggestions.value.exclude] }, ssrContext)
 )
 // The Store builder preview of a store with no products yet: sample products.
 const shown = useSampleFallback(() => products.value, 'product', Math.min(4, Number(d.value.limit) || 4))
 // Nothing viewed yet: the owner's message, or the block / its section hidden.
-const empty = computed(() => d.value.query_type === 'recent' && recent.value.ready && Array.isArray(shown.value) && !shown.value.length)
+const empty = computed(() => ['recent', 'for_you'].includes(d.value.query_type) && recent.value.ready && Array.isArray(shown.value) && !shown.value.length)
 
 const cssVars = computed(() => {
   const vars = {}
