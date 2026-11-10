@@ -28,10 +28,6 @@
           :aria-label="t('Close')"
       />
       <SectionRenderer :sections="current.sections || []" page="popup" />
-      <div v-if="s.coupon_code" class="qwoo-popup__offer">
-        <code>{{ s.coupon_code }}</code>
-        <q-btn dense no-caps outline :label="copied ? t('Copied') : t('Copy code')" @click="copyCoupon" />
-      </div>
     </div>
   </q-dialog>
 </template>
@@ -67,7 +63,6 @@ const popups = ref([])
 const interestCategories = ref([])
 const current = ref(null)
 const shown = ref(false)
-const copied = ref(false)
 let previewId = ''
 
 const s = computed(() => current.value?.settings || {})
@@ -114,25 +109,25 @@ const closeStyle = computed(() => {
 
 async function open(popup) {
   if (!popup) return
+  if (!previewId && popup.settings?.audience === 'saved') {
+    const audienceId = String(popup.settings?.audience_id || '')
+    if (!audienceId) return
+    try {
+      const response = await fetch('/wp-json/qwoo/v1/personalization/evaluate', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ audience_id: audienceId }),
+      })
+      const result = response.ok ? await response.json() : null
+      if (!result?.match) return
+    } catch { return }
+  }
   if (!previewId && popup.settings?.audience === 'interest') {
     interestCategories.value = await getInterestedCategoryIds()
     if (!matchesInterestAudience(popup, interestCategories.value)) return
   }
   current.value = popup
   shown.value = true
-  copied.value = false
   markShown(popup.id)
-}
-async function copyCoupon() {
-  const code = String(s.value.coupon_code || '')
-  if (!code) return
-  try {
-    await navigator.clipboard.writeText(code)
-    copied.value = true
-    setTimeout(() => { copied.value = false }, 1800)
-  } catch {
-    copied.value = false
-  }
 }
 function openById(id) {
   open(popups.value.find((p) => p.id === id))

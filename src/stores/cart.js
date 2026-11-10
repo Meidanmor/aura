@@ -6,6 +6,7 @@ import { matShoppingCart, matError, matCloudOff } from '@quasar/extras/material-
 import { fetchProductById } from 'src/api/woocommerce.js'
 import { getApiOrigin } from 'src/utils/server/get-api-origin'
 import { ecommerceOf, eventItem, track } from 'src/utils/custom-code.js'
+import { sendPersonalizationEvent } from 'src/utils/personalization.js'
 /* -------------------------
    Constants
    ------------------------- */
@@ -71,6 +72,7 @@ function notifyUser($q, type, message, icon=matError) {
 
 function markCartChanged() {
   state.synced = false
+  sendPersonalizationEvent('cart', { product_ids: (state.items || []).map(item => Number(item.id)).filter(Boolean) })
 }
 
 /* -------------------------

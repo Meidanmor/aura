@@ -4,6 +4,7 @@ import { fetchWithToken } from 'src/composables/useApiFetch.js'
 import { isLoggedIn } from 'src/stores/user'
 import { matFavorite } from '@quasar/extras/material-icons'
 import { queueDeviceSync } from 'src/services/push/shared.js'
+import { sendPersonalizationEvent } from 'src/utils/personalization.js'
 
 /* -------------------------
    Constants
@@ -49,6 +50,7 @@ function persist() {
   }
   // Sale alerts go to shoppers who saved the product: the store keeps the list with the device.
   queueDeviceSync()
+  sendPersonalizationEvent('wishlist', { product_ids: (state.items || []).map(item => Number(item.id)).filter(Boolean) })
 }
 
 function load() {

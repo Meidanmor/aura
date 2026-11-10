@@ -14,6 +14,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, useSSRContext, watch, provide, reactive, markRaw } from 'vue'
+import { sendPersonalizationEvent } from 'src/utils/personalization.js'
 import { rememberViewed } from 'src/utils/recently-viewed.js'
 import { ecommerceOf, eventItem, track } from 'src/utils/custom-code.js'
 import { useRoute, useRouter, onBeforeRouteUpdate } from 'vue-router'
@@ -613,6 +614,22 @@ function trackView() {
   if (p?.id) rememberViewed(p.id)
 }
 
+let personalizationStartedAt = 0
+function sendQualifiedView() {
+  const p = product.value
+  if (!p?.id || !personalizationStartedAt) return
+  sendPersonalizationEvent('view', {
+    product_id: Number(p.id),
+    category_ids: (p.categories || []).map(c => Number(c.id)).filter(Boolean),
+    seconds: Math.floor((Date.now() - personalizationStartedAt) / 1000),
+  })
+  personalizationStartedAt = 0
+}
+function onPersonalizationVisibility() {
+  if (document.visibilityState === 'hidden') sendQualifiedView()
+  else if (product.value?.id && !personalizationStartedAt) personalizationStartedAt = Date.now()
+}
+
 onMounted(async() => {
   if (!product.value || !product.value.id) {
     await fetchProduct(route.params.slug)
@@ -625,6 +642,8 @@ onMounted(async() => {
 
   }
   trackView()
+  personalizationStartedAt = Date.now()
+  document.addEventListener('visibilitychange', onPersonalizationVisibility)
 
   if (window.__PAGE_CONFIG__ && Object.keys(window.__PAGE_CONFIG__).length) {
     productSettings.value = window.__PAGE_CONFIG__
@@ -642,10 +661,14 @@ onMounted(async() => {
 })
 
 onUnmounted(() => {
+  sendQualifiedView()
+  document.removeEventListener('visibilitychange', onPersonalizationVisibility)
   unsubscribeLiveConfig()
 })
 
 onBeforeRouteUpdate(async (to) => {
+  sendQualifiedView()
+  personalizationStartedAt = Date.now()
   try {
     await fetchProduct(to.params.slug)
 
