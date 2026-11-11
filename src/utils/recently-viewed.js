@@ -1,5 +1,6 @@
 import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { getPublicProductCatalog } from './product-catalog.js'
+import { audienceReady, favouriteCategories } from './personalization.js'
 
 /**
  * Recently viewed products: the ids of the last 20 product pages the shopper
@@ -40,7 +41,20 @@ export function rememberViewed(id) {
  * Ranked categories derived in memory from the existing recently-viewed list.
  * The product details come from the store's public WooCommerce Store API.
  */
+/**
+ * "For you": the visitor's favourite categories from the store (Marketing → Audiences on:
+ * what they viewed, carted and bought, on any device they signed in on), then the
+ * categories of the products viewed in this browser.
+ */
 export async function getInterestedCategoryIds() {
+  if (typeof window === 'undefined') return []
+  await audienceReady(1500)
+  const fromStore = favouriteCategories()
+  const local = await localInterestedCategoryIds()
+  return [...new Set([...fromStore, ...local])].slice(0, 30)
+}
+
+async function localInterestedCategoryIds() {
   load()
   const productIds = ids.value.slice(0, MAX)
   if (!productIds.length || typeof window === 'undefined') return []

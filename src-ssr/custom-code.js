@@ -109,14 +109,16 @@ export function pageCode(req, { where, nonce }) {
       ? {
           mode,
           texts: c.consent?.texts || {},
-          ask: needsConsent(snippets),
+          // Audiences collects visitor activity under Analytics: the banner asks for it too.
+          ask: needsConsent(snippets) || !!c.audiences,
+          audiences: !!c.audiences,
           banner: c.consent?.banner !== false,
           snippets: snippets.map(({ id, kind, name, code, place, where: w, targets, page_paths, group }) => ({ id, kind, name, code, place, where: w, targets, page_paths, group })),
           shortcuts,
           ran: out.ran,
           testing,
         }
-      : { mode, banner: c.consent?.banner !== false, texts: c.consent?.texts || {}, ask: false, snippets: [], shortcuts: {}, ran: [], testing },
+      : { mode, banner: c.consent?.banner !== false, texts: c.consent?.texts || {}, ask: !!c.audiences, audiences: !!c.audiences, snippets: [], shortcuts: {}, ran: [], testing },
   }
 }
 

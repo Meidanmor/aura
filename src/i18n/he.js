@@ -609,4 +609,13 @@ export default {
   "Please choose how to get your order.": "נא לבחור איך לקבל את ההזמנה.",
   "Copy code": "העתקת קוד",
   "Copied": "הועתק",
+  "Helps the store see how it's used and show you products you'll like.": "עוזרות לחנות להבין איך משתמשים בה ולהציג לך מוצרים שיתאימו לך.",
+  "Apply to my cart": "להפעיל בעגלה שלי",
+  "Applied to your cart": "הקופון הופעל בעגלה",
+  "{n}% off": "{n}% הנחה",
+  "{amount} off": "{amount} הנחה",
+  "Free shipping": "משלוח חינם",
+  "Ends {date}": "בתוקף עד {date}",
+  "On orders over {amount}": "בהזמנה מעל {amount}",
+  "This code can't be used right now.": "אי אפשר להשתמש בקוד הזה כרגע.",
 }

@@ -81,6 +81,9 @@ export function mayOpenBySelf(popup, ctx) {
   if (s.audience === 'guests' && ctx.signedIn) return false
   if (s.audience === 'customers' && !ctx.signedIn) return false
   if (!matchesInterestAudience(popup, ctx.interestCategories)) return false
+  // Marketing → Audiences (ctx.inAudience: src/utils/personalization.js).
+  if (s.audience === 'saved' && !ctx.inAudience?.(s.audience_id)) return false
+  if (s.audience === 'not_saved' && ctx.inAudience?.(s.audience_id)) return false
   if (s.hide_on?.[deviceNow()]) return false
   if (s.where === 'chosen' && !chromeMatch({ targets: s.targets, page_paths: s.page_paths }, ctx.where)) return false
   if ((s.exclude || []).length && chromeMatch({ targets: s.exclude, page_paths: s.exclude_paths }, ctx.where)) return false

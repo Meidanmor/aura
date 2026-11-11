@@ -1,6 +1,6 @@
 <template>
-  <div v-if="p?.product?.categories?.length" class="product-cats" :class="`is-${display}`">
-    <router-link v-for="cat in p.product.categories" :key="cat.id" :to="`/product-category/${cat.slug}`" class="no-decoration product-cat" :class="text.class" :style="text.style">
+  <div v-if="cats.length" class="product-cats" :class="`is-${display}`">
+    <router-link v-for="cat in cats" :key="cat.id" :to="`/product-category/${cat.slug}`" class="no-decoration product-cat" :class="text.class" :style="text.style">
       <q-chip v-if="display === 'chips'" :color="chipBg ? undefined : 'secondary'" :style="chipBg ? { background: chipBg } : null" text-color="white" class="category-chip" dense clickable>
         <span>{{ cat.name }}</span>
       </q-chip>
@@ -18,6 +18,8 @@ import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
 const p = inject('productPage', null)
 const d = computed(() => props.data.data || {})
+// Only real categories (a product without one, like a gift card, has none to show).
+const cats = computed(() => (p?.product?.categories || []).filter((c) => c?.id && c.slug))
 const display = computed(() => (d.value.display === 'links' ? 'links' : 'chips'))
 const chipBg = computed(() => resolveGlobalColor(d.value.chip_bg))
 const text = computed(() => textStyle(d.value, tsKeys('text')))

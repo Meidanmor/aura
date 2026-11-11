@@ -15,7 +15,7 @@
           </label>
           <label class="consent-group">
             <input v-model="picked.analytics" type="checkbox">
-            <span><b>{{ t('Analytics') }}</b><small>{{ t('Helps the store see how it\'s used.') }}</small></span>
+            <span><b>{{ t('Analytics') }}</b><small>{{ cfg?.audiences ? t('Helps the store see how it\'s used and show you products you\'ll like.') : t('Helps the store see how it\'s used.') }}</small></span>
           </label>
           <label class="consent-group">
             <input v-model="picked.marketing" type="checkbox">

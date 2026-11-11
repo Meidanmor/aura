@@ -439,8 +439,9 @@ async function fetchProduct(slug) {
 async function enhanceProduct() {
   if (!product.value) return
 
+  // Same as on the server: a product with no category (a gift card) gets an empty list, never [null].
   if (!product.value?.categories?.length) {
-    product.value.categories = [product.value.extensions?.qwoo?.default_category]
+    product.value.categories = [product.value.extensions?.qwoo?.default_category].filter(Boolean)
   }
 
   quantity.value = 1
@@ -620,7 +621,7 @@ function sendQualifiedView() {
   if (!p?.id || !personalizationStartedAt) return
   sendPersonalizationEvent('view', {
     product_id: Number(p.id),
-    category_ids: (p.categories || []).map(c => Number(c.id)).filter(Boolean),
+    category_ids: (p.categories || []).map(c => Number(c?.id)).filter(Boolean),
     seconds: Math.floor((Date.now() - personalizationStartedAt) / 1000),
   })
   personalizationStartedAt = 0

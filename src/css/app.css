@@ -1171,6 +1171,10 @@ header.header-solid-text .header-inner :not(.q-badge) {
    builder preview (html.qa-editor) shows both, outlined. */
 html:not(.qa-out):not(.qa-editor) .sb-aud-guests,
 html:not(.qa-in):not(.qa-editor) .sb-aud-customers { display: none !important; }
+/* Show To an audience (src/utils/personalization.js): hidden until the store says who this is. */
+html:not(.qa-au):not(.qa-editor) .sb-au-in { display: none !important; }
+html.qa-editor:not(.qa-au-preview) .sb-au-in,
+html.qa-editor:not(.qa-au-preview) .sb-au-out { outline: 1px dashed rgba(91, 76, 245, .7); outline-offset: -1px; }
 html.qa-editor .sb-aud-guests,
 html.qa-editor .sb-aud-customers { outline: 1px dashed rgba(127, 127, 127, .6); outline-offset: -1px; }
 .account-sample-note { margin: 0; opacity: .75; }

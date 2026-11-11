@@ -167,8 +167,10 @@ export function setOrderVars(vars, s = {}) {
 }
 
 /** hide-on-device classes shared by containers and blocks. */
-export function visibilityClasses(hideOn, audience = '') {
+export function visibilityClasses(hideOn, audience = '', audienceId = '') {
   const h = hideOn || {}
+  // Marketing → Audiences: src/utils/personalization.js writes the one rule that shows or hides these.
+  const au = (audience === 'in' || audience === 'out') && /^[a-z0-9_]{1,24}$/.test(audienceId || '') ? audienceId : ''
   return {
     'sb-hide-d': !!h.desktop,
     'sb-hide-t': !!h.tablet,
@@ -176,6 +178,9 @@ export function visibilityClasses(hideOn, audience = '') {
     // "Show To" (visitors / signed-in customers): app.css shows them once html has qa-out / qa-in.
     'sb-aud-guests': audience === 'guests',
     'sb-aud-customers': audience === 'customers',
+    'sb-au-in': !!au && audience === 'in',
+    'sb-au-out': !!au && audience === 'out',
+    ...(au ? { [`sb-au-${au}`]: true } : {}),
   }
 }
 
@@ -540,7 +545,7 @@ export function buildContainerStyle(style = {}) {
       'sb-has-link': !!link,
       'sb-has-mx': sideways,
       ...overflowClasses(s.overflow),
-      ...visibilityClasses(s.hide_on, s.audience),
+      ...visibilityClasses(s.hide_on, s.audience, s.audience_id),
     },
     outerVars,
     innerClasses: rowClasses,
@@ -607,7 +612,7 @@ export function buildBlockWrapperStyle(block) {
         'sb-has-w': c.widthMode === 'custom' && hasAny(block.style?.width),
         'sb-has-maxw': c.widthMode === 'contained',
         ...c.stickyClasses,
-        ...visibilityClasses(block.style?.hide_on, block.style?.audience),
+        ...visibilityClasses(block.style?.hide_on, block.style?.audience, block.style?.audience_id),
       },
       vars,
       anchorId: block.style?.anchor_id || undefined,
@@ -649,7 +654,7 @@ export function buildBlockWrapperStyle(block) {
       'sb-has-border': !!looks.border,
       ...bg.classes,
       ...sticky,
-      ...visibilityClasses(s.hide_on, s.audience),
+      ...visibilityClasses(s.hide_on, s.audience, s.audience_id),
     },
     vars,
     video: bg.video,

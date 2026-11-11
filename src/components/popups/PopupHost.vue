@@ -15,7 +15,7 @@
       :transition-duration="s.animation === 'none' ? 0 : 300"
       @hide="onHide"
   >
-    <div class="qwoo-popup__card" :class="widthClasses" :style="cardVars" role="dialog" :aria-label="current.name || undefined">
+    <div class="qwoo-popup__card" :class="widthClasses" :style="cardVars" role="dialog" :aria-label="current.name || undefined" @click.capture="onCardClick">
       <q-btn
           v-if="s.show_close !== false"
           v-close-popup
@@ -52,6 +52,7 @@ import { asResponsive, toCssLength } from 'src/composables/useSectionStyle.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { countView, markShown, matchesInterestAudience, mayOpenBySelf, popupIdOf } from 'src/utils/popups.js'
 import { getInterestedCategoryIds } from 'src/utils/recently-viewed.js'
+import { audienceReady, inAudience, sendPersonalizationEvent } from 'src/utils/personalization.js'
 import { useI18n } from 'src/i18n/index.js'
 
 const { t } = useI18n()
@@ -109,17 +110,12 @@ const closeStyle = computed(() => {
 
 async function open(popup) {
   if (!popup) return
-  if (!previewId && popup.settings?.audience === 'saved') {
-    const audienceId = String(popup.settings?.audience_id || '')
-    if (!audienceId) return
-    try {
-      const response = await fetch('/wp-json/qwoo/v1/personalization/evaluate', {
-        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ audience_id: audienceId }),
-      })
-      const result = response.ok ? await response.json() : null
-      if (!result?.match) return
-    } catch { return }
+  // Marketing → Audiences: "People in an audience" / "Everyone except an audience".
+  const aud = popup.settings?.audience
+  if (!previewId && (aud === 'saved' || aud === 'not_saved')) {
+    await audienceReady()
+    const member = inAudience(String(popup.settings?.audience_id || ''))
+    if (aud === 'saved' ? !member : member) return
   }
   if (!previewId && popup.settings?.audience === 'interest') {
     interestCategories.value = await getInterestedCategoryIds()
@@ -127,7 +123,18 @@ async function open(popup) {
   }
   current.value = popup
   shown.value = true
+  clicked = false
   markShown(popup.id)
+  if (!previewId) sendPersonalizationEvent('seen', { popup_id: popup.id, ...(aud === 'saved' ? { audience_id: popup.settings.audience_id } : {}) })
+}
+// A link or button in the popup (not Close): the popup's "Clicked" number (Marketing → Audiences).
+let clicked = false
+function onCardClick(e) {
+  if (clicked || previewId || !current.value) return
+  const el = e.target?.closest?.('a, button')
+  if (!el || el.classList.contains('qwoo-popup__close')) return
+  clicked = true
+  sendPersonalizationEvent('click', { popup_id: current.value.id }, true)
 }
 function openById(id) {
   open(popups.value.find((p) => p.id === id))
@@ -166,7 +173,8 @@ async function arm() {
   } else {
     interestCategories.value = []
   }
-  const ctx = { where: chromeTarget(route), signedIn: signedIn.value, views, interestCategories: interestCategories.value }
+  if (popups.value.some((popup) => ['saved', 'not_saved'].includes(popup.settings?.audience))) await audienceReady()
+  const ctx = { where: chromeTarget(route), signedIn: signedIn.value, views, interestCategories: interestCategories.value, inAudience }
   for (const popup of popups.value) {
     if (!mayOpenBySelf(popup, ctx)) continue
     const st = popup.settings

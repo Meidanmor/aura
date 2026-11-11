@@ -311,7 +311,15 @@ export function useProductArchive(mode) {
 
     const categoryOptions = computed(() => {
         if (!Array.isArray(productsStore.categories.value)) return []
-        return productsStore.categories.value.map(cat => ({ label: decodeHtml(cat.name), value: cat.id }))
+        // The Filters list follows the Products Grid's Query: categories it leaves out aren't
+        // offered, and when it shows chosen categories only those are.
+        const ids = (list) => String(list || '').split(',').map(Number).filter(Boolean)
+        const params = rules()?.params || {}
+        const out = ids(params.qq_not_cats)
+        const only = ids(params.qq_cats)
+        return productsStore.categories.value
+            .filter(cat => !out.includes(Number(cat.id)) && (!only.length || only.includes(Number(cat.id))))
+            .map(cat => ({ label: decodeHtml(cat.name), value: cat.id }))
     })
 
     const paginatedProducts = computed(() => productsStore.products.value || [])

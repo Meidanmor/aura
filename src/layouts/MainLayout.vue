@@ -123,6 +123,7 @@ import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { stripLang } from 'src/i18n/lang.js'
 import { chromeTarget, pickChrome } from 'src/utils/layouts.js'
 import { initCustomCode } from 'src/utils/custom-code.js'
+import { initPersonalization } from 'src/utils/personalization.js'
 import { useRoute, useRouter } from 'vue-router'
 import { Platform } from 'quasar';
 import ConsentBanner from "../components/app/ConsentBanner.vue";
@@ -656,6 +657,8 @@ const initConnectivityListeners = () => {
 onMounted(async () => {
   // The owner's tracking and custom code: right away (not after the first scroll like the rest).
   initCustomCode(router)
+  // Marketing → Audiences (after the cookie choice is read).
+  initPersonalization(router)
   // Signed in or not: the Account widget, the forms and "Show To" sections wait for it.
   checkSession()
   initSessionWatcher()

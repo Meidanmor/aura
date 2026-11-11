@@ -72,7 +72,9 @@ function notifyUser($q, type, message, icon=matError) {
 
 function markCartChanged() {
   state.synced = false
-  sendPersonalizationEvent('cart', { product_ids: (state.items || []).map(item => Number(item.id)).filter(Boolean) })
+  const t = state.totals || {}
+  const value = Number(t.total_price || 0) / 10 ** (Number.isFinite(Number(t.currency_minor_unit)) ? Number(t.currency_minor_unit) : 2)
+  sendPersonalizationEvent('cart', { product_ids: (state.items || []).map(item => Number(item.id)).filter(Boolean), value: Number.isFinite(value) ? value : 0 })
 }
 
 /* -------------------------
