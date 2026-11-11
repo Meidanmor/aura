@@ -1,5 +1,5 @@
 <template>
-  <div class="gc-form">
+  <div ref="root" class="gc-form">
     <div class="gc-step">
       <div class="gc-label">{{ t('Amount') }}</div>
       <div class="gc-chips" role="radiogroup" :aria-label="t('Amount')">
@@ -90,7 +90,8 @@
       <div v-if="s.when === 'date' && otherTimeZone(g)" class="gc-fine">{{ t('Times are in the store\'s time zone ({tz}).', { tz: g.timezone }) }}</div>
     </div>
 
-    <details class="gc-acc">
+    <!-- Computers: the design choices fold open here. Phones and tablets: "Design this email" beside Add to cart opens them over the email. -->
+    <details class="gc-acc gc-desk-block">
       <summary>
         <span><b>{{ t('Design the email') }}</b><small>{{ designSummary }}</small></span>
         <i aria-hidden="true" />
@@ -165,22 +166,107 @@
         @click="previewOpen = true"
     />
 
-    <q-btn
-        class="gc-buy full-width"
-        :class="buttonClass"
-        :style="buttonStyle"
-        :color="buttonColor"
-        unelevated
-        no-caps
-        :loading="adding"
-        :label="amount ? t('Add to cart · {amount}', { amount: money(amount) }) : t('Add to cart')"
-        @click="add"
-    />
+    <div class="gc-buyrow">
+      <button type="button" class="gc-design-btn gc-phone-only" aria-haspopup="dialog" @click="designOpen = true">
+        <b>{{ designTabs.length ? t('Design this email') : t('See the email') }}</b>
+        <small v-if="designTabs.length">{{ designSummary }}</small>
+      </button>
+      <q-btn
+          class="gc-buy full-width"
+          :class="buttonClass"
+          :style="buttonStyle"
+          :color="buttonColor"
+          unelevated
+          no-caps
+          :loading="adding"
+          :label="amount ? t('Add to cart · {amount}', { amount: money(amount) }) : t('Add to cart')"
+          @click="add"
+      />
+    </div>
     <div v-if="tried && !ready" class="text-negative text-caption q-mt-xs">{{ t('Fill in the fields marked above.') }}</div>
     <p class="gc-fine">{{ fineText }}</p>
 
-    <!-- Phones and tablets: the email under the button (the photos stay on top). -->
-    <GiftCardPreview :product="product" class="gc-inline gc-phone-only" />
+    <!-- Phones and tablets: the design choices on top, the email under them, and a floating Add to cart. -->
+    <q-dialog v-model="designOpen" maximized transition-show="slide-up" transition-hide="slide-down">
+      <div class="gc-sheet" role="dialog" :aria-label="t('Design this email')">
+        <div class="gc-sheet__head">
+          <b>{{ designTabs.length ? t('Design this email') : t('Gift card email preview') }}</b>
+          <q-btn flat round dense :icon="matClose" :aria-label="t('Close')" @click="designOpen = false" />
+        </div>
+        <div v-if="designTabs.length" class="gc-sheet__top">
+          <div v-if="designTabs.length > 1" class="gc-sheet__tabs" role="tablist">
+            <button
+                v-for="tab in designTabs"
+                :key="tab.key"
+                type="button"
+                role="tab"
+                :class="{ 'is-on': designTab === tab.key }"
+                :aria-selected="designTab === tab.key ? 'true' : 'false'"
+                @click="designTabChosen = tab.key"
+            >{{ tab.label }}</button>
+          </div>
+          <div v-if="designTab === 'design'" class="gc-sheet__row">
+            <button
+                v-for="d in g.designs"
+                :key="d.id"
+                type="button"
+                class="gc-design"
+                :class="{ 'is-on': s.design === d.id }"
+                :aria-pressed="s.design === d.id ? 'true' : 'false'"
+                @click="s.design = d.id"
+            >
+              <span class="gc-design__band" :style="{ background: s.color }">{{ d.mark }}</span>
+              <span>{{ d.name }}</span>
+            </button>
+          </div>
+          <div v-else-if="designTab === 'colour'" class="gc-sheet__row gc-sheet__row--pad">
+            <button
+                v-for="c in g.palette"
+                :key="c"
+                type="button"
+                class="gc-sw"
+                :class="{ 'is-on': s.color === c }"
+                :style="{ background: c }"
+                :aria-label="t('Colour {n}', { n: g.palette.indexOf(c) + 1 })"
+                :aria-pressed="s.color === c ? 'true' : 'false'"
+                @click="s.color = c"
+            />
+          </div>
+          <div v-else class="gc-sheet__row">
+            <button type="button" class="gc-img" :class="{ 'is-on': !s.image }" :aria-pressed="!s.image ? 'true' : 'false'" @click="pickImage(null)">{{ t('No image') }}</button>
+            <button
+                v-for="(img, i) in g.images"
+                :key="img.id"
+                type="button"
+                class="gc-img"
+                :class="{ 'is-on': s.image === `p:${img.id}` }"
+                :style="{ backgroundImage: `url('${img.url}')` }"
+                :aria-label="t('Image {n}', { n: i + 1 })"
+                :aria-pressed="s.image === `p:${img.id}` ? 'true' : 'false'"
+                @click="pickImage(img)"
+            />
+            <label v-if="g.own_photo" class="gc-img gc-img--own" :class="{ 'is-on': s.image.startsWith('u:') }" :style="s.photo || ownUrl ? { backgroundImage: `url('${s.photo || ownUrl}')` } : null">
+              <q-spinner v-if="uploading" size="22px" />
+              <span v-else-if="!s.photo && !ownUrl">{{ t('Your photo') }}</span>
+              <input type="file" accept="image/jpeg,image/png,image/webp" :aria-label="t('Upload your photo')" @change="onPhoto">
+            </label>
+          </div>
+          <div v-if="photoError && designTab === 'image'" class="text-negative text-caption q-mt-xs">{{ photoError }}</div>
+        </div>
+        <div class="gc-sheet__preview"><GiftCardPreview :product="product" bare /></div>
+        <q-btn
+            class="gc-sheet__add"
+            :class="buttonClass"
+            :style="buttonStyle"
+            :color="buttonColor"
+            unelevated
+            no-caps
+            :loading="adding"
+            :label="amount ? t('Add to cart · {amount}', { amount: money(amount) }) : t('Add to cart')"
+            @click="addFromSheet"
+        />
+      </div>
+    </q-dialog>
 
     <q-dialog v-model="previewOpen">
       <q-card class="gc-dialog">
@@ -195,7 +281,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { matArrowDropDown, matClose } from '@quasar/extras/material-icons'
 import { useFieldIds } from 'src/utils/field-id.js'
@@ -225,6 +311,16 @@ const money = (a) => giftMoney(a, props.product.prices)
 const tried = ref(false)
 const adding = ref(false)
 const previewOpen = ref(false)
+// Phones and tablets: "Design this email" (the design choices over the email, a floating Add to cart).
+const root = ref(null)
+const designOpen = ref(false)
+const designTabs = computed(() => [
+  g.value.designs.length > 1 && { key: 'design', label: t('Design') },
+  g.value.palette.length > 1 && { key: 'colour', label: t('Colour') },
+  (g.value.images.length || g.value.own_photo) && { key: 'image', label: t('Image') },
+].filter(Boolean))
+const designTabChosen = ref('')
+const designTab = computed(() => (designTabs.value.some((x) => x.key === designTabChosen.value) ? designTabChosen.value : designTabs.value[0]?.key || ''))
 const minDate = todayIso()
 const maxDate = inAYearIso()
 
@@ -275,6 +371,20 @@ async function onPhoto(e) {
   } finally {
     uploading.value = false
   }
+}
+
+// The floating button in "Design this email": it closes, and adds the card; with something
+// missing it goes to the first field that needs filling in.
+async function addFromSheet() {
+  designOpen.value = false
+  if (ready.value) return add()
+  tried.value = true
+  await nextTick()
+  setTimeout(() => {
+    const field = root.value?.querySelector('.q-field--error') || root.value
+    field?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    field?.querySelector?.('input, textarea')?.focus({ preventScroll: true })
+  }, 320)
 }
 
 async function add() {
@@ -328,12 +438,30 @@ async function add() {
 .gc-see { justify-self: start; margin: 2px 0 8px; text-decoration: underline; }
 .gc-fine { font-size: 13px; opacity: .7; margin: 8px 0 0; }
 .gc-dialog { width: 600px; max-width: 94vw; }
-.gc-inline { margin-top: 18px; }
-.gc-desk-only { display: none; }
+.gc-desk-only, .gc-desk-block { display: none; }
+.gc-buyrow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 8px; align-items: stretch; }
+.gc-design-btn { display: grid; align-content: center; gap: 0; padding: 6px 12px; border: 1.5px solid rgba(0, 0, 0, .18); border-radius: 12px; background: transparent; color: inherit; font: inherit; text-align: start; cursor: pointer; min-width: 0; }
+.gc-design-btn b { font-size: 14px; }
+.gc-design-btn small { font-size: 12px; opacity: .65; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (min-width: 1024px) {
   .gc-desk-only { display: inline-flex; }
+  .gc-desk-block { display: block; }
   .gc-phone-only { display: none; }
+  .gc-buyrow { grid-template-columns: minmax(0, 1fr); }
 }
+/* "Design this email" (phones and tablets): the choices stay on top, the email scrolls under them. */
+.gc-sheet { position: relative; display: flex; flex-direction: column; height: 100%; background: var(--q-primary, #fff); color: var(--q-text, inherit); }
+.gc-sheet__head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 10px 6px 16px; }
+.gc-sheet__top { flex: none; padding: 0 16px 10px; border-bottom: 1px solid rgba(0, 0, 0, .1); }
+.gc-sheet__tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+.gc-sheet__tabs button { border: 0; background: none; color: inherit; font: inherit; font-size: 14px; font-weight: 600; padding: 6px 12px; border-radius: 999px; opacity: .6; cursor: pointer; }
+.gc-sheet__tabs button.is-on { opacity: 1; background: rgba(0, 0, 0, .07); }
+.gc-sheet__row { display: flex; gap: 8px; overflow-x: auto; padding: 2px; -webkit-overflow-scrolling: touch; }
+.gc-sheet__row--pad { gap: 12px; padding: 6px 4px; }
+.gc-sheet__row > * { flex: none; }
+.gc-sheet__row .gc-design { width: 92px; }
+.gc-sheet__preview { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 12px 96px; background: rgba(0, 0, 0, .04); }
+.gc-sheet__add { position: absolute; inset-inline: 16px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); min-height: 46px; box-shadow: 0 8px 24px -8px rgba(0, 0, 0, .45); }
 </style>
 
 <style>

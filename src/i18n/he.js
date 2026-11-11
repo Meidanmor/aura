@@ -619,4 +619,8 @@ export default {
   "On orders over {amount}": "בהזמנה מעל {amount}",
   "This code can't be used right now.": "אי אפשר להשתמש בקוד הזה כרגע.",
   "Step {n}": "שלב {n}",
+  "Full details": "לכל הפרטים",
+  "Photo {n}": "תמונה {n}",
+  "Design this email": "עיצוב המייל הזה",
+  "Add": "הוספה",
 }

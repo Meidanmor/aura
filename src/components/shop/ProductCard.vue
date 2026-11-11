@@ -49,7 +49,7 @@
               <div v-if="product.status && product.status === 'draft'"><b>{{ t('This is a draft product. It\'s shown for admins only!') }}</b></div>
               <template v-else-if="zero"><q-btn v-if="!zero.hide" class="btn-big loop-add-to-cart-btn" style="line-height: 1" :label="zero.label" color="secondary" @click="followZero" /></template>
               <q-btn class="btn-big loop-add-to-cart-btn" :aria-label="t('Add to cart')" style="line-height: 1" v-else-if="product.is_in_stock && product.type !== 'variable'" :label="t('Add to Cart')" color="secondary" @click.prevent="addToCart(product)" />
-              <q-btn class="btn-big loop-add-to-cart-btn" :aria-label="t('Choose options')" style="line-height: 1" v-else-if="product.is_in_stock && product.type === 'variable'" :label="t('Choose options')" color="secondary" />
+              <q-btn class="btn-big loop-add-to-cart-btn" :aria-label="t('Choose options')" style="line-height: 1" v-else-if="product.is_in_stock && product.type === 'variable'" :label="t('Choose options')" color="secondary" @click="chooseOptions" />
               <div v-else>{{ t('Out of stock') }}</div>
               </div>
           </q-card>
@@ -60,6 +60,7 @@
 import { matFavorite, matFavoriteBorder } from '@quasar/extras/material-icons'
 import cart from 'src/stores/cart.js'
 import { zeroPriceButton } from 'src/utils/zero-price.js'
+import { canQuickChoose, openQuickOptions } from 'src/composables/useQuickOptions.js'
 import { useRouter } from 'vue-router'
 import wishlist from 'src/stores/wishlist.js'
 import { useSanitizedPrice } from 'src/composables/useSanitizedHtml.js'
@@ -102,6 +103,13 @@ const addToCart = (product) => {
   cart.add(product.id, 1)
 }
 const zero = computed(() => zeroPriceButton(props.product))
+// Options chosen in a popup, without leaving the list; a product it can't show opens its page (the card's link).
+function chooseOptions(e) {
+  if (!canQuickChoose(props.product)) return
+  e.preventDefault()
+  e.stopPropagation()
+  openQuickOptions(props.product)
+}
 const router = useRouter()
 
 // The whole card is a link, and a link inside a link breaks the page's HTML: this is a plain

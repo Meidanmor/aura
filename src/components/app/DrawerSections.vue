@@ -2,7 +2,7 @@
   <!-- A header widget's drawer built from blocks (Store builder → Menu / Mini Cart / Mini
        Wishlist → Drawer Content → Built from blocks): its title, then the owner's sections. -->
   <!-- Sections with "Keep at the bottom of the drawer" sit under the scrolling part. -->
-  <div class="fit column no-wrap drawer-sections" :class="`drawer-sections--${entry.kind}`">
+  <div class="fit column no-wrap drawer-sections" :class="`drawer-sections--${entry.kind}`" @touchstart.passive="keepSwipe">
   <q-scroll-area :visible="false" class="col drawer-sections__scroll">
     <!-- The title row: its padding, the title's text style and the close button come from the widget
          (Style → Drawer). With no title and no close button there's no row at all. -->
@@ -71,6 +71,17 @@ const CLOSE = { menu: 'Close menu', cart: 'Close cart drawer', wishlist: 'Close 
 if (props.entry.kind === 'cart') provideCartPage()
 // Blocks inside can close the drawer (a "Close the drawer" button; links close it anyway).
 provide('closeDrawer', () => emit('close'))
+// A swipe that starts on something that scrolls sideways (the Cart Suggestions row, a carousel)
+// belongs to it: the drawer above doesn't hear the touch, so it doesn't close under the finger.
+function keepSwipe(e) {
+  for (let el = e.target; el && el !== e.currentTarget; el = el.parentElement) {
+    if (el.matches?.('.carousel-block, [data-keep-swipe]')) return e.stopPropagation()
+    if (el.scrollWidth > el.clientWidth + 1) {
+      const flow = getComputedStyle(el).overflowX
+      if (flow === 'auto' || flow === 'scroll') return e.stopPropagation()
+    }
+  }
+}
 </script>
 
 <style scoped>

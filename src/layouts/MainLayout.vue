@@ -78,6 +78,8 @@
 
     <!-- Store builder → Popups (browser only). -->
     <PopupHost v-if="uiHydrated" />
+    <!-- "Choose options" from a product card. -->
+    <QuickOptions v-if="uiHydrated" />
     <CardPreviewHost v-if="uiHydrated" />
     <!-- An import running on the store: its pages under an "updating" notice. -->
     <UpdatingOverlay v-if="uiHydrated" />
@@ -143,6 +145,7 @@ import {
 import { getPushConfig } from 'src/services/push/shared.js'
 import NotificationSoftAskModal from 'src/components/app/NotificationSoftAskModal.vue'
 import PopupHost from 'src/components/popups/PopupHost.vue'
+import QuickOptions from 'src/components/shop/QuickOptions.vue'
 import CardPreviewHost from 'src/components/loops/CardPreviewHost.vue'
 import UpdatingOverlay from 'src/components/app/UpdatingOverlay.vue'
 import SeoWait from 'src/components/app/SeoWait.js'

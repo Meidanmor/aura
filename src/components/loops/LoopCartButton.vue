@@ -20,6 +20,21 @@
         disable
         no-caps
     />
+    <!-- Options chosen in a popup, without leaving the list (QuickOptions.vue). A plain button: the card may be a link. -->
+    <q-btn
+        v-else-if="quick"
+        class="lt-cart-btn"
+        :class="btnClass"
+        v-bind="look"
+        :style="btnVars"
+        :icon="iconAtEnd ? undefined : icon"
+        :icon-right="iconAtEnd ? icon : undefined"
+        :round="iconOnly"
+        :aria-label="optionsLabel"
+        aria-haspopup="dialog"
+        no-caps
+        @click.prevent.stop="chooseOptions"
+    ><span v-if="!iconOnly" v-bind="labelBind">{{ d.options_text || t('Choose options') }}</span></q-btn>
     <q-btn
         v-else-if="hasOptions"
         class="lt-cart-btn"
@@ -52,33 +67,49 @@
 
 <script setup>
 /**
- * A product card's Add to cart button (lp_cart): adds simple products,
- * opens the page of products with options, and says so when sold out.
+ * A product card's Add to cart button (lp_cart): adds simple products, lets the
+ * shopper choose a product's options in a popup (or opens its page: Products With
+ * Options → Open the product page; gift cards and grouped products always do), and
+ * says so when sold out.
  * Styles: LoopCard.vue.
  */
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
 import { gradientOf } from 'src/utils/gradient.js'
 import { matAdd, matShoppingBag, matShoppingCart } from '@quasar/extras/material-icons'
 import cart from 'src/stores/cart.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { useLoopItem, loopItemUrl } from './loop-item.js'
 import { zeroPriceButton, zeroPriceLink } from 'src/utils/zero-price.js'
+import { canQuickChoose, openQuickOptions } from 'src/composables/useQuickOptions.js'
 import { useAriaLabel } from 'src/utils/aria-label.js'
 import { t } from 'src/i18n/index.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { iconAlign } from 'src/utils/icon-align.js'
-import { alignToText, setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
+import { alignToText, asResponsive, setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
 
 const props = defineProps({
   data: { type: Object, required: true },
 })
 const loop = useLoopItem()
 const router = useRouter()
+const $q = useQuasar()
 const d = computed(() => props.data.data || {})
 const product = computed(() => (loop?.value?.type === 'product' ? loop.value.item : null))
 // A gift card too: it's bought on its own page, with who it's for.
 const hasOptions = computed(() => ['variable', 'grouped', 'external'].includes(product.value?.type) || product.value?.has_options === true || !!product.value?.extensions?.qwoo_giftcard?.amounts)
+// Products With Options, per screen size: "Choose in a popup" or "Open the product page" (cards
+// saved before the setting: the popup). The server can't know the screen, so with the popup on any
+// screen the button is a plain button, and a screen set to the page goes there on the click.
+const optionsAction = computed(() => asResponsive(d.value.options_action ?? 'popup'))
+const quick = computed(() => canQuickChoose(product.value) && ['desktop', 'tablet', 'mobile'].some((device) => (optionsAction.value[device] || 'popup') !== 'page'))
+function chooseOptions() {
+  const device = $q.screen.lt.sm ? 'mobile' : $q.screen.lt.md ? 'tablet' : 'desktop'
+  const action = optionsAction.value[device] || optionsAction.value.tablet || optionsAction.value.desktop || 'popup'
+  if (action === 'page') return router.push(url.value)
+  openQuickOptions(product.value)
+}
 const url = computed(() => loopItemUrl('product', product.value))
 const zero = computed(() => zeroPriceButton(product.value))
 const labelBind = computed(() => textStyle(d.value, tsKeys('label'), 'buttons'))
