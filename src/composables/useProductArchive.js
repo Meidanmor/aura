@@ -541,10 +541,42 @@ export function useProductArchive(mode) {
     }
 
 
+    // Filters → "Show how many products each choice has": { termId: count } for the filters
+    // chosen now (null until the store answers). Asked again whenever a filter changes.
+    const attributeCounts = ref(null)
+    const countsOn = ref(false)
+    let countsRequest = 0
+    function loadAttributeCounts() {
+        if (!process.env.CLIENT) return
+        countsOn.value = true
+        loadAttributeOptions()
+    }
+    if (process.env.CLIENT) {
+        watch(
+            () => (countsOn.value && isReady.value && attributeOptions.value.length
+                ? JSON.stringify([search.value, selectedCategory.value, pageCategory(), priceChanged.value, priceMin.value, priceMax.value,
+                    attrToString(selectedAttributes.value), inStock.value, grid.value.query?.key || ''])
+                : ''),
+            async (key) => {
+                if (!key) return
+                const id = ++countsRequest
+                const categoryArg = mode === 'category' ? pageCategory() : (selectedCategory.value.length ? selectedCategory.value.join(',') : null)
+                const r = priceRange.value || {}
+                const priceSet = priceMin.value != null && priceMax.value != null && (r.min > priceMin.value || r.max < priceMax.value)
+                const counts = await productsStore.fetchAttributeCounts({
+                    rules: rules(), category: categoryArg, search: search.value, attributes: selectedAttributes.value, in_stock: inStock.value,
+                    ...(priceSet ? { min_amount: r.min, max_amount: r.max } : {}),
+                }, attributeOptions.value.map((attr) => attr.taxonomy))
+                if (id === countsRequest && counts) attributeCounts.value = counts
+            },
+            { immediate: true },
+        )
+    }
+
     return {
         search, selectedCategory, selectedCategoryOBJ, currentPage, sortBy, filtersOpen,
         priceMin, priceMax, priceRange, isHydrated,
-        selectedAttributes, inStock, attributeOptions, loadAttributeOptions,
+        selectedAttributes, inStock, attributeOptions, loadAttributeOptions, attributeCounts, loadAttributeCounts,
         categoryOptions, paginatedProducts, totalPages, totalProducts,
         sortOptions, onPriceChange, scrollToTop, productsStore, shopSettings, notFound,
         grid, loadingMore, loadMore

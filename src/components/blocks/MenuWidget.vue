@@ -10,7 +10,7 @@ import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { t } from 'src/i18n/index.js'
 import WidgetButton from './WidgetButton.vue'
 import { menuIcons } from 'src/utils/builder-icons.js'
-import { drawerSections, useDrawer, useDrawerSource } from 'src/composables/useDrawers.js'
+import { drawerLook, drawerSections, useDrawer, useDrawerSource } from 'src/composables/useDrawers.js'
 import { useAnchorSpy } from 'src/composables/useAnchorSpy.js'
 import MobileNavItems from 'components/app/MobileNavItems.vue'
 
@@ -98,6 +98,7 @@ const drawer = useDrawer(
       title: sd.drawer_title ?? t('Menu'),
       bg: colorValue(sd.drawer_bg),
       color: colorValue(sd.drawer_text_color),
+      look: drawerLook(sd),
       showLanguages: sd.drawer_show_languages !== false,
       showNotifications: sd.drawer_show_notifications !== false,
       swipe: sd.swipe || 'auto',

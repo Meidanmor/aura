@@ -1032,6 +1032,21 @@ footer.app-footer .footer-bottom {
 .q-drawer .cart-drawer {
    padding: 16px 16px 0;
 }
+/* The widget's Drawer Padding (Store builder): the owner's own space, also none. Sides left empty are 0. */
+.q-drawer .widget-drawer.widget-drawer--pad {
+   padding: var(--dr-pt, 0) var(--dr-pr, 0) var(--dr-pb, 0) var(--dr-pl, 0);
+}
+/* A block with nothing to show right now (an empty cart: no totals, no free shipping bar, no
+   suggestions) takes no room and draws no box: its border, background and padding would show an
+   empty frame. Comments Vue leaves behind aren't elements, so "no element inside" is enough. */
+.sb-block:not(.sb-block--section):not(:has(> *)),
+.sb-block--cart_suggestions:not(:has(.cart-sugg > *)) {
+   display: none;
+}
+/* In a drawer, a section whose blocks all have nothing to show goes with them. */
+.drawer-sections .sb-container:not(:has(.sb-block:not(.sb-block--section):not(.sb-block--cart_suggestions) > *, .cart-sugg > *)) {
+   display: none;
+}
 .cart-drawer .q-scrollarea .q-scrollarea__content {
     display: flex;
     flex-direction: column;
@@ -1222,5 +1237,24 @@ html.qa-editor .sb-aud-customers { outline: 1px dashed rgba(127, 127, 127, .6); 
         border-radius: var(--sb-radius-m, var(--sb-radius-t, var(--sb-radius, var(--card-r))));
         margin-bottom: var(--sbb-mb-m, var(--sbb-mb-t, var(--sbb-mb, var(--card-mb))));
     }
+}
+/* purgecss end ignore */
+
+/* Branding → Moving between pages: the page animation (src/utils/page-motion.js adds the class
+   to the page container after each move to another page). */
+/* purgecss start ignore */
+.q-page-container.page-in { animation-duration: var(--page-in-dur, .3s); animation-timing-function: ease; animation-fill-mode: both; }
+.q-page-container.page-in--fade { animation-name: page-in-fade; }
+.q-page-container.page-in--rise { animation-name: page-in-rise; }
+.q-page-container.page-in--slide { animation-name: page-in-slide; }
+.q-page-container.page-in--zoom { animation-name: page-in-zoom; }
+@keyframes page-in-fade { from { opacity: 0; } }
+@keyframes page-in-rise { from { opacity: 0; transform: translateY(18px); } }
+@keyframes page-in-slide { from { opacity: 0; transform: translateX(28px); } }
+@keyframes page-in-zoom { from { opacity: 0; transform: scale(.97); } }
+[dir="rtl"] .q-page-container.page-in--slide { animation-name: page-in-slide-rtl; }
+@keyframes page-in-slide-rtl { from { opacity: 0; transform: translateX(-28px); } }
+@media (prefers-reduced-motion: reduce) {
+    .q-page-container.page-in { animation: none; }
 }
 /* purgecss end ignore */

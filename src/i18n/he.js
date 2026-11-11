@@ -618,4 +618,5 @@ export default {
   "Ends {date}": "בתוקף עד {date}",
   "On orders over {amount}": "בהזמנה מעל {amount}",
   "This code can't be used right now.": "אי אפשר להשתמש בקוד הזה כרגע.",
+  "Step {n}": "שלב {n}",
 }

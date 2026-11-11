@@ -30,10 +30,11 @@
           <div class="text-subtitle1 q-mb-sm">{{ attr.name }}</div>
           <div v-if="d.attributes_style === 'chips'" class="filters-chips" role="group" :aria-label="attr.name">
             <button
-                v-for="term in attr.terms"
+                v-for="term in termsOf(attr)"
                 :key="term.value"
                 type="button"
                 class="filters-chip"
+                :disabled="term.disable"
                 :class="{ 'is-on': isOn(attr.taxonomy, term.value) }"
                 :aria-pressed="isOn(attr.taxonomy, term.value) ? 'true' : 'false'"
                 @click="toggle(attr.taxonomy, term.value)"
@@ -42,7 +43,7 @@
           <q-option-group
               v-else
               :model-value="a.selectedAttributes[attr.taxonomy] || []"
-              :options="attr.terms"
+              :options="termsOf(attr)"
               type="checkbox"
               color="secondary"
               @update:model-value="(v) => setTerms(attr.taxonomy, v)"
@@ -100,7 +101,18 @@ const ready = ref(false)
 onMounted(() => {
   ready.value = true
   if (d.value.show_attributes) a?.loadAttributeOptions?.()
+  if (d.value.show_attributes && d.value.show_counts) a?.loadAttributeCounts?.()
 })
+// "Show how many products each choice has": Blue (4), for the other filters chosen. A choice
+// with no products is greyed out (unless it's chosen: it can still be taken off).
+function termsOf(attr) {
+  const counts = d.value.show_counts ? a?.attributeCounts : null
+  if (!counts) return attr.terms
+  return attr.terms.map((term) => {
+    const n = counts[term.value] || 0
+    return { ...term, label: `${term.label} (${n})`, disable: !n && !isOn(attr.taxonomy, term.value) }
+  })
+}
 // Content → Filter By These Details: some attributes, in that order (empty: all of them).
 // Phones: drag down to close, Clear, and "Show N products" (the list follows the filters as they change).
 const drag = useSheetDrag(() => { if (a) a.filtersOpen = false })
@@ -147,6 +159,7 @@ const shownAttributes = computed(() => {
 .filters-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .filters-chip { border: 1.5px solid rgba(0, 0, 0, .18); background: transparent; color: inherit; border-radius: 999px; padding: 4px 14px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 .filters-chip:hover { border-color: currentColor; }
+.filters-chip:disabled { opacity: .4; cursor: default; border-color: rgba(0, 0, 0, .18); }
 .filters-chip.is-on { background: var(--q-secondary); border-color: var(--q-secondary); color: var(--q-primary); }
 
 /* Computers: the box is as tall as its filters (a fixed height cut them off

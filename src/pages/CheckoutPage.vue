@@ -765,13 +765,37 @@ const blockHidden = (type) => {
   if (type === 'checkout_delivery_mode' && !pickupOffered.value) return true
   return false
 }
-const stepBlocks = computed(() => {
-  const out = []
+// Steps as containers (2026-11-11): the Checkout Steps block holds one inner section per step,
+// with that step's blocks; blocks outside it show on every step. A checkout published before
+// that has no such sections: each block's own `step` (blockStep) is used, as before.
+const stepsHolder = computed(() => {
+  let found = null
   const walk = (list) => {
     for (const b of Array.isArray(list) ? list : []) {
+      if (found || !b || b.enabled === false) continue
+      if (b.type === 'checkout_steps' && Array.isArray(b.blocks) && b.blocks.some((s) => s && s.enabled !== false && s.type === 'section')) found = b
+      else if (Array.isArray(b.blocks)) walk(b.blocks)
+    }
+  }
+  walk(sections.value)
+  return found
+})
+const heldSteps = computed(() => (stepsHolder.value?.blocks || []).filter((s) => s && s.enabled !== false && s.type === 'section'))
+const stepsHeld = computed(() => heldSteps.value.length > 0)
+const stepTitle = (n) => String(heldSteps.value[n - 1]?.label || '').trim() || [t('Details'), t('Delivery'), t('Payment')][n - 1] || t('Step {n}', { n })
+const stepBlocks = computed(() => {
+  const out = []
+  const holder = stepsHolder.value
+  const walk = (list, step) => {
+    for (const b of Array.isArray(list) ? list : []) {
       if (!b || b.enabled === false) continue
-      if (b.type && b.type !== 'section') out.push({ id: b.id, type: b.type, step: blockStep(b) })
-      if (Array.isArray(b.blocks)) walk(b.blocks)
+      if (holder && b === holder) {
+        out.push({ id: b.id, type: b.type, step: 'all' })
+        heldSteps.value.forEach((s, i) => walk(s.blocks, i + 1))
+        continue
+      }
+      if (b.type && b.type !== 'section') out.push({ id: b.id, type: b.type, step: step ?? (holder ? 'all' : blockStep(b)) })
+      if (Array.isArray(b.blocks)) walk(b.blocks, step)
     }
   }
   walk(sections.value)
@@ -781,7 +805,8 @@ const hasStepsBlock = computed(() => stepBlocks.value.some((b) => b.type === 'ch
 // The steps this checkout has (1 Details, 2 Delivery, 3 Payment), without empty ones.
 const stepList = computed(() => {
   const used = new Set(stepBlocks.value.filter((b) => b.step !== 'all' && !blockHidden(b.type)).map((b) => b.step))
-  const list = [1, 2, 3].filter((n) => used.has(n))
+  const all = stepsHeld.value ? heldSteps.value.map((s, i) => i + 1) : [1, 2, 3]
+  const list = all.filter((n) => used.has(n))
   return list.length ? list : [1]
 })
 const stepIndex = ref(0)
@@ -816,7 +841,8 @@ async function nextStep() {
       return
     }
   }
-  if (currentStep.value === 2 && needsShipping.value && deliveryOptions.value.length && !selectedShippingRateId.value) {
+  const choosesDelivery = stepBlocks.value.some((b) => b.type === 'checkout_shipping' && b.step === currentStep.value)
+  if (choosesDelivery && needsShipping.value && deliveryOptions.value.length && !selectedShippingRateId.value) {
     $q.notify({ type: 'negative', message: t('Please choose how to get your order.'), icon: matError })
     return
   }
@@ -830,7 +856,8 @@ const pageCss = computed(() => {
   if (pageConfig.value?.hide_chrome) {
     css += '.q-layout > .announcement-bar, .q-layout > .above-header, .q-layout > .q-header, .q-layout > footer { display: none !important; }'
   }
-  if (stepsOn.value) {
+  // (Steps as containers hide the other steps themselves: CheckoutStepsBlock.)
+  if (stepsOn.value && !stepsHeld.value) {
     const now = currentStep.value
     const hide = stepBlocks.value.filter((b) => b.step !== 'all' && b.step !== now).map((b) => `[data-block-id="${String(b.id).replace(/[^\w-]/g, '')}"]`)
     if (hide.length) css += hide.join(', ') + ' { display: none !important; }'
@@ -852,7 +879,7 @@ provide('checkoutPage', reactive({
   submitOrder: previewSubmitOrder, placeOrder: previewPlaceOrder, registerForm,
   pickerAt, claimPicker, saveNewAddress, addressIsNew,
   needsShipping, addressNeeded, pickupOffered, deliveryMode, deliveryOptions, setDeliveryMode, registerModeBlock,
-  stepsOn, stepList, stepIndex, lastStep, goStep, nextStep, inPreview,
+  stepsOn, stepList, stepIndex, currentStep, stepTitle, lastStep, goStep, nextStep, inPreview,
 }))
 </script>
 

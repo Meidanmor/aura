@@ -5,6 +5,7 @@ import { initSwUpdates } from 'src/services/sw-updates'
 import { isEditorMode } from 'src/utils/config-loader'
 import { currentLang, isExtraLang, langFromPath, withLang } from 'src/i18n/lang.js'
 import { scrollPositionFor } from 'src/composables/useAnchorSpy.js'
+import { installPageMotion, pageScrollTarget } from 'src/utils/page-motion.js'
 
 /**
  * On a page of an extra language, every link and navigation stays in it:
@@ -55,13 +56,13 @@ export default defineRouter(function (/* { store, ssrContext } */) {
         return false
       }
 
-      // 3. For all other navigations (new links), scroll to top smoothly
-      // We use a Promise with a tiny timeout to ensure the new content
-      // has started rendering before we move the scrollbar.
+      // 3. For all other navigations (new links), to the top: smoothly, or right away
+      // (the owner's choice in Branding → Moving between pages; always right away with a
+      // page animation). A tiny timeout lets the new content start rendering first.
       return new Promise((resolve) => {
         setTimeout(() => {
-          resolve({ left: 0, top: 0, behavior: 'smooth' })
-        }, 10) // 50ms is usually enough to let Vue swap the component content
+          resolve(pageScrollTarget())
+        }, 10)
       })
     },
     routes: routes(),
@@ -84,6 +85,9 @@ export default defineRouter(function (/* { store, ssrContext } */) {
       }
     })
   }
+
+  // Branding → Moving between pages: the page animation after each move to another page.
+  if (process.env.CLIENT) installPageMotion(Router)
 
   // --- Start Preview Lock Logic ---
   Router.beforeEach((to, from, next) => {

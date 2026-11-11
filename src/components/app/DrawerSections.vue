@@ -4,9 +4,23 @@
   <!-- Sections with "Keep at the bottom of the drawer" sit under the scrolling part. -->
   <div class="fit column no-wrap drawer-sections" :class="`drawer-sections--${entry.kind}`">
   <q-scroll-area :visible="false" class="col drawer-sections__scroll">
-    <div class="drawer-sections__head sticky flex justify-between items-center no-wrap" :style="entry.bg ? { background: entry.bg } : null">
-      <div v-if="entry.title !== ''" class="text-h6">{{ entry.title ?? t(TITLES[entry.kind] || 'Menu') }}</div><span v-else />
-      <q-btn flat dense padding="none" :aria-label="t(CLOSE[entry.kind] || 'Close')" :icon="matClose" @click="emit('close')" />
+    <!-- The title row: its padding, the title's text style and the close button come from the widget
+         (Style → Drawer). With no title and no close button there's no row at all. -->
+    <div
+        v-if="entry.title !== '' || look.close"
+        class="drawer-sections__head sticky flex justify-between items-center no-wrap"
+        :class="{ 'drawer-sections__head--pad': !!look.headPad }"
+        :style="{ ...(entry.bg ? { background: entry.bg } : {}), ...(look.headPad || {}) }"
+    >
+      <div v-if="entry.title !== ''" class="text-h6 drawer-sections__title" v-bind="look.title">{{ entry.title ?? t(TITLES[entry.kind] || 'Menu') }}</div><span v-else />
+      <q-btn
+          v-if="look.close"
+          flat dense padding="none"
+          :aria-label="t(CLOSE[entry.kind] || 'Close')"
+          :icon="matClose"
+          :style="{ fontSize: look.closeSize || undefined, color: look.closeColor || undefined }"
+          @click="emit('close')"
+      />
     </div>
     <SectionRenderer :sections="scrolling" page="drawer" no-priority />
     <q-banner
@@ -43,6 +57,9 @@ const props = defineProps({
 const emit = defineEmits(['close', 'subscribe'])
 const { t } = useI18n()
 
+// The widget's Style → Drawer choices (useDrawers.js drawerLook()); a drawer without them looks as before.
+const look = computed(() => props.entry.look || { pad: null, headPad: null, title: {}, close: true, closeSize: '', closeColor: '' })
+
 // "Keep at the bottom of the drawer" (a section's Advanced → Position).
 const pinned = computed(() => (props.entry.sections || []).filter((s) => s?.style?.drawer_pin))
 const scrolling = computed(() => (props.entry.sections || []).filter((s) => !s?.style?.drawer_pin))
@@ -60,6 +77,12 @@ provide('closeDrawer', () => emit('close'))
 .drawer-sections__scroll {
   min-height: 0;
 }
+/* The scroll area's content takes the width of what's inside it, so a row that scrolls sideways
+   (cart suggestions, a carousel) stretched every section past the drawer. It stays the drawer's width. */
+.drawer-sections__scroll :deep(.q-scrollarea__content) {
+  width: 100%;
+  max-width: 100%;
+}
 .drawer-sections__bottom {
   flex: none;
   max-height: 70%;
@@ -70,5 +93,9 @@ provide('closeDrawer', () => emit('close'))
   top: 0;
   padding: 12px 16px;
   gap: 12px;
+}
+/* The owner's Title Row Padding: sides left empty are 0. */
+.drawer-sections__head--pad {
+  padding: var(--dh-pt, 0) var(--dh-pr, 0) var(--dh-pb, 0) var(--dh-pl, 0);
 }
 </style>

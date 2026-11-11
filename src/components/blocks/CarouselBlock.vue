@@ -215,7 +215,7 @@ import { useCartSuggestions } from 'src/utils/cart-suggestions.js'
 import { useRecentlyViewed } from 'src/utils/recently-viewed.js'
 import EmptyProducts from '../shop/EmptyProducts.vue'
 import { useDragScroll } from 'src/composables/useDragScroll.js'
-import { keyWithProduct, useExcludedProduct } from 'src/utils/current-product.js'
+import { keyWithProduct, useExcludedProduct, useRelatedProduct } from 'src/utils/current-product.js'
 import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
@@ -270,13 +270,15 @@ const excludeId = useExcludedProduct(() => (source.value === 'products' && !prop
 const suggestions = useCartSuggestions(() => (source.value === 'products' && !props.products ? d.value : null))
 // "Recently viewed": the shopper's list (browser only), less this page's product.
 const recent = useRecentlyViewed(() => (source.value === 'products' && !props.products ? d.value : null))
+// "Related to this page's product": the product page's product and its first category.
+const related = useRelatedProduct(() => (source.value === 'products' && !props.products ? d.value : null))
 const queryKey = () => JSON.stringify([
-  excludeId.value, source.value, d.value.query_type, d.value.category_ids, d.value.tag_ids, d.value.product_ids,
+  related.value, excludeId.value, source.value, d.value.query_type, d.value.category_ids, d.value.tag_ids, d.value.product_ids,
   d.value.limit, d.value.hide_out_of_stock, d.value.slide_category_ids, d.value.cart_fallback, d.value.for_you_fallback, suggestions.value, recent.value,
 ])
-const { data: fetched } = useBlockQuery(keyWithProduct(props.blockId, excludeId.value), queryKey, (ssrContext) => {
+const { data: fetched } = useBlockQuery(keyWithProduct(props.blockId, excludeId.value || related.value.id), queryKey, (ssrContext) => {
   if (props.products) return Promise.resolve(null)
-  if (source.value === 'products') return productsStore.queryProducts({ ...d.value, cart_ids: suggestions.value.ids, recent_ids: recent.value.ids, interest_category_ids: recent.value.category_ids, exclude_ids: [...(excludeId.value ? [excludeId.value] : []), ...suggestions.value.exclude] }, ssrContext)
+  if (source.value === 'products') return productsStore.queryProducts({ ...d.value, related_id: related.value.id, related_category_id: related.value.category_id, cart_ids: suggestions.value.ids, recent_ids: recent.value.ids, interest_category_ids: recent.value.category_ids, exclude_ids: [...(excludeId.value ? [excludeId.value] : []), ...suggestions.value.exclude] }, ssrContext)
   if (source.value === 'categories') return productsStore.queryCategories(d.value.slide_category_ids || [], ssrContext)
   return Promise.resolve([])
 })

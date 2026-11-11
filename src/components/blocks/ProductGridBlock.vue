@@ -27,7 +27,7 @@ import ProductCard from '../shop/ProductCard.vue'
 import LoopCard from '../loops/LoopCard.vue'
 import productsStore from 'src/stores/products'
 import { useBlockQuery } from 'src/composables/useBlockQuery.js'
-import { keyWithProduct, useExcludedProduct } from 'src/utils/current-product.js'
+import { keyWithProduct, useExcludedProduct, useRelatedProduct } from 'src/utils/current-product.js'
 import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
 import { useSampleFallback } from 'src/utils/sample-items.js'
@@ -53,16 +53,18 @@ const excludeId = useExcludedProduct(() => d.value)
 const suggestions = useCartSuggestions(() => d.value)
 // "Recently viewed": the shopper's list (browser only), less this page's product.
 const recent = useRecentlyViewed(() => d.value)
+// "Related to this page's product": the product page's product and its first category.
+const related = useRelatedProduct(() => d.value)
 const queryKey = () => JSON.stringify([
-  excludeId.value, d.value.query_type, d.value.category_ids, d.value.tag_ids, d.value.product_ids, d.value.limit, d.value.hide_out_of_stock, d.value.for_you_fallback,
+  related.value, excludeId.value, d.value.query_type, d.value.category_ids, d.value.tag_ids, d.value.product_ids, d.value.limit, d.value.hide_out_of_stock, d.value.for_you_fallback,
   d.value.cart_fallback, suggestions.value, recent.value,
 ])
 
 // The page's first images (src/utils/priority-image.js): its first cards.
 const picked = usePriorityBlock(props.blockId)
 
-const { data: products } = useBlockQuery(keyWithProduct(props.blockId, excludeId.value), queryKey, (ssrContext) =>
-    productsStore.queryProducts({ ...d.value, cart_ids: suggestions.value.ids, recent_ids: recent.value.ids, interest_category_ids: recent.value.category_ids, exclude_ids: [...(excludeId.value ? [excludeId.value] : []), ...suggestions.value.exclude] }, ssrContext)
+const { data: products } = useBlockQuery(keyWithProduct(props.blockId, excludeId.value || related.value.id), queryKey, (ssrContext) =>
+    productsStore.queryProducts({ ...d.value, related_id: related.value.id, related_category_id: related.value.category_id, cart_ids: suggestions.value.ids, recent_ids: recent.value.ids, interest_category_ids: recent.value.category_ids, exclude_ids: [...(excludeId.value ? [excludeId.value] : []), ...suggestions.value.exclude] }, ssrContext)
 )
 // The Store builder preview of a store with no products yet: sample products.
 const shown = useSampleFallback(() => products.value, 'product', Math.min(4, Number(d.value.limit) || 4))

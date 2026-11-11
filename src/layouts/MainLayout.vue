@@ -28,8 +28,8 @@
           behavior="mobile"
           no-swipe-open
           :width="widthOf(dr)"
-          :class="['widget-drawer', `widget-drawer--${dr.kind}`, { 'cart-drawer': dr.kind === 'cart', 'widget-drawer--blocks': !!dr.sections }]"
-          :style="{ background: dr.bg || undefined, color: dr.color || undefined }"
+          :class="['widget-drawer', `widget-drawer--${dr.kind}`, { 'cart-drawer': dr.kind === 'cart', 'widget-drawer--blocks': !!dr.sections, 'widget-drawer--pad': !!dr.look?.pad }]"
+          :style="{ background: dr.bg || undefined, color: dr.color || undefined, ...(dr.look?.pad || {}) }"
           @update:model-value="(v) => (v ? drawers.open(dr.key) : drawers.close(dr.key))"
       >
         <!-- Built from blocks (the widget's Drawer Content): the owner's sections. -->
@@ -124,6 +124,7 @@ import { stripLang } from 'src/i18n/lang.js'
 import { chromeTarget, pickChrome } from 'src/utils/layouts.js'
 import { initCustomCode } from 'src/utils/custom-code.js'
 import { initPersonalization } from 'src/utils/personalization.js'
+import { installPageMotionPreview, setPageMotion } from 'src/utils/page-motion.js'
 import { useRoute, useRouter } from 'vue-router'
 import { Platform } from 'quasar';
 import ConsentBanner from "../components/app/ConsentBanner.vue";
@@ -579,6 +580,9 @@ if (process.env.CLIENT) {
     if (c) root.setProperty('--qwoo-loading-bar', c)
     else root.removeProperty('--qwoo-loading-bar')
   }, { immediate: true })
+  // Branding → Moving between pages: the router reads it (src/utils/page-motion.js).
+  watch(() => [brandSettings.value?.page_scroll, brandSettings.value?.page_animation, brandSettings.value?.page_speed], () => setPageMotion(brandSettings.value), { immediate: true })
+  if (isEditorMode()) installPageMotionPreview()
 }
 const shownFooter = computed(() => pickChrome(footerSettings.value, route))
 

@@ -178,6 +178,19 @@ async function queryProducts(q = {}, ssrContext = null) {
     return [...recommended, ...(Array.isArray(more) ? more.filter((p) => !used.has(Number(p.id))) : [])].slice(0, limit)
   }
 
+  // "Related to this page's product" (what the Related Products block showed): others from the
+  // product's first category, else the newest in stock. Off a product page: the newest.
+  if (type === 'related') {
+    const id = Number(q.related_id) || 0
+    const others = (list) => (Array.isArray(list) ? list : []).filter((p) => Number(p.id) !== id)
+    const base = { limit: Math.min(24, limit + 1), exclude_ids: exclude }
+    let list = id && Number(q.related_category_id)
+      ? others(await queryProducts({ ...base, query_type: 'category', category_ids: [Number(q.related_category_id)], hide_out_of_stock: !!q.hide_out_of_stock }, ssrContext))
+      : []
+    if (!list.length) list = others(await queryProducts({ ...base, query_type: 'newest', hide_out_of_stock: true }, ssrContext))
+    return list.slice(0, limit)
+  }
+
   const query = new URLSearchParams()
   query.append('per_page', limit)
   switch (type) {
@@ -292,6 +305,51 @@ export async function fetchAttributeOptions() {
     return out.filter(a => a.taxonomy && a.terms.length)
   } catch {
     return []
+  }
+}
+
+/**
+ * Filters → "Show how many products each choice has": for each attribute value, how many
+ * products the shopper would see with it, given the other filters chosen (the same filters
+ * as the grid; an attribute's own choice doesn't narrow its own list). { termId: count },
+ * or null when the store can't say. Browser only.
+ */
+export async function fetchAttributeCounts(ctx = {}, taxonomies = []) {
+  if (!taxonomies.length) return {}
+  try {
+    const { min_amount, max_amount, category, search, attributes } = ctx
+    const rules = ctx.rules || null
+    const in_stock = !!ctx.in_stock || !!rules?.inStock
+    const attrFilters = Object.entries(attributes || {}).filter(([, ids]) => Array.isArray(ids) && ids.length)
+    const hasMin = min_amount != null && !isNaN(min_amount)
+    const hasMax = max_amount != null && !isNaN(max_amount)
+    const scale = (hasMin || hasMax) ? 10 ** await priceMinorUnit(null) : 1
+    const query = new URLSearchParams()
+    if (hasMin) query.append('min_price', Math.floor(Number(min_amount) * scale))
+    if (hasMax) query.append('max_price', Math.ceil(Number(max_amount) * scale))
+    if (category) query.append('category', category)
+    if (search) query.append('search', search)
+    attrFilters.forEach(([tax, ids], i) => {
+      query.append(`attributes[${i}][attribute]`, tax)
+      ids.forEach((id) => query.append(`attributes[${i}][term_id][]`, id))
+      query.append(`attributes[${i}][operator]`, 'in')
+    })
+    if (attrFilters.length > 1) query.append('attribute_relation', 'and')
+    if (in_stock) query.append('stock_status[]', 'instock')
+    for (const [k, v] of Object.entries(rules?.params || {})) query.append(k, v)
+    taxonomies.forEach((tax, i) => {
+      query.append(`calculate_attribute_counts[${i}][taxonomy]`, tax)
+      query.append(`calculate_attribute_counts[${i}][query_type]`, 'or')
+    })
+    const res = await fetch(`${storeApiBase(null)}/products/collection-data?${query.toString()}`)
+    if (!res.ok) return null
+    const data = await res.json()
+    if (!Array.isArray(data?.attribute_counts)) return null
+    const out = {}
+    for (const row of data.attribute_counts) out[Number(row.term)] = Number(row.count) || 0
+    return out
+  } catch {
+    return null
   }
 }
 
@@ -693,6 +751,7 @@ export default {
   preFetchProducts,
   fetchProductPages,
   fetchAttributeOptions,
+  fetchAttributeCounts,
   fetchProductsIfNeeded,
   getById,
   fetchById,

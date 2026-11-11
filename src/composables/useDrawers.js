@@ -16,6 +16,9 @@
  * them on mount.
  */
 import { computed, inject, onBeforeUnmount, onMounted, provide, reactive, watch } from 'vue'
+import { toCssLength } from 'src/composables/useSectionStyle.js'
+import { textStyle, tsKeys } from 'src/utils/text-style.js'
+import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 
 /**
  * A widget's drawer built from blocks: its sections while "Drawer Content" is
@@ -24,6 +27,32 @@ import { computed, inject, onBeforeUnmount, onMounted, provide, reactive, watch 
 export function drawerSections(block) {
   const list = block?.data?.drawer_content === 'blocks' && Array.isArray(block?.blocks) ? block.blocks.filter((s) => s && s.enabled !== false) : []
   return list.length ? list : null
+}
+
+/**
+ * A drawer's own look from its widget (Style → Drawer): padding around the content, the title
+ * row's padding, the title's text style, and the close button (shown, size, colour).
+ * `pad` / `headPad` are CSS variables (--dr-pt…, --dh-pt…) or null when the owner set none.
+ */
+export function drawerLook(sd = {}) {
+  const sides = (value, prefix) => {
+    const v = value && typeof value === 'object' && 'desktop' in value ? value.desktop : value
+    if (!v || typeof v !== 'object') return null
+    const vars = {}
+    for (const [side, key] of [['top', 'pt'], ['right', 'pr'], ['bottom', 'pb'], ['left', 'pl']]) {
+      const len = toCssLength(v[side])
+      if (len) vars[`--${prefix}-${key}`] = len
+    }
+    return Object.keys(vars).length ? vars : null
+  }
+  return {
+    pad: sides(sd.drawer_padding, 'dr'),
+    headPad: sides(sd.drawer_head_padding, 'dh'),
+    title: textStyle(sd, tsKeys('drawer_head'), 'text'),
+    close: sd.drawer_close !== false,
+    closeSize: toCssLength(sd.drawer_close_size) || '',
+    closeColor: resolveGlobalColor(sd.drawer_close_color) || '',
+  }
 }
 
 const FIND = Symbol('qwoo-find-widget')
