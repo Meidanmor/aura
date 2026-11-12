@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed, inject, ref } from 'vue'
 import { fetchProductById } from 'src/api/woocommerce.js'
 import productsStore from 'src/stores/products'
 import { formatStoreAmount } from 'src/utils/formatters.js'
@@ -12,6 +12,8 @@ import { t } from 'src/i18n/index.js'
  * `product`: a ref to the product (Store API shape).
  */
 export function useProductOptions(product, { syncAddress = false } = {}) {
+  // The store's setting for what a product opens with (Branding → Product options).
+  const brand = inject('brandSettings', null)
   // A variant stores the choice's slug ("light-blue") for shared attributes
   // and the choice itself ("Light Blue") for options kept on the product.
   // The shopper picks by name, so either one matches.
@@ -189,6 +191,37 @@ export function useProductOptions(product, { syncAddress = false } = {}) {
     selectedVariation.value = null
   }
 
+  /**
+   * The choices a product opens with, when the shopper (or the address) chose nothing yet:
+   * the product's own (the owner's "starts with its own choices"; the Store API marks
+   * those values "default"), else the first variant when the store's setting says so.
+   * True when something was chosen.
+   */
+  async function applyStartChoices() {
+    const p = product.value
+    if (!p || p.type !== 'variable' || Object.values(selectedVariations.value).some(Boolean)) return false
+    const options = (p.attributes || []).filter(a => a.has_variations !== false)
+    const picks = {}
+    for (const attr of options) {
+      const own = (attr.terms || []).find(term => term.default)
+      if (own) picks[attr.name] = own.name
+    }
+    if (!Object.keys(picks).length && brand?.value?.product_start === 'first') {
+      const first = (p.variations || [])[0]
+      for (const attr of first ? options : []) {
+        const stored = first.attributes.find(a => a.name === attr.name)?.value
+        const term = stored
+          ? (attr.terms || []).find(x => String(x.slug).toLowerCase() === String(stored).toLowerCase() || String(x.name).toLowerCase() === String(stored).toLowerCase())
+          : (attr.terms || [])[0] // "any": its first choice
+        if (term) picks[attr.name] = term.name
+      }
+    }
+    if (!Object.keys(picks).length) return false
+    selectedVariations.value = picks
+    await onVariationChange()
+    return true
+  }
+
   const shouldDisableCartButtons = computed(() => {
     return isVariable.value && (!selectedVariation.value || selectedVariation.value === 'null')
   })
@@ -231,6 +264,9 @@ export function useProductOptions(product, { syncAddress = false } = {}) {
         if (variationCount === selectedCount) {
           // Fetch full variation data before updating UI
           selectedVariation.value = await fetchProductById(matched.id)
+        } else {
+          // A choice was taken off: the variation chosen before is no longer the choice.
+          selectedVariation.value = null
         }
 
         variationError.value = ''
@@ -269,6 +305,9 @@ export function useProductOptions(product, { syncAddress = false } = {}) {
   // The chosen variation as the cart takes it: { id, variation: [{ attribute, value }] }, or
   // null when no variation fits the choices (a product without options).
   function chosenForCart() {
+    // Every option has to be chosen: with some missing, "the first variation that fits" isn't the shopper's choice.
+    const chosenCount = Object.values(selectedVariations.value).filter((v) => v != null && v !== '').length
+    if (isVariable.value && chosenCount < availableAttributes.value.length) return null
     const matchedVariation = (product.value?.variations || []).find((variation) => {
       return Object.entries(selectedVariations.value).every(([attrName, selectedValue]) => {
         const attr = variation.attributes.find(a => a.name === attrName);
@@ -295,6 +334,6 @@ export function useProductOptions(product, { syncAddress = false } = {}) {
   return {
     isVariable, selectedVariations, selectedVariation, variationError, variationLoading, resetVariations,
     shouldDisableCartButtons, availableAttributes, getOptionsWithDisabled,
-    choicePrice, choicePricesDiffer, choiceSamePrice, loadVariationPrices, onVariationChange, chosenForCart,
+    choicePrice, choicePricesDiffer, choiceSamePrice, loadVariationPrices, onVariationChange, chosenForCart, applyStartChoices,
   }
 }

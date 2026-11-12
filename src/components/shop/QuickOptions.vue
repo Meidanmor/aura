@@ -122,7 +122,10 @@ watch(product, (p) => {
   quantity.value = 1
   photoIndex.value = 0
   tried.value = false
-  if (p) o.loadVariationPrices()
+  if (p) {
+    o.loadVariationPrices()
+    o.applyStartChoices()
+  }
 })
 // Moving to another page closes it.
 watch(() => router.currentRoute.value.fullPath, close)
@@ -159,7 +162,11 @@ async function add() {
     return
   }
   const chosen = o.chosenForCart()
-  if (!chosen || adding.value) return
+  if (!chosen) {
+    tried.value = true
+    return
+  }
+  if (adding.value) return
   adding.value = true
   try {
     const p = product.value
@@ -184,21 +191,25 @@ function fullDetails() {
   background: var(--q-primary, #fff); color: var(--q-text, inherit);
   border-radius: 18px; overflow: hidden;
 }
-.quick-options--sheet { width: 100vw; max-width: 100vw; max-height: 88vh; border-radius: 20px 20px 0 0; }
+/* Phones: half the screen at most (its content scrolls inside), so it's easy to drag down and close. */
+.quick-options--sheet { width: 100vw; max-width: 100vw; max-height: 50vh; border-radius: 20px 20px 0 0; }
 .quick-options__grip { display: flex; justify-content: center; padding: 8px 0 2px; touch-action: none; cursor: grab; }
 .quick-options__grip span { width: 40px; height: 4px; border-radius: 4px; background: currentColor; opacity: .25; }
 .quick-options__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px 8px 16px; }
 .quick-options--sheet .quick-options__head { touch-action: none; padding-top: 2px; }
 .quick-options__body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 20px; padding: 0 16px 16px; overflow-y: auto; }
-.quick-options--sheet .quick-options__body { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.quick-options--sheet .quick-options__body { grid-template-columns: minmax(0, 1fr); gap: 10px; padding-bottom: 10px; }
+.quick-options--sheet .quick-options__side { gap: 10px; }
+.quick-options--sheet .quick-options__name { font-size: 16px; }
+.quick-options--sheet .quick-options__foot { padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
 .quick-options__main { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 12px; }
 .quick-options__thumbs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .quick-options__thumbs button { width: 52px; height: 52px; padding: 0; border: 2px solid transparent; border-radius: 10px; background: none; overflow: hidden; cursor: pointer; }
 .quick-options__thumbs button.is-on { border-color: currentColor; }
 .quick-options__thumbs img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .quick-options__strip { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
-/* Square photos, never taller than about a third of the screen, so the options stay in view. */
-.quick-options__strip img { flex: none; width: min(62vw, 34vh); height: min(62vw, 34vh); object-fit: cover; border-radius: 12px; scroll-snap-align: start; }
+/* Small square photos, so the options show without scrolling in the half-screen sheet. */
+.quick-options__strip img { flex: none; width: min(36vw, 16vh); height: min(36vw, 16vh); object-fit: cover; border-radius: 10px; scroll-snap-align: start; }
 .quick-options__side { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .quick-options__name { font-size: 18px; font-weight: 600; line-height: 1.3; }
 .quick-options__price { margin-top: 2px; opacity: .85; }

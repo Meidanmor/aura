@@ -54,17 +54,33 @@ export function installPageMotion(router) {
 
 /**
  * The Store builder preview shows one page, so a change of these settings (or "Play in the
- * preview") shows it there: the page starts lower down, then opens the way a new page would.
+ * preview") shows them there, as the message gives them (not yet published). With an animation:
+ * the page fades away, then opens at the top with the animation, like a page a shopper just
+ * opened. With none: a page scrolled down goes back up the chosen way (smoothly, or right away).
  */
 export function installPageMotionPreview() {
   if (typeof window === 'undefined') return
+  let timer = 0
   window.addEventListener('message', (event) => {
     const d = event.data
     if (event.source !== window.parent || !d || d.source !== 'qwoo-admin' || d.type !== 'page_motion') return
-    window.scrollTo({ left: 0, top: Math.min(700, Math.max(0, document.documentElement.scrollHeight - window.innerHeight)) })
-    setTimeout(() => {
+    if (d.animation !== undefined) setPageMotion({ page_scroll: d.scroll, page_animation: d.animation, page_speed: d.speed })
+    const el = document.querySelector('.q-page-container')
+    clearTimeout(timer)
+    if (motion.animation === 'none' || !el) {
+      if (el) { el.style.transition = ''; el.style.opacity = '' }
       window.scrollTo(pageScrollTarget())
+      return
+    }
+    // The old page leaves…
+    el.style.transition = 'opacity .2s ease'
+    el.style.opacity = '0'
+    timer = setTimeout(() => {
+      // …and the new one arrives.
+      el.style.transition = ''
+      el.style.opacity = ''
+      window.scrollTo({ left: 0, top: 0 })
       animatePageIn()
-    }, 450)
+    }, 260)
   })
 }

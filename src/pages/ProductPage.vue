@@ -50,7 +50,7 @@ const product = ref(null)
 const {
   isVariable, selectedVariations, selectedVariation, variationError, variationLoading, resetVariations,
   shouldDisableCartButtons, availableAttributes, getOptionsWithDisabled,
-  choicePrice, choicePricesDiffer, choiceSamePrice, loadVariationPrices, onVariationChange, chosenForCart,
+  choicePrice, choicePricesDiffer, choiceSamePrice, loadVariationPrices, onVariationChange, chosenForCart, applyStartChoices,
 } = useProductOptions(product, { syncAddress: true })
 // No such product (or not published): the page shows the 404 page and answers 404.
 const notFound = ref(false)
@@ -199,6 +199,11 @@ function addToCart(e) {
 function handleAddToCart(e, { checkout = false } = {}) {
   openDrawer.value = !checkout && !e?.target?.closest?.('[data-quick-checkout]')
   const chosen = chosenForCart()
+  // A product with options never goes in the cart without all of them chosen.
+  if (!chosen && isVariable.value) {
+    variationError.value = t('Please select all variation options.')
+    return
+  }
   if (!chosen) {
     return cart.add(product.value.id, quantity.value, null, null, $q, '', openDrawer.value);
   }
@@ -288,6 +293,8 @@ async function enhanceProduct() {
       await onVariationChange()
     }
   }
+  // Nothing from the address: the product's own starting choices, or the store's setting.
+  await applyStartChoices()
 
   await fetchWishlistData()
 }
