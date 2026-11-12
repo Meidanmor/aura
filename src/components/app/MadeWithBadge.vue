@@ -1,7 +1,7 @@
 <template>
   <!-- The Free plan (the store's pointer says `free`): a small line at the very bottom of the footer. -->
   <div v-if="shown" class="made-with">
-    <a :href="href" target="_blank" rel="noopener">{{ t('Made with YallaFlow') }}</a>
+    <a :href="href" target="_blank" rel="noopener">{{ t('Made with Openly') }}</a>
   </div>
 </template>
 
@@ -10,8 +10,8 @@ import { useI18n } from 'src/i18n/index.js'
 import { currentLang } from 'src/i18n/lang.js'
 import { showMadeWith } from 'src/utils/site-info.js'
 
-// YallaFlow's own site (Hebrew at /, English at /en/). Change here when the domain is bought.
-const SITE = 'https://yallaflow-web.vercel.app/'
+// Openly's own site (Hebrew at /, English at /en/).
+const SITE = 'https://openly.co.il/'
 
 const { t } = useI18n()
 const shown = showMadeWith()

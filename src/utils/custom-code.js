@@ -231,7 +231,7 @@ export function trackOwn(ev) {
     // The owner's own code: qwoo.on('the_event_name', …) or the page event below.
     const mine = { ...entry, event: key }
     for (const [n, fn] of handlers) if (n === key || n === '*') safe(fn, mine)
-    window.dispatchEvent(new CustomEvent('yallaflow:event', { detail: { id: ev.id, name: key, ...base } }))
+    window.dispatchEvent(new CustomEvent('openly:event', { detail: { id: ev.id, name: key, ...base } }))
   }
 }
 

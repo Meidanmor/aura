@@ -9,7 +9,7 @@ import { Readable } from 'node:stream'
 // and every shopper's request reaches the store from a few Vercel addresses:
 // passing on the shopper's browser name got all of them refused (empty 429s)
 // after a few page visits. A name of its own isn't limited that way.
-export const BACKEND_USER_AGENT = 'YallaFlow-Storefront/1.0'
+export const BACKEND_USER_AGENT = 'Openly-Storefront/1.0'
 
 export const UPLOADS_RE = /^\/wp-content\/uploads\/[^?#]+\.(jpe?g|png|gif|webp|avif|svg|mp4|webm|pdf|woff2?)(\?|$)/i
 

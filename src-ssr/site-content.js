@@ -149,7 +149,7 @@ const asPointer = (data, file = '') => ({
   ...(data?.hidden === true && /^[a-f0-9]{64}$/.test(data?.preview || '')
     ? { hidden: true, preview: data.preview, name: String(data.name || '').slice(0, 120), lang: data.lang === 'he' ? 'he' : 'en' }
     : {}),
-  // The Free plan: "Made with YallaFlow" in the footer (MadeWithBadge.vue).
+  // The Free plan: "Made with Openly" in the footer (MadeWithBadge.vue).
   free: data?.free === true,
   // Suspended by the platform: "This store is unavailable" for everyone (coming-soon.js).
   ...(data?.suspended === true

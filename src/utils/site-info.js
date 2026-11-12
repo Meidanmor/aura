@@ -10,5 +10,5 @@ function live() {
 export const storeName = () => live()?.name || process.env.STORE_NAME || ''
 export const storeDescription = () => live()?.description || process.env.STORE_DESCRIPTION || ''
 
-/** The Free plan: "Made with YallaFlow" in the footer (src-ssr/site-content.js). */
+/** The Free plan: "Made with Openly" in the footer (src-ssr/site-content.js). */
 export const showMadeWith = () => (typeof window === 'undefined' ? !!globalThis.__QWOO_BADGE : !!window.__QWOO_SITE__?.badge)
