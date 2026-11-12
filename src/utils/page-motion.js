@@ -2,11 +2,16 @@
  * Moving between pages (Store builder → Branding): how a new page starts
  * (scroll up smoothly, or at the top right away) and the page animation
  * (fade, fade and rise, slide, zoom) with its speed. The router asks here
- * where to scroll; after each page change the page container gets the
+ * where to scroll; after each page change the layout's <main> gets the
  * animation class (src/css/app.css, `.page-in--*`). Browser only.
  */
 const SPEED = { fast: '.18s', normal: '.3s', slow: '.5s' }
 const ANIMATIONS = ['fade', 'rise', 'slide', 'zoom']
+
+// The layout's <main> (the page inside the page container). Not the container itself: the storefront
+// turns animations off on .q-page-container, .q-layout and #q-app (animation: none !important, so
+// nothing moves while the first screen loads), and a class there never plays.
+const pageEl = () => document.querySelector('.q-page-container > main')
 
 const motion = { scroll: 'smooth', animation: 'none', speed: 'normal' }
 
@@ -25,7 +30,7 @@ export function pageScrollTarget() {
 /** Plays the page animation on the page container (nothing when it's "None"). */
 export function animatePageIn() {
   if (typeof document === 'undefined' || motion.animation === 'none') return
-  const el = document.querySelector('.q-page-container')
+  const el = pageEl()
   if (!el) return
   const classes = ['page-in', `page-in--${motion.animation}`]
   el.classList.remove('page-in', ...ANIMATIONS.map((a) => `page-in--${a}`))
@@ -65,7 +70,7 @@ export function installPageMotionPreview() {
     const d = event.data
     if (event.source !== window.parent || !d || d.source !== 'qwoo-admin' || d.type !== 'page_motion') return
     if (d.animation !== undefined) setPageMotion({ page_scroll: d.scroll, page_animation: d.animation, page_speed: d.speed })
-    const el = document.querySelector('.q-page-container')
+    const el = pageEl()
     clearTimeout(timer)
     if (motion.animation === 'none' || !el) {
       if (el) { el.style.transition = ''; el.style.opacity = '' }

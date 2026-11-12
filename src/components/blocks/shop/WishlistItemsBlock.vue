@@ -34,6 +34,7 @@ import { matClose } from '@quasar/extras/material-icons'
 import cart from 'src/stores/cart.js'
 import wishlist from 'src/stores/wishlist.js'
 import { addsDirectly, wishlistProducts } from 'src/utils/wishlist-cart.js'
+import { canQuickChoose, openQuickOptions } from 'src/composables/useQuickOptions.js'
 import { formatStoreAmount } from 'src/utils/formatters.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { toCssLength } from 'src/composables/useSectionStyle.js'
@@ -96,6 +97,8 @@ const adding = ref(0)
 async function add(item) {
   if (item.sample) return
   if (!item.direct) {
+    // Options are chosen in the popup (QuickOptions.vue); what it can't show opens its page.
+    if (canQuickChoose(item.product)) return openQuickOptions(item.product)
     if (item.to) await router.push(item.to)
     return
   }

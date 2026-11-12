@@ -1241,20 +1241,21 @@ html.qa-editor .sb-aud-customers { outline: 1px dashed rgba(127, 127, 127, .6); 
 /* purgecss end ignore */
 
 /* Branding → Moving between pages: the page animation (src/utils/page-motion.js adds the class
-   to the page container after each move to another page). */
+   to the layout's <main> after each move to another page; never to .q-page-container, where an
+   older rule turns every animation off). */
 /* purgecss start ignore */
-.q-page-container.page-in { animation-duration: var(--page-in-dur, .3s); animation-timing-function: ease; animation-fill-mode: both; }
-.q-page-container.page-in--fade { animation-name: page-in-fade; }
-.q-page-container.page-in--rise { animation-name: page-in-rise; }
-.q-page-container.page-in--slide { animation-name: page-in-slide; }
-.q-page-container.page-in--zoom { animation-name: page-in-zoom; }
+.q-page-container > main.page-in { animation-duration: var(--page-in-dur, .3s); animation-timing-function: ease; animation-fill-mode: both; }
+.q-page-container > main.page-in--fade { animation-name: page-in-fade; }
+.q-page-container > main.page-in--rise { animation-name: page-in-rise; }
+.q-page-container > main.page-in--slide { animation-name: page-in-slide; }
+.q-page-container > main.page-in--zoom { animation-name: page-in-zoom; }
 @keyframes page-in-fade { from { opacity: 0; } }
 @keyframes page-in-rise { from { opacity: 0; transform: translateY(18px); } }
 @keyframes page-in-slide { from { opacity: 0; transform: translateX(28px); } }
 @keyframes page-in-zoom { from { opacity: 0; transform: scale(.97); } }
-[dir="rtl"] .q-page-container.page-in--slide { animation-name: page-in-slide-rtl; }
+[dir="rtl"] .q-page-container > main.page-in--slide { animation-name: page-in-slide-rtl; }
 @keyframes page-in-slide-rtl { from { opacity: 0; transform: translateX(-28px); } }
 @media (prefers-reduced-motion: reduce) {
-    .q-page-container.page-in { animation: none; }
+    .q-page-container > main.page-in { animation: none; }
 }
 /* purgecss end ignore */
