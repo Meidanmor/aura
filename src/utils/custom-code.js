@@ -193,6 +193,48 @@ export function track(name, data = {}) {
   window.dispatchEvent(new CustomEvent(`qwoo:${name}`, { detail: entry }))
 }
 
+/** The owner's own events (dashboard: Analytics → Events), as the store sent them (src/utils/events.js listens for them). */
+export const ownEvents = () => (typeof window !== 'undefined' && Array.isArray(window.__QWOO_CODE__?.events) ? window.__QWOO_CODE__.events : [])
+
+const META_STANDARD = ['Lead', 'Contact', 'Subscribe', 'ViewContent', 'Search', 'CompleteRegistration', 'Schedule', 'FindLocation', 'CustomizeProduct', 'AddToWishlist', 'SubmitApplication']
+const TOOL_NAME_RE = /^[A-Za-z][A-Za-z0-9_]{0,39}$/
+
+/**
+ * One of the owner's own events happened: it goes to the tools the owner chose for it
+ * (ev.tools: { tool: the name to send, or true }), each only when the store has that
+ * tool connected and the shopper accepted its kind of cookie. What it carries is fixed:
+ * the page's path (no query) and the event's value. Nothing a shopper typed.
+ */
+export function trackOwn(ev) {
+  if (typeof window === 'undefined' || !cfg || !ev?.tools) return
+  const tools = ev.tools
+  const s = cfg.shortcuts || {}
+  const a = allowedNow()
+  const name = (tool) => (typeof tools[tool] === 'string' && TOOL_NAME_RE.test(tools[tool]) ? tools[tool] : '')
+  const key = TOOL_NAME_RE.test(ev.key || '') ? ev.key : 'event'
+  const value = Number(ev.value) > 0 ? Number(ev.value) : 0
+  const money = value ? { value, ...(cfg.currency ? { currency: cfg.currency } : {}) } : {}
+  const base = { page_path: window.location.pathname, ...money }
+  const entry = { event: name('gtm') || key, event_id: ev.id, ...base }
+  events.push(entry)
+  if (events.length > 100) events.shift()
+  // Tag Manager reads the dataLayer (its tags follow the shopper's consent).
+  if (name('gtm')) {
+    window.dataLayer = window.dataLayer || []
+    window.dataLayer.push(entry)
+  }
+  if (name('ga4') && s.ga4 && a.analytics && typeof window.gtag === 'function') window.gtag('event', name('ga4'), { ...base, send_to: s.ga4 })
+  if (name('meta') && s.meta && a.marketing && typeof window.fbq === 'function') window.fbq(META_STANDARD.includes(name('meta')) ? 'track' : 'trackCustom', name('meta'), money)
+  if (name('tiktok') && s.tiktok && a.marketing && window.ttq) window.ttq.track(name('tiktok'), money)
+  if (tools.clarity && s.clarity && a.analytics && typeof window.clarity === 'function') window.clarity('event', key)
+  if (tools.code) {
+    // The owner's own code: qwoo.on('the_event_name', …) or the page event below.
+    const mine = { ...entry, event: key }
+    for (const [n, fn] of handlers) if (n === key || n === '*') safe(fn, mine)
+    window.dispatchEvent(new CustomEvent('yallaflow:event', { detail: { id: ev.id, name: key, ...base } }))
+  }
+}
+
 const safe = (fn, entry) => {
   try { fn(entry) } catch (err) { console.warn('[custom code] qwoo.on', err) }
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="form-block" :class="[layoutClasses, fieldText.class]" :style="[cssVars, fieldText.style]">
+  <div ref="rootEl" class="form-block" :class="[layoutClasses, fieldText.class]" :style="[cssVars, fieldText.style]">
     <div v-if="submitted" class="form-block__success" role="status" v-bind="messageText">
       <q-icon :name="matCheckCircle" size="24px" />
       <span>{{ successMessage }}</span>
@@ -123,6 +123,8 @@ import { useHoneypot } from 'src/composables/useHoneypot.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToFlex } from 'src/composables/useSectionStyle.js'
 import { useI18n } from 'src/i18n/index.js'
+
+const rootEl = ref(null)
 import { gradientOf } from 'src/utils/gradient.js'
 import { mergeBinds, textStyle, textVars, tsKeys } from 'src/utils/text-style.js'
 
@@ -283,6 +285,8 @@ async function onSubmit() {
 
     successMessage.value = d.value.success_message || t(json.message || 'Thanks!')
     submitted.value = true
+    // The owner's events (Analytics → Events): a form was sent. Never what was written.
+    window.dispatchEvent(new CustomEvent('qwoo:form_sent', { detail: { el: rootEl.value } }))
   } catch (err) {
     console.error('[FormBlock] submit failed', err)
     formError.value = t('Could not send the form. Please check your connection and try again.')

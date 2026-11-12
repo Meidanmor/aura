@@ -75,6 +75,8 @@
 
     <ConsentBanner v-if="uiHydrated" />
     <ContactButton v-if="uiHydrated" />
+    <!-- The store's Help button and panel (dashboard: Customers → Inbox → Settings). -->
+    <HelpButton v-if="uiHydrated" />
 
     <!-- Store builder → Popups (browser only). -->
     <PopupHost v-if="uiHydrated" />
@@ -126,11 +128,13 @@ import { stripLang } from 'src/i18n/lang.js'
 import { chromeTarget, pickChrome } from 'src/utils/layouts.js'
 import { initCustomCode } from 'src/utils/custom-code.js'
 import { initPersonalization } from 'src/utils/personalization.js'
+import { initEvents } from 'src/utils/events.js'
 import { installPageMotionPreview, setPageMotion } from 'src/utils/page-motion.js'
 import { useRoute, useRouter } from 'vue-router'
 import { Platform } from 'quasar';
 import ConsentBanner from "../components/app/ConsentBanner.vue";
 import ContactButton from "../components/app/ContactButton.vue";
+import HelpButton from '../components/app/HelpButton.vue'
 import initPush, { subscribeToWebPush, initNativePush, checkNativePermission } from 'src/services/push/push.js'
 import { initLoadingBar } from 'src/composables/useLoadingBar.js'
 import { initAuthPopup } from 'src/composables/useAuthExpired.js'
@@ -666,6 +670,7 @@ onMounted(async () => {
   initCustomCode(router)
   // Marketing → Audiences (after the cookie choice is read).
   initPersonalization(router)
+  initEvents(router)
   // Signed in or not: the Account widget, the forms and "Show To" sections wait for it.
   checkSession()
   initSessionWatcher()

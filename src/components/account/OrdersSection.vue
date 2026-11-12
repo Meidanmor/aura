@@ -19,6 +19,7 @@
           <div class="text-body2 text-grey-7 q-mb-sm">
             {{ t('Total: {total} {currency}', { total: order.total, currency: order.currency }) }}
           </div>
+          <button v-if="canAsk" type="button" class="help-link q-mb-sm" @click="openHelp({ view: 'write', order: order.number })">{{ t('Help with this order') }}</button>
 
           <q-table
             :rows="Object.values(order.items)"
@@ -59,6 +60,11 @@ import { ref, onMounted } from 'vue'
 import { matShoppingBag, matKeyboardArrowDown } from '@quasar/extras/material-icons'
 import { fetchWithToken } from 'src/composables/useApiFetch.js'
 import { useI18n } from 'src/i18n/index.js'
+import { helpConfig, openHelp } from 'src/composables/useHelp.js'
+
+// The store's Help button is on: an order can be asked about (known in the browser only).
+const canAsk = ref(false)
+onMounted(() => { canAsk.value = !!helpConfig()?.write })
 
 const { t } = useI18n()
 // The Account Orders block's own text for no orders ('' = the built-in one).

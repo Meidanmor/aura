@@ -167,7 +167,7 @@ export function setOrderVars(vars, s = {}) {
 }
 
 /** hide-on-device classes shared by containers and blocks. */
-export function visibilityClasses(hideOn, audience = '', audienceId = '') {
+export function visibilityClasses(hideOn, audience = '', audienceId = '', clickEvent = '') {
   const h = hideOn || {}
   // Marketing → Audiences: src/utils/personalization.js writes the one rule that shows or hides these.
   const au = (audience === 'in' || audience === 'out') && /^[a-z0-9_]{1,24}$/.test(audienceId || '') ? audienceId : ''
@@ -181,6 +181,8 @@ export function visibilityClasses(hideOn, audience = '', audienceId = '') {
     'sb-au-in': !!au && audience === 'in',
     'sb-au-out': !!au && audience === 'out',
     ...(au ? { [`sb-au-${au}`]: true } : {}),
+    // Analytics → Events, "Count clicks as an event": src/utils/events.js listens for clicks inside.
+    ...(typeof clickEvent === 'string' && /^ev_[a-z0-9]{8,12}$/.test(clickEvent) ? { [`sb-ev-${clickEvent}`]: true } : {}),
   }
 }
 
@@ -545,7 +547,7 @@ export function buildContainerStyle(style = {}) {
       'sb-has-link': !!link,
       'sb-has-mx': sideways,
       ...overflowClasses(s.overflow),
-      ...visibilityClasses(s.hide_on, s.audience, s.audience_id),
+      ...visibilityClasses(s.hide_on, s.audience, s.audience_id, s.click_event),
     },
     outerVars,
     innerClasses: rowClasses,
@@ -612,7 +614,7 @@ export function buildBlockWrapperStyle(block) {
         'sb-has-w': c.widthMode === 'custom' && hasAny(block.style?.width),
         'sb-has-maxw': c.widthMode === 'contained',
         ...c.stickyClasses,
-        ...visibilityClasses(block.style?.hide_on, block.style?.audience, block.style?.audience_id),
+        ...visibilityClasses(block.style?.hide_on, block.style?.audience, block.style?.audience_id, block.style?.click_event),
       },
       vars,
       anchorId: block.style?.anchor_id || undefined,
@@ -654,7 +656,7 @@ export function buildBlockWrapperStyle(block) {
       'sb-has-border': !!looks.border,
       ...bg.classes,
       ...sticky,
-      ...visibilityClasses(s.hide_on, s.audience, s.audience_id),
+      ...visibilityClasses(s.hide_on, s.audience, s.audience_id, s.click_event),
     },
     vars,
     video: bg.video,

@@ -5,7 +5,7 @@ import { initSwUpdates } from 'src/services/sw-updates'
 import { isEditorMode } from 'src/utils/config-loader'
 import { currentLang, isExtraLang, langFromPath, withLang } from 'src/i18n/lang.js'
 import { scrollPositionFor } from 'src/composables/useAnchorSpy.js'
-import { installPageMotion, pageScrollTarget } from 'src/utils/page-motion.js'
+import { installPageMotion, pageGap, pageMoving, pageScrollTarget } from 'src/utils/page-motion.js'
 
 /**
  * On a page of an extra language, every link and navigation stays in it:
@@ -40,6 +40,17 @@ export default defineRouter(function (/* { store, ssrContext } */) {
 
   const Router = createRouter({
     scrollBehavior: (to, from, savedPosition) => {
+      // With a page animation (Branding → Moving between pages) the window only scrolls
+      // between its two halves: the old page is gone, the new one is in place but not shown
+      // yet. So the scroll is never seen (src/utils/page-motion.js).
+      if (pageMoving()) {
+        return pageGap().then(() => {
+          if (savedPosition) return savedPosition
+          if (to.hash && to.hash !== '#') return scrollPositionFor(to.hash)
+          return { left: 0, top: 0 }
+        })
+      }
+
       // 1. If user clicked "Back" or "Forward", restore exactly where they were
       if (savedPosition) {
         return savedPosition
@@ -86,7 +97,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     })
   }
 
-  // Branding → Moving between pages: the page animation after each move to another page.
+  // Branding → Moving between pages: the page animation around each move to another page.
   if (process.env.CLIENT) installPageMotion(Router)
 
   // --- Start Preview Lock Logic ---

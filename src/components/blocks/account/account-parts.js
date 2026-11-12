@@ -7,8 +7,8 @@ import { signOut } from 'src/composables/useAccount.js'
  * address (/my-account/orders, /my-account/details), so menus and the
  * header's Account widget can link straight to one.
  */
-// giftcards: shown in the menu only to shoppers with gift cards; drawn in the Account Orders block's place.
-export const ACCOUNT_PARTS = ['dashboard', 'orders', 'giftcards', 'details']
+// giftcards and messages: shown in the menu only to shoppers who have some; drawn in the Account Orders block's place.
+export const ACCOUNT_PARTS = ['dashboard', 'orders', 'giftcards', 'messages', 'details']
 
 export const partPath = (part) => (part === 'dashboard' ? '/my-account' : `/my-account/${part}`)
 

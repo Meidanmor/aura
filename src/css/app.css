@@ -1240,22 +1240,33 @@ html.qa-editor .sb-aud-customers { outline: 1px dashed rgba(127, 127, 127, .6); 
 }
 /* purgecss end ignore */
 
-/* Branding → Moving between pages: the page animation (src/utils/page-motion.js adds the class
-   to the layout's <main> after each move to another page; never to .q-page-container, where an
-   older rule turns every animation off). */
+/* Branding → Moving between pages: the page animation (src/utils/page-motion.js). Two halves:
+   the page being left goes away (data-page-move="out"), the window scrolls while nothing shows,
+   the new page arrives ("in"). The marks go on the layout's <main>, the footer and a header that
+   is out of view; never on .q-page-container / .q-layout / #q-app, where an older rule turns
+   every animation off. Attributes, not classes: Vue rewrites classes when the page changes. */
 /* purgecss start ignore */
-.q-page-container > main.page-in { animation-duration: var(--page-in-dur, .3s); animation-timing-function: ease; animation-fill-mode: both; }
-.q-page-container > main.page-in--fade { animation-name: page-in-fade; }
-.q-page-container > main.page-in--rise { animation-name: page-in-rise; }
-.q-page-container > main.page-in--slide { animation-name: page-in-slide; }
-.q-page-container > main.page-in--zoom { animation-name: page-in-zoom; }
+.q-layout [data-page-move] { animation-duration: var(--page-move-dur, .3s); animation-fill-mode: both; }
+.q-layout [data-page-move="out"] { animation-timing-function: ease-in; pointer-events: none; }
+.q-layout [data-page-move="in"] { animation-timing-function: ease-out; }
+.q-layout [data-page-move="out"][data-page-anim="fade"] { animation-name: page-out-fade; }
+.q-layout [data-page-move="out"][data-page-anim="rise"] { animation-name: page-out-rise; }
+.q-layout [data-page-move="out"][data-page-anim="slide"] { animation-name: page-out-slide; }
+.q-layout [data-page-move="out"][data-page-anim="zoom"] { animation-name: page-out-zoom; }
+.q-layout [data-page-move="in"][data-page-anim="fade"] { animation-name: page-in-fade; }
+.q-layout [data-page-move="in"][data-page-anim="rise"] { animation-name: page-in-rise; }
+.q-layout [data-page-move="in"][data-page-anim="slide"] { animation-name: page-in-slide; }
+.q-layout [data-page-move="in"][data-page-anim="zoom"] { animation-name: page-in-zoom; }
+@keyframes page-out-fade { to { opacity: 0; } }
+@keyframes page-out-rise { to { opacity: 0; transform: translateY(-14px); } }
+@keyframes page-out-slide { to { opacity: 0; transform: translateX(-28px); } }
+@keyframes page-out-zoom { to { opacity: 0; transform: scale(.97); } }
 @keyframes page-in-fade { from { opacity: 0; } }
 @keyframes page-in-rise { from { opacity: 0; transform: translateY(18px); } }
 @keyframes page-in-slide { from { opacity: 0; transform: translateX(28px); } }
 @keyframes page-in-zoom { from { opacity: 0; transform: scale(.97); } }
-[dir="rtl"] .q-page-container > main.page-in--slide { animation-name: page-in-slide-rtl; }
+[dir="rtl"] .q-layout [data-page-move="out"][data-page-anim="slide"] { animation-name: page-out-slide-rtl; }
+[dir="rtl"] .q-layout [data-page-move="in"][data-page-anim="slide"] { animation-name: page-in-slide-rtl; }
+@keyframes page-out-slide-rtl { to { opacity: 0; transform: translateX(28px); } }
 @keyframes page-in-slide-rtl { from { opacity: 0; transform: translateX(-28px); } }
-@media (prefers-reduced-motion: reduce) {
-    .q-page-container > main.page-in { animation: none; }
-}
 /* purgecss end ignore */

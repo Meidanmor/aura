@@ -59,6 +59,62 @@ export function codeTestMiddleware() {
 /** Every <script> in the owner's code gets the page's nonce (the only scripts the policy runs). */
 const withNonce = (html, nonce) => String(html).replace(/<script\b([^>]*)>/gi, (tag, attrs) => `<script${attrs.replace(/\snonce\s*=\s*("[^"]*"|'[^']*'|\S+)/gi, '')} nonce="${nonce}">`)
 
+// The owner's own events (dashboard: Analytics → Events): only the known fields, in the known shapes.
+const EVENT_NAME_RE = /^[A-Za-z][A-Za-z0-9_]{0,39}$/
+const shortText = (v) => (typeof v === 'string' ? v.slice(0, 120) : '')
+function cleanEvents(list) {
+  const out = []
+  for (const e of Array.isArray(list) ? list : []) {
+    if (!e || typeof e !== 'object' || !/^ev_[a-z0-9]{8,12}$/.test(e.id) || !e.start || typeof e.start !== 'object') continue
+    const s = e.start
+    if (!['block', 'link', 'page', 'form', 'scroll', 'time'].includes(s.type)) continue
+    const tools = {}
+    for (const [tool, name] of Object.entries(e.tools && typeof e.tools === 'object' ? e.tools : {})) {
+      if (!/^[a-z0-9]{1,20}$/.test(tool)) continue
+      if (name === true || (typeof name === 'string' && EVENT_NAME_RE.test(name))) tools[tool] = name
+    }
+    out.push({
+      id: e.id,
+      key: typeof e.key === 'string' && EVENT_NAME_RE.test(e.key) ? e.key : 'event',
+      start: {
+        type: s.type,
+        ...(typeof s.kind === 'string' && /^[a-z]{1,20}$/.test(s.kind) ? { kind: s.kind } : {}),
+        ...(s.text ? { text: shortText(s.text) } : {}),
+        ...(s.type === 'scroll' ? { percent: Math.min(100, Math.max(1, Number(s.percent) || 50)) } : {}),
+        ...(s.type === 'time' ? { seconds: Math.min(1800, Math.max(5, Number(s.seconds) || 30)) } : {}),
+        ...(s.on === 'contains' && s.on_text ? { on: 'contains', on_text: shortText(s.on_text) } : {}),
+      },
+      every: !!e.every,
+      value: Number(e.value) > 0 ? Math.round(Number(e.value) * 100) / 100 : 0,
+      tools,
+    })
+    if (out.length >= 30) break
+  }
+  return out
+}
+
+// The store's Help button (dashboard: Customers → Inbox → Settings), or null when it's off.
+function cleanHelp(h) {
+  if (!h || typeof h !== 'object') return null
+  const text = (v, max) => (typeof v === 'string' ? v.slice(0, max) : '')
+  const colour = (v) => (typeof v === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(v) ? v : '')
+  return {
+    style: ['pill', 'round', 'tab'].includes(h.style) ? h.style : 'tab',
+    edge: ['start', 'end', 'bottom'].includes(h.edge) ? h.edge : 'end',
+    position: Math.min(88, Math.max(12, Number(h.position) || 50)),
+    label: text(h.label, 30),
+    title: text(h.title, 60),
+    bg: colour(h.bg),
+    color: colour(h.color),
+    answers: h.answers !== false,
+    order: h.order !== false,
+    write: h.write !== false,
+    topics: (Array.isArray(h.topics) ? h.topics : []).map((x) => text(x, 40)).filter(Boolean).slice(0, 8),
+    faq: (Array.isArray(h.faq) ? h.faq : []).map((x) => ({ q: text(x?.q, 120), a: text(x?.a, 800) })).filter((x) => x.q && x.a).slice(0, 20),
+    answer_time: text(h.answer_time, 80),
+  }
+}
+
 const cleanHosts = (list) => (Array.isArray(list) ? list.filter((h) => typeof h === 'string' && HOST_RE.test(h)) : [])
 
 /**
@@ -121,10 +177,13 @@ export function pageCode(req, { where, nonce }) {
               .filter(([name, tools]) => /^[a-z_]{1,40}$/.test(name) && Array.isArray(tools))
               .map(([name, tools]) => [name, tools.filter((x) => typeof x === 'string' && /^[a-z0-9]{1,20}$/.test(x)).slice(0, 12)]),
           ),
+          events: cleanEvents(c.events),
+          help: cleanHelp(c.help),
+          currency: typeof c.currency === 'string' && /^[A-Z]{3}$/.test(c.currency) ? c.currency : '',
           ran: out.ran,
           testing,
         }
-      : { mode, banner: c.consent?.banner !== false, texts: c.consent?.texts || {}, ask: !!c.audiences, audiences: !!c.audiences, snippets: [], shortcuts: {}, ran: [], testing },
+      : { mode, banner: c.consent?.banner !== false, texts: c.consent?.texts || {}, ask: !!c.audiences, audiences: !!c.audiences, snippets: [], shortcuts: {}, events: cleanEvents(c.events), help: cleanHelp(c.help), ran: [], testing },
   }
 }
 

@@ -24,6 +24,7 @@ import { useAccountView } from 'src/composables/useAccount.js'
 import { ACCOUNT_PARTS, partPath, useAccountLogout } from './account-parts.js'
 import { useI18n } from 'src/i18n/index.js'
 import { useMyGiftCards } from 'src/composables/useMyGiftCards.js'
+import { useMyMessages } from 'src/composables/useMyMessages.js'
 
 /**
  * "Account Menu" (My account): links to the account's parts (their own
@@ -38,11 +39,13 @@ const accountPage = inject('accountPage', null)
 const current = computed(() => accountPage?.part || 'dashboard')
 const { busy, logout } = useAccountLogout()
 
-const LABELS = { dashboard: 'Dashboard', orders: 'My Orders', giftcards: 'Gift cards', details: 'Account Details' }
+const LABELS = { dashboard: 'Dashboard', orders: 'My Orders', giftcards: 'Gift cards', messages: 'Messages', details: 'Account Details' }
 const gifts = useMyGiftCards()
+const messages = useMyMessages()
 const items = computed(() => ACCOUNT_PARTS
   .filter((part) => d.value[`show_${part}`] !== false)
   .filter((part) => part !== 'giftcards' || gifts.hasAny.value || current.value === 'giftcards')
+  .filter((part) => part !== 'messages' || messages.hasAny.value || current.value === 'messages')
   .map((part) => ({ part, label: d.value[`${part}_label`] || t(LABELS[part]) })))
 
 const layoutClasses = computed(() => {
