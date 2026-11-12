@@ -128,21 +128,31 @@ function pageInfo() {
   return { page_path: location.pathname + location.search, page_location: location.href, page_title: document.title }
 }
 
-/** The GA4 and Meta shortcuts (Tag Manager reads the dataLayer itself). */
+/**
+ * The owner's choice per shop event (dashboard: Analytics → Events): whether an event goes
+ * to a tool. The store sends the tools turned off, { event: [tool] }; nothing listed = sent.
+ */
+const sendsTo = (name, tool) => !(cfg?.events_off?.[name] || []).includes(tool)
+
+/** The GA4, TikTok, Meta and Clarity shortcuts (Tag Manager reads the dataLayer itself). */
 function toVendors(name, data) {
   const s = cfg?.shortcuts || {}
   const a = allowedNow()
   const e = data.ecommerce
-  if (s.ga4 && a.analytics && typeof window.gtag === 'function') {
+  // Clarity records pages by itself; a shop event becomes a tag on the recording.
+  if (s.clarity && a.analytics && name !== 'page_view' && typeof window.clarity === 'function' && sendsTo(name, 'clarity')) {
+    window.clarity('event', name)
+  }
+  if (s.ga4 && a.analytics && typeof window.gtag === 'function' && sendsTo(name, 'ga4')) {
     window.gtag('event', name, { ...(e || {}), ...(name === 'page_view' ? { page_location: data.page_location, page_title: data.page_title } : {}), send_to: s.ga4 })
   }
-  if (s.tiktok && a.marketing && window.ttq) {
+  if (s.tiktok && a.marketing && window.ttq && sendsTo(name, 'tiktok')) {
     if (name === 'page_view') window.ttq.page()
     else if (TIKTOK[name]) {
       window.ttq.track(TIKTOK[name], e ? { value: Number(e.value) || 0, currency: e.currency, contents: (e.items || []).map((i) => ({ content_id: String(i.item_id), quantity: i.quantity, price: i.price })), content_type: 'product' } : {}, e?.transaction_id ? { event_id: `order_${e.transaction_id}` } : undefined)
     }
   }
-  if (s.meta && a.marketing && typeof window.fbq === 'function' && META[name]) {
+  if (s.meta && a.marketing && typeof window.fbq === 'function' && META[name] && sendsTo(name, 'meta')) {
     if (!e) return window.fbq('track', META[name])
     const params = {
       content_ids: e.items.map((i) => i.item_id),
@@ -172,11 +182,14 @@ export function track(name, data = {}) {
   events.push(entry)
   if (events.length > 100) events.shift()
   // Only kept on the page: a tracker that reads it is one the shopper allowed.
-  window.dataLayer = window.dataLayer || []
-  if (data.ecommerce) window.dataLayer.push({ ecommerce: null })
-  window.dataLayer.push(entry)
+  if (sendsTo(name, 'gtm')) {
+    window.dataLayer = window.dataLayer || []
+    if (data.ecommerce) window.dataLayer.push({ ecommerce: null })
+    window.dataLayer.push(entry)
+  }
   if (cfg) toVendors(name, data)
-  for (const [n, fn] of handlers) if (n === name || n === '*') safe(fn, entry)
+  // The owner's own code (qwoo.on). The window event below always fires: the storefront itself listens to it.
+  if (sendsTo(name, 'code')) for (const [n, fn] of handlers) if (n === name || n === '*') safe(fn, entry)
   window.dispatchEvent(new CustomEvent(`qwoo:${name}`, { detail: entry }))
 }
 

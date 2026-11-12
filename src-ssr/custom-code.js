@@ -115,6 +115,12 @@ export function pageCode(req, { where, nonce }) {
           banner: c.consent?.banner !== false,
           snippets: snippets.map(({ id, kind, name, code, place, where: w, targets, page_paths, group }) => ({ id, kind, name, code, place, where: w, targets, page_paths, group })),
           shortcuts,
+          // Per shop event, the tools the owner turned off (dashboard: Analytics → Events): { event: [tool] }.
+          events_off: Object.fromEntries(
+            Object.entries(c.events_off && typeof c.events_off === 'object' ? c.events_off : {})
+              .filter(([name, tools]) => /^[a-z_]{1,40}$/.test(name) && Array.isArray(tools))
+              .map(([name, tools]) => [name, tools.filter((x) => typeof x === 'string' && /^[a-z0-9]{1,20}$/.test(x)).slice(0, 12)]),
+          ),
           ran: out.ran,
           testing,
         }
