@@ -84,7 +84,8 @@ const rootVars = computed(() => {
 const widthClasses = computed(() => {
   const w = asResponsive(s.value.width)
   const maxw = asResponsive(s.value.max_width)
-  return { 'qp-w-d': !!w.desktop,'qp-maxw-d': !!maxw.desktop, 'qp-w-t': !!w.tablet,'qp-maxw-t': !!maxw.tablet, 'qp-w-m': !!w.mobile,'qp-maxw-m': !!maxw.mobile, }
+  // One class per field when any screen has a value; the media rules below fall back phone → tablet → desktop.
+  return { 'qp-w': !!(w.desktop || w.tablet || w.mobile), 'qp-maxw': !!(maxw.desktop || maxw.tablet || maxw.mobile) }
 })
 const cardVars = computed(() => {
   const v = {}
@@ -290,16 +291,18 @@ html.q-document--prevent-scroll:has(.qwoo-popup) body { position: fixed !importa
   inset-inline-end: 8px;
   z-index: 2;
 }
+/* A screen with no value of its own takes the bigger screen's; with none at all the
+   variable is invalid and the card's own fallback (560px / 100%) applies. */
 @media (min-width: 1024px) {
-  .qp-w-d { --qp-w-now: var(--qp-w); }
-  .qp-maxw-d { --qp-maxw-now: var(--qp-maxw) }
+  .qp-w { --qp-w-now: var(--qp-w); }
+  .qp-maxw { --qp-maxw-now: var(--qp-maxw); }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-  .qp-w-t { --qp-w-now: var(--qp-w-t, var(--qp-w)); }
-  .qp-maxw-d { --qp-maxw-now: var(--qp-maxw-t, var(--qp-maxw)) }
+  .qp-w { --qp-w-now: var(--qp-w-t, var(--qp-w)); }
+  .qp-maxw { --qp-maxw-now: var(--qp-maxw-t, var(--qp-maxw)); }
 }
 @media (max-width: 767px) {
-  .qp-w-m { --qp-w-now: var(--qp-w-m, var(--qp-w-t, var(--qp-w))); }
-  .qp-maxw-m { --qp-maxw-now: var(--qp-maxw-m, var(--qp-maxw-t, var(--qp-maxw))); }
+  .qp-w { --qp-w-now: var(--qp-w-m, var(--qp-w-t, var(--qp-w))); }
+  .qp-maxw { --qp-maxw-now: var(--qp-maxw-m, var(--qp-maxw-t, var(--qp-maxw))); }
 }
 </style>
