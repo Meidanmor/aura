@@ -127,6 +127,7 @@ import { shopBlocks } from '../blocks/shop/index.js'
 import { accountBlocks } from '../blocks/account/index.js'
 import AccountWidgetBlock from 'components/blocks/AccountWidgetBlock.vue'
 import PersonalizedOfferBlock from 'components/blocks/PersonalizedOfferBlock.vue'
+import BookingBlock from 'components/blocks/BookingBlock.vue'
 
 defineOptions({ name: 'SectionTemplate' })
 
@@ -143,6 +144,7 @@ const layoutActions = inject('layoutActions', null)
 
 const blockComponents = {
   personalized_offer: PersonalizedOfferBlock,
+  booking: BookingBlock,
   heading: HeadingBlock,
   text_block: TextBlock,
   image_block: ImageBlock,

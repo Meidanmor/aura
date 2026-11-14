@@ -123,7 +123,9 @@ function itemSignature(itemLike) {
       .join('|')
   // Each gift card is its own line: its key (local item, or the store's extensions.qwoo_giftcard).
   const giftKey = itemLike.gift?.key || itemLike.extensions?.qwoo_giftcard?.key || ''
-  return `${id}::${varSig}${giftKey ? `::g${giftKey}` : ''}`
+  // Each booking too (Appointments): the time it holds.
+  const bookKey = itemLike.booking?.key || itemLike.extensions?.qwoo_booking?.key || ''
+  return `${id}::${varSig}${giftKey ? `::g${giftKey}` : ''}${bookKey ? `::b${bookKey}` : ''}`
 }
 
 function buildSig(productId, variationArr) {
@@ -600,7 +602,8 @@ async function _runSync() {
                 id: localItem.id,
                 quantity: Number(localItem.quantity),
                 variation: localItem.variation,
-                ...(localItem.gift ? { qwoo_gift: localItem.gift } : {})
+                ...(localItem.gift ? { qwoo_gift: localItem.gift } : {}),
+                ...(localItem.booking ? { qwoo_booking: { hold: localItem.booking.hold } } : {})
               }
             })
           }
@@ -613,7 +616,8 @@ async function _runSync() {
             id: localItem.id,
             quantity: Number(localItem.quantity),
             variation: localItem.variation,
-                ...(localItem.gift ? { qwoo_gift: localItem.gift } : {})
+                ...(localItem.gift ? { qwoo_gift: localItem.gift } : {}),
+                ...(localItem.booking ? { qwoo_booking: { hold: localItem.booking.hold } } : {})
           }
         })
       }
@@ -772,6 +776,7 @@ function hydrateLocalCartFromServer(serverCart) {
     quantity: serverItem.quantity,
     variation: normalizeVariation(serverItem.variation || []),
     ...(serverItem.extensions?.qwoo_giftcard?.key ? { gift: { ...serverItem.extensions.qwoo_giftcard } } : {}),
+    ...(serverItem.extensions?.qwoo_booking?.key ? { booking: { ...serverItem.extensions.qwoo_booking } } : {}),
 
     // Data used by the UI
     prices: serverItem.prices || {},
@@ -845,7 +850,8 @@ async function mergeLocalCartWithServer() {
                 id: localItem.id,
                 quantity: Number(localItem.quantity),
                 variation: localItem.variation,
-                ...(localItem.gift ? { qwoo_gift: localItem.gift } : {})
+                ...(localItem.gift ? { qwoo_gift: localItem.gift } : {}),
+                ...(localItem.booking ? { qwoo_booking: { hold: localItem.booking.hold } } : {})
               }
             })
           }
@@ -860,7 +866,8 @@ async function mergeLocalCartWithServer() {
             id: localItem.id,
             quantity: Number(localItem.quantity),
             variation: localItem.variation,
-                ...(localItem.gift ? { qwoo_gift: localItem.gift } : {})
+                ...(localItem.gift ? { qwoo_gift: localItem.gift } : {}),
+                ...(localItem.booking ? { qwoo_booking: { hold: localItem.booking.hold } } : {})
           }
         })
       }
@@ -1147,6 +1154,28 @@ async function addGiftCard(product, gift, $q = null) {
   state.local_cart.items.push(item)
   _finishAdd($q, true)
   trackAdd(itemSignature(item), 1)
+}
+
+/**
+ * A booking (the Booking block): the service's hidden product, quantity 1,
+ * priced at what's paid now; the store checks the hold when it's synced.
+ * booking: { key, hold, when, place }.
+ */
+async function addBooking(product, booking, price, $q = null) {
+  markCartChanged()
+  const item = buildLocalItemFromProduct(product, [], 1, null)
+  const mu = product?.prices?.currency_minor_unit ?? 2
+  const amount = String(Math.round(Number(price) * 10 ** mu))
+  item.prices = { ...(product?.prices || {}), price: amount, regular_price: amount, sale_price: amount }
+  item.quantity_limits = { ...item.quantity_limits, maximum: 1, editable: false }
+  item.booking = { ...booking }
+  item.key = generateLocalKeyForSig(itemSignature(item))
+  state.local_cart.items.push(item)
+  _finishAdd($q, true)
+  trackAdd(itemSignature(item), 1)
+  // Paying for a booking can't wait for the background sync: the store checks the hold now.
+  cancelPendingSync()
+  await syncLocalCartWithServer()
 }
 
 /** The owner's trackers (Settings → Tracking & code): what was just added. */
@@ -1616,6 +1645,7 @@ export default {
   isOffline,
   removeCoupon,
   addGiftCard,
+  addBooking,
   removeGiftCard,
   placeOrder,
   syncLocalCartWithServer,

@@ -4,6 +4,11 @@
     <p v-if="user?.sample" class="account-sample-note">{{ t('Customers see their gift cards here.') }}</p>
     <GiftCardsSection v-else />
   </CheckoutPart>
+  <!-- My account → Appointments: the shopper's bookings (Appointments). -->
+  <CheckoutPart v-else-if="isIn && shown && appts" :data="{ ...d, title: '' }" :default-title="t('Appointments')" class="account-orders-block account-appointments">
+    <p v-if="user?.sample" class="account-sample-note">{{ t('Customers see their bookings here.') }}</p>
+    <BookingsSection v-else />
+  </CheckoutPart>
   <!-- My account → Messages: the shopper's conversations with the store. -->
   <CheckoutPart v-else-if="isIn && shown && msgs" :data="{ ...d, title: '' }" :default-title="t('Messages')" class="account-orders-block account-messages">
     <p v-if="user?.sample" class="account-sample-note">{{ t('Customers see their messages to you here.') }}</p>
@@ -20,6 +25,7 @@ import { computed, inject } from 'vue'
 import OrdersSection from 'src/components/account/OrdersSection.vue'
 import GiftCardsSection from 'src/components/account/GiftCardsSection.vue'
 import MessagesSection from 'src/components/account/MessagesSection.vue'
+import BookingsSection from 'src/components/account/BookingsSection.vue'
 import CheckoutPart from '../shop/CheckoutPart.vue'
 import { useAccountView } from 'src/composables/useAccount.js'
 import { usePartShown } from './account-parts.js'
@@ -30,8 +36,9 @@ const props = defineProps({ data: { type: Object, required: true }, blockId: { t
 const { t } = useI18n()
 const d = computed(() => props.data.data || {})
 const { user, signedIn: isIn } = useAccountView()
-const shown = usePartShown(() => d.value, ['orders', 'giftcards', 'messages'])
+const shown = usePartShown(() => d.value, ['orders', 'appointments', 'giftcards', 'messages'])
 const accountPage = inject('accountPage', null)
+const appts = computed(() => accountPage?.part === 'appointments')
 const gifts = computed(() => accountPage?.part === 'giftcards')
 const msgs = computed(() => accountPage?.part === 'messages')
 </script>

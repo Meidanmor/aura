@@ -26,7 +26,9 @@ const pages = (suffix = '') => {
     { path: 'products', name: named('products'), component: ProductsPage },
     { path: 'thank-you', name: named('thank-you'), component: () => import('pages/ThankYouPage.vue') },
     // My account, and its parts at their own address (/my-account/orders, /my-account/details).
-    { path: 'my-account/:part(orders|giftcards|messages|details)?', name: named('my-account'), component: () => import('pages/AccountPage.vue') },
+    { path: 'my-account/:part(orders|appointments|giftcards|messages|details)?', name: named('my-account'), component: () => import('pages/AccountPage.vue') },
+    // A booking from the link in its emails (?k=key): see, move or cancel it.
+    { path: 'booking/:id(\\d+)', name: named('booking'), component: () => import('pages/BookingPage.vue') },
     { path: 'forgot-password', name: named('forgot-password'), component: () => import('pages/ForgotPasswordPage.vue') },
     { path: 'reset-password', name: named('reset-password'), component: () => import('pages/ResetPasswordPage.vue') },
     // From the "How was your order?" email (?o=order&p=product&t=token).
