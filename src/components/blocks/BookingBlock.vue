@@ -35,6 +35,17 @@
             <button v-if="!fixedService" type="button" class="qbk__link" @click="backToServices">{{ t('Change') }}</button>
           </div>
 
+          <!-- Who with: the service's staff (and "Anyone available" when the owner offers it). -->
+          <div v-if="svc.staff?.length > 1" class="qbk__staff" role="radiogroup" :aria-label="t('Book with')">
+            <button v-if="svc.anyone" type="button" role="radio" class="qbk__who" :class="{ on: who === 0 }" :aria-checked="who === 0" @click="pickWho(0)">
+              <i class="qbk__face">✦</i><span>{{ t('Anyone available') }}</span>
+            </button>
+            <button v-for="p in svc.staff" :key="p.id" type="button" role="radio" class="qbk__who" :class="{ on: who === p.id }" :aria-checked="who === p.id" :title="p.bio || null" @click="pickWho(p.id)">
+              <i class="qbk__face" :style="p.photo ? { backgroundImage: `url(${p.photo})` } : null">{{ p.photo ? '' : p.name.charAt(0) }}</i><span>{{ p.name }}</span>
+            </button>
+          </div>
+          <p v-else-if="svc.staff?.length === 1" class="qbk__note qbk__with">{{ t('With {name}', { name: svc.staff[0].name }) }}</p>
+
           <div class="qbk__mon-h">
             <button type="button" class="qbk__arrow" :aria-label="t('Previous month')" :disabled="!canBack" @click="shiftMonth(-1)"><span class="qbk__flip">‹</span></button>
             <b>{{ monthLabel }}</b>
@@ -119,17 +130,20 @@
         </div>
         <p v-if="info.terms" class="qbk__note">{{ info.terms }}</p>
         <p v-if="problem" class="qbk__problem" role="alert">{{ problem }}</p>
-        <button type="submit" class="qbk__cta" :disabled="busy">{{ busy ? t('One moment…') : paid ? t('Continue to payment') : (d.button_text || t('Book')) }}</button>
+        <button type="submit" class="qbk__cta" :disabled="busy">{{ busy ? t('One moment…') : paid ? t('Continue to payment') : svc.approval ? t('Ask for this time') : (d.button_text || t('Book')) }}</button>
+        <p v-if="svc.approval" class="qbk__note">{{ t('The store confirms each booking. We\'ll keep the time for you until they answer.') }}</p>
       </form>
 
       <!-- 4. Done -->
       <div v-else-if="step === 'done'" class="qbk__card qbk__done" role="status">
         <div class="qbk__tick" aria-hidden="true">✓</div>
-        <b class="qbk__done-h" :class="titleText.class">{{ t('You\'re booked!') }}</b>
+        <b class="qbk__done-h" :class="titleText.class">{{ done?.status === 'requested' ? t('Request sent') : t('You\'re booked!') }}</b>
+        <p v-if="done?.status === 'requested'" class="qbk__note">{{ t('We\'re keeping the time for you. You\'ll get an email when it\'s confirmed.') }}</p>
+        <p v-if="done?.staff">{{ t('With {name}', { name: done.staff }) }}</p>
         <p>{{ svc.name }} · {{ chosenText }}</p>
         <p v-if="doneText" class="qbk__desc" :class="bodyText.class" :style="bodyText.style">{{ doneText }}</p>
         <p class="qbk__note">{{ t('We emailed the details to {email}.', { email: form.email }) }}</p>
-        <div class="qbk__adds">
+        <div v-if="done?.status !== 'requested'" class="qbk__adds">
           <span>{{ t('Add to your calendar:') }}</span>
           <a v-if="done?.google" :href="done.google" target="_blank" rel="noopener">Google</a>
           <a v-if="done?.outlook" :href="done.outlook" target="_blank" rel="noopener">Outlook</a>
@@ -238,7 +252,16 @@ const slot = ref(null)
 const seats = ref(1)
 const todayYmd = computed(() => info.value?.today || '')
 const canBack = computed(() => month.value > todayYmd.value.slice(0, 7))
+// Who with: 0 = anyone (or a service without staff); the only person when there's one; the first when "anyone" isn't offered.
+const who = ref(0)
+function pickWho(id) {
+  who.value = id
+  date.value = ''
+  slot.value = null
+  loadMonth()
+}
 function chooseService(s) {
+  who.value = s.staff?.length === 1 || (s.staff?.length > 1 && !s.anyone) ? s.staff[0].id : 0
   svc.value = s
   step.value = 'time'
   month.value = todayYmd.value.slice(0, 7)
@@ -262,7 +285,7 @@ async function loadMonth() {
   const from = `${month.value}-01` < todayYmd.value ? todayYmd.value : `${month.value}-01`
   const ask = ++asked
   loadingTimes.value = true
-  const res = await bookingApi.times(svc.value.id, from, `${month.value}-${pad(last)}`, seats.value)
+  const res = await bookingApi.times(svc.value.id, from, `${month.value}-${pad(last)}`, seats.value, who.value)
   if (ask !== asked) return
   days.value = res.ok ? (res.data?.days || {}) : {}
   if (!res.ok) problem.value = failText(res, t('We couldn\'t load the free times. Please try again.'))
@@ -333,7 +356,7 @@ async function takeTime() {
   if (!slot.value) return
   busy.value = true
   problem.value = ''
-  const res = await bookingApi.hold(svc.value.id, slot.value.start, seats.value)
+  const res = await bookingApi.hold(svc.value.id, slot.value.start, seats.value, who.value)
   busy.value = false
   if (!res.ok) {
     problem.value = failText(res, t('That time was just taken. Please pick another one.'))
@@ -449,6 +472,12 @@ function again() {
 .qbk__time.on { background: var(--qbk-accent); border-color: var(--qbk-accent); color: #fff; }
 .qbk__time.on small { opacity: 1; }
 .qbk__seats { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.qbk__staff { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+.qbk__who { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--qbk-line); background: transparent; color: inherit; border-radius: 99px; padding: 4px 14px 4px 4px; font: inherit; font-size: .9em; cursor: pointer; }
+[dir="rtl"] .qbk__who { padding: 4px 4px 4px 14px; }
+.qbk__who.on { border-color: var(--qbk-accent); background: color-mix(in srgb, var(--qbk-accent) 12%, transparent); }
+.qbk__face { width: 28px; height: 28px; border-radius: 50%; background: var(--qbk-line) center / cover no-repeat; display: grid; place-items: center; font-style: normal; font-size: .8em; font-weight: 700; }
+.qbk__with { margin: 0 0 12px; }
 .qbk__select { border: 1px solid var(--qbk-line); border-radius: 8px; padding: 6px 10px; background: transparent; color: inherit; font: inherit; }
 .qbk__cta { margin-top: 14px; width: 100%; border: 0; border-radius: 12px; padding: 12px 18px; background: var(--qbk-accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
 .qbk__cta:disabled { opacity: .5; cursor: default; }

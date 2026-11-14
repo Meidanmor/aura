@@ -34,7 +34,7 @@
         aria-haspopup="dialog"
         no-caps
         @click.prevent.stop="chooseOptions"
-    ><span v-if="!iconOnly" v-bind="labelBind">{{ d.options_text || t('Choose options') }}</span></q-btn>
+    ><span v-if="!iconOnly" v-bind="labelBind">{{ optionsText }}</span></q-btn>
     <q-btn
         v-else-if="hasOptions"
         class="lt-cart-btn"
@@ -47,7 +47,7 @@
         :round="iconOnly"
         :aria-label="optionsLabel"
         no-caps
-    ><span v-if="!iconOnly" v-bind="labelBind">{{ d.options_text || t('Choose options') }}</span></q-btn>
+    ><span v-if="!iconOnly" v-bind="labelBind">{{ optionsText }}</span></q-btn>
     <q-btn
         v-else
         class="lt-cart-btn"
@@ -98,7 +98,10 @@ const $q = useQuasar()
 const d = computed(() => props.data.data || {})
 const product = computed(() => (loop?.value?.type === 'product' ? loop.value.item : null))
 // A gift card too: it's bought on its own page, with who it's for.
-const hasOptions = computed(() => ['variable', 'grouped', 'external'].includes(product.value?.type) || product.value?.has_options === true || !!product.value?.extensions?.qwoo_giftcard?.amounts)
+// A service shown as a product (Appointments) opens its page to choose a time: "Book".
+const isBooking = computed(() => !!product.value?.extensions?.qwoo_booking?.service_id)
+const hasOptions = computed(() => isBooking.value || ['variable', 'grouped', 'external'].includes(product.value?.type) || product.value?.has_options === true || !!product.value?.extensions?.qwoo_giftcard?.amounts)
+const optionsText = computed(() => (isBooking.value ? (d.value.book_text || t('Book')) : (d.value.options_text || t('Choose options'))))
 // Products With Options, per screen size: "Choose in a popup" or "Open the product page" (cards
 // saved before the setting: the popup). The server can't know the screen, so with the popup on any
 // screen the button is a plain button, and a screen set to the page goes there on the click.

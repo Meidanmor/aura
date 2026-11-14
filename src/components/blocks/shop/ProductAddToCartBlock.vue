@@ -1,8 +1,10 @@
 <template>
   <div v-if="p?.product" class="product-buy" :class="[{ 'is-full': d.full_width || d.buttons_layout === 'stack' }, `product-buy--${d.buttons_layout || 'auto'}`]" :style="[radiusVar, paddingVars.vars]">
+    <!-- A service shown as a product: choose a time here instead (Appointments). -->
+    <BookingBlock v-if="bookingService" :data="bookingData" />
     <!-- A gift card: its amount, recipient and email instead (src/utils/gift-card.js). -->
     <GiftCardForm
-        v-if="gift"
+        v-else-if="gift"
         :product="p.product"
         :button-class="[buttonText.class, paddingVars.cls]"
         :button-style="[buttonText.style, buttonColors]"
@@ -139,6 +141,7 @@ import { matAdd, matArrowDropDown, matCancel, matRemove, matShoppingBag, matShop
 import { iconAlign } from 'src/utils/icon-align.js'
 import BackInStockForm from 'src/components/product/BackInStockForm.vue'
 import GiftCardForm from 'src/components/product/GiftCardForm.vue'
+import BookingBlock from 'src/components/blocks/BookingBlock.vue'
 import { giftSettings } from 'src/utils/gift-card.js'
 import { t } from 'src/i18n/index.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
@@ -159,6 +162,9 @@ const p = inject('productPage', null)
 const d = computed(() => props.data.data || {})
 const zero = computed(() => zeroPriceButton(p?.product, { onProductPage: true }))
 const gift = computed(() => !!giftSettings(p?.product))
+// A service shown as a product (Appointments): its Booking calendar in this block's place.
+const bookingService = computed(() => Number(p?.product?.extensions?.qwoo_booking?.service_id) || 0)
+const bookingData = computed(() => ({ data: { service_id: String(bookingService.value), title: '', show_description: false } }))
 
 const buttonText = computed(() => textStyle(d.value, tsKeys('button'), 'buttons'))
 const buttonBg = computed(() => resolveGlobalColor(d.value.button_bg))

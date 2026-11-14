@@ -737,4 +737,13 @@ export default {
   "Done": "התקיים",
   "Missed": "הוחמץ",
   "Cancelled": "בוטל",
+  "Book with": "עם מי",
+  "Anyone available": "מי שפנוי",
+  "With {name}": "עם {name}",
+  "Request sent": "הבקשה נשלחה",
+  "We're keeping the time for you. You'll get an email when it's confirmed.": "אנחנו שומרים לך את הזמן. יגיע אליך מייל כשהוא יאושר.",
+  "Ask for this time": "בקשת הזמן הזה",
+  "The store confirms each booking. We'll keep the time for you until they answer.": "החנות מאשרת כל תור. נשמור לך את הזמן עד שיענו.",
+  "Your request is waiting for the store": "הבקשה שלך מחכה לתשובת החנות",
+  "Waiting for the store": "מחכה לחנות",
 }

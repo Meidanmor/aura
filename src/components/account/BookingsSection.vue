@@ -28,8 +28,8 @@ import { useMyBookings } from 'src/composables/useMyBookings.js'
 /** My account → Appointments: the shopper's bookings; each opens its own page (move, cancel). */
 const { t } = useI18n()
 const { state } = useMyBookings()
-const STATUS = { confirmed: 'Confirmed', pending: 'Waiting for payment', done: 'Done', noshow: 'Missed', cancelled: 'Cancelled' }
-const isUpcoming = (b) => ['confirmed', 'pending'].includes(b.status) && new Date(b.start).getTime() > Date.now()
+const STATUS = { requested: 'Waiting for the store', confirmed: 'Confirmed', pending: 'Waiting for payment', done: 'Done', noshow: 'Missed', cancelled: 'Cancelled' }
+const isUpcoming = (b) => ['confirmed', 'pending', 'requested'].includes(b.status) && new Date(b.start).getTime() > Date.now()
 const upcoming = computed(() => state.list.filter(isUpcoming).sort((a, b) => a.start.localeCompare(b.start)))
 const past = computed(() => state.list.filter((b) => !isUpcoming(b)))
 const at = (b) => new Date(b.local.replace(' ', 'T'))

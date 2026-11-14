@@ -57,7 +57,7 @@
         </div>
       </div>
 
-      <div v-else-if="['confirmed', 'pending'].includes(b.status)" class="bkp-actions">
+      <div v-else-if="['confirmed', 'pending', 'requested'].includes(b.status)" class="bkp-actions">
         <q-btn v-if="b.can_move" outline color="secondary" no-caps :label="t('Move to another time')" @click="startMove" />
         <q-btn v-if="b.can_cancel" flat color="negative" no-caps :label="t('Cancel booking')" @click="cancelling = true" />
         <p v-if="!b.can_cancel" class="bkp-note">{{ t('It\'s less than {n} hours before your booking, so it can\'t be changed online. Please contact us.', { n: b.cancel_hours }) }}</p>
@@ -97,7 +97,7 @@ async function load() {
 }
 onMounted(load)
 
-const STATUS = { confirmed: 'Your booking is confirmed', pending: 'Waiting for your payment', done: 'This booking has passed', noshow: 'This booking has passed', cancelled: 'This booking was cancelled' }
+const STATUS = { requested: 'Your request is waiting for the store', confirmed: 'Your booking is confirmed', pending: 'Waiting for your payment', done: 'This booking has passed', noshow: 'This booking has passed', cancelled: 'This booking was cancelled' }
 const statusText = computed(() => t(STATUS[b.value?.status] || 'Your booking'))
 
 /* Moving: the next 4 weeks of free times */

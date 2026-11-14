@@ -61,6 +61,8 @@ const position = computed(() => (d.value.position === 'top' ? 'top' : 'bottom'))
 // Nothing to buy: out of stock, a draft, or no price (the store's setting).
 const buyable = computed(() => {
   const product = p?.product
+  // A service shown as a product (Appointments) is booked on the page, never added from the bar.
+  if (product?.extensions?.qwoo_booking?.service_id) return false
   return !!(product?.id && product.is_in_stock && product.status !== 'draft' && !zeroPriceButton(product, { onProductPage: true }))
 })
 
