@@ -217,20 +217,29 @@ const list = computed(() => {
 const svc = ref(null)
 const step = ref('service')
 // A new step starts at the block's top (it can be taller or shorter than the last one),
-// unless the top is already on screen below the header.
+// unless it's already there (just below a header that stays on screen).
 const root = ref(null)
 let quiet = true
+let topCheck = 0
+// More than a few pixels off: moves the page so the block's top sits under the header.
+function toTop(smooth) {
+  const el = root.value
+  if (!el || typeof window === 'undefined') return
+  const off = headerOffset()
+  const top = el.getBoundingClientRect().top
+  if (Math.abs(top - off) < 24) return
+  window.scrollTo({ top: Math.max(0, top + window.scrollY - off), behavior: smooth ? 'smooth' : 'auto' })
+}
 watch(step, () => {
   if (quiet) return
   nextTick(() => {
-    const el = root.value
-    if (!el || typeof window === 'undefined') return
-    const off = headerOffset()
-    const top = el.getBoundingClientRect().top
-    if (top >= off && top < window.innerHeight * 0.4) return
     let smooth = true
     try { smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches } catch { /* old browser */ }
-    window.scrollTo({ top: Math.max(0, top + window.scrollY - off), behavior: smooth ? 'smooth' : 'auto' })
+    toTop(smooth)
+    // The block changes height while the new step loads (free times), which can cut a
+    // smooth scroll short: once it's had time to finish, finish the move.
+    clearTimeout(topCheck)
+    topCheck = setTimeout(() => toTop(false), 900)
   })
 })
 const paid = computed(() => !!svc.value && ['full', 'deposit'].includes(svc.value.pay) && svc.value.product_id > 0)
@@ -403,6 +412,7 @@ function backToTimes() {
 }
 onBeforeUnmount(() => {
   clearInterval(ticker)
+  clearTimeout(topCheck)
   // Leaving before booking a free service: the time goes back at once (a paid one stays held for the checkout).
   if (hold.value && step.value === 'details') bookingApi.release(hold.value.hold)
 })

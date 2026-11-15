@@ -313,7 +313,8 @@ function widthOf(dr) {
  * drawer opens by swiping in from an edge (its "swipe": auto, none, left,
  * right). Automatic: menus from the start side of the screen, the cart and
  * wishlist from the end side. One drawer per edge: the first widget on the
- * page (header first) wins.
+ * page (header first) that's shown on this screen size wins (a desktop-only
+ * menu never opens on a phone).
  */
 const rtl = computed(() => !!$q.lang.rtl)
 // The side a drawer belongs on: the edge its widget chose, else menus at the start, the rest at the end.
@@ -322,15 +323,8 @@ const screenSide = (key) => {
   if (swipe === 'left' || swipe === 'right') return swipe
   return key.startsWith('menu:') !== rtl.value ? 'left' : 'right'
 }
-const edgeKeys = computed(() => {
-  const edges = { left: '', right: '' }
-  for (const key of drawers.state.order) {
-    if ((drawers.state.entries[key]?.swipe || 'auto') === 'none') continue
-    const edge = screenSide(key)
-    if (!edges[edge]) edges[edge] = key
-  }
-  return edges
-})
+// Asked when a swipe starts: what's shown depends on the screen size right now.
+const edgeKey = (edge) => drawers.state.order.find((key) => (drawers.state.entries[key]?.swipe || 'auto') !== 'none' && screenSide(key) === edge && drawers.onScreen(key)) || ''
 // Quasar mirrors a drawer's side on right-to-left pages.
 const qSide = (key) => {
   const side = screenSide(key)
@@ -429,7 +423,7 @@ const handlePointerMove = (e) => {
     dragging = true
     // A left-to-right swipe pulls in the drawer on the left edge of the screen.
     activeEdge = dx > 0 ? 'left' : 'right'
-    activeDrawer = edgeKeys.value[activeEdge]
+    activeDrawer = edgeKey(activeEdge)
     activeEl = activeDrawer ? getEl(activeDrawer) : null
     if (!activeEl) {
       // Nothing opens from this edge.

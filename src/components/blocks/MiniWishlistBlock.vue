@@ -21,6 +21,8 @@ const { t } = useI18n()
 const d = computed(() => props.data?.data || {})
 
 const source = useDrawerSource(props)
+// Its button: the drawer counts only while that button is shown (for swipes).
+const openerEl = ref(null)
 const drawer = useDrawer(
   () => 'wishlist',
   () => {
@@ -39,6 +41,7 @@ const drawer = useDrawer(
       swipe: sd.swipe || 'none',
     }
   },
+  () => openerEl.value,
 )
 
 // Saved in the browser only: the server's page and the first render agree.
@@ -51,6 +54,7 @@ const hidden = computed(() => !!d.value.hide_when_empty && count.value === 0)
 <template>
   <WidgetButton
       v-if="!hidden"
+      ref="openerEl"
       :d="d"
       :icons="wishlistIcons"
       :default-icon="wishlistIcons.heart_outline"

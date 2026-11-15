@@ -1,5 +1,5 @@
 <script setup>
-import { computed, inject } from 'vue'
+import { computed, inject, ref } from 'vue'
 import NavMenu from 'components/app/NavMenu.vue'
 import { asResponsive, toCssLength, alignToFlex, alignToText } from 'src/composables/useSectionStyle.js'
 import { brandFontVar } from 'src/utils/brand-fonts.js'
@@ -84,6 +84,8 @@ const scope = computed(() => `hm-${(props.blockId || 'x').replace(/[^\w-]/g, '')
 // This widget's drawer (useDrawers.js), only while its phone button can show it: its own,
 // or with "Same as another widget" that widget's (one drawer, opened by both).
 const source = useDrawerSource(props)
+// Its hamburger: the drawer counts only while that button is shown (for swipes).
+const toggleEl = ref(null)
 const drawer = useDrawer(
   () => (mobileMenuEnabled.value && breakpoint.value !== null ? `menu:${source.value.id || 'menu'}` : ''),
   () => {
@@ -104,6 +106,7 @@ const drawer = useDrawer(
       swipe: sd.swipe || 'auto',
     }
   },
+  () => toggleEl.value,
 )
 
 const colorValue = (c) => (c ? resolveGlobalColor(c) || c : '')
@@ -263,7 +266,7 @@ const css = computed(() => {
           </q-toolbar-title>
         </div>
       </q-toolbar>
-      <div v-if="mobileMenuEnabled" class="hm-toggle">
+      <div v-if="mobileMenuEnabled" ref="toggleEl" class="hm-toggle">
         <WidgetButton :d="d" :icons="menuIcons" :default-icon="menuIcons.menu" :aria-label="t('Open menu')" action="menu" @click="drawer.toggle()" />
       </div>
     </div>

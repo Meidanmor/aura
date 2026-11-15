@@ -26,6 +26,8 @@ const d = computed(() => props.data?.data || {})
 const toPage = computed(() => d.value.click_action === 'page')
 
 const source = useDrawerSource(props)
+// Its button: the drawer counts only while that button is shown (for swipes).
+const openerEl = ref(null)
 const drawer = useDrawer(
   () => (toPage.value ? '' : 'cart'),
   () => {
@@ -44,6 +46,7 @@ const drawer = useDrawer(
       swipe: sd.swipe || 'auto',
     }
   },
+  () => openerEl.value,
 )
 
 // The cart is known in the browser only: the server's page and the first
@@ -68,6 +71,7 @@ function open() {
 <template>
   <WidgetButton
       v-if="!hidden"
+      ref="openerEl"
       :d="d"
       :icons="cartIcons"
       :default-icon="cartIcons.cart"

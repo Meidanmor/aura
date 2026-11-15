@@ -110,6 +110,19 @@ export function provideDrawers() {
     owners: {}, // key -> [owner, entry][]
     open: '', // the open drawer's key
   })
+  // key -> owner -> a getter for the button that opens it (not reactive: read when needed).
+  const openers = {}
+  // Shown now: one of its buttons takes up space on the page. A widget hidden on this
+  // screen size (its own Hide On, its section's, or its hamburger above the width) doesn't count.
+  const onScreen = (key) => {
+    const list = Object.values(openers[key] || {})
+    if (!list.length) return true
+    return list.some((get) => {
+      const r = get()
+      const el = r?.$el ?? r
+      return !!el && typeof el.getClientRects === 'function' && el.getClientRects().length > 0
+    })
+  }
 
   const sync = (key) => {
     const owners = state.owners[key] || []
@@ -127,7 +140,8 @@ export function provideDrawers() {
   const api = {
     state,
     has: (key) => !!state.entries[key],
-    set(key, owner, entry) {
+    set(key, owner, entry, opener) {
+      if (opener) (openers[key] ||= {})[owner] = opener
       const owners = (state.owners[key] ||= [])
       const mine = owners.find((o) => o[0] === owner)
       if (mine) mine[1] = entry
@@ -137,6 +151,7 @@ export function provideDrawers() {
     remove(key, owner) {
       if (!state.owners[key]) return
       state.owners[key] = state.owners[key].filter((o) => o[0] !== owner)
+      if (openers[key]) delete openers[key][owner]
       sync(key)
     },
     open(key) {
@@ -149,8 +164,9 @@ export function provideDrawers() {
       if (state.open === key) state.open = ''
       else api.open(key)
     },
-    /** The first menu drawer on the page (for "the menu"). */
-    firstMenu: () => state.order.find((k) => k.startsWith('menu:')) || '',
+    onScreen,
+    /** The first menu drawer on the page that's shown on this screen (for "the menu"), else the first one. */
+    firstMenu: () => state.order.find((k) => k.startsWith('menu:') && onScreen(k)) || state.order.find((k) => k.startsWith('menu:')) || '',
   }
   provide(KEY, api)
   return api
@@ -161,7 +177,7 @@ export function provideDrawers() {
  * getters (they follow the widget's settings, e.g. in the live preview); a
  * falsy key means no drawer.
  */
-export function useDrawer(key, entry) {
+export function useDrawer(key, entry, opener = null) {
   const api = inject(KEY, null)
   // A plain id: objects kept in reactive state come back as proxies (never equal).
   const owner = `w${++ownerSeq}`
@@ -175,7 +191,7 @@ export function useDrawer(key, entry) {
       ([k, e]) => {
         if (current && current !== k) api.remove(current, owner)
         current = k || ''
-        if (current) api.set(current, owner, e)
+        if (current) api.set(current, owner, e, opener)
       },
       { immediate: true, deep: true },
     )
