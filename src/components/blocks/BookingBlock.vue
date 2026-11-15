@@ -1,5 +1,5 @@
 <template>
-  <div class="qbk" :class="[`qbk--${layout}`]" :style="vars">
+  <div ref="root" class="qbk" :class="[`qbk--${layout}`]" :style="vars">
     <div v-if="title" class="qbk__title" :class="titleText.class" :style="titleText.style">{{ title }}</div>
 
     <!-- The server draws the frame only: free times load in the browser (they change every minute). -->
@@ -64,19 +64,25 @@
           </div>
           <!-- Phones: a row of days that scrolls sideways. -->
           <div class="qbk__strip">
+            <template v-if="loadingTimes && !openCells.length"><span v-for="n in 6" :key="`k${n}`" class="qbk__sday qbk__skel" aria-hidden="true" /></template>
             <button
               v-for="c in openCells" :key="`s${c.ymd}`" type="button" class="qbk__sday" :class="{ on: c.ymd === date }" :aria-pressed="c.ymd === date" :aria-label="c.label"
               @click="date = c.ymd"
             ><small>{{ c.wd }}</small><b>{{ c.n }}</b></button>
           </div>
-          <p v-if="loadingTimes" class="qbk__note">{{ t('Looking for free times…') }}</p>
+          <p v-if="loadingTimes" class="qbk__sr" role="status">{{ t('Looking for free times…') }}</p>
           <p v-else-if="!openCells.length" class="qbk__note">{{ t('No free times this month.') }} <button type="button" class="qbk__link" @click="shiftMonth(1)">{{ t('Next month') }}</button></p>
           <p v-if="zoneNote" class="qbk__note">{{ zoneNote }}</p>
         </div>
 
         <div class="qbk__card">
-          <b class="qbk__dayname">{{ dateLabel }}</b>
-          <template v-if="date && daySlots.length">
+          <b v-if="!(loadingTimes && !daySlots.length)" class="qbk__dayname">{{ dateLabel }}</b>
+          <template v-if="loadingTimes && !daySlots.length">
+            <span class="qbk__skel qbk__skel-line" aria-hidden="true" />
+            <span class="qbk__skel qbk__skel-part" aria-hidden="true" />
+            <div class="qbk__times" aria-hidden="true"><span v-for="n in 8" :key="`t${n}`" class="qbk__time qbk__skel" /></div>
+          </template>
+          <template v-else-if="date && daySlots.length">
             <template v-for="g in groups" :key="g.key">
               <div v-if="g.slots.length" class="qbk__part">{{ g.label }}</div>
               <div v-if="g.slots.length" class="qbk__times">
@@ -157,7 +163,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n, currentLocale } from 'src/i18n/index.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
@@ -166,6 +172,7 @@ import { useFieldIds } from 'src/utils/field-id.js'
 import { fetchProductById } from 'src/api/woocommerce.js'
 import { bookingApi, failText, moneyText, shopperZone } from 'src/composables/useBooking.js'
 import cart from 'src/stores/cart.js'
+import { headerOffset } from 'src/composables/useAnchorSpy.js'
 
 /**
  * "Booking" (Store builder; Appointments): a service (or a list to choose from),
@@ -209,6 +216,23 @@ const list = computed(() => {
 })
 const svc = ref(null)
 const step = ref('service')
+// A new step starts at the block's top (it can be taller or shorter than the last one),
+// unless the top is already on screen below the header.
+const root = ref(null)
+let quiet = true
+watch(step, () => {
+  if (quiet) return
+  nextTick(() => {
+    const el = root.value
+    if (!el || typeof window === 'undefined') return
+    const off = headerOffset()
+    const top = el.getBoundingClientRect().top
+    if (top >= off && top < window.innerHeight * 0.4) return
+    let smooth = true
+    try { smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches } catch { /* old browser */ }
+    window.scrollTo({ top: Math.max(0, top + window.scrollY - off), behavior: smooth ? 'smooth' : 'auto' })
+  })
+})
 const paid = computed(() => !!svc.value && ['full', 'deposit'].includes(svc.value.pay) && svc.value.product_id > 0)
 const stepNames = computed(() => {
   const s = []
@@ -240,6 +264,8 @@ onMounted(async () => {
   if (!res.ok) problem.value = failText(res, '')
   loading.value = false
   if (list.value.length === 1) chooseService(list.value[0])
+  await nextTick()
+  quiet = false
 })
 
 /* ---------------- days and times ---------------- */
@@ -497,6 +523,14 @@ function again() {
 .qbk__done-h { font-size: 1.3em; }
 .qbk__adds { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; font-size: .9em; }
 .qbk__adds a { border: 1px solid var(--qbk-line); border-radius: 8px; padding: 6px 12px; color: inherit; text-decoration: none; font-weight: 600; }
+.qbk__skel { display: block; background: var(--qbk-line); border-color: transparent; opacity: .45; animation: qbk-pulse 1.2s ease-in-out infinite alternate; cursor: default; }
+.qbk__sday.qbk__skel { height: 52px; }
+.qbk__time.qbk__skel { height: 38px; }
+.qbk__skel-line { height: 18px; width: 55%; border-radius: 6px; margin: 2px 0 8px; }
+.qbk__skel-part { height: 10px; width: 70px; border-radius: 5px; margin: 14px 0 8px; }
+@keyframes qbk-pulse { to { opacity: .2; } }
+@media (prefers-reduced-motion: reduce) { .qbk__skel { animation: none; } }
+.qbk__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: -1px; }
 @media (max-width: 700px) {
   .qbk__grid { grid-template-columns: minmax(0, 1fr); }
   .qbk__mon { display: none; }
