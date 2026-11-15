@@ -49,7 +49,7 @@ const product = ref(null)
 // Choosing options (variations): shared with the "choose options" sheet on product cards.
 const {
   isVariable, selectedVariations, selectedVariation, variationError, variationLoading, resetVariations,
-  shouldDisableCartButtons, availableAttributes, getOptionsWithDisabled,
+  shouldDisableCartButtons, availableAttributes, openingAttributes, getOptionsWithDisabled,
   choicePrice, choicePricesDiffer, choiceSamePrice, loadVariationPrices, onVariationChange, chosenForCart, applyStartChoices,
 } = useProductOptions(product, { syncAddress: true })
 // No such product (or not published): the page shows the 404 page and answers 404.
@@ -447,7 +447,7 @@ watch(
 provide('productPage', reactive({
   product, gallery, imagesCarousel: markRaw(imagesCarousel), cart: markRaw(cart), wishlist: markRaw(wishlist),
   reviewsOn, scrollToReviews, safeCategoryName, safePrice, safeVariationPrice, safeDescription,
-  variationLoading, selectedVariation, selectedVariations, availableAttributes, getOptionsWithDisabled,
+  variationLoading, selectedVariation, selectedVariations, availableAttributes, openingAttributes, getOptionsWithDisabled,
   choicePrice, choicePricesDiffer, choiceSamePrice, loadExtras,
   onVariationChange, variationError, isVariable, quantity, decreaseQty, increaseQty,
   shouldDisableCartButtons, addToCartHandler, addCurrentToCart, showChoices, addToWishlist,

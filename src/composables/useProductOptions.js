@@ -40,7 +40,11 @@ export function useProductOptions(product, { syncAddress = false } = {}) {
     }))
   }
 
-  const availableAttributes = computed(() => {
+  const availableAttributes = computed(() => attributesFor(selectedVariations.value))
+  // Before anything is chosen: what the server drew. A block draws this until it is mounted, since the
+  // page picks its starting choices before the blocks (loaded on their own) hydrate.
+  const openingAttributes = computed(() => attributesFor({}))
+  function attributesFor(selection) {
     if (!product.value?.attributes) return []
 
     // Only the attributes shoppers choose (options); the others (taste, material…) are product details.
@@ -62,7 +66,7 @@ export function useProductOptions(product, { syncAddress = false } = {}) {
 
       const validOptions = allOptions.filter(optionValue => {
         // Build a hypothetical selection with this option chosen
-        const hypothetical = { ...selectedVariations.value, [attrName]: optionValue }
+        const hypothetical = { ...selection, [attrName]: optionValue }
 
         // Check if any variation is compatible with this hypothetical selection
         return product.value.variations.some(variation => {
@@ -89,7 +93,7 @@ export function useProductOptions(product, { syncAddress = false } = {}) {
         options: validOptions
       }
     })
-  })
+  }
 
 
   // Each variation's prices (extensions.qwoo.variation_prices: only in the store's
@@ -333,7 +337,7 @@ export function useProductOptions(product, { syncAddress = false } = {}) {
 
   return {
     isVariable, selectedVariations, selectedVariation, variationError, variationLoading, resetVariations,
-    shouldDisableCartButtons, availableAttributes, getOptionsWithDisabled,
+    shouldDisableCartButtons, availableAttributes, openingAttributes, getOptionsWithDisabled,
     choicePrice, choicePricesDiffer, choiceSamePrice, loadVariationPrices, onVariationChange, chosenForCart, applyStartChoices,
   }
 }

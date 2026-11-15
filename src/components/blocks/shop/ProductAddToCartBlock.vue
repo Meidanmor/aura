@@ -13,7 +13,7 @@
     <template v-else>
     <!-- Variations Selection for Variable Product -->
     <div v-if="p.isVariable" class="q-mb-md">
-      <div v-for="attribute in p.availableAttributes" :key="attribute.id" class="q-mb-sm">
+      <div v-for="attribute in (mounted ? p.availableAttributes : p.openingAttributes)" :key="attribute.id" class="q-mb-sm">
         <label class="text-subtitle2 q-mb-xs">{{ attribute.name }}</label>
         <!-- Product Options As "Buttons" / "Cards": one per value, the chosen one marked. -->
         <div
@@ -30,8 +30,8 @@
               type="button"
               role="radio"
               class="pb-choice"
-              :class="{ 'is-on': p.selectedVariations[attribute.name] === opt.value }"
-              :aria-checked="p.selectedVariations[attribute.name] === opt.value ? 'true' : 'false'"
+              :class="{ 'is-on': chosen(attribute.name) === opt.value }"
+              :aria-checked="chosen(attribute.name) === opt.value ? 'true' : 'false'"
               :disabled="opt.disable"
               @click="choose(attribute.name, opt.value)"
           >
@@ -43,7 +43,7 @@
         </div>
         <q-select :for="fid(`a${attribute.id}`)"
             v-else
-            v-model="p.selectedVariations[attribute.name]"
+            :model-value="chosen(attribute.name)"
             :options="p.getOptionsWithDisabled(attribute)"
             dense
             :dropdown-icon="matArrowDropDown"
@@ -53,10 +53,10 @@
             :label="t('Select a {name}', { name: attribute.name })"
             emit-value
             map-options
-            @update:model-value="p.onVariationChange"
+            @update:model-value="(v) => { p.selectedVariations[attribute.name] = v; p.onVariationChange() }"
         />
       </div>
-      <div v-if="p.variationError" class="text-negative text-caption q-mt-xs">{{ p.variationError }}</div>
+      <div v-if="mounted && p.variationError" class="text-negative text-caption q-mt-xs">{{ p.variationError }}</div>
     </div>
 
     <div v-if="p.product.status === 'draft'"><b>{{ t('This is a draft product. It\'s shown for admins only!') }}</b></div>
@@ -136,7 +136,7 @@
 
 <script setup>
 import { useFieldIds } from 'src/utils/field-id.js'
-import { computed, inject } from 'vue'
+import { computed, inject, onMounted, ref } from 'vue'
 import { matAdd, matArrowDropDown, matCancel, matRemove, matShoppingBag, matShoppingCart } from '@quasar/extras/material-icons'
 import { iconAlign } from 'src/utils/icon-align.js'
 import BackInStockForm from 'src/components/product/BackInStockForm.vue'
@@ -159,6 +159,10 @@ const fid = useFieldIds()
  */
 const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
 const p = inject('productPage', null)
+// The page picks its starting choices before this block hydrates: draw them only once it is mounted.
+const mounted = ref(false)
+onMounted(() => { mounted.value = true })
+const chosen = (name) => (mounted.value ? p.selectedVariations[name] : undefined)
 const d = computed(() => props.data.data || {})
 const zero = computed(() => zeroPriceButton(p?.product, { onProductPage: true }))
 const gift = computed(() => !!giftSettings(p?.product))
