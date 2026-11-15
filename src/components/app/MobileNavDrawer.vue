@@ -6,7 +6,7 @@
         <q-btn flat dense :aria-label="t('Close menu')" padding="none" :icon="matClose" @click="closeMenu"/>
       </div>
       <!-- The owner's menu (Design → Menus). -->
-      <q-list v-if="Array.isArray(menu)" bordered padding>
+      <q-list v-if="Array.isArray(menu)" class="mobile-drawer-list" bordered padding>
         <MobileNavItems :items="menu" @navigate="closeMenu" />
       </q-list>
       <!-- Stores published before menus existed. -->

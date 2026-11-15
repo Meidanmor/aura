@@ -28,10 +28,12 @@
           behavior="mobile"
           no-swipe-open
           :width="widthOf(dr)"
-          :class="['widget-drawer', `widget-drawer--${dr.kind}`, { 'cart-drawer': dr.kind === 'cart', 'widget-drawer--blocks': !!dr.sections, 'widget-drawer--pad': !!dr.look?.pad }]"
+          :class="['widget-drawer', `widget-drawer--${dr.kind}`, dr.scope || '', { 'cart-drawer': dr.kind === 'cart', 'widget-drawer--blocks': !!dr.sections, 'widget-drawer--pad': !!dr.look?.pad }]"
           :style="{ background: dr.bg || undefined, color: dr.color || undefined, ...(dr.look?.pad || {}) }"
           @update:model-value="(v) => (v ? drawers.open(dr.key) : drawers.close(dr.key))"
       >
+        <!-- The standard menu drawer's own link look (MenuWidget: Style → Drawer Links). -->
+        <component :is="'style'" v-if="!dr.sections && dr.css">{{ dr.css }}</component>
         <!-- Built from blocks (the widget's Drawer Content): the owner's sections. -->
         <DrawerSections
             v-if="dr.sections"

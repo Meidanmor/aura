@@ -104,12 +104,56 @@ const drawer = useDrawer(
       showLanguages: sd.drawer_show_languages !== false,
       showNotifications: sd.drawer_show_notifications !== false,
       swipe: sd.swipe || 'auto',
+      // The standard drawer's links (Style → Drawer Links): a class on the drawer and its rules.
+      scope: drawerScope.value,
+      css: drawerLinkCss(sd, drawerScope.value),
     }
   },
   () => toggleEl.value,
 )
 
 const colorValue = (c) => (c ? resolveGlobalColor(c) || c : '')
+
+const MEDIA = { desktop: '(min-width: 1024px)', tablet: '(min-width: 768px) and (max-width: 1023px)', mobile: '(max-width: 767px)' }
+// Padding per screen size ({ desktop: { top, right, bottom, left }, … }): a side left empty on a smaller
+// screen keeps the bigger screen's. left / right are the start / end sides, so they flip in Hebrew.
+function paddingRules(value, selector) {
+  const r = asResponsive(value)
+  const last = {}
+  const out = []
+  const PROP = { top: 'padding-top', bottom: 'padding-bottom', left: 'padding-inline-start', right: 'padding-inline-end' }
+  for (const device of DEVICES) {
+    const box = r[device] && typeof r[device] === 'object' ? r[device] : {}
+    const decl = []
+    for (const side of ['top', 'right', 'bottom', 'left']) {
+      let v = toCssLength(box[side])
+      if (v === null || v === undefined || v === '') v = last[side]
+      if (v === null || v === undefined || v === '' || !LENGTH_RE.test(v)) continue
+      last[side] = v
+      decl.push(`${PROP[side]}: ${v} !important`)
+    }
+    // A list item keeps Quasar's 48px height otherwise.
+    if (decl.length) out.push(`@media ${MEDIA[device]} { ${selector} { ${decl.join('; ')}; min-height: 0 !important; } }`)
+  }
+  return out
+}
+
+// The standard phone drawer's links (Style → Drawer Links), scoped to that drawer.
+const drawerScope = computed(() => `hmd-${String(source.value.id || props.blockId || 'menu').replace(/[^\w-]/g, '')}`)
+function drawerLinkCss(sd, scopeClass) {
+  const s = `.${scopeClass}`
+  const links = `${s} .mobile-drawer-list .q-item`
+  const current = `${s} .mobile-drawer-list .q-item.q-router-link--exact-active`
+  const rules = []
+  const c = (k) => colorValue(sd[k])
+  if (c('drawer_link_bg')) rules.push(`${links} { background: ${c('drawer_link_bg')} !important; }`)
+  if (c('drawer_active_color')) rules.push(`${current} { color: ${c('drawer_active_color')} !important; }`)
+  if (c('drawer_active_bg')) rules.push(`${current} { background: ${c('drawer_active_bg')} !important; }`)
+  const radius = toCssLength(sd.drawer_link_radius)
+  if (radius && LENGTH_RE.test(radius)) rules.push(`${links} { border-radius: ${radius} !important; }`)
+  rules.push(...paddingRules(sd.drawer_link_padding, links))
+  return rules.join('\n')
+}
 
 const css = computed(() => {
   const s = `.${scope.value}`
@@ -154,7 +198,6 @@ const css = computed(() => {
   if (['uppercase', 'lowercase', 'capitalize'].includes(d.value.link_case)) own.push(`text-transform: ${d.value.link_case}`)
   if (own.length) rules.push(`${links} { ${own.map((x) => `${x} !important`).join('; ')}; }`)
   const sized = { size: asResponsive(d.value.link_size), lh: asResponsive(d.value.link_line_height), ls: asResponsive(d.value.link_spacing) }
-  const MEDIA = { desktop: '(min-width: 1024px)', tablet: '(min-width: 768px) and (max-width: 1023px)', mobile: '(max-width: 767px)' }
   for (const device of ['desktop', 'tablet', 'mobile']) {
     const decl = []
     const size = toCssLength(sized.size[device])
@@ -176,8 +219,21 @@ const css = computed(() => {
     if (c) rules.push(`${s} .nav-link:hover, ${s} .menu-v-link:hover, ${s} .menu-folding .q-item:hover { color: ${c} !important; }`)
   }
 
-  // The link of the page the visitor is on.
-  const current = `${s} .nav-link.router-link-exact-active, ${s} .menu-v-link.router-link-exact-active`
+  // Style → Links: each link's padding, background and corners (a whole row in the vertical and folding lists).
+  if (d.value.link_bg) {
+    const c = colorValue(d.value.link_bg)
+    if (c) rules.push(`${links} { background: ${c} !important; }`)
+  }
+  if (d.value.link_hover_bg) {
+    const c = colorValue(d.value.link_hover_bg)
+    if (c) rules.push(`${s} .nav-link:hover, ${s} .menu-v-link:hover, ${s} .menu-folding .q-item:hover { background: ${c} !important; }`)
+  }
+  const radius = toCssLength(d.value.link_radius)
+  if (radius && LENGTH_RE.test(radius)) rules.push(`${links} { border-radius: ${radius} !important; }`)
+  rules.push(...paddingRules(d.value.link_padding, links))
+
+  // The link of the page the visitor is on (also in the folding list, where the drawer's own look applied before).
+  const current = `${s} .nav-link.router-link-exact-active, ${s} .menu-v-link.router-link-exact-active, ${s} .menu-folding .q-item.q-router-link--exact-active`
   if (d.value.active_link_color) {
     const c = colorValue(d.value.active_link_color)
     if (c) rules.push(`${current} { color: ${c} !important; }`)
@@ -292,8 +348,9 @@ const css = computed(() => {
 .menu-v-item {
   position: relative;
 }
+/* A whole row: a background or padding fills the line, not only the text. */
 .menu-v-link {
-  display: inline-block;
+  display: block;
   color: inherit;
   transition: color 0.15s ease;
 }
