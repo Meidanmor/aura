@@ -1,5 +1,6 @@
 // src/composables/useProductArchive.js
 import {ref, computed, onMounted, watch, useSSRContext, nextTick, onUnmounted} from 'vue'
+import { shopGate } from 'src/utils/shop-mode.js'
 import { useRouter, useRoute } from 'vue-router'
 import { useFilterSync, parseQueryFilters, attrToString } from 'src/composables/useFilterSync'
 import { scroll } from 'quasar'
@@ -54,6 +55,7 @@ export const gridAppends = (grid) => grid?.mode === 'button' || grid?.mode === '
  */
 export function createArchivePreFetch(mode) {
     return async function preFetch({ ssrContext, currentRoute, previousRoute, redirect }) {
+        if (shopGate(currentRoute.path)) return // closed while the shop / accounts are off (MainLayout shows what's there instead)
         // Only the filters changed (same page, another query): the page loads the products itself.
         if (!ssrContext && previousRoute?.matched?.length && previousRoute.path === currentRoute.path) return
 

@@ -1,7 +1,7 @@
 <template>
   <div v-if="p?.product" class="product-price" :class="priceText.class" :style="[{ textAlign: align }, priceText.style]">
     <q-skeleton v-if="mounted && p.variationLoading" type="text" width="120px" />
-    <div v-else-if="mounted && p.selectedVariation" v-html="p.safeVariationPrice"></div>
+    <div v-else-if="mounted && p.selectedVariation && !isCatalog(p.product)" v-html="p.safeVariationPrice"></div>
     <div v-else v-html="p.safePrice"></div>
   </div>
 </template>
@@ -9,6 +9,7 @@
 <script setup>
 import { computed, inject, onMounted, ref } from 'vue'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
+import { isCatalog } from 'src/utils/shop-mode.js'
 
 /** "Product Price" (product page template): the chosen variant's price once one is chosen. */
 const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })

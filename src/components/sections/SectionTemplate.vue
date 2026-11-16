@@ -128,6 +128,7 @@ import { accountBlocks } from '../blocks/account/index.js'
 import AccountWidgetBlock from 'components/blocks/AccountWidgetBlock.vue'
 import PersonalizedOfferBlock from 'components/blocks/PersonalizedOfferBlock.vue'
 import BookingBlock from 'components/blocks/BookingBlock.vue'
+import { blockOffNow } from 'src/utils/shop-mode.js'
 
 defineOptions({ name: 'SectionTemplate' })
 
@@ -232,7 +233,7 @@ const innerStyle = computed(() => props.nested
 
 const enabledBlocks = computed(() =>
     (props.data.blocks || []).filter((block) =>
-        block?.enabled !== false && (block.type === 'section' || blockComponents[block?.type])
+        block?.enabled !== false && (block.type === 'section' || blockComponents[block?.type]) && !blockOffNow(block.type)
     )
 )
 

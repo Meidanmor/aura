@@ -62,7 +62,9 @@
 
     <q-page-container style="padding-top: 0">
       <main :data-clarity-mask="privatePage ? 'True' : null">
-        <router-view />
+        <ShopClosed v-if="shopGateNow === 'closed'" />
+        <ErrorNotFound v-else-if="shopGateNow === 'notfound'" />
+        <router-view v-else />
       </main>
     </q-page-container>
 
@@ -126,7 +128,10 @@ import AppFooter from '../components/app/AppFooter.vue'
 import AnnouncementBar from '../components/app/AnnouncementBar.vue'
 import SectionRenderer from 'components/sections/SectionRenderer.vue'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
-import { stripLang } from 'src/i18n/lang.js'
+import { langFromPath, stripLang, withLang } from 'src/i18n/lang.js'
+import { shopGate } from 'src/utils/shop-mode.js'
+import ShopClosed from 'src/components/app/ShopClosed.vue'
+import ErrorNotFound from 'pages/ErrorNotFound.vue'
 import { chromeTarget, pickChrome } from 'src/utils/layouts.js'
 import { initCustomCode } from 'src/utils/custom-code.js'
 import { initPersonalization } from 'src/utils/personalization.js'
@@ -182,7 +187,9 @@ function applyGlobalColors(colors) {
 }
 // Inside your Page or Layout
 defineOptions({
-  async preFetch ({ ssrContext, currentRoute }) {
+  async preFetch ({ ssrContext, currentRoute, redirect }) {
+    // Sell online off, "Go to the home page": a shop address answers a redirect (src/utils/shop-mode.js).
+    if (shopGate(currentRoute.path) === 'home') return redirect(withLang('/', langFromPath(currentRoute.path)))
 
     const siteURL = getApiOrigin(ssrContext) || '';
 
@@ -568,6 +575,8 @@ const router = useRouter()
 // number on them, whatever the owner's Clarity project settings (form fields are hidden everywhere already).
 const PRIVATE_PAGE = /(^|\/)(checkout|thank-you|my-account|forgot-password|reset-password|review)(\/|$)/
 const privatePage = computed(() => PRIVATE_PAGE.test(route.path))
+// Sell online / Shopper accounts off: this address shows the owner's message or Page not found (null: the page).
+const shopGateNow = computed(() => shopGate(route.path))
 if (process.env.SERVER) {
   // Which page this is, for the owner's custom code (src-ssr/custom-code.js).
   const ssr = useSSRContext()

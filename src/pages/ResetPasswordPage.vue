@@ -45,6 +45,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { shopGate } from 'src/utils/shop-mode.js'
 import { useRoute } from 'vue-router'
 import {useSeoMeta} from "src/composables/useSeo.js";
 import { t as i18nT, useI18n } from 'src/i18n/index.js'
@@ -52,7 +53,8 @@ import { t as i18nT, useI18n } from 'src/i18n/index.js'
 const { t } = useI18n()
 
 defineOptions({
-  async preFetch ({ ssrContext }) {
+  async preFetch ({ ssrContext, currentRoute }) {
+    if (shopGate(currentRoute.path)) return // closed while the shop / accounts are off (MainLayout shows what's there instead)
     const seo = {
       title: i18nT('Reset password'),
       description: 'Reset password page',

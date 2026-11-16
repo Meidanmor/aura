@@ -14,6 +14,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, useSSRContext, watch, provide, reactive, markRaw } from 'vue'
+import { shopGate } from 'src/utils/shop-mode.js'
 import { sendPersonalizationEvent } from 'src/utils/personalization.js'
 import { rememberViewed } from 'src/utils/recently-viewed.js'
 import { ecommerceOf, eventItem, track } from 'src/utils/custom-code.js'
@@ -117,6 +118,7 @@ imagesCarousel.recompute()
 // Inside your Page or Layout
 defineOptions({
   async preFetch ({ ssrContext, currentRoute, redirect }) {
+    if (shopGate(currentRoute.path)) return // closed while the shop / accounts are off (MainLayout shows what's there instead)
 
     const isPreview = currentRoute.query.preview === 'true'
 

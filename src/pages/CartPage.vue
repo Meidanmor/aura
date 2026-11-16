@@ -8,6 +8,7 @@
 
 <script setup>
 import cart from 'src/stores/cart';
+import { shopGate } from 'src/utils/shop-mode.js'
 import { computed } from 'vue';
 import { provideCartPage } from 'src/composables/useCartPage.js'
 import {useSeoMeta} from "src/composables/useSeo.js";
@@ -24,7 +25,8 @@ import { t as i18nT } from 'src/i18n/index.js'
 provideCartPage()
 
 defineOptions({
-  async preFetch ({ ssrContext }) {
+  async preFetch ({ ssrContext, currentRoute }) {
+    if (shopGate(currentRoute.path)) return // closed while the shop / accounts are off (MainLayout shows what's there instead)
     let cartData;
     if(ssrContext) {
       cartData = await cart.fetchCart(true, ssrContext)

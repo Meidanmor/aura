@@ -4,6 +4,7 @@ import routes from './routes'
 import { initSwUpdates } from 'src/services/sw-updates'
 import { isEditorMode } from 'src/utils/config-loader'
 import { currentLang, isExtraLang, langFromPath, withLang } from 'src/i18n/lang.js'
+import { shopGate } from 'src/utils/shop-mode.js'
 import { scrollPositionFor } from 'src/composables/useAnchorSpy.js'
 import { installPageMotion, pageGap, pageMoving, pageScrollTarget } from 'src/utils/page-motion.js'
 
@@ -94,6 +95,13 @@ export default defineRouter(function (/* { store, ssrContext } */) {
         window.location.assign(to.fullPath)
         return false
       }
+    })
+  }
+
+  // Sell online off, "Go to the home page" (the server answers a redirect for page loads: MainLayout).
+  if (process.env.CLIENT) {
+    Router.beforeEach((to) => {
+      if (shopGate(to.path) === 'home') return withLang('/', langFromPath(to.path))
     })
   }
 

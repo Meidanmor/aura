@@ -27,6 +27,7 @@
 
 <script setup>
 import { computed, onMounted, provide, reactive, ref, watch } from 'vue'
+import { shopGate } from 'src/utils/shop-mode.js'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchWithToken } from 'src/composables/useApiFetch.js'
 import { clearSessionState } from 'src/composables/useSessionCleanup.js'
@@ -43,7 +44,8 @@ import { t as i18nT, useI18n } from 'src/i18n/index.js'
 const { t } = useI18n()
 
 defineOptions({
-  async preFetch ({ ssrContext }) {
+  async preFetch ({ ssrContext, currentRoute }) {
+    if (shopGate(currentRoute.path)) return // closed while the shop / accounts are off (MainLayout shows what's there instead)
     const configData = await loadPageConfig('account', false, getApiOrigin(ssrContext)).catch(() => null)
     const seo = {
       title: i18nT('My account'),

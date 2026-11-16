@@ -19,6 +19,7 @@
         />
 
         <q-btn
+            v-if="!productsHidden()"
             flat
             color="transparent"
             text-color="black"
@@ -35,6 +36,7 @@
 import { useMeta } from 'quasar'
 import { useSSRContext } from 'vue'
 import { useI18n } from 'src/i18n/index.js'
+import { productsHidden } from 'src/utils/shop-mode.js'
 
 const { t } = useI18n()
 

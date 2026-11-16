@@ -36,6 +36,7 @@ export default {
   "as the payment reference.": "כאסמכתא לתשלום.",
   "At least 8 characters": "לפחות 8 תווים",
   "Back to Homepage": "חזרה לעמוד הבית",
+  "Our online shop is closed for now. Come back soon!": "החנות האונליין שלנו סגורה כרגע. חזרו בקרוב!",
   "Back to login": "חזרה להתחברות",
   "Back to the store": "חזרה לחנות",
   "Background video": "סרטון רקע",

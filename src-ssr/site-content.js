@@ -133,6 +133,22 @@ function build(data, p) {
   }
 }
 
+/** The store's shop switches, cleaned (only while one of them is off). */
+function shopOf(v) {
+  if (!v || typeof v !== 'object') return null
+  const closed = {}
+  for (const [lang, text] of Object.entries(v.closed && typeof v.closed === 'object' ? v.closed : {})) {
+    if (/^[a-z]{2}$/.test(lang) && typeof text === 'string') closed[lang] = text.slice(0, 200)
+  }
+  return {
+    sell: v.sell !== false,
+    products: v.products === 'hide' ? 'hide' : 'catalog',
+    addr: ['home', 'closed', 'notfound'].includes(v.addr) ? v.addr : 'home',
+    accounts: v.accounts !== false,
+    closed,
+  }
+}
+
 const asPointer = (data, file = '') => ({
   version: VERSION_RE.test(data?.version || '') ? data.version : null,
   // The pointer file's address (qwoo/v1/site says it; older stores have none).
@@ -151,6 +167,8 @@ const asPointer = (data, file = '') => ({
     : {}),
   // The Free plan: "Made with Openly" in the footer (MadeWithBadge.vue).
   free: data?.free === true,
+  // Sell online / Shopper accounts off (src/utils/shop-mode.js); null while both are on.
+  shop: shopOf(data?.shop),
   // Suspended by the platform: "This store is unavailable" for everyone (coming-soon.js).
   ...(data?.suspended === true
     ? { suspended: true, name: String(data.name || '').slice(0, 120), lang: data.lang === 'he' ? 'he' : 'en' }
@@ -309,7 +327,7 @@ export function siteVisibility() {
 
 /** The page's view of the live version, for the browser (window.__QWOO_SITE__). */
 export function clientSite(s) {
-  return s ? { version: s.version, languages: s.languages, name: s.name, description: s.description, badge: !!pointer?.free } : null
+  return s ? { version: s.version, languages: s.languages, name: s.name, description: s.description, badge: !!pointer?.free, shop: pointer?.shop || null } : null
 }
 
 /* ---------------- serving the files ---------------- */
@@ -463,6 +481,8 @@ export function siteContentMiddleware({ publicDir }) {
     globalThis.__QWOO_SITE = s
     // The same answer as window.__QWOO_SITE__.badge (clientSite), so the server and browser draw the same footer.
     globalThis.__QWOO_BADGE = !!(s && pointer?.free)
+    // The same answer as window.__QWOO_SITE__.shop (src/utils/shop-mode.js).
+    globalThis.__QWOO_SHOP = s ? pointer?.shop || null : null
 
     // The header, footer and branding configs pages link instead of carrying (shared-state.js).
     const shared = req.path.match(/^\/__site\/s\/([a-f0-9]{20,40})\/([a-z]{2,3}(?:-[A-Za-z]{2,4})?)\.js$/)
