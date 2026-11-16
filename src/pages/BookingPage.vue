@@ -11,6 +11,27 @@
     <div v-else-if="b" class="bkp-card">
       <p class="bkp-status" :class="`is-${b.status}`">{{ statusText }}</p>
       <h1 class="text-h5 q-my-sm">{{ b.service }}</h1>
+
+      <!-- "Are you coming?": the service asks before the appointment -->
+      <div v-if="b.can_answer && !moving && !cancelling" class="bkp-box bkp-ask">
+        <template v-if="!saying">
+          <b class="bkp-ask-title">{{ t('Are you coming?') }}</b>
+          <span v-if="answerUntil" class="bkp-note">{{ t('Please answer by {when}.', { when: answerUntil }) }}</span>
+          <div class="bkp-actions">
+            <q-btn color="secondary" no-caps unelevated :loading="busy" :label="t('Yes, I\'m coming')" @click="answer('coming')" />
+            <q-btn outline color="negative" no-caps :disable="busy" :label="t('I can\'t make it')" @click="saying = true" />
+          </div>
+        </template>
+        <template v-else>
+          <b>{{ t('Cancel this booking?') }}</b>
+          <p v-if="b.paid" class="bkp-note">{{ b.refund === 'full' ? t('Your payment is refunded to the card you paid with.') : t('The payment isn\'t refunded.') }}</p>
+          <div class="bkp-actions">
+            <q-btn color="negative" no-caps unelevated :loading="busy" :label="t('Yes, cancel it')" @click="answer('not_coming')" />
+            <q-btn flat no-caps :label="t('Back')" @click="saying = false" />
+          </div>
+        </template>
+      </div>
+      <p v-else-if="b.status === 'confirmed' && b.confirm === 'yes'" class="bkp-note">✓ {{ t('You confirmed you\'re coming.') }}</p>
       <dl class="bkp-rows">
         <template v-for="r in b.rows" :key="r.k">
           <dt>{{ r.k }}</dt>
@@ -97,6 +118,20 @@ async function load() {
 }
 onMounted(load)
 
+/* The answer to "Are you coming?" */
+const saying = ref(false)
+const answerUntil = computed(() => (b.value?.answer_until ? new Date(b.value.answer_until).toLocaleString(currentLocale(), { timeZone: b.value.tz || undefined, weekday: 'long', hour: '2-digit', minute: '2-digit' }) : ''))
+async function answer(action) {
+  busy.value = true
+  error.value = ''
+  const res = await bookingApi.act(id.value, key.value, action)
+  busy.value = false
+  if (!res.ok) { error.value = failText(res, t('Something went wrong. Please try again.')); return }
+  b.value = res.data
+  saying.value = false
+  notice.value = action === 'coming' ? t('Thanks! See you then.') : t('Your booking is cancelled.')
+}
+
 const STATUS = { requested: 'Your request is waiting for the store', confirmed: 'Your booking is confirmed', pending: 'Waiting for your payment', done: 'This booking has passed', noshow: 'This booking has passed', cancelled: 'This booking was cancelled' }
 const statusText = computed(() => t(STATUS[b.value?.status] || 'Your booking'))
 
@@ -148,6 +183,8 @@ async function doCancel() {
 .bkp-card { width: 100%; max-width: 560px; display: grid; gap: 10px; padding-block: 24px; }
 .bkp-status { margin: 0; font-weight: 600; color: var(--q-secondary); }
 .bkp-status.is-cancelled { color: var(--q-negative); }
+.bkp-ask { border-color: var(--q-secondary); }
+.bkp-ask-title { font-size: 1.15em; }
 .bkp-rows { display: grid; grid-template-columns: minmax(90px, 30%) minmax(0, 1fr); gap: 8px 12px; margin: 0; }
 .bkp-rows dt { opacity: .7; }
 .bkp-rows dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }

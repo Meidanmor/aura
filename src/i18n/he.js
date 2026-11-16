@@ -1,5 +1,11 @@
 // Hebrew: English text → Hebrew (see i18n/index.js). Arrays are [one, many].
 export default {
+  "Are you coming?": "מגיעים?",
+  "Please answer by {when}.": "נשמח לתשובה עד {when}.",
+  "Yes, I'm coming": "כן, אני מגיע/ה",
+  "I can't make it": "לא אוכל להגיע",
+  "You confirmed you're coming.": "אישרת שאת/ה מגיע/ה.",
+  "Thanks! See you then.": "תודה! נתראה.",
   "Product photos": "תמונות המוצר",
   "Show photo {n}": "הצגת תמונה {n}",
   "In stock only": "רק מה שבמלאי",
