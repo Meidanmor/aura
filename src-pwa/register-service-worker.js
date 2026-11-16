@@ -12,7 +12,18 @@ import { register } from 'register-service-worker'
 
   // We add an extra delay to ensure the "Main Thread" has
   // finished hydrating the page and painting the LCP.
-  requestIdleCallback(() => {
+  // Safari (every iPhone) has no requestIdleCallback: calling it threw before the app started,
+  // so nothing on the page worked there (menu, booking widget…). After load + 2 s instead.
+  const whenIdle = (fn) => {
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(fn, { timeout: 5000 })
+      return
+    }
+    const later = () => setTimeout(fn, 2000)
+    if (document.readyState === 'complete') later()
+    else window.addEventListener('load', later, { once: true })
+  }
+  whenIdle(() => {
 
     register(process.env.SERVICE_WORKER_FILE, {
       //ready(/*registration*/) {
