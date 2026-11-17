@@ -44,6 +44,11 @@ export function getPushConfig() {
                 backForm: cfg ? !!(cfg.back_form ?? cfg.notify_me) : false,
                 backPush: cfg ? !!(cfg.back_push ?? cfg.notify_me) : false,
                 backEmail: !!cfg && 'back_form' in cfg,
+                // WhatsApp / SMS on the sold-out form (off unless the owner turned them on).
+                backWa: !!cfg?.back_wa,
+                backSms: !!cfg?.back_sms,
+                // Asking to add the store to the home screen (older stores: off).
+                install: cfg?.install || { on: false },
             }))
     }
     return configPromise
@@ -190,6 +195,20 @@ export function queueDeviceSync() {
 const WANTS_KEY = 'qwoo_push_wants'
 export function wantsBack(productId) {
     try { return (JSON.parse(localStorage.getItem(WANTS_KEY) || '[]') || []).includes(Number(productId)) } catch { return false }
+}
+/** WhatsApp / SMS (channel 'wa' | 'sms'): { ok, message }. */
+export async function requestBackInStockPhone(productId, phone, channel, website = '') {
+    try {
+        const res = await fetch('/wp-json/qwoo/v1/back-in-stock/phone', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product_id: Number(productId), phone, channel, website })
+        })
+        const body = await res.json().catch(() => ({}))
+        return { ok: res.ok && body?.success !== false, message: body?.message || '' }
+    } catch {
+        return { ok: false, message: '' }
+    }
 }
 /** The email way (after push couldn't work): { ok, message }. website = the hidden field bots fill. */
 export async function requestBackInStockEmail(productId, email, website = '') {

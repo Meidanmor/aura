@@ -327,7 +327,7 @@ export function siteVisibility() {
 
 /** The page's view of the live version, for the browser (window.__QWOO_SITE__). */
 export function clientSite(s) {
-  return s ? { version: s.version, languages: s.languages, name: s.name, description: s.description, badge: !!pointer?.free, shop: pointer?.shop || null } : null
+  return s ? { version: s.version, languages: s.languages, name: s.name, description: s.description, badge: !!pointer?.free, shop: pointer?.shop || null, product_start: pointer?.product_start || null } : null
 }
 
 /* ---------------- serving the files ---------------- */
@@ -483,6 +483,8 @@ export function siteContentMiddleware({ publicDir }) {
     globalThis.__QWOO_BADGE = !!(s && pointer?.free)
     // The same answer as window.__QWOO_SITE__.shop (src/utils/shop-mode.js).
     globalThis.__QWOO_SHOP = s ? pointer?.shop || null : null
+    // Product settings → Product options (the same as window.__QWOO_SITE__.product_start).
+    globalThis.__QWOO_PRODUCT_START = s ? pointer?.product_start || null : null
 
     // The header, footer and branding configs pages link instead of carrying (shared-state.js).
     const shared = req.path.match(/^\/__site\/s\/([a-f0-9]{20,40})\/([a-z]{2,3}(?:-[A-Za-z]{2,4})?)\.js$/)

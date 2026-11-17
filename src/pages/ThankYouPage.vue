@@ -15,6 +15,8 @@
         <div class="text-subtitle1 text-center">
           {{ t('Hey {first_name}. Your order is being processed and will get to you soon! Please check your email inbox at', { first_name: order.billing_address.first_name }) }} <strong>{{ order.billing_address.email }}</strong> {{ t('for more details.') }}
         </div>
+        <!-- Add the store to the home screen (dashboard → Notifications → Settings → Home screen). -->
+        <InstallAsk place="thanks" />
 
         <q-card v-if="bank" class="q-pa-md">
           <q-card-section>
@@ -88,6 +90,7 @@
 
 <script setup>
 import {ref, computed, onMounted} from 'vue'
+import InstallAsk from 'src/components/app/InstallAsk.vue'
 import {useSeoMeta} from 'src/composables/useSeo.js'
 import {useRoute} from 'vue-router'
 import {fetchWithToken} from 'src/composables/useApiFetch.js';

@@ -210,7 +210,9 @@ export function useProductOptions(product, { syncAddress = false } = {}) {
       const own = (attr.terms || []).find(term => term.default)
       if (own) picks[attr.name] = own.name
     }
-    if (!Object.keys(picks).length && brand?.value?.product_start === 'first') {
+    // Product settings → Product options (live, from the store's pointer); older stores: Store builder → Branding.
+    const live = typeof window === 'undefined' ? globalThis.__QWOO_PRODUCT_START : window.__QWOO_SITE__?.product_start
+    if (!Object.keys(picks).length && (live || brand?.value?.product_start) === 'first') {
       const first = (p.variations || [])[0]
       for (const attr of first ? options : []) {
         const stored = first.attributes.find(a => a.name === attr.name)?.value

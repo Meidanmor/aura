@@ -3,9 +3,9 @@
     <div v-if="title" class="bis__title" :class="titleText.class" :style="titleText.style">{{ title }}</div>
 
     <!-- Done (push or email) -->
-    <div v-if="state === 'done' || state === 'emailed'" class="bis__done" role="status" :class="bodyText.class" :style="bodyText.style">
+    <div v-if="state === 'done' || state === 'emailed' || state === 'texted'" class="bis__done" role="status" :class="bodyText.class" :style="bodyText.style">
       <q-icon :name="matCheckCircle" size="20px" />
-      <span>{{ state === 'emailed' ? t('Done! We\'ll email you when it\'s back.') : (d.done_text || t('Done! We\'ll let you know when it\'s back.')) }}</span>
+      <span>{{ doneText }}</span>
     </div>
 
     <template v-else>
@@ -35,10 +35,28 @@
         </div>
       </template>
 
-      <!-- Email: only once push couldn't work (failed, or no push on this device). -->
-      <form v-if="showEmail" class="bis__email" novalidate @submit.prevent="sendEmail">
-        <div v-if="canPush" class="bis__email-title" :class="bodyText.class" :style="bodyText.style">{{ d.email_title || t('Or get an email instead') }}</div>
-        <q-input :for="fid('email')"
+      <!-- Email, WhatsApp or SMS: only once push couldn't work (failed, or no push on this device, like iPhone's browser). -->
+      <form v-if="showOther" class="bis__email" novalidate @submit.prevent="sendOther">
+        <div v-if="canPush" class="bis__email-title" :class="bodyText.class" :style="bodyText.style">{{ channels.length > 1 ? t('Or choose another way') : (d.email_title || t('Or get an email instead')) }}</div>
+        <div v-if="channels.length > 1" class="bis__ways" role="radiogroup" :aria-label="t('How should we tell you?')">
+          <button
+              v-for="c in channels" :key="c" type="button" role="radio" class="bis__way"
+              :class="{ 'is-on': channel === c }" :aria-checked="channel === c" @click="channel = c"
+          >{{ WAY_LABELS[c] }}</button>
+        </div>
+        <q-input v-if="channel !== 'email'" :for="fid('phone')"
+            v-model="phone"
+            type="tel"
+            autocomplete="tel"
+            inputmode="tel"
+            dense
+            v-bind="look"
+            :label="t('Your phone number')"
+            :error="!!emailError"
+            :error-message="emailError"
+            hide-bottom-space
+        />
+        <q-input v-else :for="fid('email')"
             v-model="email"
             type="email"
             autocomplete="email"
@@ -55,7 +73,7 @@
         <div class="bis__buttons">
           <q-btn
               type="submit"
-              :label="d.email_button || t('Email me')"
+              :label="channel === 'email' ? (d.email_button || t('Email me')) : t('Tell me')"
               :icon="matMailOutline"
               class="bis__btn"
               :class="[buttonText.class, paddingVars.cls]"
@@ -68,6 +86,8 @@
           />
         </div>
       </form>
+      <!-- iPhone's browser has no alerts: once the store is on the home screen, it does. -->
+      <button v-if="installHint" type="button" class="bis__install" @click="startInstall">{{ t('Or add the store to your home screen to get an alert') }}</button>
     </template>
   </div>
 </template>
@@ -75,7 +95,8 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { matCheckCircle, matMailOutline, matNotificationsNone } from '@quasar/extras/material-icons'
-import { getPushConfig, requestBackInStock, requestBackInStockEmail, wantsBack } from 'src/services/push/shared.js'
+import { getPushConfig, requestBackInStock, requestBackInStockEmail, requestBackInStockPhone, wantsBack } from 'src/services/push/shared.js'
+import { device, install, isStandalone, startInstall } from 'src/services/install.js'
 import { subscribeToWebPush } from 'src/services/push/push.js'
 import { t } from 'src/i18n/index.js'
 import { useFieldIds } from 'src/utils/field-id.js'
@@ -102,7 +123,9 @@ const fid = useFieldIds()
 
 const ready = ref(false)
 const cfg = ref(null)
-const state = ref('idle') // idle | asking | failed | emailing | done | emailed
+const state = ref('idle') // idle | asking | failed | emailing | done | emailed | texted
+const channel = ref('email')
+const phone = ref('')
 const blocked = ref(false)
 const email = ref('')
 const website = ref('')
@@ -111,8 +134,18 @@ const emailError = ref('')
 const pushWorks = () => typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window
 const canPush = computed(() => !!cfg.value?.backPush && !!cfg.value?.key && pushWorks())
 const show = computed(() => ready.value && !!props.product && (props.preview
-  || (!!cfg.value?.backForm && !props.product.is_in_stock && props.product.status !== 'draft' && (canPush.value || !!cfg.value?.backEmail))))
-const showEmail = computed(() => !!cfg.value?.backEmail && (!canPush.value || state.value === 'failed' || state.value === 'emailing'))
+  || (!!cfg.value?.backForm && !props.product.is_in_stock && props.product.status !== 'draft' && (canPush.value || channels.value.length > 0))))
+/** The other ways the owner offers: email always (newer stores), WhatsApp / SMS when turned on. */
+const channels = computed(() => [cfg.value?.backEmail && 'email', cfg.value?.backWa && 'wa', cfg.value?.backSms && 'sms'].filter(Boolean))
+const showOther = computed(() => channels.value.length > 0 && (!canPush.value || state.value === 'failed' || state.value === 'emailing'))
+const WAY_LABELS = { email: t('Email'), wa: t('WhatsApp'), sms: t('SMS') }
+const installHint = computed(() => !props.preview && !!cfg.value?.key && !!cfg.value?.install?.on && !canPush.value
+  && device().os === 'ios' && !isStandalone() && !install.installed)
+const doneText = computed(() => {
+  if (state.value === 'emailed') return t('Done! We\'ll email you when it\'s back.')
+  if (state.value === 'texted') return channel.value === 'wa' ? t('Done! We\'ll send you a WhatsApp message when it\'s back.') : t('Done! We\'ll text you when it\'s back.')
+  return d.value.done_text || t('Done! We\'ll let you know when it\'s back.')
+})
 
 const title = computed(() => d.value.title || t('Sold out for now'))
 const text = computed(() => d.value.text || t('We\'ll let you know the moment it\'s back.'))
@@ -120,6 +153,7 @@ const text = computed(() => d.value.text || t('We\'ll let you know the moment it
 onMounted(async () => {
   cfg.value = await getPushConfig()
   if (wantsBack(props.product?.id)) state.value = 'done'
+  channel.value = channels.value[0] || 'email'
   ready.value = true
 })
 
@@ -135,6 +169,28 @@ async function askPush() {
     state.value = ok ? 'done' : 'failed'
   } catch {
     state.value = 'failed'
+  }
+}
+
+function sendOther() {
+  return channel.value === 'email' ? sendEmail() : sendPhone()
+}
+
+async function sendPhone() {
+  emailError.value = ''
+  const value = phone.value.trim()
+  if (value.replace(/\D/g, '').length < 7) {
+    emailError.value = t('Enter a valid phone number.')
+    return
+  }
+  const before = state.value
+  state.value = 'emailing'
+  const res = await requestBackInStockPhone(props.product.id, value, channel.value, website.value)
+  if (res.ok) {
+    state.value = 'texted'
+  } else {
+    state.value = before === 'emailing' ? 'idle' : before
+    emailError.value = res.message || t('That didn\'t work. Try again in a moment.')
   }
 }
 
@@ -216,6 +272,10 @@ const paddingVars = computed(() => {
 .is-full .bis__btn { width: 100%; }
 .bis__done { display: flex; align-items: center; gap: 8px; color: var(--q-positive, #21ba45); }
 .bis__error { color: var(--bis-error, var(--q-negative, #c10015)); font-size: 0.92em; }
+.bis__ways { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: rgba(0, 0, 0, 0.06); }
+.bis__way { flex: 1; border: 0; background: none; font: inherit; padding: 7px 8px; border-radius: 8px; cursor: pointer; color: inherit; }
+.bis__way.is-on { background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); font-weight: 600; }
+.bis__install { border: 0; background: none; padding: 4px 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; text-align: start; }
 .bis__hp { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; inset-inline-start: -9999px; }
 @media (min-width: 1024px) {
   .bisp-t-d { padding-top: var(--bisp-top) !important; min-height: 0; }

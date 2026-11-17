@@ -10,6 +10,7 @@
           :style="optionText.style"
           @update:model-value="c.onShippingMethodChange"
       />
+      <p v-if="pickupAddress" class="co-pickup"><b>{{ t('Pickup address') }}:</b> <span>{{ pickupAddress }}</span></p>
     </CheckoutPart>
   </div>
 </template>
@@ -27,8 +28,10 @@ const d = computed(() => props.data.data || {})
 const choice = computed(() => resolveGlobalColor(d.value.choice_color))
 const choiceVars = computed(() => (choice.value ? { '--co-choice': choice.value } : {}))
 const optionText = computed(() => textStyle(d.value, tsKeys('option')))
+const pickupAddress = computed(() => (c?.deliveryOptions || []).find((o) => o.value === c?.selectedShippingRateId)?.address || '')
 </script>
 
 <style scoped>
+.co-pickup { margin: 8px 0 0; white-space: pre-line; }
 .co-choice :deep(.q-radio__inner--truthy) { color: var(--co-choice); }
 </style>

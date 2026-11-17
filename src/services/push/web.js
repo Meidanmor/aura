@@ -41,6 +41,8 @@ export async function subscribeToWebPush({ ownerCode = '' } = {}) {
             subscription: subscription,
             ...(ownerCode ? { owner_code: ownerCode } : {})
         })
+        // The owner's thank-you coupon for turning notifications on (InstallHost shows it once).
+        if (res?.success && !ownerCode) window.dispatchEvent(new CustomEvent('qwoo:push-on'))
         return !!res?.success
     } catch (err) {
         console.error('❌ Push subscription failed (web):', err)

@@ -20,6 +20,8 @@
 
     <!-- Built from the My account template (Store builder → Shop pages → My account):
          sections for visitors (sign in, sign up) and for customers (the account's parts). -->
+    <!-- Signed-in customers: add the store to the home screen (Notifications → Settings → Home screen). -->
+    <InstallAsk v-if="!deleteDone" place="account" :allowed="signedIn" />
     <SectionRenderer v-if="!deleteDone" :sections="sections" page="account" />
     <div v-if="checking" class="account-page__checking"><q-spinner color="secondary" size="2em" /></div>
   </div>
@@ -39,6 +41,7 @@ import { getApiOrigin } from 'src/utils/server/get-api-origin.js'
 import { shopSections } from 'src/utils/shop-templates.js'
 import { partOf } from 'src/components/blocks/account/account-parts.js'
 import SectionRenderer from 'components/sections/SectionRenderer.vue'
+import InstallAsk from 'src/components/app/InstallAsk.vue'
 import { t as i18nT, useI18n } from 'src/i18n/index.js'
 
 const { t } = useI18n()
@@ -77,7 +80,7 @@ watch(() => route.params.part, (p) => { page.part = partOf(p) })
 provide('accountPage', page)
 
 // Until the browser knows who this is, nothing of either kind shows (CSS on html.qa-in / qa-out).
-const { state } = useAccount()
+const { state, signedIn } = useAccount()
 const checking = ref(false)
 onMounted(async () => {
   checking.value = !state.checked

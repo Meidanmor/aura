@@ -84,6 +84,8 @@
 
     <!-- Store builder → Popups (browser only). -->
     <PopupHost v-if="uiHydrated" />
+    <!-- Add to home screen: the step card, the second-visit ask, the owner's gifts (Notifications → Settings). -->
+    <InstallHost v-if="uiHydrated && !Platform.is.capacitor" />
     <!-- "Choose options" from a product card. -->
     <QuickOptions v-if="uiHydrated" />
     <CardPreviewHost v-if="uiHydrated" />
@@ -156,6 +158,7 @@ import {
 import { getPushConfig } from 'src/services/push/shared.js'
 import NotificationSoftAskModal from 'src/components/app/NotificationSoftAskModal.vue'
 import PopupHost from 'src/components/popups/PopupHost.vue'
+import InstallHost from 'src/components/app/InstallHost.vue'
 import QuickOptions from 'src/components/shop/QuickOptions.vue'
 import CardPreviewHost from 'src/components/loops/CardPreviewHost.vue'
 import UpdatingOverlay from 'src/components/app/UpdatingOverlay.vue'
