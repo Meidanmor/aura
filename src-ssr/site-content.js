@@ -192,6 +192,10 @@ const asPointer = (data, file = '') => ({
   free: data?.free === true,
   // Sell online / Shopper accounts off (src/utils/shop-mode.js); null while both are on.
   shop: shopOf(data?.shop),
+  // Products → Product settings → Product options ('none' | 'first').
+  product_start: ['none', 'first'].includes(data?.product_start) ? data.product_start : null,
+  // Notifications → Settings → Home screen off: the app file offers no install (webManifest).
+  app: data?.app !== false,
   // Suspended by the platform: "This store is unavailable" for everyone (coming-soon.js).
   ...(data?.suspended === true
     ? { suspended: true, name: String(data.name || '').slice(0, 120), lang: data.lang === 'he' ? 'he' : 'en' }
@@ -446,6 +450,13 @@ function webManifest(s, publicDir) {
   const own = s.json['config/icons.json']?.icons
   const icons = Array.isArray(own) && own.length ? own : builtManifest.icons || []
   out.icons = icons.filter((icon) => has(icon.src))
+  // The owner turned "add to home screen" off: a plain website to the browsers, so Chrome, Edge and
+  // Samsung Internet stop offering to install it, and iPhones add a bookmark that opens in Safari.
+  // The service worker and push on Android and computers don't need it.
+  if (pointer && pointer.app === false) {
+    out.display = 'browser'
+    delete out.display_override
+  }
   return out
 }
 
@@ -542,8 +553,9 @@ export function siteContentMiddleware({ publicDir }) {
     if (req.path === '/manifest.json') {
       res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8')
       res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate')
-      res.setHeader('ETag', `"${s.version}"`)
-      if (req.headers['if-none-match'] === `"${s.version}"`) return res.status(304).end()
+      const tag = `"${s.version}${pointer?.app === false ? '-b' : ''}"`
+      res.setHeader('ETag', tag)
+      if (req.headers['if-none-match'] === tag) return res.status(304).end()
       return res.end(JSON.stringify(webManifest(s, publicDir)))
     }
 
