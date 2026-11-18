@@ -81,6 +81,7 @@ export async function startInstall() {
   if (install.prompt) {
     const p = install.prompt
     install.prompt = null
+    window.__qwooInstallPrompt = null
     try {
       await p.prompt()
       const choice = await p.userChoice
@@ -136,9 +137,13 @@ export function initInstall() {
       write(VISITS_KEY, String(visits() + 1))
     }
   } catch { /* ignore */ }
+  // Chrome offers its install window early, often before the app starts: a tiny script in the
+  // page head (render.js) keeps it in window.__qwooInstallPrompt. Later offers come here.
+  if (window.__qwooInstallPrompt) install.prompt = window.__qwooInstallPrompt
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault()
     install.prompt = e
+    window.__qwooInstallPrompt = e
   })
   window.addEventListener('appinstalled', () => {
     install.installed = true

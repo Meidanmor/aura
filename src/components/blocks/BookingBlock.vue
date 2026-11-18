@@ -57,7 +57,7 @@
               <span v-for="n in lead" :key="`l${n}`" />
               <button
                 v-for="c in cells" :key="c.ymd" type="button" class="qbk__day"
-                :class="{ on: c.ymd === date, open: c.open }" :disabled="!c.open" :aria-pressed="c.ymd === date" :aria-label="c.label"
+                :class="{ on: c.ymd === date, open: c.open, shut: grey && !c.open && !c.past }" :disabled="!c.open" :aria-pressed="c.ymd === date" :aria-label="c.label"
                 @click="date = c.ymd"
               >{{ c.n }}</button>
             </div>
@@ -66,7 +66,7 @@
           <div class="qbk__strip">
             <template v-if="loadingTimes && !openCells.length"><span v-for="n in 6" :key="`k${n}`" class="qbk__sday qbk__skel" aria-hidden="true" /></template>
             <button
-              v-for="c in openCells" :key="`s${c.ymd}`" type="button" class="qbk__sday" :class="{ on: c.ymd === date }" :aria-pressed="c.ymd === date" :aria-label="c.label"
+              v-for="c in stripCells" :key="`s${c.ymd}`" type="button" class="qbk__sday" :class="{ on: c.ymd === date, shut: !c.open }" :disabled="!c.open" :aria-pressed="c.ymd === date" :aria-label="c.label"
               @click="date = c.ymd"
             ><small>{{ c.wd }}</small><b>{{ c.n }}</b></button>
           </div>
@@ -86,8 +86,8 @@
             <template v-for="g in groups" :key="g.key">
               <div v-if="g.slots.length" class="qbk__part">{{ g.label }}</div>
               <div v-if="g.slots.length" class="qbk__times">
-                <button v-for="s in g.slots" :key="s.start" type="button" class="qbk__time" :class="{ on: slot?.start === s.start }" :aria-pressed="slot?.start === s.start" @click="slot = s">
-                  {{ s.time }}<small v-if="s.left != null">{{ tn('{n} place left', '{n} places left', s.left) }}</small>
+                <button v-for="s in g.slots" :key="s.start" type="button" class="qbk__time" :class="{ on: slot?.start === s.start, shut: s.taken }" :disabled="s.taken" :aria-pressed="slot?.start === s.start" @click="slot = s">
+                  {{ s.time }}<small v-if="s.left != null && !s.taken">{{ tn('{n} place left', '{n} places left', s.left) }}</small>
                 </button>
               </div>
             </template>
@@ -199,6 +199,8 @@ const vars = computed(() => {
   if (bg) v['--qbk-card'] = bg
   const line = resolveGlobalColor(d.value.border_color)
   if (line) v['--qbk-line'] = line
+  const shut = resolveGlobalColor(d.value.taken_bg)
+  if (shut) v['--qbk-shut'] = shut
   return v
 })
 
@@ -208,6 +210,8 @@ const info = ref(null)
 const problem = ref('')
 const busy = ref(false)
 const fixedService = computed(() => Number(d.value.service_id) || 0)
+// "Days And Times You Can't Book": hide (only free times) or grey (taken times and closed days shown, not choosable).
+const grey = computed(() => d.value.taken_look === 'grey')
 const list = computed(() => {
   const all = info.value?.services || []
   if (fixedService.value) return all.filter((s) => s.id === fixedService.value)
@@ -320,12 +324,12 @@ async function loadMonth() {
   const from = `${month.value}-01` < todayYmd.value ? todayYmd.value : `${month.value}-01`
   const ask = ++asked
   loadingTimes.value = true
-  const res = await bookingApi.times(svc.value.id, from, `${month.value}-${pad(last)}`, seats.value, who.value)
+  const res = await bookingApi.times(svc.value.id, from, `${month.value}-${pad(last)}`, seats.value, who.value, grey.value)
   if (ask !== asked) return
   days.value = res.ok ? (res.data?.days || {}) : {}
   if (!res.ok) problem.value = failText(res, t('We couldn\'t load the free times. Please try again.'))
   loadingTimes.value = false
-  if (!date.value) date.value = Object.keys(days.value).find((k) => days.value[k]?.length) || ''
+  if (!date.value) date.value = Object.keys(days.value).find((k) => freeOn(k)) || ''
 }
 const weekStart = computed(() => Number(info.value?.week_start || 0))
 const weekdays = computed(() => Array.from({ length: 7 }, (_, i) => new Date(2026, 10, 15 + ((i + weekStart.value) % 7)).toLocaleDateString(currentLocale(), { weekday: 'narrow' })))
@@ -338,10 +342,13 @@ const cells = computed(() => {
   return Array.from({ length: n }, (_, i) => {
     const ymd = `${month.value}-${pad(i + 1)}`
     const at = new Date(y, m - 1, i + 1, 12)
-    return { ymd, n: i + 1, open: !!days.value[ymd]?.length, wd: at.toLocaleDateString(currentLocale(), { weekday: 'short' }), label: at.toLocaleDateString(currentLocale(), { weekday: 'long', day: 'numeric', month: 'long' }) }
+    return { ymd, n: i + 1, open: freeOn(ymd), past: ymd < todayYmd.value, wd: at.toLocaleDateString(currentLocale(), { weekday: 'short' }), label: at.toLocaleDateString(currentLocale(), { weekday: 'long', day: 'numeric', month: 'long' }) }
   })
 })
+const freeOn = (ymd) => !!days.value[ymd]?.some((s) => !s.taken)
 const openCells = computed(() => cells.value.filter((c) => c.open))
+// Phones: free days only, or (grey) every day from today with closed ones greyed.
+const stripCells = computed(() => (grey.value ? cells.value.filter((c) => !c.past) : openCells.value))
 const monthLabel = computed(() => { if (!month.value) return ''; const [y, m] = month.value.split('-').map(Number); return new Date(y, m - 1, 1).toLocaleDateString(currentLocale(), { month: 'long', year: 'numeric' }) })
 const dateLabel = computed(() => (date.value ? new Date(`${date.value}T12:00:00`).toLocaleDateString(currentLocale(), { weekday: 'long', day: 'numeric', month: 'long' }) : t('Choose a day')))
 const daySlots = computed(() => days.value[date.value] || [])
@@ -479,7 +486,6 @@ function again() {
 .qbk__svc-text small, .qbk__sum small { opacity: .7; }
 .qbk__desc { white-space: pre-line; opacity: .85; }
 .qbk__go { font-size: 1.4em; opacity: .5; }
-[dir="rtl"] .qbk__flip { display: inline-block; transform: scaleX(-1); }
 .qbk__pic { width: 56px; height: 56px; border-radius: 12px; background: var(--qbk-line) center / cover no-repeat; flex: none; }
 .qbk__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 16px; align-items: start; }
 .qbk--stack .qbk__grid { grid-template-columns: minmax(0, 1fr); }
@@ -499,6 +505,8 @@ function again() {
 .qbk__sday b { font-size: 1.15em; font-variant-numeric: tabular-nums; }
 .qbk__sday small { font-size: .7em; opacity: .7; }
 .qbk__sday.on { background: var(--qbk-accent); border-color: var(--qbk-accent); color: #fff; }
+.qbk__day.shut, .qbk__sday.shut, .qbk__time.shut { background: var(--qbk-shut, color-mix(in srgb, currentColor 9%, transparent)); border-color: transparent; opacity: .5; cursor: not-allowed; }
+.qbk__time.shut { text-decoration: line-through; }
 .qbk__note { font-size: .85em; opacity: .75; margin: 10px 0 0; }
 .qbk__dayname { display: block; margin-bottom: 4px; font-size: 1.05em; }
 .qbk__part { font-size: .72em; letter-spacing: .06em; text-transform: uppercase; opacity: .6; margin: 12px 0 6px; font-weight: 600; }

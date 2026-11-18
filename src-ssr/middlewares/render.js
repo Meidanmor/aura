@@ -469,6 +469,7 @@ export default defineSsrMiddleware(({ app, resolve, render, /*folders*/ }) => {
               fetchpriority="high"
             >` : ''}
           ${priorityPreloads}
+          <script nonce="${nonce}">addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__qwooInstallPrompt=e})</script>
           <style>
             .hero-section-sec, .lcp-wrapper, .hero-img, .q-layout, .q-page-container, #q-app {
               opacity: 1 !important;

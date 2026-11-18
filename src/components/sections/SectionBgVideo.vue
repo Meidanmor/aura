@@ -10,7 +10,7 @@
       loop
       playsinline
       disablepictureinpicture
-      preload="auto"
+      preload="metadata"
       aria-hidden="true"
       tabindex="-1"
   />
@@ -25,6 +25,7 @@
         loading="lazy"
     />
   </div>
+  <span ref="anchor" class="sb-bg-video-anchor" hidden />
 </template>
 
 <script setup>
@@ -35,7 +36,8 @@
  * first paint) shows the poster, which is also the element's CSS
  * background — so nothing shifts when the video starts. Not rendered for
  * visitors who prefer reduced motion, or on phones when the block asks
- * for the poster there.
+ * for the poster there. Starts only when its section comes near the screen
+ * (a video far down the page isn't downloaded until then) and pauses off it.
  */
 import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 
@@ -48,6 +50,9 @@ const play = ref(false)
 const videoEl = ref(null)
 const frameBox = ref(null)
 const frameSize = ref({})
+const anchor = ref(null)
+const near = ref(false)
+let seen = null
 let queries = []
 let resizeObserver = null
 
@@ -55,7 +60,7 @@ function decide() {
   if (typeof window === 'undefined' || !window.matchMedia) return
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const mobile = window.matchMedia('(max-width: 767px)').matches
-  play.value = !!props.video?.src && !reducedMotion && (props.video.mobile || !mobile)
+  play.value = near.value && !!props.video?.src && !reducedMotion && (props.video.mobile || !mobile)
 }
 
 // An iframe can't use object-fit: size the 16:9 player so it covers the
@@ -98,9 +103,22 @@ onMounted(() => {
   queries = ['(prefers-reduced-motion: reduce)', '(max-width: 767px)']
       .map((q) => window.matchMedia(q))
   queries.forEach((mq) => mq.addEventListener?.('change', decide))
+  const box = anchor.value?.parentElement
+  if (box && typeof IntersectionObserver !== 'undefined') {
+    seen = new IntersectionObserver((entries) => {
+      const on = entries.some((e) => e.isIntersecting)
+      if (on && !near.value) { near.value = true; decide() }
+      const el = videoEl.value
+      if (el && near.value) { if (on) el.play?.().catch(() => {}); else el.pause?.() }
+    }, { rootMargin: '300px 0px' })
+    seen.observe(box)
+  } else {
+    near.value = true
+  }
   decide()
 })
 onUnmounted(() => {
+  seen?.disconnect()
   queries.forEach((mq) => mq.removeEventListener?.('change', decide))
   resizeObserver?.disconnect()
 })

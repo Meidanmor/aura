@@ -116,10 +116,33 @@ async function pointerFromFile(url) {
   return asPointer(await res.json(), url)
 }
 
+// The store's uploads address (https://<backend>/wp-content/uploads/): files picked from the media
+// library (videos, files) keep it in the published designs, so shoppers loaded them from the backend
+// (a third-party host to PageSpeed, no CDN). They go through this domain instead (server.js proxies
+// /wp-content/uploads with a year at the CDN), like the store's API answers already do.
+const UPLOADS_RE = (() => {
+  try {
+    const host = new URL(BACKEND).host.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    return new RegExp(`https?://${host}/wp-content/uploads/`, 'g')
+  } catch { return null }
+})()
+function ownUploads(value) {
+  if (!UPLOADS_RE) return value
+  if (typeof value === 'string') return value.includes('/wp-content/uploads/') ? value.replace(UPLOADS_RE, '/wp-content/uploads/') : value
+  if (Array.isArray(value)) return value.map(ownUploads)
+  if (value && typeof value === 'object') {
+    const out = {}
+    for (const k of Object.keys(value)) out[k] = ownUploads(value[k])
+    return out
+  }
+  return value
+}
+
 function build(data, p) {
   const json = data.json && typeof data.json === 'object' ? { ...data.json } : {}
   // Store builder configs without their empty style fields (slim-config.js): smaller pages.
   for (const key of Object.keys(json)) if (key.startsWith('config/')) json[key] = slimConfig(json[key])
+  for (const key of Object.keys(json)) if (key.startsWith('config/') && key !== 'config/pwa.json') json[key] = ownUploads(json[key])
   const pwa = json['config/pwa.json'] || {}
   const languages = json['config/languages.json']
   return {

@@ -47,6 +47,7 @@
             </div>
             <div v-else><strong>{{ t('Subtotal:') }}</strong> {{ money(order.totals.subtotal, totalsUnit) }}</div>
             <div><strong>{{ t('Shipping:') }}</strong> {{ money(order.totals.total_shipping, totalsUnit) }}</div>
+            <div v-if="order.extensions?.qwoo_pickup?.address" class="ty-pickup"><strong>{{ t('Pickup address') }}:</strong> {{ order.extensions.qwoo_pickup.address }}</div>
             <div><strong>{{ t('Total:') }}</strong> {{ money(order.totals.total_price, totalsUnit) }}</div>
           </q-card-section>
 

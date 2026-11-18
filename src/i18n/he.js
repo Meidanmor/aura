@@ -772,6 +772,8 @@ export default {
   "Add {name} to your home screen": "הוסיפו את {name} למסך הבית",
   "Follow the steps. This card stays here while you tap.": "עקבו אחרי השלבים. הכרטיס הזה נשאר כאן בזמן שאתם מקישים.",
   "Then tap Install or Add.": "ואז הקישו על התקנה או הוספה.",
+  "Tap ⋮ at the top": "הקישו על ⋮ למעלה",
+  "If Chrome asks, choose Install (not a shortcut), then tap Install again.": "אם Chrome שואל, בחרו התקנה (לא קיצור דרך), ואז הקישו שוב על התקנה.",
   "Then tap Add.": "ואז הקישו על הוספה.",
   "Know the moment it ships": "לדעת ברגע שההזמנה יוצאת",
   "{name} on your home screen": "{name} במסך הבית",
@@ -790,4 +792,7 @@ export default {
   "Done! We'll send you a WhatsApp message when it's back.": "מעולה! נשלח לכם הודעת וואטסאפ כשזה יחזור.",
   "Done! We'll text you when it's back.": "מעולה! נשלח לכם SMS כשזה יחזור.",
   "Enter a valid phone number.": "הזינו מספר טלפון תקין.",
+  "Your cookie choices": "הבחירות שלך לגבי עוגיות",
+  "Choice ID {id}": "מספר בחירה {id}",
+  "Cookie choices": "בחירת עוגיות",
 }

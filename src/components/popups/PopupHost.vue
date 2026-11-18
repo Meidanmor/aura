@@ -279,12 +279,18 @@ html.q-document--prevent-scroll:has(.qwoo-popup) body { position: fixed !importa
   border-radius: var(--qp-radius, 16px);
   box-shadow: 0 24px 60px rgba(0, 0, 0, .25);
   overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  /* Quasar's `.q-dialog__inner--minimized > div { max-height }` is missing from the build too:
+     a popup taller than a phone ran off the screen and couldn't scroll (the page is locked). */
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
 }
 .qwoo-popup--top .qwoo-popup__card,
-.qwoo-popup--bottom .qwoo-popup__card { width: var(--qp-w-now, 100vw); }
+.qwoo-popup--bottom .qwoo-popup__card { width: var(--qp-w-now, 100vw); max-height: 100vh; max-height: 100dvh; }
 .qwoo-popup--left .qwoo-popup__card,
-.qwoo-popup--right .qwoo-popup__card { width: var(--qp-w-now, 380px); height: 100vh; max-height: 100vh; }
-.q-dialog__inner--maximized > .qwoo-popup__card { width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; }
+.qwoo-popup--right .qwoo-popup__card { width: var(--qp-w-now, 380px); height: 100vh; max-height: 100vh; height: 100dvh; max-height: 100dvh; }
+.q-dialog__inner--maximized > .qwoo-popup__card { width: 100vw; height: 100vh; max-height: 100vh; height: 100dvh; max-height: 100dvh; border-radius: 0; }
 .qwoo-popup__close {
   position: absolute;
   top: 8px;

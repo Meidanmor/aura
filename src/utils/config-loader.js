@@ -204,10 +204,21 @@ function installEditorFocus(trustedOrigin) {
       setTimeout(tryScroll, 150)
     }
   }
+  // The dashboard's list row under the pointer (Step by step): dashed, like a hover here. The row
+  // being edited keeps its solid outline (its rule has !important).
+  const listHover = document.createElement('style')
+  listHover.id = 'qwoo-editor-list-hover'
+  document.head.appendChild(listHover)
   window.addEventListener('message', (event) => {
     if (event.origin !== trustedOrigin || event.source !== window.parent) return
     const data = event.data
-    if (!data || data.source !== 'qwoo-admin' || data.type !== 'focus') return
+    if (!data || data.source !== 'qwoo-admin') return
+    if (data.type === 'hover') {
+      const id = typeof data.id === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(data.id) ? data.id : ''
+      listHover.textContent = id ? `[data-section-id="${id}"], [data-block-id="${id}"] { outline: 2px dashed #2563eb; outline-offset: -2px; }` : ''
+      return
+    }
+    if (data.type !== 'focus') return
     const id = typeof data.id === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(data.id) ? data.id : ''
     const sel = `[data-section-id="${id}"], [data-block-id="${id}"]`
     const part = typeof data.part === 'string' && /^[\w &/-]{1,60}$/.test(data.part) ? data.part : ''

@@ -39,13 +39,31 @@ export const consentChoice = () => choice
 /** The groups that may run now. */
 export const allowedNow = () => allowedGroups(cfg?.mode, choice)
 
-/** Saves the shopper's choice (for 6 months) and runs what it allows. */
+/** A random choice ID ("7K2F-9QXA"): the shopper sees it in the choices window; the store's record keeps it. */
+function newChoiceId() {
+  const abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  const bytes = new Uint8Array(8)
+  try { crypto.getRandomValues(bytes) } catch { for (let i = 0; i < 8; i++) bytes[i] = Math.floor(Math.random() * 256) }
+  const s = Array.from(bytes, (b) => abc[b % abc.length]).join('')
+  return `${s.slice(0, 4)}-${s.slice(4)}`
+}
+
+/** Tells the store's record (Settings → Cookie banner → Consents). Never blocks the page. */
+export function logConsent(body) {
+  try {
+    fetch('/wp-json/qwoo/v1/consent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), keepalive: true, credentials: 'omit' }).catch(() => {})
+  } catch { /* old browser */ }
+}
+
+/** Saves the shopper's choice (6 or 12 months, the owner's choice) and runs what it allows. */
 export function saveConsent(next) {
-  choice = { analytics: !!next.analytics, marketing: !!next.marketing }
+  choice = { analytics: !!next.analytics, marketing: !!next.marketing, v: Number(cfg?.version) || 1, cid: newChoiceId() }
   const secure = location.protocol === 'https:' ? '; Secure' : ''
-  document.cookie = `${CONSENT_COOKIE}=${formatConsent(choice)}; Path=/; Max-Age=${60 * 60 * 24 * 180}; SameSite=Lax${secure}`
+  const months = Number(cfg?.months) === 12 ? 12 : 6
+  document.cookie = `${CONSENT_COOKIE}=${formatConsent(choice)}; Path=/; Max-Age=${60 * 60 * 24 * (months === 12 ? 365 : 180)}; SameSite=Lax${secure}`
+  logConsent({ event: 'choice', cid: choice.cid, analytics: choice.analytics, marketing: choice.marketing, version: choice.v, device: window.matchMedia?.('(max-width: 767px)').matches ? 'phone' : 'desk', lang: (document.documentElement.lang || '').slice(0, 2) })
   const a = allowedNow()
-  if (typeof window.gtag === 'function') {
+  if (typeof window.gtag === 'function' && cfg?.gcm !== false) {
     const g = (yes) => (yes ? 'granted' : 'denied')
     window.gtag('consent', 'update', { analytics_storage: g(a.analytics), ad_storage: g(a.marketing), ad_user_data: g(a.marketing), ad_personalization: g(a.marketing) })
   }
@@ -350,7 +368,7 @@ export function initCustomCode(router) {
   const state = window.__QWOO_CODE__
   if (!state || !Array.isArray(state.snippets)) return
   cfg = state
-  choice = parseConsent(readCookie(CONSENT_COOKIE))
+  choice = parseConsent(readCookie(CONSENT_COOKIE), state.version)
   for (const id of state.ran || []) ran.add(id)
   currentRoute = router.currentRoute.value
 

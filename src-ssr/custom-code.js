@@ -117,6 +117,30 @@ function cleanHelp(h) {
 
 const cleanHosts = (list) => (Array.isArray(list) ? list.filter((h) => typeof h === 'string' && HOST_RE.test(h)) : [])
 
+/** The cookie banner's looks and rules (Settings → Cookie banner), only known values. */
+const COLOR_RE = /^#[0-9a-f]{6}$/i
+const DESIGN = {
+  layout: ['bar', 'box', 'center'], corner: ['start', 'end'], font: ['store', 'system'], prefs_layout: ['center', 'box', 'bar'],
+  fab_corner: ['start', 'end'], fab_shape: ['round', 'pill'], fab_icon: ['cookie', 'shield', 'sliders'],
+}
+const DESIGN_NUM = { radius: [0, 32], btn_radius: [0, 999], size: [12, 18], fab_size: [32, 60] }
+const DESIGN_BOOL = ['dim', 'show_title', 'show_policy', 'equal', 'prefs_desc', 'fab']
+const DESIGN_COLOR = ['bg', 'ink', 'accent', 'fab_bg', 'fab_ink']
+export function consentDesign(consent) {
+  const d = consent?.design && typeof consent.design === 'object' ? consent.design : {}
+  const out = {}
+  for (const [k, opts] of Object.entries(DESIGN)) out[k] = opts.includes(d[k]) ? d[k] : opts[0]
+  for (const [k, [min, max]] of Object.entries(DESIGN_NUM)) if (Number.isFinite(Number(d[k])) && d[k] !== '' && d[k] != null) out[k] = Math.max(min, Math.min(max, Number(d[k])))
+  for (const k of DESIGN_BOOL) out[k] = k === 'dim' ? d[k] === true : d[k] !== false
+  for (const k of DESIGN_COLOR) out[k] = COLOR_RE.test(String(d[k] || '')) ? d[k] : ''
+  return {
+    design: out,
+    months: Number(consent?.months) === 12 ? 12 : 6,
+    version: Math.max(1, Number(consent?.version) || 1),
+    gcm: consent?.gcm !== false,
+  }
+}
+
 /**
  * The page's code: { head, bodyStart, bodyEnd, state, extra, relaxed, eval },
  * or null (nothing set up, or the Store builder's preview, where snippets
@@ -130,10 +154,11 @@ export function pageCode(req, { where, nonce }) {
   const testing = !!(c.test && KEY_RE.test(own) && sha(own) === c.test)
   const snippets = forBrowser(c.snippets, testing)
   const mode = c.consent?.mode === 'notice' ? 'notice' : 'ask'
-  const allowed = allowedGroups(mode, parseConsent(cookieOf(req, CONSENT_COOKIE)))
+  const allowed = allowedGroups(mode, parseConsent(cookieOf(req, CONSENT_COOKIE), c.consent?.version))
+  const consentExtra = consentDesign(c.consent)
 
   const out = { head: '', bodyStart: '', bodyEnd: '', ran: [] }
-  if (snippets.length) {
+  if (snippets.length && consentExtra.gcm) {
     // Google's consent signals before any Google tag (Tag Manager's tags and GA4 follow them).
     const g = (yes) => (yes ? "'granted'" : "'denied'")
     // qwoo.on() works before the app starts (src/utils/custom-code.js takes the queue over).
@@ -165,6 +190,7 @@ export function pageCode(req, { where, nonce }) {
       ? {
           mode,
           texts: c.consent?.texts || {},
+          ...consentExtra,
           // Audiences collects visitor activity under Analytics: the banner asks for it too.
           ask: needsConsent(snippets) || !!c.audiences,
           audiences: !!c.audiences,
@@ -183,7 +209,7 @@ export function pageCode(req, { where, nonce }) {
           ran: out.ran,
           testing,
         }
-      : { mode, banner: c.consent?.banner !== false, texts: c.consent?.texts || {}, ask: !!c.audiences, audiences: !!c.audiences, snippets: [], shortcuts: {}, events: cleanEvents(c.events), help: cleanHelp(c.help), ran: [], testing },
+      : { mode, banner: c.consent?.banner !== false, texts: c.consent?.texts || {}, ...consentExtra, ask: !!c.audiences, audiences: !!c.audiences, snippets: [], shortcuts: {}, events: cleanEvents(c.events), help: cleanHelp(c.help), ran: [], testing },
   }
 }
 

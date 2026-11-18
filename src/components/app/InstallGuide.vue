@@ -77,7 +77,8 @@ const steps = computed(() => {
     case 'ipad': return [{ icon: 'share', text: t('Tap Share') }, { icon: 'more', text: t('Scroll down') }, { icon: 'add', text: t('Add to Home Screen') }]
     case 'chrome': return [{ icon: 'share', text: t('Tap Share') }, { icon: 'more', text: t('More') }, { icon: 'add', text: t('Add to Home Screen') }]
     case 'inapp': return [{ icon: 'dots', text: t('Tap •••') }, { icon: 'browser', text: t('Open in browser') }]
-    case 'android': return [{ icon: 'vdots', text: t('Tap the menu') }, { icon: 'add', text: t('Add to Home screen') }]
+    // Only when Chrome didn't offer its own install window (startInstall uses that first).
+    case 'android': return [{ icon: 'vdots', text: t('Tap ⋮ at the top') }, { icon: 'add', text: t('Add to Home screen') }, { icon: 'add', text: t('Install') }]
     default: return [{ icon: 'share', text: t('Tap Share') }, { icon: 'add', text: t('Add to Home Screen') }]
   }
 })
@@ -90,7 +91,7 @@ const sub = computed(() => (kind.value === 'inapp'
   : t('Follow the steps. This card stays here while you tap.')))
 const after = computed(() => {
   if (kind.value === 'inapp') return ''
-  if (kind.value === 'android') return t('Then tap Install or Add.')
+  if (kind.value === 'android') return t('If Chrome asks, choose Install (not a shortcut), then tap Install again.')
   return t('Then tap Add.')
 })
 

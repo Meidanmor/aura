@@ -31,7 +31,7 @@ const post = (path, body) => call(path, { method: 'POST', headers: { 'Content-Ty
 
 export const bookingApi = {
   services: (id = 0) => get('services', id ? { id } : {}),
-  times: (service, from, to, seats = 1, staff = 0) => get('times', { service, from, to, seats, staff }),
+  times: (service, from, to, seats = 1, staff = 0, taken = false) => get('times', { service, from, to, seats, staff, ...(taken ? { taken: 1 } : {}) }),
   hold: (service, start, seats = 1, staff = 0) => post('hold', { service, start, seats, staff }),
   release: (hold) => post('release', { hold }),
   details: (hold, form) => post('details', { hold, ...form }),
