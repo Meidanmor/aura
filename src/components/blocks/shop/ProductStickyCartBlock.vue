@@ -158,11 +158,14 @@ let padded = false
 function pad() {
   const el = bar.value
   const h = shown.value && position.value === 'bottom' && el && getComputedStyle(el).display !== 'none' ? el.offsetHeight : 0
+  // --qwoo-bottom-bar: the floating contact button sits above the bar (ContactButton.vue).
   if (h) {
     document.body.style.paddingBottom = `${h}px`
+    document.documentElement.style.setProperty('--qwoo-bottom-bar', `${h}px`)
     padded = true
   } else if (padded) {
     document.body.style.paddingBottom = ''
+    document.documentElement.style.removeProperty('--qwoo-bottom-bar')
     padded = false
   }
 }

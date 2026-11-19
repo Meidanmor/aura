@@ -104,13 +104,14 @@ const icons = {
 .qwoo-contact-btn-wrap {
   position: fixed;
   left: 16px;
-  bottom: 16px;
+  /* Above the product page's floating Add To Cart bar while it shows (ProductStickyCartBlock sets it). */
+  bottom: calc(16px + var(--qwoo-bottom-bar, 0px));
   z-index: 999;
+  transition: transform .2s ease, bottom .25s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  transition: transform .2s ease;
 }
 
 /* Shift up while the (full-width) cookie banner is showing so they don't overlap */
