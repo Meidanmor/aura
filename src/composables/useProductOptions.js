@@ -332,7 +332,12 @@ export function useProductOptions(product, { syncAddress = false } = {}) {
         resolvedValue = selectedVariations.value[attr.name] ?? '';
       }
 
-      variation.push({ attribute: attr.name, value: resolvedValue });
+      // Shared options keep their slug (the store matches on it) plus the name to show in the cart.
+      const term = (product.value?.attributes || []).find(a => a.name === attr.name)?.terms
+        ?.find(t => String(t.slug).toLowerCase() === String(resolvedValue).toLowerCase())
+      variation.push(term && term.name !== resolvedValue
+        ? { attribute: attr.name, value: resolvedValue, label: term.name }
+        : { attribute: attr.name, value: resolvedValue });
     }
     return { id: matchedVariation.id, variation }
   }

@@ -48,6 +48,9 @@
             <div v-else><strong>{{ t('Subtotal:') }}</strong> {{ money(order.totals.subtotal, totalsUnit) }}</div>
             <div><strong>{{ t('Shipping:') }}</strong> {{ money(order.totals.total_shipping, totalsUnit) }}</div>
             <div v-if="order.extensions?.qwoo_pickup?.address" class="ty-pickup"><strong>{{ t('Pickup address') }}:</strong> {{ order.extensions.qwoo_pickup.address }}</div>
+            <!-- HFD pickup point and the courier's tracking (Qwoo_Couriers). -->
+            <div v-if="order.extensions?.qwoo_shipment?.point" class="ty-pickup"><strong>{{ t('Pickup point') }}:</strong> {{ order.extensions.qwoo_shipment.point.name }}<template v-if="order.extensions.qwoo_shipment.point.address">, {{ order.extensions.qwoo_shipment.point.address }}</template></div>
+            <TrackingLine v-if="order.extensions?.qwoo_shipment?.tracking" :tracking="order.extensions.qwoo_shipment.tracking" />
             <div><strong>{{ t('Total:') }}</strong> {{ money(order.totals.total_price, totalsUnit) }}</div>
           </q-card-section>
 
@@ -92,6 +95,7 @@
 <script setup>
 import {ref, computed, onMounted} from 'vue'
 import InstallAsk from 'src/components/app/InstallAsk.vue'
+import TrackingLine from 'src/components/account/TrackingLine.vue'
 import {useSeoMeta} from 'src/composables/useSeo.js'
 import {useRoute} from 'vue-router'
 import {fetchWithToken} from 'src/composables/useApiFetch.js';

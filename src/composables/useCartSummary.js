@@ -63,7 +63,9 @@ export function useCartSummary(cartOf = () => cart) {
             label: `${rate.name} – ${formatCurrency(rate.price)}`,
             value: rate.rate_id,
             // Local pickup's address (Settings → Shipping in the dashboard).
-            address: (rate.meta_data || []).find(m => m.key === 'qwoo_pickup_address')?.value || ''
+            address: (rate.meta_data || []).find(m => m.key === 'qwoo_pickup_address')?.value || '',
+            // "Pickup point (HFD)": the shopper picks a point (CheckoutShippingBlock).
+            method: rate.method_id
         }))
     })
     // The rates that are local pickup (Settings → Shipping): they need no address.

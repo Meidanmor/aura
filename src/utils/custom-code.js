@@ -12,6 +12,7 @@
 //   - what the page's security rules blocked is reported to the store
 //     (Settings → Tracking & code lists it; in the test browser it's added).
 
+import { optionLabel } from 'src/utils/option-label'
 import { CONSENT_COOKIE, allowedGroups, formatConsent, onPage, parseConsent } from 'src/utils/custom-code-rules.js'
 import { chromeTarget } from 'src/utils/layouts.js'
 
@@ -264,7 +265,7 @@ export function eventItem(p, quantity = 1, minorUnit = null) {
   const prices = p?.prices || {}
   const unit = minorUnit ?? Number(prices.currency_minor_unit ?? 2)
   const price = Number(prices.price ?? prices.sale_price ?? 0) / 10 ** unit
-  const variant = (p?.variation || []).map((v) => plain(v.value)).filter(Boolean).join(' / ')
+  const variant = (p?.variation || []).map((v) => plain(optionLabel(v))).filter(Boolean).join(' / ')
   return {
     // Order items carry the product's id apart (their own id is the order line's).
     item_id: String(p?.variation_id || p?.product_id || p?.id || ''),

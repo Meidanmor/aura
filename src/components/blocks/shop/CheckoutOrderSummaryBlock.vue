@@ -21,7 +21,7 @@
           <div class="co-sum__name">
             {{ item.name }}
             <GiftLineDetails v-if="item.gift" :gift="item.gift" />
-            <div v-for="(variation, index) in item.variation || []" :key="index" class="text-caption">{{ variation.attribute }}: {{ variation.value }}</div>
+            <div v-for="(variation, index) in item.variation || []" :key="index" class="text-caption">{{ variation.attribute }}: {{ optionLabel(variation) }}</div>
           </div>
           <div class="co-sum__amount" dir="ltr">{{ formatCurrency(item.totals?.line_total ?? (parseInt(toRaw(item.prices)?.price || 0) * item.quantity).toString()) }}</div>
         </div>
@@ -45,6 +45,7 @@
 </template>
 
 <script setup>
+import { optionLabel } from 'src/utils/option-label'
 import { computed, inject, onMounted, ref, toRaw, useId } from 'vue'
 import { matExpandMore } from '@quasar/extras/material-icons'
 import { formatCurrency } from 'src/utils/formatters.js'

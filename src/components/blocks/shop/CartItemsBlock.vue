@@ -17,7 +17,7 @@
             </div>
             <GiftLineDetails v-if="item.gift" :gift="item.gift" />
             <div v-if="item.variation && item.variation.length > 0">
-              <div v-for="(variation, index) in item.variation" :key="index">{{ variation.attribute }}: {{ variation.value }}</div>
+              <div v-for="(variation, index) in item.variation" :key="index">{{ variation.attribute }}: {{ optionLabel(variation) }}</div>
             </div>
             <div v-if="item.prices">{{ formatCurrency(item.prices.price) }}</div>
           </div>
@@ -36,6 +36,7 @@
 </template>
 
 <script setup>
+import { optionLabel } from 'src/utils/option-label'
 import { computed, inject, onMounted, ref } from 'vue'
 import { matAdd, matClose, matRemove } from '@quasar/extras/material-icons'
 import { formatCurrency } from 'src/utils/formatters.js'

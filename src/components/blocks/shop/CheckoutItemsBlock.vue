@@ -11,7 +11,7 @@
             {{ item.name }}
             <GiftLineDetails v-if="item.gift" :gift="item.gift" />
             <div v-if="item.variation && item.variation.length > 0">
-              <div v-for="(variation, index) in item.variation" :key="index">{{ variation.attribute }}: {{ variation.value }}</div>
+              <div v-for="(variation, index) in item.variation" :key="index">{{ variation.attribute }}: {{ optionLabel(variation) }}</div>
             </div>
           </div>
           × {{ item.quantity }} - {{ formatCurrency(item.totals?.line_total ?? (parseInt(toRaw(item.prices)?.price || 0) * item.quantity).toString()) }}
@@ -22,6 +22,7 @@
 </template>
 
 <script setup>
+import { optionLabel } from 'src/utils/option-label'
 import { computed, inject, toRaw } from 'vue'
 import { formatCurrency } from 'src/utils/formatters.js'
 import GiftLineDetails from 'src/components/shop/GiftLineDetails.vue'

@@ -89,7 +89,10 @@ function normalizeVariation(variation) {
           if (typeof v === 'string') return { attribute: '', value: String(v) }
           const attribute = v.attribute ?? v.name ?? v.option ?? ''
           const value = v.value ?? v.option ?? ''
-          return { attribute: String(attribute), value: String(value) }
+          // label: the option's name to show (value can be a slug the store matches on).
+          return v.label
+            ? { attribute: String(attribute), value: String(value), label: String(v.label) }
+            : { attribute: String(attribute), value: String(value) }
         })
         .filter(v => v.attribute !== '' || v.value !== '')
         .sort((a, b) => (a.attribute + a.value).localeCompare(b.attribute + b.value))

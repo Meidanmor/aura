@@ -11,15 +11,21 @@
           @update:model-value="c.onShippingMethodChange"
       />
       <p v-if="pickupAddress" class="co-pickup"><b>{{ t('Pickup address') }}:</b> <span>{{ pickupAddress }}</span></p>
+      <!-- "Pickup point (HFD)": a point in the shopper's city, required before paying. Drawn after this block mounts. -->
+      <PickupPointSelect v-if="mounted && c.pointNeeded" v-model="c.pickupPoint" :city="c.form?.shipping?.city || ''" />
     </CheckoutPart>
   </div>
 </template>
 
 <script setup>
-import { computed, inject } from 'vue'
+import { computed, defineAsyncComponent, inject, onMounted, ref } from 'vue'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import CheckoutPart from './CheckoutPart.vue'
+
+const PickupPointSelect = defineAsyncComponent(() => import('src/components/checkout/PickupPointSelect.vue'))
+const mounted = ref(false)
+onMounted(() => { mounted.value = true })
 
 /** "Delivery Options" (checkout page template): the shipping choice. */
 const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })

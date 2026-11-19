@@ -30,7 +30,7 @@
                 v-for="(variation, index) in item.variation"
                 :key="index"
             >
-              {{variation.attribute}}: {{variation.value}}
+              {{ variation.attribute }}: {{ optionLabel(variation) }}
             </div>
           </div>
           <div v-if="item.prices">
@@ -99,6 +99,7 @@
 </q-scroll-area>
 </template>
 <script setup>
+import { optionLabel } from 'src/utils/option-label'
 import {useQuasar} from "quasar"
 import {formatCurrency} from 'src/utils/formatters.js'
 import GiftLineDetails from 'src/components/shop/GiftLineDetails.vue'

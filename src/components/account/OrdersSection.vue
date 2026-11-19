@@ -19,6 +19,9 @@
           <div class="text-body2 text-grey-7 q-mb-sm">
             {{ t('Total: {total} {currency}', { total: order.total, currency: order.currency }) }}
           </div>
+          <!-- The courier's tracking and the HFD pickup point (Qwoo_Couriers on the store). -->
+          <TrackingLine v-if="order.tracking" :tracking="order.tracking" />
+          <div v-if="order.pickup_point" class="q-mb-sm"><strong>{{ t('Pickup point') }}:</strong> {{ order.pickup_point.name }}<template v-if="order.pickup_point.address">, {{ order.pickup_point.address }}</template></div>
           <button v-if="canAsk" type="button" class="help-link q-mb-sm" @click="openHelp({ view: 'write', order: order.number })">{{ t('Help with this order') }}</button>
 
           <q-table
@@ -61,6 +64,7 @@ import { matShoppingBag, matKeyboardArrowDown } from '@quasar/extras/material-ic
 import { fetchWithToken } from 'src/composables/useApiFetch.js'
 import { useI18n } from 'src/i18n/index.js'
 import { helpConfig, openHelp } from 'src/composables/useHelp.js'
+import TrackingLine from './TrackingLine.vue'
 
 // The store's Help button is on: an order can be asked about (known in the browser only).
 const canAsk = ref(false)

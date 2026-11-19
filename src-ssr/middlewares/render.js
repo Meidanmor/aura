@@ -512,9 +512,12 @@ export default defineSsrMiddleware(({ app, resolve, render, /*folders*/ }) => {
                 // is told not to set them: in the browser it would first set
                 // its default left-to-right, a flash on Hebrew pages).
                 const langAttrs = `lang="${pageLang}" dir="${LANGUAGES[pageLang]?.dir || 'ltr'}"`
-                // The live version's favicon and theme colour replace the built-in ones.
+                // The live version's favicon and theme colour replace the built-in ones. The built page is
+                // minified, so its attributes often have no quotes (<link rel=icon …>, <meta name=theme-color …>).
                 const page = site
-                    ? withShared.replace(/<link\s+rel="(icon|apple-touch-icon)"[^>]*>/g, '').replace(/<meta\s+name="theme-color"[^>]*>/g, '')
+                    ? withShared
+                        .replace(/<link\s+rel=["']?(?:icon|apple-touch-icon|mask-icon)["']?(?=[\s>])[^>]*>/g, '')
+                        .replace(/<meta\s+name=["']?theme-color["']?(?=[\s>])[^>]*>/g, '')
                     : withShared
                 // A section image comes first: the header logo stops competing with it.
                 const withLogo = ssrContext.sectionPriority

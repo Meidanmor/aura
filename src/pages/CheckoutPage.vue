@@ -382,6 +382,12 @@ const submitOrder = async (walletOverride = null) => {
     })
     return
   }
+  // "Pickup point (HFD)": a point must be chosen (the store checks it again).
+  if (pointNeeded.value && !pickupPoint.value?.id) {
+    $q.notify({ type: 'negative', message: t('Please choose a pickup point.'), icon: matError })
+    walletOverride?.complete?.('fail')
+    return
+  }
   const isWallet = walletOverride && typeof walletOverride === 'object' && 'paymentMethod' in walletOverride
   isProcessingOrder.value = true
   // The method chosen now. Read it once: placing the order replaces the cart with the order's
@@ -455,7 +461,10 @@ const submitOrder = async (walletOverride = null) => {
       payment_method: method,
       payment_data: paymentData,
       // The store checks the agreement (only sent when it asks for one).
-      extensions: { qwoo: { ...(termsRequired.value ? { terms: agreeTerms.value } : {}), ...currentSource(), ...(marketingOptin.value.on && wantsMarketing.value ? { marketing: true } : {}) } },
+      extensions: {
+        qwoo: { ...(termsRequired.value ? { terms: agreeTerms.value } : {}), ...currentSource(), ...(marketingOptin.value.on && wantsMarketing.value ? { marketing: true } : {}) },
+        ...(pointNeeded.value && pickupPoint.value?.id ? { qwoo_couriers: { pickup_point: String(pickupPoint.value.id) } } : {}),
+      },
       billing_same_as_shipping: noAddress || !differentBillingAddress.value,
       ...(orderNote.value.trim() ? { customer_note: orderNote.value.trim().slice(0, 1000) } : {}),
       ...(allowSignup.value && isLoggedIn.value === false && createAccount.value ? { create_account: true } : {}),
@@ -741,6 +750,9 @@ function setDeliveryMode(mode) {
 }
 // The address is needed only when something is delivered (not picked up).
 const addressNeeded = computed(() => needsShipping.value && !isPickupRate(selectedShippingRateId.value) && !(modeOn.value && deliveryMode.value === 'pickup'))
+// "Pickup point (HFD)" (Settings → Shipping): the shopper picks one of HFD's points in their city.
+const pickupPoint = ref(null)
+const pointNeeded = computed(() => needsShipping.value && shippingOptions.value.find((o) => o.value === selectedShippingRateId.value)?.method === 'qwoo_hfd_pickup')
 
 /* ---------- Checkout in steps (Settings → Checkout) ---------- */
 
@@ -846,6 +858,10 @@ async function nextStep() {
     $q.notify({ type: 'negative', message: t('Please choose how to get your order.'), icon: matError })
     return
   }
+  if (choosesDelivery && pointNeeded.value && !pickupPoint.value?.id && !inPreview.value) {
+    $q.notify({ type: 'negative', message: t('Please choose a pickup point.'), icon: matError })
+    return
+  }
   return goStep(stepIndex.value + 1)
 }
 // The Store builder preview: any step can be opened from the bar.
@@ -879,6 +895,7 @@ provide('checkoutPage', reactive({
   submitOrder: previewSubmitOrder, placeOrder: previewPlaceOrder, registerForm,
   pickerAt, claimPicker, saveNewAddress, addressIsNew,
   needsShipping, addressNeeded, pickupOffered, deliveryMode, deliveryOptions, setDeliveryMode, registerModeBlock,
+  pickupPoint, pointNeeded,
   stepsOn, stepList, stepIndex, currentStep, stepTitle, lastStep, goStep, nextStep, inPreview,
 }))
 </script>
