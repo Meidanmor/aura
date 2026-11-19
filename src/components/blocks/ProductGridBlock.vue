@@ -1,6 +1,6 @@
 <template>
   <div class="product-grid-block" :style="cssVars">
-    <div v-if="shown?.length" class="product-grid-block__grid">
+    <div v-if="shown?.length" class="product-grid-block__grid" :class="shortRow">
       <div v-for="(product, index) in shown" :key="product.id" class="product-grid-block__cell">
         <LoopCard v-if="card" :sections="card" type="product" :item="product" :priority="picked && index < 3" />
         <ProductCard v-else :product="product" :priority="picked && index < 3" />
@@ -71,6 +71,10 @@ const shown = useSampleFallback(() => products.value, 'product', Math.min(4, Num
 // Nothing viewed yet: the owner's message, or the block / its section hidden.
 const empty = computed(() => ['recent', 'for_you'].includes(d.value.query_type) && recent.value.ready && Array.isArray(shown.value) && !shown.value.length)
 
+// Fewer products than columns: keep the empty columns (default, as before), or center / end the products
+// at their usual width (Store builder: "Fewer Products Than Columns").
+const shortRow = computed(() => (['center', 'end'].includes(d.value.short_row) ? `short-${d.value.short_row}` : ''))
+
 const cssVars = computed(() => {
   const vars = {}
   setResponsiveVar(vars, '--pg-cols', d.value.columns || { desktop: 4, tablet: 3, mobile: 2 }, (v) => (v ? Math.max(1, Math.min(6, Number(v))) : null))
@@ -93,5 +97,22 @@ const cssVars = computed(() => {
 }
 @media (max-width: 767px) {
   .product-grid-block__grid { grid-template-columns: repeat(var(--pg-cols-m, var(--pg-cols-t, var(--pg-cols, 2))), minmax(0, 1fr)); gap: var(--pg-gap-m, var(--pg-gap-t, var(--pg-gap, 12px))); }
+}
+/* Same column width, but empty columns fold away (auto-fit), so the products can sit in the center or at the end.
+   A hair less than the exact width, so rounding never drops a column. */
+.product-grid-block__grid.short-center, .product-grid-block__grid.short-end {
+  grid-template-columns: repeat(auto-fit, calc((100% - (var(--pg-cols, 4) - 1) * var(--pg-gap, 16px)) / var(--pg-cols, 4) - 0.1px));
+}
+.product-grid-block__grid.short-center { justify-content: center; }
+.product-grid-block__grid.short-end { justify-content: end; }
+@media (max-width: 1023px) {
+  .product-grid-block__grid.short-center, .product-grid-block__grid.short-end {
+    grid-template-columns: repeat(auto-fit, calc((100% - (var(--pg-cols-t, var(--pg-cols, 3)) - 1) * var(--pg-gap-t, var(--pg-gap, 16px))) / var(--pg-cols-t, var(--pg-cols, 3)) - 0.1px));
+  }
+}
+@media (max-width: 767px) {
+  .product-grid-block__grid.short-center, .product-grid-block__grid.short-end {
+    grid-template-columns: repeat(auto-fit, calc((100% - (var(--pg-cols-m, var(--pg-cols-t, var(--pg-cols, 2))) - 1) * var(--pg-gap-m, var(--pg-gap-t, var(--pg-gap, 12px)))) / var(--pg-cols-m, var(--pg-cols-t, var(--pg-cols, 2))) - 0.1px));
+  }
 }
 </style>
