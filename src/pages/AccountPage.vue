@@ -65,7 +65,7 @@ defineOptions({
   },
 })
 
-useSeoMeta({ noindex: true })
+useSeoMeta({ noindex: true, title: i18nT('My account') })
 
 const route = useRoute()
 const router = useRouter()

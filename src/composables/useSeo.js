@@ -16,7 +16,7 @@ const NOINDEX = 'noindex, nofollow'
  * Returns { seoData }: set seoData.value after a client-side navigation to
  * update the tags.
  */
-export function useSeoMeta({ noindex = false } = {}) {
+export function useSeoMeta({ noindex = false, title = '' } = {}) {
   const seoData = ref(
       process.env.CLIENT && window.__SEO_DATA__ ? window.__SEO_DATA__ : null
   )
@@ -31,23 +31,25 @@ export function useSeoMeta({ noindex = false } = {}) {
       useMeta(tags)
       ssr.seoPromise.then((seo) => {
         seoData.value = seo
-        Object.assign(tags, metaFor(seo, noindex))
+        Object.assign(tags, metaFor(seo, noindex, title))
       })
       return { seoData }
     }
   }
 
-  useMeta(() => metaFor(seoData.value, noindex))
+  useMeta(() => metaFor(seoData.value, noindex, title))
 
   return { seoData }
 }
 
 /** The page's tags (title, description, canonical, Open Graph…) from its SEO answer. */
-function metaFor(seo, noindex) {
+function metaFor(seo, noindex, ownTitle = '') {
   // A private page never takes another page's tags (window.__SEO_DATA__
   // still holds the page the visit started on).
   if (noindex) {
-    return { title: storeName(), meta: { robots: { name: 'robots', content: NOINDEX, key: 'robots' } }, link: {} }
+    // The page's own name first ("Checkout | Pullim"), never another page's.
+    const name = storeName()
+    return { title: ownTitle ? (name ? `${ownTitle} | ${name}` : ownTitle) : name, meta: { robots: { name: 'robots', content: NOINDEX, key: 'robots' } }, link: {} }
   }
   if (!seo) return {}
 

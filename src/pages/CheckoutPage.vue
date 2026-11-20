@@ -28,6 +28,13 @@
       <!-- Settings → Checkout: no header and footer, and the checkout in steps (blocks of other
            steps hidden by their data-block-id). A style element, so the server's page has it too. -->
       <component :is="'style'" v-if="pageCss">{{ pageCss }}</component>
+      <!-- Header hidden: the logo still leads back to the store. -->
+      <div v-if="pageConfig?.hide_chrome" class="checkout-brand">
+        <router-link to="/" class="checkout-brand__link" :title="t('Back to the store')">
+          <img v-if="brand?.logo" :src="brand.logo" :alt="t('Back to the store')" class="checkout-brand__logo" />
+          <span v-else class="checkout-brand__name">{{ storeName() }}</span>
+        </router-link>
+      </div>
       <CheckoutStepsBlock v-if="stepsOn && !hasStepsBlock" :data="{ data: {} }" class="checkout-steps--auto" />
 
       <SectionRenderer :sections="sections" page="checkout" />
@@ -52,7 +59,7 @@
 
 <script setup>
 import { currentSource } from 'src/utils/traffic-source.js'
-import { ref, computed, reactive, watch, onMounted, onUnmounted, useSSRContext, provide, markRaw, nextTick } from 'vue';
+import { ref, computed, reactive, watch, onMounted, onUnmounted, useSSRContext, provide, inject, markRaw, nextTick } from 'vue';
 import cart from 'src/stores/cart';
 import { useRouter, onBeforeRouteLeave } from 'vue-router';
 import { useQuasar } from 'quasar';
@@ -80,8 +87,10 @@ import { signedIn } from 'src/composables/useAccount.js'
 import { isSaved, saveAddress as keepAddress } from 'src/composables/useSavedAddresses.js'
 import { ecommerceOf, eventItem, track } from 'src/utils/custom-code.js'
 import { t as i18nT, useI18n } from 'src/i18n/index.js'
+import { storeName } from 'src/utils/site-info.js'
 
 const { t } = useI18n()
+const brand = inject('brandSettings', ref(null))
 // The Store builder's preview of an empty cart shows a sample one (never ordered).
 const preview = usePreviewCart(cart)
 const {
@@ -139,7 +148,7 @@ const $q = useQuasar()
 $q.iconSet.field.error = matError
 
 const pageConfig = ref('');
-useSeoMeta({ noindex: true })
+useSeoMeta({ noindex: true, title: i18nT('Checkout') })
 if (process.env.SERVER) {
   const ssr = useSSRContext()
   pageConfig.value = ssr?.pageConfig || null
@@ -901,6 +910,10 @@ provide('checkoutPage', reactive({
 </script>
 
 <style>
+.checkout-brand { display: flex; justify-content: center; padding: 16px 16px 0; }
+.checkout-brand__link { display: inline-flex; align-items: center; color: inherit; text-decoration: none; }
+.checkout-brand__logo { max-height: 40px; max-width: 180px; width: auto; height: auto; }
+.checkout-brand__name { font-size: 20px; font-weight: 600; }
 /* Cardcom's card form in a window over the checkout. */
 .pay-frame { display: flex; flex-direction: column; width: min(560px, 100vw); height: min(760px, 92vh); background: #fff; color: #111; border-radius: 12px; overflow: hidden; }
 .q-dialog__inner--maximized .pay-frame { width: 100vw; height: 100%; border-radius: 0; }

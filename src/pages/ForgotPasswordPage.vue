@@ -72,7 +72,7 @@ defineOptions({
 
   }
 })
-useSeoMeta({ noindex: true })
+useSeoMeta({ noindex: true, title: i18nT('Forgot password') })
 
 const username = ref('')
 const error    = ref('')

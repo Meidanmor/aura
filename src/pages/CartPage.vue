@@ -55,7 +55,7 @@ defineOptions({
 
   }
 })
-useSeoMeta({ noindex: true })
+useSeoMeta({ noindex: true, title: i18nT('Cart') })
 // Store builder → Shop pages → Cart.
 const cartConfig = usePageConfig('cart')
 const sections = computed(() => shopSections('cart', cartConfig.value))

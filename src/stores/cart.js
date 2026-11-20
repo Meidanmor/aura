@@ -341,9 +341,24 @@ function rebuildMergedView() {
   state.items.splice(0, state.items.length, ...visible)
   state.items_count = state.items.reduce((s, i) => s + (i.quantity || 0), 0)
 
-  if (state.cart_array?.totals) {
+  const pending = state.cart_array?.totals ? localDiffersFromServer() : false
+  if (state.cart_array?.totals && !pending) {
     // Server totals are authoritative when available
     state.totals = state.cart_array.totals
+    state.coupons = state.cart_array.coupons || []
+  } else if (pending) {
+    // The cart changed here and the store hasn't answered yet: its totals are for the cart before
+    // the change (an empty cart read ₪0 and "₪270 more for free shipping" for a few seconds).
+    // The items' prices move the server's numbers until its answer replaces them.
+    const s = state.cart_array.totals
+    const local = state.items.reduce((sum, it) => sum + parseInt(it.prices?.price ?? 0, 10) * (it.quantity || 1), 0)
+    const diff = local - (parseInt(s.total_items ?? 0, 10) || 0)
+    state.totals = {
+      ...s,
+      total_items: String(local),
+      total_price: String(Math.max(0, (parseInt(s.total_price ?? 0, 10) || 0) + diff)),
+      _local: true,
+    }
     state.coupons = state.cart_array.coupons || []
   } else {
     // Compute local totals from item prices
@@ -381,6 +396,23 @@ function rebuildMergedView() {
     }
     state.coupons = []
   }
+}
+
+/**
+ * The cart shown here isn't the one the store last answered for (an add, a remove or a quantity
+ * change waiting for the sync). Items without a price here don't count: their totals can't be guessed.
+ */
+function localDiffersFromServer() {
+  const server = new Map()
+  for (const i of state.cart_array?.items || []) server.set(itemSignature(i), Number(i.quantity) || 0)
+  const here = new Map()
+  for (const i of state.items) {
+    if (i.prices?.price == null) return false
+    here.set(itemSignature(i), (here.get(itemSignature(i)) || 0) + (Number(i.quantity) || 0))
+  }
+  if (server.size !== here.size) return true
+  for (const [k, q] of here) if (server.get(k) !== q) return true
+  return false
 }
 
 /* -------------------------

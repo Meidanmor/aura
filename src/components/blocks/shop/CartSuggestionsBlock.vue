@@ -91,7 +91,12 @@ const { data: products } = useBlockQuery(keyWithProduct(props.blockId, excludeId
   }, ssrContext),
 )
 // The Store builder preview with nothing to show: sample products.
-const shown = useSampleFallback(() => notInCart(products.value, suggestions.value), 'product', 4)
+// Only what can go in the cart: no "contact us" products (no price / price 0) or ones the store won't sell.
+const buyable = (p) => p?.sample || (p?.is_purchasable !== false && !zeroPriceButton(p))
+const shown = useSampleFallback(() => {
+  const list = notInCart(products.value, suggestions.value)
+  return Array.isArray(list) ? list.filter(buyable) : list
+}, 'product', 4)
 const empty = computed(() => ['recent', 'for_you'].includes(d.value.query_type) && recent.value.ready && Array.isArray(shown.value) && !shown.value.length)
 
 const row = ref(null)

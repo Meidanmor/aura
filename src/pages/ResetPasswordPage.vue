@@ -69,7 +69,7 @@ defineOptions({
 
   }
 })
-useSeoMeta({ noindex: true })
+useSeoMeta({ noindex: true, title: i18nT('Reset password') })
 
 const route = useRoute()
 const key   = computed(() => route.query.key || '')
