@@ -24,8 +24,8 @@
         </q-card>
       </template>
 
-      <!-- Product attributes (taste, size…): after hydration only, the server doesn't list them. -->
-      <template v-if="d.show_attributes && ready">
+      <!-- Product attributes (taste, size…): the server loads the list with the page (older pages: after mount). -->
+      <template v-if="d.show_attributes && (ready || shownAttributes.length)">
         <q-card v-for="attr in shownAttributes" :key="attr.taxonomy" class="filters-inner-wrap q-pa-md q-mb-md">
           <div class="text-subtitle1 q-mb-sm">{{ attr.name }}</div>
           <div v-if="d.attributes_style === 'chips'" class="filters-chips" role="group" :aria-label="attr.name">

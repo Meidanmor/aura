@@ -68,6 +68,7 @@ import ArchivePagination from 'components/shop/ArchivePagination.vue'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { toCssLength } from 'src/composables/useSectionStyle.js'
 import { useSampleFallback } from 'src/utils/sample-items.js'
+import { promoShown } from 'src/utils/shop-templates.js'
 
 /**
  * "Products Grid" (All products / category page template): the products, with the chosen loop
@@ -124,7 +125,8 @@ onBeforeUnmount(() => observer?.disconnect())
 
 // Promo card: after product N (0 = before the first), on the first page (with Load more, always: page 1 is in the list).
 const promoAt = computed(() => {
-  if (!d.value.promo || (!d.value.promo_title && !d.value.promo_text)) return -1
+  // Off, empty, or linking to this very page (the grid gave its place to a product).
+  if (!promoShown(d.value, route.path)) return -1
   if (!appends.value && Number(a?.currentPage || 1) !== 1) return -1
   return Math.max(0, Math.min(24, Number(d.value.promo_position) || 0))
 })

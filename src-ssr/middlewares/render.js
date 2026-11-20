@@ -443,6 +443,7 @@ export default defineSsrMiddleware(({ app, resolve, render, /*folders*/ }) => {
                     pageConfig: ssrContext.pageConfig || {},
                     selectedCategoryData: ssrContext.selectedCategoryData || {},
                     priceMeta: ssrContext.priceMeta || {},
+                    attributeOptionsData: ssrContext.attributeOptionsData || null,
                     seoData: ssrContext.seoData || null,
                     blogData: ssrContext.blogData || null,
                     // window.__QWOO_SITE__: the languages and the store's name, as published.

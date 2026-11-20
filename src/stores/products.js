@@ -287,9 +287,9 @@ async function priceMinorUnit(ssrContext) {
  * The shop's product attributes for the Filters block: [{ taxonomy, name, terms: [{ label, value }] }],
  * only values some product uses. [] when the store has none or can't be reached.
  */
-export async function fetchAttributeOptions() {
+export async function fetchAttributeOptions(ssrContext = null) {
   try {
-    const base = storeApiBase(null)
+    const base = storeApiBase(ssrContext)
     const res = await fetch(`${base}/products/attributes`)
     if (!res.ok) return []
     const list = await res.json()

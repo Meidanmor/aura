@@ -162,7 +162,28 @@ const GRID_MODES = ['numbers', 'button', 'scroll', 'none']
  * lead: places the first page gives to cards that aren't products (the Promo card: 1), so a page of
  * 9 is 8 products + the promo card, and the next pages are 9 products each.
  */
-export function archiveGrid(sections) {
+/** A link that opens this same page (a relative address; its query and #part don't count). */
+export function linksHere(url, path) {
+  const u = String(url || '').trim()
+  if (!u.startsWith('/') || u.startsWith('//') || !path) return false
+  const norm = (p) => {
+    let x = p.split(/[?#]/)[0].replace(/\/+$/, '') || '/'
+    try { x = decodeURI(x) } catch { /* keep it as it is */ }
+    return x.toLowerCase()
+  }
+  return norm(u) === norm(String(path))
+}
+
+/**
+ * Products Grid → Promo card: on, with a title or text, and not linking to the page it's on (a card that
+ * says "see all of X" on X's own page: it's left out there, and the page shows one more product instead).
+ */
+export function promoShown(d = {}, path = '') {
+  if (!d.promo || d.promo === 'false' || !(d.promo_title || d.promo_text)) return false
+  return !linksHere(d.promo_url, path)
+}
+
+export function archiveGrid(sections, path = '') {
   let found = null
   const walk = (nodes) => {
     for (const n of nodes || []) {
@@ -175,13 +196,31 @@ export function archiveGrid(sections) {
   const d = found?.data || {}
   const n = parseInt(d.per_page, 10)
   const perPage = Number.isFinite(n) ? Math.max(1, Math.min(48, n)) : 6
-  const promo = !!d.promo && d.promo !== 'false' && !!(d.promo_title || d.promo_text)
+  const promo = promoShown(d, path)
   return {
     perPage,
     mode: GRID_MODES.includes(d.pagination) ? d.pagination : 'numbers',
     lead: promo && perPage > 1 ? 1 : 0,
     query: gridQuery(d),
   }
+}
+
+/**
+ * A Filters block on these sections that shows product attributes (Taste, Size…): the server then
+ * loads the attribute list with the products, so the filters are in the first HTML (2026-11-20).
+ */
+export function archiveWantsAttributes(sections) {
+  let found = false
+  const on = (v) => !!v && v !== 'false'
+  const walk = (nodes) => {
+    for (const n of nodes || []) {
+      if (found || !n || typeof n !== 'object') continue
+      if (n.type === 'archive_filters' && n.enabled !== false && n.enabled !== 'false' && on(n.data?.show_attributes)) { found = true; return }
+      if (Array.isArray(n.blocks)) walk(n.blocks)
+    }
+  }
+  walk(sections)
+  return found
 }
 
 const idList = (v) => (Array.isArray(v) ? v : []).map(Number).filter((n) => Number.isInteger(n) && n > 0)

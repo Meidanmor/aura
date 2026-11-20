@@ -9,7 +9,7 @@ import productsStore from 'src/stores/products'
 import { sameSlug } from 'src/utils/slug.js'
 import {getApiOrigin} from "src/utils/server/get-api-origin.js";
 import {loadPageConfig, subscribeToLiveConfig} from "src/utils/config-loader.js";
-import { archiveGrid, shopSections } from 'src/utils/shop-templates.js'
+import { archiveGrid, archiveWantsAttributes, shopSections } from 'src/utils/shop-templates.js'
 import { categoryMatch } from 'src/utils/layouts.js'
 
 const { setVerticalScrollPosition } = scroll
@@ -41,9 +41,10 @@ export const sortOptions = [
 
 
 /** The Products Grid's paging on this page (its layout for the category): { perPage, mode }. */
-export function archiveGridFor(mode, config, category = null) {
+export function archiveGridFor(mode, config, category = null, path = '') {
     const page = mode === 'category' ? 'category' : 'shop'
-    return archiveGrid(shopSections(page, config, mode === 'category' ? categoryMatch(category) : undefined))
+    // path: the page's address (a promo card linking to it isn't shown, so it takes no place).
+    return archiveGrid(shopSections(page, config, mode === 'category' ? categoryMatch(category) : undefined), path)
 }
 
 /** Load more / Load while scrolling: the list holds pages 1…current, not one page. */
@@ -75,7 +76,7 @@ export function createArchivePreFetch(mode) {
         const seoPromise = fetchSeoForPath(seoPath, origin)
         // The Products Grid says how many products a page has (the config is in memory: no wait).
         const shopListPromise = mode === 'category' ? null : configPromise.then((cfg) =>
-            listFor(urlFilters.selectedCategory?.length ? urlFilters.selectedCategory : null, archiveGridFor(mode, cfg)))
+            listFor(urlFilters.selectedCategory?.length ? urlFilters.selectedCategory : null, archiveGridFor(mode, cfg, null, currentRoute.path)))
 
         const [configData, categories, seo] = await Promise.all([configPromise, categoriesPromise, seoPromise])
         // The owner changed the category's address: send visitors to the new one.
@@ -116,7 +117,15 @@ export function createArchivePreFetch(mode) {
             ])
         }
 
-        const [result, priceMeta] = await (shopListPromise || listFor(currentCat?.id ?? null, archiveGridFor(mode, configData, currentCat)))
+        // Filters with product attributes: their list comes with the page, not a second later in the browser.
+        const pageSections = shopSections(mode === 'category' ? 'category' : 'shop', configData, mode === 'category' ? categoryMatch(currentCat) : undefined)
+        const attributesPromise = archiveWantsAttributes(pageSections)
+            ? productsStore.fetchAttributeOptions(ssrContext).catch(() => [])
+            : Promise.resolve(null)
+        const [[result, priceMeta], attributeOptionsData] = await Promise.all([
+            shopListPromise || listFor(currentCat?.id ?? null, archiveGridFor(mode, configData, currentCat, currentRoute.path)),
+            attributesPromise,
+        ])
 
         // ✅ shared page-existence guard
         const totalPages = result.totalPages || 1
@@ -135,6 +144,7 @@ export function createArchivePreFetch(mode) {
             ssrContext.pagesTotal = result.totalPages
             ssrContext.seoData = seo
             ssrContext.pageConfig = configData
+            ssrContext.attributeOptionsData = attributeOptionsData
 
             if (mode === 'category') ssrContext.selectedCategoryData = currentCat
         } else {
@@ -143,6 +153,7 @@ export function createArchivePreFetch(mode) {
             window.__PAGES_TOTAL__ = result.totalPages
             window.__CATEGORIES_DATA__ = categories
             window.__PRICE_META__ = priceMeta
+            window.__ATTRIBUTE_OPTIONS_DATA__ = attributeOptionsData
             window.__SEO_DATA__ = seo
             window.__PAGE_CONFIG__ = configData;
             if (mode === 'category') window.__SELECTED_CATEGORY_DATA__ = currentCat
@@ -181,6 +192,13 @@ export function useProductArchive(mode) {
     const inStock             = ref(false)
     const attributeOptions    = ref([])
     let attributesLoading     = null
+    if (process.env.SERVER) {
+        const ssr = useSSRContext()
+        if (Array.isArray(ssr?.attributeOptionsData)) attributeOptions.value = ssr.attributeOptionsData
+    } else if (Array.isArray(window.__ATTRIBUTE_OPTIONS_DATA__)) {
+        attributeOptions.value = window.__ATTRIBUTE_OPTIONS_DATA__
+        attributesLoading = Promise.resolve(attributeOptions.value)
+    }
     function loadAttributeOptions() {
         if (!process.env.CLIENT) return
         attributesLoading ||= productsStore.fetchAttributeOptions().then((list) => { attributeOptions.value = list })
@@ -193,7 +211,7 @@ export function useProductArchive(mode) {
     )
 
     // Products Grid → Pagination: products per page and how more of them come.
-    const grid        = computed(() => archiveGridFor(mode, shopSettings.value, selectedCategoryOBJ.value))
+    const grid        = computed(() => archiveGridFor(mode, shopSettings.value, selectedCategoryOBJ.value, route.path))
     const perPage     = () => grid.value.perPage
     // The promo card counts as one of page 1's cards (8 products + the card on a page of 9).
     const lead        = () => grid.value.lead || 0

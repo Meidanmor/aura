@@ -356,7 +356,18 @@ export function siteVisibility() {
 
 /** The page's view of the live version, for the browser (window.__QWOO_SITE__). */
 export function clientSite(s) {
-  return s ? { version: s.version, languages: s.languages, name: s.name, description: s.description, badge: !!pointer?.free, shop: pointer?.shop || null, product_start: pointer?.product_start || null } : null
+  return s ? { version: s.version, languages: s.languages, name: s.name, description: s.description, badge: !!pointer?.free, shop: pointer?.shop || null, product_start: pointer?.product_start || null, app_icon: hasAppIcon(s) } : null
+}
+
+/**
+ * Whether the published files have an app icon browsers can install with (192 or 512 px, from
+ * config/icons.json). Without one Chrome can't install the store, so the storefront asks no one to
+ * add it to their home screen (src/services/install.js, 2026-11-20).
+ */
+function hasAppIcon(s) {
+  const own = s.json['config/icons.json']?.icons
+  if (!Array.isArray(own)) return false
+  return own.some((icon) => !!s.files[String(icon?.src || '').replace(/^\//, '')] && /\b(192|512)x/.test(String(icon?.sizes || '')))
 }
 
 /* ---------------- serving the files ---------------- */

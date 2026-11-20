@@ -57,10 +57,20 @@ export function isStandalone() {
   }
 }
 
-/** Whether this device can add the store at all (phones and tablets only; asks stay off on computers). */
+/**
+ * Whether the store has an app icon. Stores whose content comes from the live version say so in
+ * window.__QWOO_SITE__ (app_icon); older stores (built content, no live version) are taken as having one.
+ */
+export function hasAppIcon() {
+  if (typeof window === 'undefined') return false
+  const site = window.__QWOO_SITE__
+  return !site || site.app_icon !== false
+}
+
+/** Whether this device can add the store at all (phones and tablets only; asks stay off on computers; never without an app icon). */
 export function canInstall() {
   const d = device()
-  if (install.installed) return false
+  if (install.installed || !hasAppIcon()) return false
   if (d.os === 'ios') return d.browser === 'safari' || d.browser === 'chrome' || d.browser === 'inapp' || d.browser === 'edge'
   if (d.os === 'android') return !!install.prompt || d.browser === 'chrome' || d.browser === 'inapp'
   return false
@@ -78,6 +88,7 @@ export function later() {
 
 /** Opens the install: Android's own prompt when there is one, else our step card. */
 export async function startInstall() {
+  if (!hasAppIcon()) return
   if (install.prompt) {
     const p = install.prompt
     install.prompt = null
@@ -153,6 +164,6 @@ export function initInstall() {
   if (location.hash === GUIDE_HASH) {
     try { history.replaceState(history.state, '', location.pathname + location.search) } catch { /* ignore */ }
     const d = device()
-    if (d.os === 'ios' && d.browser !== 'inapp' && !install.installed) install.guide = true
+    if (d.os === 'ios' && d.browser !== 'inapp' && !install.installed && hasAppIcon()) install.guide = true
   }
 }
