@@ -1,6 +1,6 @@
 // ssr-src/middlewares/render.js
 import { defineSsrMiddleware } from '#q-app/wrappers'
-import { BACKEND_USER_AGENT } from '../uploads.js'
+import { BACKEND_USER_AGENT, clientIp } from '../uploads.js'
 import { randomBytes } from 'crypto'
 import { AsyncLocalStorage } from 'node:async_hooks'
 //import { readFileSync } from 'node:fs'
@@ -30,7 +30,7 @@ if (!globalThis.__QWOO_FETCH_LANG) {
         const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input?.url || ''
         if (url.includes('/wp-json/')) {
             const headers = new Headers(init?.headers || (input instanceof Request ? input.headers : undefined))
-            const { lang, ua, origin } = langStore.getStore() || {}
+            const { lang, ua, ip, origin } = langStore.getStore() || {}
             if (isExtraLang(lang)) headers.set('X-Qwoo-Lang', lang)
             // The visitor's own browser name, for the store (see server.js).
             if (ua) headers.set('X-Qwoo-Client-UA', ua)
@@ -42,6 +42,8 @@ if (!globalThis.__QWOO_FETCH_LANG) {
             // ran this function a second time before reaching the store.
             if (BACKEND && PROXY_SECRET && origin && typeof input !== 'object' && url.startsWith(`${origin}/wp-json/`)) {
                 headers.set('X-Proxy-Secret', PROXY_SECRET)
+                // The visitor's real address, for the store's rate limits (uploads.js clientIp).
+                if (ip) headers.set('X-Qwoo-Client-IP', ip)
                 const path = url.slice(origin.length)
                 const call = () => original(BACKEND + path, { ...init, headers })
                 // The store's public answers, kept until something changes on the store (api-cache.js).
@@ -98,6 +100,10 @@ const AI_APP_FRAME_HOSTS = [
     'https://claude.ai', 'https://*.claude.ai', 'https://*.claudemcpcontent.com', 'https://*.claudeusercontent.com',
     'https://chatgpt.com', 'https://*.chatgpt.com', 'https://*.oaiusercontent.com',
 ]
+
+// Pages that show one shopper's data (src/router/routes.js): cart, checkout, order received,
+// My account, a booking, password and review links, the sign-in callback.
+const PERSONAL_PAGE_RE = /^\/(cart|checkout|thank-you|my-account|booking|forgot-password|reset-password|review|auth)(\/|$)/
 
 const isIgnoredRequest = (url) => {
     return (
@@ -386,19 +392,25 @@ export default defineSsrMiddleware(({ app, resolve, render, /*folders*/ }) => {
             res.setHeader('X-Robots-Tag', 'noindex')
         }
 
-        const ssrContext = { req, res }
+        // nonce: Quasar puts it on the scripts it writes itself (its meta and state scripts).
+        const ssrContext = { req, res, nonce }
         // The store's live published version (set by site-content.js for this request), or null.
         const site = globalThis.__QWOO_SITE || null
         const pageLang = langFromPath(req.path || req.url)
+        // A shopper's own pages are never kept by a browser or a shared cache.
+        if (PERSONAL_PAGE_RE.test(stripLang(req.path || '/'))) res.setHeader('Cache-Control', 'private, no-store')
 
         const ua = String(req.headers['user-agent'] || '').slice(0, 512)
-        langStore.run({ lang: pageLang, ua, origin: originOf(req) }, () => render(ssrContext))
+        langStore.run({ lang: pageLang, ua, ip: clientIp(req), origin: originOf(req) }, () => render(ssrContext))
             .then(html => {
                 // NOTE: html already contains the correct <title>/<meta>/<link>/<script>
                 // tags from every useMeta() call in the rendered component tree,
                 // injected automatically by Quasar's render() — with the hydration
                 // markers the client-side Meta plugin needs to adopt these nodes on
                 // navigation. Do NOT strip or replace the <title> here.
+
+                // The page carries this shopper's cart: never kept by a browser or a shared cache.
+                if (ssrContext.cartArray) res.setHeader('Cache-Control', 'private, no-store')
 
                 const productData = ssrContext.productData || {}
                 const heroData = ssrContext.heroData || {}
@@ -463,9 +475,9 @@ export default defineSsrMiddleware(({ app, resolve, render, /*folders*/ }) => {
             <link
               rel="preload"
               as="image"
-              href="${heroData.src}"
-              ${heroData.srcset ? `imagesrcset="${heroData.srcset}"` : ''}
-              ${heroData.sizes ? `imagesizes="${heroData.sizes}"` : ''}
+              href="${attr(heroData.src)}"
+              ${heroData.srcset ? `imagesrcset="${attr(heroData.srcset)}"` : ''}
+              ${heroData.sizes ? `imagesizes="${attr(heroData.sizes)}"` : ''}
               fetchpriority="high"
             >` : ''}
           ${priorityPreloads}
@@ -483,10 +495,9 @@ export default defineSsrMiddleware(({ app, resolve, render, /*folders*/ }) => {
           ${fontsHead(site, pageLang)}
         `
 
-                const withNonce = html.replace(
-                    /<script((?:(?!src=|nonce=)[^>])*)>/g,
-                    (match, attrs) => `<script${attrs} nonce="${nonce}">`
-                )
+                // No blanket nonce: only the scripts written here, by Quasar (ssrContext.nonce) and by
+                // custom-code.js carry it. A <script> inside store text (a description…) never runs.
+                const withNonce = html
 
                 const stateText = Object.fromEntries(Object.entries(states).map(([key, value]) => [key, stateJson(value)]))
                 // The header, footer and branding configs are the same on every page: linked as one
@@ -535,7 +546,7 @@ export default defineSsrMiddleware(({ app, resolve, render, /*folders*/ }) => {
             .catch(err => {
                 // A router redirect: { url: '/…', code? }. Other errors can carry a `url` too (a module that
                 // failed to load has its file:// address): redirecting there threw and stopped the server.
-                if (typeof err.url === 'string' && /^(\/(?!\/)|https?:\/\/)/.test(err.url)) {
+                if (typeof err.url === 'string' && /^(\/(?![/\\])|https?:\/\/)/.test(err.url)) {
                     if (Number.isInteger(err.code) && err.code >= 300 && err.code < 400) res.redirect(err.code, err.url)
                     else res.redirect(err.url)
                 } else if (err.code === 404) {

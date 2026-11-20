@@ -16,6 +16,7 @@
  */
 import { nextTick } from 'vue'
 import { isNavigationFailure, NavigationFailureType } from 'vue-router'
+import { isEditorMessage } from 'src/utils/config-loader.js'
 
 const SPEED = { fast: 180, normal: 300, slow: 500 }
 const ANIMATIONS = ['fade', 'rise', 'slide', 'zoom']
@@ -161,7 +162,7 @@ export function installPageMotionPreview() {
   let turn = 0
   window.addEventListener('message', async (event) => {
     const d = event.data
-    if (event.source !== window.parent || !d || d.source !== 'qwoo-admin' || d.type !== 'page_motion') return
+    if (!isEditorMessage(event) || !d || d.source !== 'qwoo-admin' || d.type !== 'page_motion') return
     if (d.animation !== undefined) setPageMotion({ page_scroll: d.scroll, page_animation: d.animation, page_speed: d.speed })
     const mine = ++turn
     restore()

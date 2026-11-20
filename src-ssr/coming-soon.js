@@ -98,7 +98,8 @@ export function comingSoonMiddleware() {
       params.delete('preview')
       const rest = params.toString()
       noStore(res)
-      return res.redirect(302, req.path + (rest ? `?${rest}` : ''))
+      // One leading slash only: "//evil.com" or "/\evil.com" would leave the store.
+      return res.redirect(302, '/' + req.path.replace(/^[/\\]+/, '') + (rest ? `?${rest}` : ''))
     }
 
     const own = cookieOf(req, COOKIE)

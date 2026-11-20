@@ -146,7 +146,8 @@ function saveCartToken(response, ssrContext = null) {
 
     const secure = typeof window !== 'undefined'
         ? location.protocol === 'https:'
-        : ssrContext?.req?.protocol === 'https'
+        // Behind Vercel the server itself speaks http: the forwarded scheme says https.
+        : ssrContext?.req?.protocol === 'https' || String(ssrContext?.req?.headers?.['x-forwarded-proto'] || '').startsWith('https')
 
     if (typeof window !== 'undefined') {
       localStorage.setItem(CART_TOKEN_COOKIE, token)

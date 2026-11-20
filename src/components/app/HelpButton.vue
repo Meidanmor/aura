@@ -83,6 +83,13 @@
           <button type="submit" class="help-btn help-btn--main" :disabled="busy || !message.trim()">{{ busy ? t('Sending…') : t('Send') }}</button>
         </form>
 
+        <!-- A guest's message: the answer comes by email (no conversation link here) -->
+        <div v-else-if="help.view === 'sent'" class="help-form" role="status">
+          <h3>{{ t('Thanks, we got your message') }}</h3>
+          <p class="help-muted">{{ t('We\'ll answer you by email.') }}</p>
+          <button type="button" class="help-btn" @click="help.view = 'home'">{{ t('Back') }}</button>
+        </div>
+
         <!-- One conversation -->
         <HelpThread v-else-if="help.view === 'thread' && help.thread" :thread-key="help.thread" :note="sentNote" />
 
@@ -237,7 +244,7 @@ async function send() {
     help.thread = res.k
     help.view = 'thread'
   } else {
-    help.view = 'home'
+    help.view = res.emailed ? 'sent' : 'home'
   }
 }
 

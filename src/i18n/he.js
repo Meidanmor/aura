@@ -665,6 +665,8 @@ export default {
   "Returns": "החזרות",
   "Could not send. Please check your connection and try again.": "לא הצלחנו לשלוח. בדקו את החיבור ונסו שוב.",
   "We got it. We'll answer here and by email.": "קיבלנו. נענה כאן וגם באימייל.",
+  "Thanks, we got your message": "תודה, קיבלנו את ההודעה שלך",
+  "We'll answer you by email.": "נענה לך באימייל.",
   "Sent. We'll answer here and by email.": "נשלח. נענה כאן וגם באימייל.",
   "This conversation isn't available any more.": "השיחה הזאת כבר לא זמינה.",
   "You": "את/ה",

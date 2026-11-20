@@ -94,6 +94,8 @@ async function pointerFromStore() {
   const data = await getJson(`${BACKEND}/wp-json/qwoo/v1/site`, {
     'x-proxy-secret': SECRET,
     'x-qwoo-storefront': STOREFRONT_VERSION,
+    // Proves the version comes from this storefront (the store checks it with the same secret).
+    'x-qwoo-storefront-sig': createHmac('sha256', SECRET).update('qwoo-storefront').digest('hex'),
   })
   return asPointer(data)
 }

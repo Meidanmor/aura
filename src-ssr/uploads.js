@@ -11,6 +11,19 @@ import { Readable } from 'node:stream'
 // after a few page visits. A name of its own isn't limited that way.
 export const BACKEND_USER_AGENT = 'Openly-Storefront/1.0'
 
+// Client IP headers a browser could send to pose as another address: never passed on.
+export const SPOOFABLE_IP_HEADERS = ['cf-connecting-ip', 'x-real-ip', 'forwarded', 'x-qwoo-client-ip']
+
+/**
+ * The shopper's real address, for the store's rate limits (sent as X-Qwoo-Client-IP; the store
+ * trusts it only with the proxy secret). On Vercel the first X-Forwarded-For entry is set by
+ * Vercel itself; elsewhere a browser could write that header, so the socket's address is used.
+ */
+export function clientIp(req) {
+  const fwd = process.env.VERCEL ? String(req.headers?.['x-forwarded-for'] || '').split(',')[0].trim() : ''
+  return (fwd || req.socket?.remoteAddress || '').slice(0, 64)
+}
+
 export const UPLOADS_RE = /^\/wp-content\/uploads\/[^?#]+\.(jpe?g|png|gif|webp|avif|svg|mp4|webm|pdf|woff2?)(\?|$)/i
 
 // Hostinger's server sometimes refuses a burst of photo requests (an empty

@@ -52,7 +52,8 @@ export function codeTestMiddleware() {
     params.delete('qwoo_code_test')
     const rest = params.toString()
     res.setHeader('Cache-Control', 'no-store')
-    return res.redirect(302, req.path + (rest ? `?${rest}` : ''))
+    // One leading slash only: "//evil.com" or "/\evil.com" would leave the store.
+    return res.redirect(302, '/' + req.path.replace(/^[/\\]+/, '') + (rest ? `?${rest}` : ''))
   }
 }
 

@@ -139,6 +139,7 @@ import { initCustomCode } from 'src/utils/custom-code.js'
 import { initPersonalization } from 'src/utils/personalization.js'
 import { initEvents } from 'src/utils/events.js'
 import { installPageMotionPreview, setPageMotion } from 'src/utils/page-motion.js'
+import { installPreviewShot } from 'src/utils/preview-shot.js'
 import { useRoute, useRouter } from 'vue-router'
 import { Platform } from 'quasar';
 import ConsentBanner from "../components/app/ConsentBanner.vue";
@@ -597,7 +598,11 @@ if (process.env.CLIENT) {
   }, { immediate: true })
   // Branding → Moving between pages: the router reads it (src/utils/page-motion.js).
   watch(() => [brandSettings.value?.page_scroll, brandSettings.value?.page_animation, brandSettings.value?.page_speed], () => setPageMotion(brandSettings.value), { immediate: true })
-  if (isEditorMode()) installPageMotionPreview()
+  if (isEditorMode()) {
+    installPageMotionPreview()
+    // The dashboard assistant asks for pictures of the preview to check its own work.
+    installPreviewShot()
+  }
 }
 const shownFooter = computed(() => pickChrome(footerSettings.value, route))
 

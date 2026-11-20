@@ -16,7 +16,7 @@ import { siteContentMiddleware } from './site-content.js'
 import { comingSoonMiddleware } from './coming-soon.js'
 import { payReturnMiddleware } from './pay-return.js'
 import { codeTestMiddleware } from './custom-code.js'
-import { uploadsHandler, BACKEND_USER_AGENT } from './uploads.js'
+import { uploadsHandler, BACKEND_USER_AGENT, SPOOFABLE_IP_HEADERS, clientIp } from './uploads.js'
 import { apiCacheMiddleware } from './api-cache.js'
 import {
   defineSsrCreate,
@@ -33,6 +33,9 @@ import {
  *
  * Can be async: defineSsrCreate(async ({ ... }) => { ... })
  */
+
+// wc-ajax actions the storefront calls through the proxy (pathname "/").
+const WC_AJAX_ACTIONS = ['wc_stripe_verify_intent']
 
 export const create = defineSsrCreate(({ folders }) => {
   const app = express()
@@ -78,11 +81,12 @@ export const create = defineSsrCreate(({ folders }) => {
       target: backendTarget,
       changeOrigin: true,
       secure: true,
+      // Only what the storefront calls: the REST API, and Stripe's card check after 3-D Secure
+      // (src/payments/adapters/stripe.js). No wp-admin, no other wc-ajax actions.
       pathFilter: (pathname, req) => {
         return (
-            pathname.startsWith('/wp-json') ||
-            pathname.startsWith('/wp-admin') ||
-            req.query['wc-ajax'] !== undefined
+            pathname === '/wp-json' || pathname.startsWith('/wp-json/') ||
+            (pathname === '/' && WC_AJAX_ACTIONS.includes(req.query['wc-ajax']))
         )
       },
       cookieDomainRewrite: {
@@ -92,6 +96,10 @@ export const create = defineSsrCreate(({ folders }) => {
         proxyReq: (proxyReq, req) => {
           proxyReq.setHeader('X-Proxy-Secret', proxySecret)
           proxyReq.setHeader('User-Agent', BACKEND_USER_AGENT) // see uploads.js
+          // The shopper's real address for the store's rate limits; never one the browser wrote.
+          for (const name of SPOOFABLE_IP_HEADERS) proxyReq.removeHeader(name)
+          const ip = clientIp(req)
+          if (ip) proxyReq.setHeader('X-Qwoo-Client-IP', ip)
           // The shopper's own browser name, for the store (orders, trackers):
           // it puts it back only on requests carrying the proxy secret. A page
           // render's own calls already carry the visitor's (render.js).
@@ -107,6 +115,12 @@ export const create = defineSsrCreate(({ folders }) => {
         // included, errors too — so browsers kept serving old products.
         // API answers must always be asked for again.
         proxyRes: (proxyRes, req) => {
+          // An answer that isn't JSON (an HTML page, an SVG…) can't run as this store's page:
+          // no type guessing, and sandboxed unless the store sent its own policy.
+          if (!/^application\/(?:[\w.+-]*\+)?json\b/i.test(String(proxyRes.headers['content-type'] || ''))) {
+            proxyRes.headers['x-content-type-options'] = 'nosniff'
+            if (!proxyRes.headers['content-security-policy']) proxyRes.headers['content-security-policy'] = 'sandbox'
+          }
           if (!req.url?.startsWith('/wp-json')) return
           proxyRes.headers['cache-control'] = 'private, no-cache, max-age=0'
           delete proxyRes.headers['expires']

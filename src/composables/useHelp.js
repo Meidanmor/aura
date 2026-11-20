@@ -91,7 +91,8 @@ export async function writeToStore(fields) {
   const r = await post('write', fields)
   if (!r.ok || !r.data?.ok) return { error: r.data?.message || '' }
   if (r.data.k) keepThread(r.data.k)
-  return { k: r.data.k || '' }
+  // A guest gets no key: the store answers by email ({ ok, emailed }).
+  return { k: r.data.k || '', emailed: !!r.data.emailed }
 }
 
 /** A conversation by its key: { topic, status, messages: [{ id, mine, body, at }] }, or null. */

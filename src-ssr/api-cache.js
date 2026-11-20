@@ -13,7 +13,7 @@
  * anything sent with a signed-in customer's cookie; product answers only when they're the same
  * for every shopper (no taxes by address). An older store (no stamp) keeps nothing.
  */
-import { BACKEND_USER_AGENT } from './uploads.js'
+import { BACKEND_USER_AGENT, clientIp } from './uploads.js'
 import { contentTag, currentSite, originOf, sharedAnswers } from './site-content.js'
 
 const BACKEND = (process.env.WP_BACKEND_URL || '').replace(/\/+$/, '')
@@ -115,6 +115,7 @@ export function apiCacheMiddleware() {
           'X-Proxy-Secret': SECRET,
           'User-Agent': BACKEND_USER_AGENT,
           'X-Qwoo-Uploads': '1',
+          ...(clientIp(req) ? { 'X-Qwoo-Client-IP': clientIp(req) } : {}),
           ...(lang ? { 'X-Qwoo-Lang': lang } : {}),
           ...(req.headers['user-agent'] ? { 'X-Qwoo-Client-UA': String(req.headers['user-agent']).slice(0, 512) } : {}),
           Accept: 'application/json',

@@ -16,6 +16,7 @@
 import { ref } from 'vue'
 import { allowedNow } from 'src/utils/custom-code.js'
 import { fetchWithToken } from 'src/composables/useApiFetch.js'
+import { isEditorMessage } from 'src/utils/config-loader.js'
 
 const ENDPOINT = '/wp-json/qwoo/v1/personalization/event'
 const CACHE_KEY = 'qwoo_au'
@@ -232,7 +233,7 @@ export function initPersonalization(router) {
   if (new URLSearchParams(window.location.search).get('qwoo_editor') === '1') {
     window.addEventListener('message', (event) => {
       const d = event.data
-      if (event.source !== window.parent || !d || d.source !== 'qwoo-admin' || d.type !== 'audience_preview') return
+      if (!isEditorMessage(event) || !d || d.source !== 'qwoo-admin' || d.type !== 'audience_preview') return
       const id = safeId(String(d.id || ''))
       if (!d.id) {
         preview = null

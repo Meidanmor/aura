@@ -52,7 +52,26 @@ export function isEditorMode() {
   if (import.meta.env.SSR) return false
   if (new URLSearchParams(window.location.search).get(EDITOR_FLAG_PARAM) !== '1') return false
   if (window.parent === window) return false
-  return getTrustedAdminOrigin() !== null
+  const trusted = getTrustedAdminOrigin()
+  if (!trusted) return false
+  // The frame right above must be the dashboard (Chrome and Safari can tell).
+  const above = window.location.ancestorOrigins?.[0]
+  return !above || above === trusted
+}
+
+/**
+ * A message from the Store builder preview's own dashboard: in editor mode, from the window
+ * that frames this page, and from the trusted dashboard origin (not just any parent).
+ */
+export function isEditorMessage(event) {
+  return isEditorMode() && event.source === window.parent && event.origin === getTrustedAdminOrigin()
+}
+
+// The view-only preview (qwoo_view=1) may sit inside an AI app's frames (render.js): shown
+// only when the frame right above it is the dashboard, so no other page can frame it.
+if (!import.meta.env.SSR && typeof window !== 'undefined' && window.parent !== window &&
+  new URLSearchParams(window.location.search).get('qwoo_view') === '1' && !isEditorMode()) {
+  document.documentElement.style.visibility = 'hidden'
 }
 
 /**

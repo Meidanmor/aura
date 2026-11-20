@@ -22,6 +22,33 @@ export function getDeviceId() {
     return deviceId
 }
 const SUBSCRIBED_KEY = 'pwa_push_subscribed'
+const ENDPOINT_KEY = 'pwa_push_endpoint'
+
+/* ---------------------------------------------------------------------
+   This device's push address (the web push endpoint, or the native app's
+   token). The store asks for it with every device call, so a device id
+   alone can't change another device's row.
+   --------------------------------------------------------------------- */
+function keepEndpoint(endpoint) {
+    try { if (endpoint) localStorage.setItem(ENDPOINT_KEY, String(endpoint)) } catch { /* ignore */ }
+}
+function storedEndpoint() {
+    try { return localStorage.getItem(ENDPOINT_KEY) || '' } catch { return '' }
+}
+/** The kept endpoint, else the browser's current subscription (devices subscribed before it was kept). */
+export async function pushEndpoint() {
+    const kept = storedEndpoint()
+    if (kept) return kept
+    try {
+        if (typeof navigator === 'undefined' || !navigator.serviceWorker) return ''
+        const registration = await navigator.serviceWorker.getRegistration()
+        const sub = await registration?.pushManager?.getSubscription()
+        keepEndpoint(sub?.endpoint)
+        return sub?.endpoint || ''
+    } catch {
+        return ''
+    }
+}
 
 /* ---------------------------------------------------------------------
    The store's push settings (dashboard → Notifications): its public push
@@ -66,6 +93,7 @@ export function setPushSources({ cartCount, wishlist } = {}) {
 
 export async function saveSubscription(payload) {
     payload = { wishlist: readWishlist(), ...payload }
+    keepEndpoint(payload.subscription?.endpoint)
     const res = await fetch('/wp-json/qwoo/v1/pwa/save-subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -123,10 +151,11 @@ function writeLastSent(value) {
     } catch { /* ignore */ }
 }
 
-function sendCartState(status, cartToken, items) {
+async function sendCartState(status, cartToken, items) {
     const sent = { status, token: cartToken || null, items }
     writeLastSent(sent)
-    const body = { device_id: getDeviceId(), cart_token: cartToken, status }
+    const endpoint = storedEndpoint() || await pushEndpoint()
+    const body = { device_id: getDeviceId(), endpoint, cart_token: cartToken, status }
     if (Number.isFinite(items)) body.items = items
     return fetch('/wp-json/qwoo/v1/pwa/update-cart-token', {
         method: 'POST',
@@ -178,12 +207,13 @@ let syncTimer = null
 export function queueDeviceSync() {
     if (typeof window === 'undefined' || !isPushSubscribed()) return
     clearTimeout(syncTimer)
-    syncTimer = setTimeout(() => {
+    syncTimer = setTimeout(async () => {
+        const endpoint = await pushEndpoint()
         fetch('/wp-json/qwoo/v1/pwa/sync', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             keepalive: true,
-            body: JSON.stringify({ device_id: getDeviceId(), wishlist: readWishlist() })
+            body: JSON.stringify({ device_id: getDeviceId(), endpoint, wishlist: readWishlist() })
         }).catch(() => { /* next change retries */ })
     }, 1500)
 }
@@ -228,7 +258,7 @@ export async function requestBackInStock(productId) {
     const res = await fetch('/wp-json/qwoo/v1/pwa/notify-me', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ device_id: getDeviceId(), product_id: Number(productId), on: true })
+        body: JSON.stringify({ device_id: getDeviceId(), endpoint: await pushEndpoint(), product_id: Number(productId), on: true })
     })
     if (!res.ok) return false
     try {
