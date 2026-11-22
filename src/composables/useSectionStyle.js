@@ -544,6 +544,9 @@ export function buildContainerStyle(style = {}) {
       'sb-has-shadow': !!shadow,
       'sb-has-border': !!looks.border,
       ...(hover ? { [`sb-hover-${hover}`]: true } : {}),
+      // Moving backgrounds (Style → Background): depth while scrolling (src/utils/scroll-scene.js) and a slow zoom.
+      'sb-bg-depth': ['gentle', 'strong'].includes(s.bg_depth) && ['image', 'video', 'slideshow'].includes(s.bg_type),
+      ...(['in', 'out'].includes(s.bg_zoom) && ['image', 'video'].includes(s.bg_type) ? { [`sb-bg-zoom-${s.bg_zoom}`]: true } : {}),
       'sb-has-link': !!link,
       'sb-has-mx': sideways,
       ...overflowClasses(s.overflow),
@@ -567,7 +570,7 @@ export function buildContainerStyle(style = {}) {
   }
 }
 
-const HOVER_EFFECTS = new Set(['zoom', 'darken', 'lift'])
+const HOVER_EFFECTS = new Set(['zoom', 'darken', 'lift', 'tilt'])
 
 /**
  * "Make the whole section a link": { internal, to | href, newTab, label },

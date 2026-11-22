@@ -16,7 +16,7 @@
  */
 import { isEditorMode } from './config-loader.js'
 
-const NAMES = new Set(['fade_up', 'fade', 'zoom_in', 'reveal'])
+const NAMES = new Set(['fade_up', 'fade', 'zoom_in', 'reveal', 'slide_start', 'slide_end', 'blur_in', 'flip', 'words'])
 const observers = {}
 
 const nameOf = (value) => String(value || '').split(':')[0]

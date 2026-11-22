@@ -40,16 +40,47 @@ const SPEED = { slow: 1.5, normal: 1, fast: 0.7 }
 const scenes = new Set()
 const depths = new Set()
 let frame = 0
+let frameAt = 0
 let installed = false
 let io = null
 
+function drawAll() {
+  frame = 0
+  for (const s of scenes) if (s.near) s.update()
+  for (const d of depths) if (d.near) d.update()
+}
+let fallback = 0
 function schedule() {
-  if (frame) return
-  frame = requestAnimationFrame(() => {
-    frame = 0
-    for (const s of scenes) if (s.near) s.update()
-    for (const d of depths) if (d.near) d.update()
-  })
+  // A frame asked for while the tab was in the background (or a throttled frame) may never come: ask again
+  // after a moment, and draw from a timer if no frame came at all, so a scene never stays at a stale point.
+  if (frame && performance.now() - frameAt < 250) return
+  if (frame) cancelAnimationFrame(frame)
+  frameAt = performance.now()
+  frame = requestAnimationFrame(drawAll)
+  clearTimeout(fallback)
+  fallback = setTimeout(() => { if (frame) { cancelAnimationFrame(frame); drawAll() } }, 150)
+}
+// "Settle on a step": when scrolling stops between two steps of a story, glide to the nearest one.
+let idle = 0
+let settling = false
+function onScroll() {
+  schedule()
+  clearTimeout(idle)
+  if (!settling) idle = setTimeout(settle, 180)
+}
+function settle() {
+  for (const s of scenes) {
+    if (!s.near || s.off || !s.conf.snap || s.conf.mode !== 'story') continue
+    const p = s.progress()
+    if (p <= 0.001 || p >= 0.999) continue
+    const n = Math.min(8, Math.max(1, Number(s.conf.steps) || 4))
+    const target = (Math.min(n - 1, Math.floor(p * n)) + 0.5) / n
+    if (Math.abs(target - p) * s.run < 24) continue
+    settling = true
+    s.scrollTo(target, true)
+    setTimeout(() => { settling = false }, 700)
+    return
+  }
 }
 function remeasureAll() {
   for (const s of scenes) s.measure()
@@ -60,7 +91,7 @@ let resizeTimer = 0
 function install() {
   if (installed || typeof window === 'undefined') return
   installed = true
-  window.addEventListener('scroll', schedule, { passive: true })
+  window.addEventListener('scroll', onScroll, { passive: true })
   // Only width changes re-measure: an iPhone's address bar changes the height while scrolling.
   let lastW = window.innerWidth
   window.addEventListener('resize', () => {
@@ -102,19 +133,38 @@ class Scene {
     this.p = -1
     this.step = 0
     el.__scScene = this
-    this.ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => this.soon()) : null
+    // Re-measure only when a watched box really changes size (observe() itself reports once: that one is skipped).
+    this.sizes = new WeakMap()
+    this.ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver((entries) => {
+      let changed = false
+      for (const e of entries) {
+        const key = Math.round(e.contentRect.width) + 'x' + Math.round(e.contentRect.height)
+        if (this.sizes.has(e.target) && this.sizes.get(e.target) !== key) changed = true
+        this.sizes.set(e.target, key)
+      }
+      if (changed) this.soon()
+    }) : null
     this.onFocus = (e) => this.focusInto(e.target)
     el.addEventListener('focusin', this.onFocus)
     // The Store builder changes blocks while the preview is open: find them again.
     if (isEditorMode() && typeof MutationObserver !== 'undefined') {
       this.mo = new MutationObserver(() => this.soon())
-      this.mo.observe(el, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-sc', 'class'] })
+      this.mo.observe(el, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-sc'] })
     }
     this.measure()
   }
 
+  watch(target) {
+    if (!this.ro || this.watched === target) return
+    if (this.watched) this.ro.unobserve(this.watched)
+    this.ro.observe(target)
+    this.watched = target
+  }
+
   soon() {
-    if (this.pending) return
+    if (this.pending && performance.now() - this.pendingAt < 250) return
+    if (this.pending) cancelAnimationFrame(this.pending)
+    this.pendingAt = performance.now()
     this.pending = requestAnimationFrame(() => { this.pending = 0; this.measure(); schedule() })
   }
 
@@ -142,16 +192,14 @@ class Scene {
       el.classList.toggle('sc-fits', fits)
       this.run = fits ? 0 : Math.round(this.travel * (SPEED[c.speed] || 1))
       this.items = [...this.inner.querySelectorAll(':scope > .sb-block[data-sc-speed]')].map((n) => ({ el: n, speed: n.dataset.scSpeed }))
-      this.ro?.disconnect()
-      this.ro?.observe(this.inner)
+      this.watch(this.inner)
     } else {
       const len = Math.min(8, Math.max(1, Number(c.length) || 3)) * (phone && c.phone === 'simple' ? 0.7 : 1)
       this.run = Math.round(this.stage * len)
       this.items = [...el.querySelectorAll('[data-sc]')].map((n) => ({ el: n, o: parseItem(n.dataset.sc) }))
       for (const it of this.items) if (it.o.c) it.nums = numberNodes(it.el)
       this.dots = [...el.querySelectorAll('.sb-scene-dots > i')]
-      this.ro?.disconnect()
-      this.ro?.observe(this.pin)
+      this.watch(this.pin)
     }
     el.style.setProperty('--sc-run', `${this.run}px`)
     this.video = c.video ? this.pin.querySelector(':scope > .sb-bg-video video') : null
@@ -169,7 +217,6 @@ class Scene {
     }
     this.pin?.style.removeProperty('--sc-bgt')
     this.pin?.style.removeProperty('--sc-bgf')
-    this.pin?.style.removeProperty('--sc-bgd')
     this.items = []
   }
 
@@ -224,7 +271,7 @@ class Scene {
       case 'move_down': s.setProperty('--sc-bgt', `translate3d(0,${(-6 + 12 * p).toFixed(2)}%,0) scale(1.15)`); break
       case 'move_side': s.setProperty('--sc-bgt', `translate3d(${((this.rtl ? -1 : 1) * (6 - 12 * p)).toFixed(2)}%,0,0) scale(1.15)`); break
       case 'blur_in': s.setProperty('--sc-bgf', `blur(${(12 * (1 - p)).toFixed(1)}px)`); s.setProperty('--sc-bgt', 'scale(1.06)'); break
-      case 'darken': s.setProperty('--sc-bgd', (0.6 * p).toFixed(3)); break
+      case 'darken': s.setProperty('--sc-bgf', `brightness(${(1 - 0.6 * p).toFixed(3)})`); break
     }
   }
 
@@ -342,17 +389,17 @@ function drawItem(it, p, sign) {
 function numberNodes(root) {
   const out = []
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
-  const re = /\d[\d,. ]*/g
+  const re = /\d[\d,.\u00a0]*/g
   for (let node = walker.nextNode(); node && out.length < 12; node = walker.nextNode()) {
     const text = node.nodeValue
     if (!/\d/.test(text)) continue
     const parts = []
     let last = 0
     for (const m of text.matchAll(re)) {
-      const raw = m[0].replace(/[., ]+$/, '')
+      const raw = m[0].replace(/[.,\u00a0]+$/, '')
       const decimals = (raw.match(/[.,](\d{1,2})$/) || [])[1]?.length || 0
-      const value = parseFloat(decimals ? raw.replace(/[, ](?=\d{3})/g, '').replace(',', '.') : raw.replace(/[^\d]/g, ''))
-      parts.push(text.slice(last, m.index), { value, decimals, sep: /\d[, ]\d{3}/.test(raw) ? raw.match(/\d([, ])\d{3}/)[1] : '' })
+      const value = parseFloat(decimals ? raw.replace(/[,\u00a0](?=\d{3})/g, '').replace(',', '.') : raw.replace(/[^\d]/g, ''))
+      parts.push(text.slice(last, m.index), { value, decimals, sep: /\d[,\u00a0]\d{3}/.test(raw) ? raw.match(/\d([,\u00a0])\d{3}/)[1] : '' })
       last = m.index + raw.length
     }
     parts.push(text.slice(last))

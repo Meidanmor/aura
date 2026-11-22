@@ -7,7 +7,7 @@
         :class="titleText.class"
         :style="[titleStyle, titleText.style]"
     >
-      <span v-html="sanitizeSectionText(d.title)" />
+      <span v-html="titleHtml" />
     </component>
     <p
         v-if="d.subtitle"
@@ -36,6 +36,17 @@ const props = defineProps({
 
 const d = computed(() => props.data.data || {})
 const tag = computed(() => (TAGS.has(d.value.tag) ? d.value.tag : 'h2'))
+
+/**
+ * Entrance animation "Words one by one": each word of the title in its own span (--wi: its place), animated by
+ * app.css. Done here, in the HTML itself, so the server's page and the browser's are the same.
+ */
+const titleHtml = computed(() => {
+  const html = sanitizeSectionText(d.value.title)
+  if (props.data.style?.animation !== 'words') return html
+  let i = 0
+  return String(html).split(/(<[^>]+>)/).map((part) => (part.startsWith('<') ? part : part.replace(/[^\s<>]+/g, (w) => `<span class="sb-w" style="--wi:${i++}">${w}</span>`))).join('')
+})
 
 const cssVars = computed(() => {
   const vars = {}
