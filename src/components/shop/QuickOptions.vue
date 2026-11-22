@@ -137,7 +137,7 @@ const photos = computed(() => {
   const own = product.value?.images || []
   const chosen = o.selectedVariation.value?.images?.[0]
   const list = chosen?.src && !own.some((img) => img.src === chosen.src) ? [chosen, ...own] : own
-  return list.length ? list : [{ src: '/naturaBloom-circle.svg', alt: '' }]
+  return list.length ? list : [{ src: '/placeholder.svg', alt: '' }]
 })
 watch(() => o.selectedVariation.value?.id, () => {
   const chosen = o.selectedVariation.value?.images?.[0]

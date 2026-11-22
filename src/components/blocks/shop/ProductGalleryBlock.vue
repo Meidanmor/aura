@@ -91,7 +91,7 @@
 
     <div v-else>
       <img
-          :src="p.product.images[0]?.src ? p.product.images[0].src : '/naturaBloom-circle.svg'"
+          :src="p.product.images[0]?.src ? p.product.images[0].src : '/placeholder.svg'"
           :srcset="p.product.images[0]?.srcset"
           :sizes="p.product.images[0]?.sizes"
           fetchpriority="high"

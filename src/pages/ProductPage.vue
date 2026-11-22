@@ -189,7 +189,7 @@ const lightboxRef = ref(null)
 function openLightbox(index) {
   // The lightbox shows photos only: count the photos before this one.
   const photoIndex = gallery.value.slice(0, index).filter((item) => item.kind === 'image').length
-  lightboxRef.value.open(product.value?.images.length ? product.value?.images :  [{ src: '/naturaBloom-circle.svg' }], photoIndex)
+  lightboxRef.value.open(product.value?.images.length ? product.value?.images :  [{ src: '/placeholder.svg' }], photoIndex)
 }
 
 

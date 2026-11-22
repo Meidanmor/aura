@@ -11,7 +11,7 @@
       </div>
       <div v-else-if="wishlist.state.items && wishlist.state.items.length > 0" v-for="product in wishlist.state.items" :key="product.id" class="relative-position q-pa-sm row full-width">
         <router-link :to="`/product/${product.slug}/`" class="flex no-wrap q-pr-lg no-decoration text-secondary full-width">
-          <img :src="product?.image || '/naturaBloom-circle.svg'" :alt="product.name" style="width: 70px; height: 70px; object-fit: cover" />
+          <img :src="product?.image || '/placeholder.svg'" :alt="product.name" style="width: 70px; height: 70px; object-fit: cover" />
           <div class="q-ml-sm column items-start">
             <div>{{ product.name }}</div>
             <!-- A plain button inside the link: it never follows the link itself. -->

@@ -6,7 +6,7 @@
           <LoopCard v-if="card" :sections="card" type="category" :item="cat" />
           <q-btn v-else flat no-caps :to="`/product-category/${cat.slug}`" class="category-grid-card">
             <div class="absolute-full bg-black" style="opacity: 0.2; z-index: 1"></div>
-            <img v-if="cat.image" :src="cat.image" :alt="cat.name" loading="lazy" />
+            <img :src="cat.image || '/placeholder.svg'" :alt="cat.name" loading="lazy" />
             <span class="category-name text-h6 absolute">{{ cat.name }}</span>
           </q-btn>
         </div>

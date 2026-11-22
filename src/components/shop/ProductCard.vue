@@ -40,7 +40,7 @@
           <q-card class="my-card full-height">
             <img
             :img-src="product.images[0]?.src"
-            :src="product.images[0]?.src ? product.images[0].src : '/naturaBloom-circle.svg'"
+            :src="product.images[0]?.src ? product.images[0].src : '/placeholder.svg'"
             :srcset="product.images[0]?.srcset"
             :sizes="product.images[0]?.srcset ? cardSizes : undefined"
             v-fit-sizes

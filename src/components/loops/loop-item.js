@@ -53,17 +53,21 @@ export function loopItemName(type, item) {
 }
 
 /** The card's image: { src, srcset, sizes, alt, width, height, second, secondSrcset } or null. */
+/** The picture shown where a product or category has none (public/placeholder.svg). */
+export const PLACEHOLDER = '/placeholder.svg'
+
 export function loopImage(type, item) {
   if (!item) return null
   if (type === 'product') {
     const [first, second] = item.images || []
-    if (!first?.src) return null
+    // No photo: the neutral placeholder picture (owner, 2026-11-22), like the built-in product card.
+    if (!first?.src) return { src: PLACEHOLDER, alt: plainText(item.name) }
     return { src: first.src, srcset: first.srcset, sizes: first.sizes, alt: first.alt || plainText(item.name), second: second?.src || '', secondSrcset: second?.srcset || '' }
   }
   if (type === 'category') {
     const img = item.image_data || item.image
     const src = typeof img === 'string' ? img : img?.src
-    return src ? { src, srcset: img?.srcset, sizes: img?.sizes, alt: img?.alt || plainText(item.name) } : null
+    return src ? { src, srcset: img?.srcset, sizes: img?.sizes, alt: img?.alt || plainText(item.name) } : { src: PLACEHOLDER, alt: plainText(item.name) }
   }
   if (type === 'post') {
     const img = item.image

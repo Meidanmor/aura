@@ -4,7 +4,7 @@
     <div v-if="!items.length" class="wli__empty">{{ d.empty_text || t('Your wishlist is empty.') }}</div>
     <div v-for="item in items" :key="item.id" class="wli__item">
       <router-link :to="item.to" class="wli__img no-decoration" :aria-label="item.name">
-        <img :src="item.image || '/naturaBloom-circle.svg'" alt="" loading="lazy" width="70" height="70">
+        <img :src="item.image || '/placeholder.svg'" alt="" loading="lazy" width="70" height="70">
       </router-link>
       <div class="wli__info">
         <router-link :to="item.to" class="wli__name no-decoration" v-bind="nameText">{{ item.name }}</router-link>

@@ -12,7 +12,7 @@
             width="70"
             height="70"
             v-if="item.images"
-            :src="cart.state.offline === true ? item?.images[0]?.src || '/naturaBloom-circle.svg' : item.images[0]?.thumbnail || '/naturaBloom-circle.svg'"
+            :src="cart.state.offline === true ? item?.images[0]?.src || '/placeholder.svg' : item.images[0]?.thumbnail || '/placeholder.svg'"
             style="width: 70px; height: 70px; object-fit: cover"
             :alt="t('Cart item - {name}', { name: item?.name })"
         />
