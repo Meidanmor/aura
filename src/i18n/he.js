@@ -285,6 +285,8 @@ export default {
   "Reviews by stars": "ביקורות לפי כוכבים",
   "Reviews could not be loaded.": "לא הצלחנו לטעון את הביקורות.",
   "Sale!": "מבצע!",
+  "Sample": "דוגמה",
+  "Sample product": "מוצר לדוגמה",
   "Save Changes": "שמירת השינויים",
   "Search products...": "חיפוש מוצרים...",
   "Seconds": "שניות",

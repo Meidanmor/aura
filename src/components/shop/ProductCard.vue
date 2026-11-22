@@ -15,7 +15,17 @@
     />
   </div>
           <div
-    v-if="product.is_in_stock && product.on_sale"
+    v-if="sample"
+    class="absolute q-ma-sm card-badge"
+  >
+    <q-badge
+      color="grey-8"
+      :label="t('Sample')"
+      class="text-caption text-black text-weight-medium q-px-sm q-py-xs"
+    />
+  </div>
+          <div
+    v-else-if="product.is_in_stock && product.on_sale"
     class="absolute q-ma-sm card-badge"
   >
     <q-badge
@@ -47,7 +57,7 @@
               <div class="text-subtitle2 text-text" v-html="sanitizedPrice" />
               </div>
               <div v-if="product.status && product.status === 'draft'"><b>{{ t('This is a draft product. It\'s shown for admins only!') }}</b></div>
-              <template v-else-if="zero"><q-btn v-if="!zero.hide" class="btn-big loop-add-to-cart-btn" style="line-height: 1" :label="zero.label" color="secondary" @click="followZero" /></template>
+              <template v-else-if="zero"><q-btn v-if="!zero.hide" class="btn-big loop-add-to-cart-btn" style="line-height: 1" :label="zero.label" :disable="!!zero.disabled" color="secondary" @click="followZero" /></template>
               <q-btn class="btn-big loop-add-to-cart-btn" :aria-label="t('Add to cart')" style="line-height: 1" v-else-if="product.is_in_stock && product.type !== 'variable'" :label="t('Add to Cart')" color="secondary" @click.prevent="addToCart(product)" />
               <q-btn class="btn-big loop-add-to-cart-btn" :aria-label="t('Choose options')" style="line-height: 1" v-else-if="product.is_in_stock && product.type === 'variable'" :label="t('Choose options')" color="secondary" @click="chooseOptions" />
               <div v-else>{{ t('Out of stock') }}</div>
@@ -60,6 +70,7 @@
 import { matFavorite, matFavoriteBorder } from '@quasar/extras/material-icons'
 import cart from 'src/stores/cart.js'
 import { zeroPriceButton } from 'src/utils/zero-price.js'
+import { isSampleProduct } from 'src/utils/sample-product.js'
 import { canQuickChoose, openQuickOptions } from 'src/composables/useQuickOptions.js'
 import { useRouter } from 'vue-router'
 import wishlist from 'src/stores/wishlist.js'
@@ -103,6 +114,7 @@ const addToCart = (product) => {
   cart.add(product.id, 1)
 }
 const zero = computed(() => zeroPriceButton(props.product))
+const sample = computed(() => isSampleProduct(props.product))
 // Options chosen in a popup, without leaving the list; a product it can't show opens its page (the card's link).
 function chooseOptions(e) {
   if (!canQuickChoose(props.product)) return
@@ -118,6 +130,7 @@ function followZero(e) {
   e.preventDefault()
   e.stopPropagation()
   const { to, href, external } = zero.value
+  if (zero.value.disabled) return
   if (to) router.push(to)
   else if (external) window.open(href, '_blank', 'noopener')
   else window.location.href = href

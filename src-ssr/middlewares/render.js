@@ -162,7 +162,8 @@ function structuredData(ssrContext, req) {
             : { '@type': 'Offer', priceCurrency: prices.currency_code, price: money(range ? range.min_amount : prices.price, prices), availability, url }
         // A product that isn't sold at a price (Settings → Products with no price) offers nothing to Google.
         const zeroPrice = product.extensions?.qwoo?.zero_price
-        const hasOffer = !zeroPrice || zeroPrice.action === 'buy'
+        // Nor does a sample product (the AI's prompt setup).
+        const hasOffer = (!zeroPrice || zeroPrice.action === 'buy') && product.extensions?.qwoo?.sample !== true
         out.push({
             '@context': 'https://schema.org',
             '@type': 'Product',

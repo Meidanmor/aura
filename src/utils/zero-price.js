@@ -6,9 +6,12 @@
  * action is buy. The price itself already carries the owner's text.
  */
 import { t } from 'src/i18n/index.js'
+import { isSampleProduct } from 'src/utils/sample-product.js'
 
-/** null (sell it as usual), or { hide: true }, or { label, to | href, external }. */
+/** null (sell it as usual), or { hide: true }, or { label, to | href, external }, or { label, disabled } (a sample product). */
 export function zeroPriceButton(product, { onProductPage = false } = {}) {
+  // A sample product (the AI's prompt setup): shown, never sold.
+  if (isSampleProduct(product)) return { label: t('Sample product'), disabled: true, sample: true }
   const zp = product?.extensions?.qwoo?.zero_price
   if (!zp || zp.action === 'buy' || !['replace', 'hide'].includes(zp.action)) return null
   if (zp.action === 'hide') return { hide: true }
@@ -25,4 +28,4 @@ export function zeroPriceButton(product, { onProductPage = false } = {}) {
 }
 
 /** Props for a q-btn that follows the replacement's link. */
-export const zeroPriceLink = (zb) => (zb?.to ? { to: zb.to } : zb?.href ? { href: zb.href, target: zb.external ? '_blank' : undefined, rel: zb.external ? 'noopener' : undefined } : {})
+export const zeroPriceLink = (zb) => (zb?.disabled ? { disable: true } : zb?.to ? { to: zb.to } : zb?.href ? { href: zb.href, target: zb.external ? '_blank' : undefined, rel: zb.external ? 'noopener' : undefined } : {})

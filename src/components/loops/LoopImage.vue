@@ -27,7 +27,7 @@
     />
     <span v-if="shade" class="lt-img__shade" :class="`lt-img__shade--${shade}`" aria-hidden="true" />
     <template v-if="isProduct">
-      <span v-if="d.show_badge !== false && badge" class="lt-img__badge" :class="`lt-img__badge--${badgePosition}`" :style="badgeStyle">{{ badgeText }}</span>
+      <span v-if="badge && (d.show_badge !== false || badge === 'sample')" class="lt-img__badge" :class="`lt-img__badge--${badgePosition}`" :style="badgeStyle">{{ badgeText }}</span>
       <div v-if="d.show_wishlist || d.show_share" class="lt-img__icons" :class="{ 'lt-img__icons--outline': d.icons_style === 'outline' }">
         <q-btn
             v-if="d.show_wishlist"
@@ -67,6 +67,7 @@ import { computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { matFavorite, matFavoriteBorder, matShare } from '@quasar/extras/material-icons'
 import { gradientOf } from 'src/utils/gradient.js'
+import { isSampleProduct } from 'src/utils/sample-product.js'
 import { useI18n } from 'src/i18n/index.js'
 import wishlist from 'src/stores/wishlist.js'
 import { useLoopItem, loopImage } from './loop-item.js'
@@ -102,6 +103,8 @@ const badgePosition = computed(() => (BADGE_SPOTS.has(d.value.badge_position) ? 
 const badge = computed(() => {
   const p = ctx.value?.item
   if (!p || !isProduct.value) return ''
+  // A sample product (the AI's prompt setup): always says so.
+  if (isSampleProduct(p)) return 'sample'
   if (p.is_in_stock === false) return 'sold'
   return p.on_sale ? 'sale' : ''
 })
@@ -113,6 +116,7 @@ const percent = computed(() => {
   return regular > 0 && price < regular ? Math.round(((regular - price) / regular) * 100) : 0
 })
 const badgeText = computed(() => {
+  if (badge.value === 'sample') return t('Sample')
   if (badge.value === 'sold') return t('Sold out')
   if (d.value.badge_text === 'percent' && percent.value > 0) {
     return (d.value.badge_format || t('{percent}% off')).replace('{percent}', String(percent.value))
