@@ -94,6 +94,17 @@ const EDITOR_ORIGINS = [WP_BACKEND_URL, process.env.QWOO_EDITOR_ORIGIN || ''].ma
     }
 }).filter(Boolean)
 
+// A template's demo store (Vercel env QWOO_GALLERY=1, platform 0.197.0): the owner dashboard (QWOO_EDITOR_ORIGIN,
+// never the backend) may show its public pages in a frame, for "Start from a template".
+const GALLERY_DEMO = process.env.QWOO_GALLERY === '1'
+const GALLERY_ORIGIN = (() => {
+    try {
+        return process.env.QWOO_EDITOR_ORIGIN ? new URL(process.env.QWOO_EDITOR_ORIGIN).origin : ''
+    } catch {
+        return ''
+    }
+})()
+
 // Claude's and ChatGPT's pages and the frames they show an app's view in (MCP Apps).
 // Keep in step with YFAI_View::FRAME_HOSTS in the yallaflow-ai plugin.
 const AI_APP_FRAME_HOSTS = [
@@ -347,9 +358,13 @@ export default defineSsrMiddleware(({ app, resolve, render, /*folders*/ }) => {
         // Claude or ChatGPT: there the dashboard's preview page sits in the app's own frames,
         // and frame-ancestors checks every frame above, up to the app's page. Only the
         // dashboard (the direct parent, checked by origin in config-loader.js) can send the draft.
+        // A template's demo store (QWOO_GALLERY=1, set by the platform on those stores only): the dashboard's
+        // "Start from a template" preview shows it in a frame. Only the dashboard (QWOO_EDITOR_ORIGIN), and never
+        // the pages that hold one shopper's data.
+        const galleryOrigin = GALLERY_DEMO && !PERSONAL_PAGE_RE.test(req.path || '') ? GALLERY_ORIGIN : ''
         const frameAncestors = isEditorRequest
             ? `'self' ${editorOrigin}${req.query?.qwoo_view === '1' ? ' ' + AI_APP_FRAME_HOSTS.join(' ') : ''}`
-            : "'self'"
+            : galleryOrigin ? `'self' ${galleryOrigin}` : "'self'"
 
         // The page's own rules (src-ssr/custom-code.js); the owner's tracking
         // addresses are added after the render, once the page is known.
@@ -382,7 +397,7 @@ export default defineSsrMiddleware(({ app, resolve, render, /*folders*/ }) => {
         // and left as SAMEORIGIN for everything else. Modern browsers prefer
         // CSP frame-ancestors over this anyway, but older ones don't, so it
         // must not contradict the CSP set above.
-        if (!isEditorRequest) {
+        if (!isEditorRequest && !galleryOrigin) {
             res.setHeader('X-Frame-Options', 'SAMEORIGIN')
         }
 
