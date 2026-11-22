@@ -16,7 +16,7 @@
         <h2 class="search-page__h2 text-h6">{{ t('Categories') }}</h2>
         <div class="search-page__chips">
           <router-link v-for="c in results.categories" :key="c.id" :to="`/product-category/${c.slug}`" class="search-page__chip">
-            {{ c.name }} <small v-if="c.count">({{ c.count }})</small>
+            {{ decodeEntities(c.name) }} <small v-if="c.count">({{ c.count }})</small>
           </router-link>
         </div>
       </div>
@@ -46,6 +46,7 @@
  * (products when none). Loaded in the browser; never indexed.
  */
 import { computed, onMounted, ref, watch } from 'vue'
+import { decodeEntities } from 'src/utils/entities.js'
 import { useRoute, useRouter } from 'vue-router'
 import { useMeta } from 'quasar'
 import ProductResultsGrid from 'src/components/shop/ProductResultsGrid.vue'

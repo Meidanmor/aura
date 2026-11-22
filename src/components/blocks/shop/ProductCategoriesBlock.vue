@@ -2,15 +2,16 @@
   <div v-if="cats.length" class="product-cats" :class="`is-${display}`">
     <router-link v-for="cat in cats" :key="cat.id" :to="`/product-category/${cat.slug}`" class="no-decoration product-cat" :class="text.class" :style="text.style">
       <q-chip v-if="display === 'chips'" :color="chipBg ? undefined : 'secondary'" :style="chipBg ? { background: chipBg } : null" text-color="white" class="category-chip" dense clickable>
-        <span>{{ cat.name }}</span>
+        <span>{{ decodeEntities(cat.name) }}</span>
       </q-chip>
-      <span v-else>{{ cat.name }}</span>
+      <span v-else>{{ decodeEntities(cat.name) }}</span>
     </router-link>
   </div>
 </template>
 
 <script setup>
 import { computed, inject } from 'vue'
+import { decodeEntities } from 'src/utils/entities.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 

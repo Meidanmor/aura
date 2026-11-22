@@ -9,12 +9,13 @@
       :class="[{ on: c.slug === current }, linkText.class]"
       :style="linkText.style"
       :aria-current="c.slug === current ? 'page' : undefined"
-    >{{ c.name }}</router-link>
+    >{{ decodeEntities(c.name) }}</router-link>
   </nav>
 </template>
 
 <script setup>
 import { computed, inject } from 'vue'
+import { decodeEntities } from 'src/utils/entities.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 
 /** "Blog Category Links" (blog page template). */

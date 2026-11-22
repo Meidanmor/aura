@@ -2,13 +2,14 @@
   <p v-if="post && (showDate || cats.length)" class="post-meta text-caption" :class="metaText.class" :style="[{ textAlign: align }, metaText.style]">
     <time v-if="showDate" :datetime="new Date(post.date * 1000).toISOString()">{{ postDate(post.date, post.day) }}</time>
     <template v-for="(c, i) in cats" :key="c.slug">
-      <span v-if="showDate || i > 0"> · </span><router-link :to="`/blog/category/${c.slug}`">{{ c.name }}</router-link>
+      <span v-if="showDate || i > 0"> · </span><router-link :to="`/blog/category/${c.slug}`">{{ decodeEntities(c.name) }}</router-link>
     </template>
   </p>
 </template>
 
 <script setup>
 import { computed, inject } from 'vue'
+import { decodeEntities } from 'src/utils/entities.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { postDate } from 'src/api/blog.js'
 

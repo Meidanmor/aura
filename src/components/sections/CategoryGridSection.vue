@@ -5,9 +5,9 @@
         <div v-for="cat in categories" :key="cat.id" class="category-grid__cell">
           <LoopCard v-if="card" :sections="card" type="category" :item="cat" />
           <q-btn v-else flat no-caps :to="`/product-category/${cat.slug}`" class="category-grid-card">
-            <div class="absolute-full bg-black" style="opacity: 0.2; z-index: 1"></div>
+            <div class="absolute-full bg-black" style="opacity: 0.35; z-index: 1"></div>
             <img :src="cat.image || '/placeholder.svg'" :alt="cat.name" loading="lazy" />
-            <span class="category-name text-h6 absolute">{{ cat.name }}</span>
+            <span class="category-name text-h6 absolute">{{ decodeEntities(cat.name) }}</span>
           </q-btn>
         </div>
       </div>
@@ -24,6 +24,7 @@
 // store yet — if you add one later (mirroring productsStore), swap the
 // fetch below for it, the same way getFeaturedProducts is used for products.
 import {computed, onMounted, onServerPrefetch, useSSRContext, watch} from 'vue'
+import { decodeEntities } from 'src/utils/entities.js'
 import { useSectionData } from 'src/composables/useSectionData.js'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
 import { getApiOrigin } from 'src/utils/server/get-api-origin.js'
@@ -131,7 +132,12 @@ watch(
   overflow: hidden;
   height: 100%;
 }
+/* Above the shade, white with a soft shadow: readable on any picture (2026-11-22: brand-coloured names sat under
+   the shade and disappeared on light pictures). */
 .category-grid-card .category-name {
+  z-index: 2;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
   transition: 0.3s ease
 }
 
