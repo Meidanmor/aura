@@ -481,7 +481,9 @@ export default defineSsrMiddleware(({ app, resolve, render, /*folders*/ }) => {
                 const seenPreloads = new Set()
                 const priorityPreloads = heroData.src ? '' : (ssrContext.priorityImages || [])
                     .filter((l) => l?.href && !seenPreloads.has(l.href + '|' + l.media) && seenPreloads.add(l.href + '|' + l.media))
-                    .map((l) => `<link rel="preload" as="image" href="${attr(l.href)}"${l.media ? ` media="${attr(l.media)}"` : ''} fetchpriority="high">`)
+                    // With the picture's smaller sizes (imagesrcset / imagesizes, the same as its <img>) and,
+                    // for a WebP copy, its type: browsers without WebP skip it (src/utils/webp.js).
+                    .map((l) => `<link rel="preload" as="image" href="${attr(l.href)}"${l.srcset ? ` imagesrcset="${attr(l.srcset)}" imagesizes="${attr(l.sizes || '100vw')}"` : ''}${l.type ? ` type="${attr(l.type)}"` : ''}${l.media ? ` media="${attr(l.media)}"` : ''} fetchpriority="high">`)
                     .join('')
 
                 const criticalHeadExtra = `

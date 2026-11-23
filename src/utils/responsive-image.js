@@ -6,9 +6,11 @@
  *
  *   <img :srcset="srcsetOf(payload)" :sizes="LAZY_SIZES" v-fit-sizes ... />
  *
- * Only for lazy images: the page's first image (priority-image.js) keeps
- * one file, so its <head> preload and the <img> always fetch the same one.
+ * The page's first image (priority-image.js) keeps them too: its <head> preload
+ * sends the same list and the same `sizes` (blockImageSizes), so both pick the same file.
  */
+
+import { asResponsive, toCssLength } from 'src/composables/useSectionStyle.js'
 
 const URL_RE = /^(\/(?!\/)|https:\/\/)[^\s,"'<>]+$/
 
@@ -95,7 +97,47 @@ function fit(el, w, h) {
   // Once a file is chosen, keep it: a second download costs more than a slightly
   // smaller or larger file. Only a much bigger box (a phone turned sideways) asks again.
   if (el.currentSrc && !(Number.isFinite(now) && need > now * 1.5)) return
-  if (now !== need) el.setAttribute('sizes', `${need}px`)
+  if (now !== need) {
+    el.setAttribute('sizes', `${need}px`)
+    // Its WebP <source> (src/utils/webp.js) picks with the same width.
+    if (el.parentElement?.tagName === 'PICTURE') {
+      for (const s of el.parentElement.querySelectorAll('source[type="image/webp"]')) s.setAttribute('sizes', `${need}px`)
+    }
+  }
+}
+
+const pxOf = (v) => {
+  const m = /^(\d+(?:\.\d+)?)px$/.exec(String(toCssLength(v) || ''))
+  return m ? Math.ceil(+m[1]) : 0
+}
+
+const pctOf = (v) => {
+  const m = /^(\d+(?:\.\d+)?)%$/.exec(String(v ?? '').trim())
+  return m ? +m[1] / 100 : 0
+}
+
+/**
+ * `sizes` for an Image block's picture known from its settings, for its first paint: the
+ * page's first image loads before v-fit-sizes can measure it (a 118px logo would otherwise
+ * load a file for the whole screen width). Image Width / Max Width in px, else the block's own
+ * Width / Max Width in px (Style → Size) times the image's width in %.
+ *   d: the block's data, style: the block's style.
+ */
+export function blockImageSizes(d, style) {
+  const w = asResponsive(d?.image_width)
+  const max = asResponsive(d?.image_max_width)
+  const bw = asResponsive(style?.width)
+  const bmax = asResponsive(style?.max_width)
+  const at = (device, vw) => {
+    const px = pxOf(w[device])
+    if (px) return `${px}px`
+    const share = pctOf(w[device]) || 1
+    const box = pxOf(bw[device]) || pxOf(bmax[device])
+    if (box) return `${Math.ceil(box * share)}px`
+    const cap = pxOf(max[device])
+    return cap ? `min(${vw}vw, ${cap}px)` : `${vw}vw`
+  }
+  return `(max-width: 767px) ${at('mobile', 100)}, (max-width: 1023px) ${at('tablet', 50)}, ${at('desktop', 50)}`
 }
 
 /** v-fit-sizes: keeps an <img>'s `sizes` at the width it's really drawn at. */

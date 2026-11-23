@@ -38,6 +38,8 @@
 
 
           <q-card class="my-card full-height">
+            <picture class="pic">
+            <source v-if="cardWebp" type="image/webp" :srcset="cardWebp" :sizes="cardSizes" />
             <img
             :img-src="product.images[0]?.src"
             :src="product.images[0]?.src ? product.images[0].src : '/placeholder.svg'"
@@ -51,6 +53,7 @@
             width="auto"
             class="rounded-borders product-img"
             />
+            </picture>
             <div class="flex q-pa-md">
               <div class="full-width q-mb-sm">
               <div class="text-text">{{ product.name }}</div>
@@ -67,6 +70,7 @@
 </template>
 
 <script setup>
+import { webpOfImage } from 'src/utils/webp.js'
 import { matFavorite, matFavoriteBorder } from '@quasar/extras/material-icons'
 import cart from 'src/stores/cart.js'
 import { zeroPriceButton } from 'src/utils/zero-price.js'
@@ -96,6 +100,8 @@ const props = defineProps({
   eager: Boolean
 })
 
+// Faster pictures: the store's WebP copy (src/utils/webp.js).
+const cardWebp = computed(() => (props.product.images?.[0]?.src ? webpOfImage(props.product.images[0]) : undefined))
 const cardSizes = computed(() => croppedSizes(CARD_COLS, BOX, ratioFromSrcset(props.product.images?.[0]?.srcset)))
 const sanitizedPrice = useSanitizedPrice(() => props.product.price_html)
 

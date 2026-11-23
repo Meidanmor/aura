@@ -9,6 +9,7 @@
  *         description }), a blog post (api/blog.js) or a testimonial
  *         ({ name, rating, review_text, verified, product_label, product_url })
  */
+import { webpOfImage } from 'src/utils/webp.js'
 import { inject } from 'vue'
 import { postDate } from 'src/api/blog.js'
 
@@ -62,12 +63,12 @@ export function loopImage(type, item) {
     const [first, second] = item.images || []
     // No photo: the neutral placeholder picture (owner, 2026-11-22), like the built-in product card.
     if (!first?.src) return { src: PLACEHOLDER, alt: plainText(item.name) }
-    return { src: first.src, srcset: first.srcset, sizes: first.sizes, alt: first.alt || plainText(item.name), second: second?.src || '', secondSrcset: second?.srcset || '' }
+    return { src: first.src, srcset: first.srcset, sizes: first.sizes, webp: webpOfImage(first), alt: first.alt || plainText(item.name), second: second?.src || '', secondSrcset: second?.srcset || '', secondWebp: webpOfImage(second) }
   }
   if (type === 'category') {
     const img = item.image_data || item.image
     const src = typeof img === 'string' ? img : img?.src
-    return src ? { src, srcset: img?.srcset, sizes: img?.sizes, alt: img?.alt || plainText(item.name) } : { src: PLACEHOLDER, alt: plainText(item.name) }
+    return src ? { src, srcset: img?.srcset, sizes: img?.sizes, webp: webpOfImage(img), alt: img?.alt || plainText(item.name) } : { src: PLACEHOLDER, alt: plainText(item.name) }
   }
   if (type === 'post') {
     const img = item.image

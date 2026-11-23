@@ -1,4 +1,6 @@
 import { bgImageUrls } from 'src/composables/useSectionStyle.js'
+import { srcsetOf, blockImageSizes } from 'src/utils/responsive-image.js'
+import { webpSrcsetOf, webpUrl } from 'src/utils/webp.js'
 
 /**
  * The page's most important image (usually what the visitor sees first, and
@@ -71,16 +73,19 @@ function pickIn(node, device) {
     switch (b.type) {
       case 'image_block': {
         const img = (d.images || []).find((i) => urlOf(i.image))
-        if (img) return { kind: 'img', block: b.id, url: urlOf(img.image) }
+        // With its smaller sizes and the block's own `sizes` (ImageBlock.vue draws the same).
+        if (img) return { kind: 'img', block: b.id, url: urlOf(img.image), image: typeof img.image === 'object' ? img.image : null, sizes: blockImageSizes(d, b.style) }
         break
       }
       case 'carousel': {
         if (d.source === 'slides') {
           const s = (d.slides || []).find((x) => urlOf(x.image))
-          if (s) return { kind: 'img', block: b.id, url: device === 'mobile' && urlOf(s.mobile_image) ? urlOf(s.mobile_image) : urlOf(s.image) }
+          // `single`: the carousel's first picture is one file (no smaller sizes), its WebP copy when there is one.
+          const shown = s && (device === 'mobile' && urlOf(s.mobile_image) ? s.mobile_image : s.image)
+          if (s) return { kind: 'img', block: b.id, url: urlOf(shown), single: typeof shown === 'object' ? shown : null }
         } else if (d.source === 'images' || d.source === 'logos') {
           const img = (d.images || []).find((i) => urlOf(i.image))
-          if (img) return { kind: 'img', block: b.id, url: urlOf(img.image) }
+          if (img) return { kind: 'img', block: b.id, url: urlOf(img.image), single: typeof img.image === 'object' ? img.image : null }
         } else if (d.source === 'products') {
           return { kind: 'products', block: b.id }
         }
@@ -119,14 +124,30 @@ export function pagePriority(sections, page) {
   return { picks, blocks, any: DEVICES.some((dv) => picks[dv]) }
 }
 
-/** <link rel="preload"> data for the picked images with a known address: [{ href, media }]. */
+/**
+ * <link rel="preload"> data for the picked images with a known address:
+ * [{ href, media, srcset?, sizes?, type? }]. An Image block's picture brings its smaller sizes
+ * (and its WebP files while Faster pictures is on: type image/webp, so a browser without
+ * WebP skips it and loads the <img>'s own file).
+ */
 export function preloadLinks(priority) {
   const byUrl = new Map()
   for (const device of DEVICES) {
-    const url = priority?.picks?.[device]?.url
-    if (!url) continue
-    if (!byUrl.has(url)) byUrl.set(url, [])
-    byUrl.get(url).push(device)
+    const pick = priority?.picks?.[device]
+    if (!pick?.url) continue
+    let link = { href: pick.url }
+    if (pick.single) {
+      const webp = webpUrl(pick.single)
+      if (webp) link = { href: webp, type: 'image/webp' }
+    } else if (pick.image) {
+      const webp = webpSrcsetOf(pick.image)
+      const set = webp || srcsetOf(pick.image)
+      link = webp ? { href: webpUrl(pick.image) || pick.url, type: 'image/webp' } : { href: pick.url }
+      if (set && /\s\d+w/.test(set)) Object.assign(link, { srcset: set, sizes: pick.sizes })
+    }
+    const key = JSON.stringify(link)
+    if (!byUrl.has(key)) byUrl.set(key, { link, devices: [] })
+    byUrl.get(key).devices.push(device)
   }
-  return [...byUrl].map(([href, devices]) => ({ href, media: devices.length === 3 ? '' : MEDIA[devices.join(',')] || '' }))
+  return [...byUrl.values()].map(({ link, devices }) => ({ ...link, media: devices.length === 3 ? '' : MEDIA[devices.join(',')] || '' }))
 }

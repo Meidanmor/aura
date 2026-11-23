@@ -25,7 +25,10 @@
     >
       <q-carousel-slide v-for="(slide, idx) in slides" :key="idx" :name="idx" class="cb-slide">
         <picture class="cb-slide__media">
+          <source v-if="slide.mobileSrc && slide.mobileWebp" media="(max-width: 767px)" type="image/webp" :srcset="slide.mobileWebp" />
           <source v-if="slide.mobileSrc" media="(max-width: 767px)" :srcset="slide.mobileSrc" />
+          <!-- Faster pictures: the store's WebP copy (src/utils/webp.js). -->
+          <source v-if="slide.webp" type="image/webp" :srcset="picked && idx === 0 ? slide.webpFull || slide.webp : slide.webp" :sizes="picked && idx === 0 ? undefined : LAZY_SIZES" />
           <img
               :src="slide.src"
               :srcset="picked && idx === 0 ? undefined : slide.srcset"
@@ -123,6 +126,8 @@
               v-bind="item.link_url ? imageLinkAttrs(item) : {}"
               class="cb-img"
           >
+            <picture class="pic">
+            <source v-if="item.webp" type="image/webp" :srcset="picked && idx === 0 ? item.webpFull || item.webp : item.webp" :sizes="picked && idx === 0 ? undefined : LAZY_SIZES" />
             <img
                 :src="item.src"
                 :srcset="picked && idx === 0 ? undefined : item.srcset"
@@ -135,6 +140,7 @@
                 :fetchpriority="picked && idx === 0 ? 'high' : undefined"
                 decoding="async"
             />
+            </picture>
           </component>
         </div>
       </div>
@@ -222,6 +228,7 @@ import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { asResponsive, setResponsiveVar, toCssLength, DEVICES } from 'src/composables/useSectionStyle.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { srcsetOf, LAZY_SIZES, vFitSizes } from 'src/utils/responsive-image.js'
+import { webpSrcsetOf, webpUrl } from 'src/utils/webp.js'
 import { useI18n } from 'src/i18n/index.js'
 
 const { t } = useI18n()
@@ -261,7 +268,7 @@ function imageLinkAttrs(item) {
 const picked = usePriorityBlock(props.blockId)
 
 const slides = computed(() => (d.value.slides || [])
-    .map((s) => ({ ...s, src: imgUrl(s.image), srcset: srcsetOf(s.image), mobileSrc: imgUrl(s.mobile_image), width: s.image?.width, height: s.image?.height }))
+    .map((s) => ({ ...s, src: imgUrl(s.image), srcset: srcsetOf(s.image), webp: webpSrcsetOf(s.image), webpFull: webpUrl(s.image), mobileSrc: imgUrl(s.mobile_image), mobileWebp: webpUrl(s.mobile_image), width: s.image?.width, height: s.image?.height }))
     .filter((s) => s.src))
 
 // On the product page template: the product being viewed is left out (unless turned off).
@@ -286,7 +293,7 @@ const { data: fetched } = useBlockQuery(keyWithProduct(props.blockId, excludeId.
 const items = computed(() => {
   if (source.value === 'images' || source.value === 'logos') {
     return (d.value.images || [])
-        .map((img, i) => ({ ...img, key: i, src: imgUrl(img.image), srcset: srcsetOf(img.image), width: img.image?.width, height: img.image?.height }))
+        .map((img, i) => ({ ...img, key: i, src: imgUrl(img.image), srcset: srcsetOf(img.image), webp: webpSrcsetOf(img.image), webpFull: webpUrl(img.image), width: img.image?.width, height: img.image?.height }))
         .filter((img) => img.src)
   }
   if (props.products) return props.products

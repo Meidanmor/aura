@@ -48,7 +48,9 @@ export function uploadsHandler (backendTarget) {
     // No cookies: only what a file answer needs. Unpacked files, so the
     // length passed on matches the body.
     const headers = { 'accept-encoding': 'identity', 'user-agent': BACKEND_USER_AGENT }
-    for (const name of ['range', 'if-none-match', 'if-modified-since', 'accept']) {
+    // Not Accept: a WebP plugin on the store answers WebP at the .png address by it, and the CDN keeps
+    // one file per address for a year (the store's own WebP copies have their own addresses, src/utils/webp.js).
+    for (const name of ['range', 'if-none-match', 'if-modified-since']) {
       if (req.headers[name]) headers[name] = req.headers[name]
     }
 

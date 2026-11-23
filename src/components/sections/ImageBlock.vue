@@ -22,12 +22,14 @@
             :recolor="!!svgColor"
             :alt="img.alt || ''"
         />
+        <picture v-else class="pic">
+        <!-- Faster pictures: the store's WebP copy, the original for browsers without WebP (src/utils/webp.js). -->
+        <source v-if="img.webp" type="image/webp" :srcset="img.webp" :sizes="img.srcset || /\s\d+w/.test(img.webp) ? firstSizes(idx) : undefined" />
         <img
-            v-else
             class="image-block__img"
             :src="img.src"
-            :srcset="picked && idx === 0 ? undefined : img.srcset"
-            :sizes="picked && idx === 0 || !img.srcset ? undefined : LAZY_SIZES"
+            :srcset="img.srcset"
+            :sizes="img.srcset ? firstSizes(idx) : undefined"
             v-fit-sizes
             :alt="img.alt || ''"
             :width="img.width || undefined"
@@ -36,6 +38,7 @@
             :fetchpriority="picked && idx === 0 ? 'high' : undefined"
             decoding="async"
         />
+        </picture>
         <!-- A fixed header turned solid shows this one instead (a dark logo for a light header). -->
         <img
             v-if="img.solidSrc"
@@ -48,8 +51,9 @@
             decoding="async"
         />
         <!-- Hover Effect "Show the second image": loaded lazily, never in the page's first paint. -->
+        <picture v-if="hover === 'swap' && img.hoverSrc" class="pic">
+        <source v-if="img.hoverWebp" type="image/webp" :srcset="img.hoverWebp" :sizes="LAZY_SIZES" />
         <img
-            v-if="hover === 'swap' && img.hoverSrc"
             class="image-block__img image-block__img--hover"
             :src="img.hoverSrc"
             :srcset="img.hoverSrcset"
@@ -60,6 +64,7 @@
             loading="lazy"
             decoding="async"
         />
+        </picture>
       </component>
       <ProductTags
           v-if="img.tags?.length"
@@ -81,7 +86,8 @@ import { RouterLink } from 'vue-router'
 import ProductTags from './ProductTags.vue'
 import BuilderSvg from '../blocks/BuilderSvg.vue'
 import { safeSvg } from 'src/utils/inline-svg.js'
-import { srcsetOf, LAZY_SIZES, vFitSizes } from 'src/utils/responsive-image.js'
+import { srcsetOf, LAZY_SIZES, vFitSizes, blockImageSizes } from 'src/utils/responsive-image.js'
+import { webpSrcsetOf } from 'src/utils/webp.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToFlex, DEVICES } from 'src/composables/useSectionStyle.js'
@@ -104,6 +110,9 @@ const captionText = computed(() => textStyle(d.value, tsKeys('caption')))
 // plain URL string.
 // The page's first image (src/utils/priority-image.js).
 const picked = usePriorityBlock(props.blockId)
+// The first picture of the page loads before it can be measured: `sizes` from the block's
+// width settings (the same in its <head> preload, priority-image.js); the others are measured.
+const firstSizes = (idx) => (picked.value && idx === 0 ? blockImageSizes(d.value, props.data.style) : LAZY_SIZES)
 
 const images = computed(() => (d.value.images || [])
     .map((img) => {
@@ -115,7 +124,7 @@ const images = computed(() => (d.value.images || [])
       const svgStyle = asSvg && payload.width && payload.height
         ? { '--svg-w': `${payload.width}px`, aspectRatio: `${payload.width} / ${payload.height}` }
         : {}
-      return { ...img, src: payload.url, srcset: srcsetOf(payload), width: payload.width, height: payload.height, hoverSrc, hoverSrcset: srcsetOf(img.hover_image), solidSrc, asSvg, svgStyle }
+      return { ...img, src: payload.url, srcset: srcsetOf(payload), webp: webpSrcsetOf(payload), width: payload.width, height: payload.height, hoverSrc, hoverSrcset: srcsetOf(img.hover_image), hoverWebp: webpSrcsetOf(img.hover_image), solidSrc, asSvg, svgStyle }
     })
     .filter((img) => img.src))
 
@@ -211,8 +220,8 @@ function linkAttrs(img) {
 .ib-hover-darken .image-block__frame,
 .ib-hover-swap .image-block__frame { position: relative; }
 .image-block__img--solid { display: none; }
-:global(header.header-solid) .image-block__frame.has-solid > .image-block__img:not(.image-block__img--solid) { display: none; }
-:global(header.header-solid) .image-block__frame.has-solid > .image-block__img--solid { display: block; }
+:global(header.header-solid) .image-block__frame.has-solid .image-block__img:not(.image-block__img--solid) { display: none; }
+:global(header.header-solid) .image-block__frame.has-solid .image-block__img--solid { display: block; }
 .ib-hover-darken .image-block__frame::after {
   content: '';
   position: absolute;

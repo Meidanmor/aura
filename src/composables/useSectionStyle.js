@@ -2,6 +2,7 @@ import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { youtubeId, vimeoId, youtubeThumbnail, backgroundEmbedUrl } from 'src/utils/video-embed.js'
 import { currentLang } from 'src/i18n/lang.js'
 import { LANGUAGES } from 'src/i18n/index.js'
+import { webpUrl } from 'src/utils/webp.js'
 
 /**
  * Turns Shop Builder (schema v3) style objects into CSS classes + custom
@@ -211,9 +212,11 @@ export const alignToText = (v) => (v === 'default' ? 'start' : ['left', 'center'
  * filled in by the store).
  */
 export function bgImageUrls(img) {
-  const d = (typeof img === 'string' ? img : img?.url) || ''
-  const t = img?.tablet?.url || d
-  const m = img?.mobile?.url || t
+  // The store's WebP copy while Faster pictures is on (src/utils/webp.js).
+  const of = (p) => (p && typeof p === 'object' ? webpUrl(p) || p.url || '' : '')
+  const d = (typeof img === 'string' ? img : of(img)) || ''
+  const t = of(img?.tablet) || d
+  const m = of(img?.mobile) || t
   return { desktop: d, tablet: t, mobile: m }
 }
 

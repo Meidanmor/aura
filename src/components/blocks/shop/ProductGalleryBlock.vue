@@ -34,8 +34,10 @@
               preload="metadata"
               class="product-video"
           />
+          <picture v-else class="pic">
+          <!-- Faster pictures: the store's WebP copy (src/utils/webp.js). -->
+          <source v-if="webpOfImage(img)" type="image/webp" :srcset="webpOfImage(img)" :sizes="img.sizes" />
           <img
-              v-else
               :src="img.src"
               :srcset="img.srcset"
               :sizes="img.sizes"
@@ -48,6 +50,7 @@
               class="gallery-img"
               draggable="false"
           />
+          </picture>
         </div>
       </div>
 
@@ -90,6 +93,8 @@
     </div>
 
     <div v-else>
+      <picture class="pic">
+      <source v-if="p.product.images[0]?.src && webpOfImage(p.product.images[0])" type="image/webp" :srcset="webpOfImage(p.product.images[0])" :sizes="p.product.images[0]?.sizes" />
       <img
           :src="p.product.images[0]?.src ? p.product.images[0].src : '/placeholder.svg'"
           :srcset="p.product.images[0]?.srcset"
@@ -103,6 +108,7 @@
           width="400"
           @click="zoom && p.openLightbox(0)"
       />
+      </picture>
     </div>
   </div>
   <GiftCardPreview v-if="p?.product && gift && giftPreview === 'below'" :product="p.product" class="product-gallery--gift gc-desk-only gc-below" />
@@ -110,6 +116,7 @@
 
 <script setup>
 import { computed, inject, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { webpOfImage } from 'src/utils/webp.js'
 import { useDragScroll } from 'src/composables/useDragScroll.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import GiftCardPreview from 'src/components/product/GiftCardPreview.vue'

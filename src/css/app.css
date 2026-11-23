@@ -1488,3 +1488,7 @@ html.qa-editor .sb-aud-customers { outline: 1px dashed rgba(127, 127, 127, .6); 
 .dock-movable { touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 .dock-holding { transform: scale(1.06); transition: transform .15s ease; }
 .dock-dragging { transform: scale(1.12); cursor: grabbing; box-shadow: 0 12px 30px rgba(0, 0, 0, .35) !important; }
+
+/* Faster pictures (src/utils/webp.js): the <picture> around an <img> takes no box of its own,
+   so the picture's layout and styles stay as they were. */
+picture.pic { display: contents; }

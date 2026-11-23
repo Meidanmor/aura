@@ -1,5 +1,8 @@
 <template>
   <div v-if="ctx && image" class="lt-img" :class="classes" :style="vars">
+    <picture class="pic">
+    <!-- Faster pictures: the store's WebP copy (src/utils/webp.js). -->
+    <source v-if="image.webp" type="image/webp" :srcset="image.webp" :sizes="sizes" />
     <img
         class="lt-img__img"
         :src="image.src"
@@ -13,8 +16,10 @@
         :fetchpriority="ctx.priority ? 'high' : undefined"
         decoding="async"
     />
+    </picture>
+    <picture v-if="hover === 'swap' && image.second" class="pic">
+    <source v-if="image.secondWebp" type="image/webp" :srcset="image.secondWebp" :sizes="sizes" />
     <img
-        v-if="hover === 'swap' && image.second"
         class="lt-img__img lt-img__second"
         :src="image.second"
         :srcset="image.secondSrcset || undefined"
@@ -25,6 +30,7 @@
         loading="lazy"
         decoding="async"
     />
+    </picture>
     <span v-if="shade" class="lt-img__shade" :class="`lt-img__shade--${shade}`" aria-hidden="true" />
     <template v-if="isProduct">
       <span v-if="badge && (d.show_badge !== false || badge === 'sample')" class="lt-img__badge" :class="`lt-img__badge--${badgePosition}`" :style="badgeStyle">{{ badgeText }}</span>
