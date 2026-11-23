@@ -31,6 +31,10 @@ module.exports = {
 safelist: {
     standard: [
         'html', 'body',
+        // The accessibility tool's classes are put together in code (a11y-s1…3, a11y-sp…), so purge can't find them.
+        /^a11y-/,
+        // Floating buttons (src/utils/floating-dock.js).
+        /^dock-/,
         /q-app/, /q-layout/, /q-page/, /q-header/, /q-footer/,
         /q-body--/,        // Vital for drawer-open overflow handling
         /q-layout--/,      // Vital for header/drawer positioning
