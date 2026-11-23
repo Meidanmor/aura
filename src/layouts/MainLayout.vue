@@ -1,5 +1,7 @@
 <template>
   <q-layout view="hHh lpR fFf">
+    <!-- Keyboard: the first Tab offers to jump past the header (WCAG 2.4.1). -->
+    <a class="skip-link" href="#main-content" @click.prevent="skipToMain">{{ t('Skip to content') }}</a>
     <AnnouncementBar v-if="headerSettings?.announcement?.enabled && (typeof headerSettings?.announcement?.text === 'string' && headerSettings.announcement.text.trim().length > 0)" :announcement="headerSettings?.announcement" />
 
     <!-- The header's "Above header" sections: outside the header element, they scroll away with the page. -->
@@ -61,7 +63,7 @@
     </template>
 
     <q-page-container style="padding-top: 0">
-      <main :data-clarity-mask="privatePage ? 'True' : null">
+      <main id="main-content" tabindex="-1" :data-clarity-mask="privatePage ? 'True' : null">
         <ShopClosed v-if="shopGateNow === 'closed'" />
         <ErrorNotFound v-else-if="shopGateNow === 'notfound'" />
         <router-view v-else />
@@ -81,6 +83,9 @@
     <ContactButton v-if="uiHydrated" />
     <!-- The store's Help button and panel (dashboard: Customers → Inbox → Settings). -->
     <HelpButton v-if="uiHydrated" />
+    <!-- The accessibility tool (dashboard: Settings → Accessibility; on by default). -->
+    <A11yButton v-if="uiHydrated" />
+    <FloatingDock v-if="uiHydrated" />
 
     <!-- Store builder → Popups (browser only). -->
     <PopupHost v-if="uiHydrated" />
@@ -111,7 +116,8 @@
 </template>
 
 <script setup>
-import {ref, computed, watch, onMounted, onUnmounted, useSSRContext, provide} from 'vue'
+import {ref, computed, watch, onMounted, onUnmounted, useSSRContext, provide, nextTick} from 'vue'
+import { trapFocus, installRadioKeys } from 'src/utils/focus-trap.js'
 import { isEditorMode, loadPageConfig, subscribeToLiveConfig } from 'src/utils/config-loader'
 import { resolveHeroImageSrc } from 'src/utils/resolve-hero-image'
 import { applyBrandFonts } from 'src/utils/brand-fonts.js'
@@ -123,6 +129,8 @@ import wishlist from 'src/stores/wishlist'
 import { isAdmin } from 'src/stores/user'
 import WishlistDrawer from '../components/app/WishlistDrawer.vue'
 import CartDrawer from '../components/app/CartDrawer.vue'
+import A11yButton from '../components/app/A11yButton.vue'
+import FloatingDock from '../components/app/FloatingDock.vue'
 import MobileNavDrawer from '../components/app/MobileNavDrawer.vue'
 import DrawerSections from '../components/app/DrawerSections.vue'
 import AppHeader from '../components/app/AppHeader.vue'
@@ -140,6 +148,7 @@ import { initPersonalization } from 'src/utils/personalization.js'
 import { initEvents } from 'src/utils/events.js'
 import { installPageMotionPreview, setPageMotion } from 'src/utils/page-motion.js'
 import { installPreviewShot } from 'src/utils/preview-shot.js'
+import { installPreviewCheck } from 'src/utils/preview-check.js'
 import { useRoute, useRouter } from 'vue-router'
 import { Platform } from 'quasar';
 import ConsentBanner from "../components/app/ConsentBanner.vue";
@@ -262,6 +271,30 @@ const drawers = provideDrawers()
 // "Same as another widget": a widget opens the drawer of another one in the header or footer.
 provideWidgetFinder(() => [shownHeader.value?.sections, shownFooter.value?.sections])
 const drawerList = computed(() => drawers.state.order.map((key) => ({ key, ...drawers.state.entries[key] })))
+// Keyboard and screen readers: an open drawer is a dialog; Tab stays inside, Escape
+// closes it, focus goes back to the button that opened it (src/utils/focus-trap.js).
+function skipToMain() {
+  const el = document.getElementById('main-content')
+  el?.focus({ preventScroll: true })
+  el?.scrollIntoView({ block: 'start' })
+}
+let releaseDrawer = null
+watch(() => drawers.state.open, (key) => {
+  releaseDrawer?.()
+  releaseDrawer = null
+  if (!key || isEditorMode()) return
+  const dr = drawerList.value.find((x) => x.key === key)
+  const fallback = { menu: t('Menu'), cart: t('Cart'), wishlist: t('Wishlist') }[dr?.kind] || ''
+  const opener = document.activeElement
+  nextTick(() => {
+    const aside = getAside(getEl(key))
+    if (aside && drawers.state.open === key) {
+      releaseDrawer = trapFocus(aside, { label: (dr?.title || fallback), returnTo: opener, onEscape: () => drawers.close(key) })
+    }
+  })
+})
+onUnmounted(() => releaseDrawer?.({ restore: false }))
+onMounted(installRadioKeys)
 // For widgets written before the drawer list (they emit these).
 provide('layoutActions', {
   openMobileMenu: () => drawers.open(drawers.firstMenu()),
@@ -405,7 +438,8 @@ const handlePointerDown = (e) => {
   // Only left mouse button, ignore right-click/middle-click
   if (e.pointerType === 'mouse' && e.button !== 0) return
   if (drawers.state.open) return
-  if (inSidewaysScroller(e.target)) {
+  // A floating button (floating-dock.js: a shopper may press and drag it) never pulls in a drawer.
+  if (inSidewaysScroller(e.target) || e.target?.closest?.('[data-dock]')) {
     activePointerId = null
     return
   }
@@ -602,6 +636,7 @@ if (process.env.CLIENT) {
     installPageMotionPreview()
     // The dashboard assistant asks for pictures of the preview to check its own work.
     installPreviewShot()
+    installPreviewCheck()
   }
 }
 const shownFooter = computed(() => pickChrome(footerSettings.value, route))

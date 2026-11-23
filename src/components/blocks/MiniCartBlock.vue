@@ -79,6 +79,7 @@ function open() {
       :to="toPage ? '/cart' : ''"
       :aria-label="t('View cart')"
       action="cart"
+      :expanded="toPage ? null : drawer.isOpen()"
       @click="open"
   >
     <template v-if="d.show_total && count > 0" #extra>

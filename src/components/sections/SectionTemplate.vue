@@ -183,7 +183,8 @@ const scene = computed(() => {
   if (props.scenePin || !ownScene.value) return null
   const s = style.value
   const mode = ownScene.value
-  const phone = ['same', 'simple', 'off'].includes(s.scene_phone) ? s.scene_phone : 'simple'
+  // "The same" by default (2026-11-22): a scene moves on phones too unless the owner chose otherwise.
+  const phone = ['same', 'simple', 'off'].includes(s.scene_phone) ? s.scene_phone : 'same'
   const length = Math.min(8, Math.max(1, num(s.scene_length, 3)))
   const vars = {
     // A first height before the script measures (the server's HTML): a story's screens, a row's guess.

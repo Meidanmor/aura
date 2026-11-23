@@ -1,26 +1,26 @@
 <template>
-  <q-input :for="fid('f1')"
+  <q-input autocomplete="address-line1" aria-required="true" :for="fid('f1')"
       v-model="model.address_1"
       :label="required ? `${addressLabel} *` : addressLabel"
       filled
       class="q-mb-sm"
       :rules="required ? [val => !!val || `${addressLabel} is required`] : []"
   />
-  <q-input :for="fid('f2')"
+  <q-input autocomplete="address-level2" aria-required="true" :for="fid('f2')"
       v-model="model.city"
       :label="required ? t('City *') : t('City')"
       filled
       class="q-mb-sm"
       :rules="required ? [val => !!val || t('City is required')] : []"
   />
-  <q-input :for="fid('f3')"
+  <q-input autocomplete="postal-code" aria-required="true" :for="fid('f3')"
       v-model="model.postcode"
       :label="required ? t('Postcode *') : t('Postcode')"
       filled
       class="q-mb-sm"
       :rules="required ? [val => !!val || t('Postcode is required')] : []"
   />
-  <q-input :for="fid('f4')" v-model="model.country" :label="t('Country')" filled />
+  <q-input autocomplete="country-name" :for="fid('f4')" v-model="model.country" :label="t('Country')" filled />
 </template>
 
 <script setup>

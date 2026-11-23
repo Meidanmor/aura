@@ -85,9 +85,27 @@ a {
     text-decoration: none;
     color: var(--q-secondary);
 }
+/* Keyboard focus: a clear ring in the text's own colour (WCAG 2.4.7). */
 *:focus-visible {
-    outline: 1px solid;
+    outline: 2px solid;
+    outline-offset: 1px;
 }
+main#main-content:focus { outline: none; }
+/* "Skip to content": hidden until a keyboard reaches it (MainLayout). */
+.skip-link {
+    position: fixed;
+    top: 8px;
+    inset-inline-start: 8px;
+    z-index: 10000;
+    padding: 10px 16px;
+    background: #fff;
+    color: #111;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .25);
+    font-size: 16px;
+    transform: translateY(-160%);
+}
+.skip-link:focus { transform: none; outline: 2px solid #111; outline-offset: 2px; }
 span.q-focus-helper{
     display: none;
 }
@@ -1310,7 +1328,10 @@ html.qa-editor .sb-aud-customers { outline: 1px dashed rgba(127, 127, 127, .6); 
 .sb-scene.sc-fits .sb-scene-line { display: none; }
 
 /* --- Move sideways: the section's blocks are one row that the script moves. --- */
+/* flex: none: the row is only as tall as its tallest card (an inner box grows to the whole screen otherwise, and
+   every card stretched to the screen height: tall empty cards on phones, 2026-11-22). The pin centres it. */
 .sb-scene--sideways > .sb-scene-pin > .sb-inner {
+    flex: 0 0 auto;
     display: flex;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
@@ -1462,3 +1483,8 @@ html.qa-editor .sb-aud-customers { outline: 1px dashed rgba(127, 127, 127, .6); 
 }
 
 /* purgecss end ignore */
+
+/* Floating buttons a shopper may move (src/utils/floating-dock.js): press and hold, then drag. */
+.dock-movable { touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.dock-holding { transform: scale(1.06); transition: transform .15s ease; }
+.dock-dragging { transform: scale(1.12); cursor: grabbing; box-shadow: 0 12px 30px rgba(0, 0, 0, .35) !important; }

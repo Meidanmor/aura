@@ -1,7 +1,7 @@
 <template>
   <!-- Phones: a tap beside the open drawer closes it. -->
   <div v-if="a" class="filters-backdrop" :class="{ shown: a.filtersOpen }" aria-hidden="true" @click="a.filtersOpen = false" />
-  <div v-if="a" class="filters-wrap flex" :class="{ shown: a.filtersOpen }" data-sheet @pointerdown.stop>
+  <div v-if="a" ref="wrapEl" class="filters-wrap flex" :class="{ shown: a.filtersOpen }" data-sheet @pointerdown.stop>
     <!-- Phones: a sheet from the bottom, dragged down by its handle or title to close. -->
     <div class="filters-grip" aria-hidden="true" v-on="drag"><span /></div>
     <q-scroll-area class="fit filters-scroll">
@@ -20,7 +20,7 @@
         </div>
         <q-card v-else-if="a.categoryOptions.length" class="filters-inner-wrap q-pa-md q-mb-md">
           <div class="text-subtitle1 q-mb-sm">{{ t('Filter by Category') }}</div>
-          <q-option-group v-model="a.selectedCategory" :options="a.categoryOptions" type="checkbox" color="secondary" />
+          <q-option-group v-model="a.selectedCategory" :options="a.categoryOptions" type="checkbox" color="secondary" role="group" :aria-label="t('Filter by Category')" />
         </q-card>
       </template>
 
@@ -66,7 +66,8 @@
 
 <script setup>
 import { useFieldIds } from 'src/utils/field-id.js'
-import { computed, inject, onMounted, ref } from 'vue'
+import { computed, inject, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { trapFocus } from 'src/utils/focus-trap.js'
 import { matClose } from '@quasar/extras/material-icons'
 import PriceFilterCard from 'components/shop/PriceFilterCard.vue'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
@@ -85,6 +86,24 @@ const props = defineProps({ data: { type: Object, required: true }, blockId: { t
 const a = inject('productArchive', null)
 const d = computed(() => props.data.data || {})
 const headingText = computed(() => textStyle(d.value, tsKeys('heading')))
+
+// Phones (the sheet from the bottom): Tab stays inside while it's open, Escape closes it,
+// focus goes back to the Filters button. Wider screens show the list in the page: nothing to trap.
+const wrapEl = ref(null)
+let release = null
+watch(() => a?.filtersOpen, (isOpen) => {
+  release?.()
+  release = null
+  if (!isOpen) return
+  const opener = document.activeElement
+  nextTick(() => {
+    const el = wrapEl.value
+    if (el && a.filtersOpen && getComputedStyle(el).position === 'fixed') {
+      release = trapFocus(el, { label: d.value.title || t('Filters'), returnTo: opener, onEscape: () => { a.filtersOpen = false } })
+    }
+  })
+})
+onBeforeUnmount(() => release?.({ restore: false }))
 
 // Attribute filters: a new object each time, so the archive's watcher sees the change.
 function setTerms(tax, ids) {

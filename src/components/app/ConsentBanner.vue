@@ -57,7 +57,8 @@
       </div>
     </transition>
     <!-- The cookie button: changes the choice later. -->
-    <button v-if="fabShown" type="button" class="ckb-fab" :class="[`ckb-fab--${d.fab_corner}`, { 'ckb-fab--pill': d.fab_shape === 'pill' }]" :aria-label="own.fab || t('Cookie choices')" @click="reopen">
+    <!-- Placed by the floating buttons layout (Store builder → Floating buttons; floating-dock.js). -->
+    <button v-if="fabShown && fabPlace" ref="fabEl" type="button" class="ckb-fab" :class="{ 'ckb-fab--pill': d.fab_shape === 'pill', 'dock-movable': fabMovable }" :style="fabPlace" data-dock :aria-label="own.fab || t('Cookie choices')" @pointerdown="fabDrag.down($event, fabEl)" @click.capture="fabDrag.click" @contextmenu="fabMovable && $event.preventDefault()" @click="reopen">
       <svg v-if="d.fab_icon === 'shield'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" /></svg>
       <svg v-else-if="d.fab_icon === 'sliders'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></svg>
       <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 3 3 0 0 1-3-3 3 3 0 0 1-3-3 3 3 0 0 1-3-3z" /><path d="M8.5 11.5h.01M12 16h.01M15.5 13h.01M9 15.5h.01" /></svg>
@@ -67,7 +68,8 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { dock, dockDrag, dockShow, dockStyle } from 'src/utils/floating-dock.js'
 import { loadPageConfig } from 'src/utils/config-loader.js'
 import { allowedNow, codeConfig, consentChoice, logConsent, saveConsent } from 'src/utils/custom-code.js'
 import { currentLang } from 'src/i18n/lang.js'
@@ -127,6 +129,11 @@ const bannerClass = computed(() => place(d.layout))
 const prefsClass = computed(() => place(d.prefs_layout))
 const dimmed = computed(() => view.value === 'prefs' ? d.prefs_layout === 'center' : (d.dim || d.layout === 'center'))
 const fabShown = computed(() => !view.value && asks && chosen.value && d.fab !== false)
+const fabEl = ref(null)
+const fabPlace = computed(() => dockStyle('cookie'))
+const fabMovable = computed(() => !!dock.cfg.buttons.cookie?.move)
+const fabDrag = dockDrag('cookie')
+watch(fabShown, (on) => dockShow('cookie', on), { immediate: true })
 
 const PRIVACY_PATHS = ['privacy-policy', 'privacy']
 async function findPrivacyPage() {
@@ -243,13 +250,11 @@ onUnmounted(() => {
 .ckb-group input:disabled { opacity: .6; cursor: default; }
 .ckb-id { margin: 0; font-size: .8em; opacity: .6; font-variant-numeric: tabular-nums; }
 .ckb-fab {
-  position: fixed; z-index: 9990; bottom: 16px; width: var(--ckb-fab-s, 44px); height: var(--ckb-fab-s, 44px);
+  width: var(--dock-size, 52px); height: var(--dock-size, 52px);
   border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center; padding: 0;
   background: var(--ckb-fab-bg, var(--ckb-ink-now)); color: var(--ckb-fab-ink, var(--ckb-bg-now)); box-shadow: 0 6px 18px rgba(0, 0, 0, .2);
 }
 .ckb-fab svg { width: 55%; height: 55%; }
-.ckb-fab--start { inset-inline-start: 16px; }
-.ckb-fab--end { inset-inline-end: 16px; }
 .ckb-fab--pill { width: auto; border-radius: 999px; padding: 0 14px; display: flex; gap: 6px; font-family: inherit; font-weight: 600; font-size: 13px; }
 .ckb-fab--pill svg { width: 18px; height: 18px; }
 @media (max-width: 600px) {
@@ -257,8 +262,6 @@ onUnmounted(() => {
   .ckb--bar { inset-inline: 8px; bottom: 8px; }
   .ckb-body { min-width: 0; flex-basis: 100%; }
   .ckb--bar .ckb-acts { width: 100%; justify-content: flex-end; }
-  /* Above the floating cart and Help buttons on phones. */
-  .ckb-fab { bottom: 84px; }
 }
 @media (prefers-reduced-motion: reduce) { .ckb-group input, .ckb-group input::after { transition: none; } }
 </style>

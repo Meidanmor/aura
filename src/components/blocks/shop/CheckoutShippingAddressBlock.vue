@@ -2,10 +2,10 @@
   <q-form v-if="c?.ready && c.addressNeeded" ref="formEl" class="checkout-shipping-address" @submit.prevent="c.placeOrder">
     <CheckoutPart :data="d" :default-title="t('Shipping Address')">
       <SavedAddressPicker v-if="showPicker" />
-      <q-input :for="fid('f1')" v-model="c.form.shipping.address_1" v-bind="look" :label="t('Address *')" class="q-mb-sm" :rules="[val => !!val || t('Address is required')]" @blur="c.handleInputBlur" />
-      <q-input :for="fid('f2')" v-model="c.form.shipping.city" v-bind="look" :label="t('City *')" class="q-mb-sm" :rules="[val => !!val || t('City is required')]" @blur="c.handleInputBlur" />
-      <q-input :for="fid('f3')" v-model="c.form.shipping.postcode" v-bind="look" :label="t('Postcode')" class="q-mb-sm" :rules="[val => !!val || t('Postcode is required')]" @blur="c.handleInputBlur" />
-      <q-input :for="fid('f4')" v-model="c.form.shipping.country" v-bind="look" readonly :label="t('Country')" @blur="c.handleInputBlur" />
+      <q-input autocomplete="shipping address-line1" aria-required="true" :for="fid('f1')" v-model="c.form.shipping.address_1" v-bind="look" :label="t('Address *')" class="q-mb-sm" :rules="[val => !!val || t('Address is required')]" @blur="c.handleInputBlur" />
+      <q-input autocomplete="shipping address-level2" aria-required="true" :for="fid('f2')" v-model="c.form.shipping.city" v-bind="look" :label="t('City *')" class="q-mb-sm" :rules="[val => !!val || t('City is required')]" @blur="c.handleInputBlur" />
+      <q-input autocomplete="shipping postal-code" aria-required="true" :for="fid('f3')" v-model="c.form.shipping.postcode" v-bind="look" :label="t('Postcode')" class="q-mb-sm" :rules="[val => !!val || t('Postcode is required')]" @blur="c.handleInputBlur" />
+      <q-input autocomplete="shipping country-name" :for="fid('f4')" v-model="c.form.shipping.country" v-bind="look" readonly :label="t('Country')" @blur="c.handleInputBlur" />
       <q-checkbox v-if="c.addressIsNew" v-model="c.saveNewAddress" class="q-mt-sm" :label="t('Save this address for next time')" />
     </CheckoutPart>
   </q-form>

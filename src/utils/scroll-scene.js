@@ -191,7 +191,12 @@ class Scene {
       const fits = this.travel < 8
       el.classList.toggle('sc-fits', fits)
       this.run = fits ? 0 : Math.round(this.travel * (SPEED[c.speed] || 1))
-      this.items = [...this.inner.querySelectorAll(':scope > .sb-block[data-sc-speed]')].map((n) => ({ el: n, speed: n.dataset.scSpeed }))
+      // Depth items: where each sits in the row (layout position, not moved by transforms), and how far it may drift:
+      // never more than the gap to its neighbours, so a slower or faster card never covers another or leaves a hole.
+      const gap = parseFloat(getComputedStyle(this.inner).columnGap) || 16
+      this.drift = Math.max(6, Math.min(48, gap * 0.9))
+      this.items = [...this.inner.querySelectorAll(':scope > .sb-block[data-sc-speed]')].map((n) => ({ el: n, speed: n.dataset.scSpeed, center: n.offsetLeft + n.offsetWidth / 2 }))
+      this.innerLeft = this.inner.offsetLeft
       this.watch(this.inner)
     } else {
       const len = Math.min(8, Math.max(1, Number(c.length) || 3)) * (phone && c.phone === 'simple' ? 0.7 : 1)
@@ -246,7 +251,11 @@ class Scene {
     const x = dir * p * this.travel
     this.inner.style.transform = `translate3d(${x.toFixed(1)}px,0,0)`
     for (const it of this.items) {
-      const extra = it.speed === 'fixed' ? -x : it.speed === 'slower' ? -x * 0.18 : it.speed === 'faster' ? x * 0.18 : 0
+      // Slower / faster: a drift by the card's distance from the middle of the screen (2026-11-22: it grew with the
+      // whole row before, hundreds of pixels on phones, and cards covered each other).
+      const rel = this.innerLeft + x + it.center - this.pin.clientWidth / 2
+      const depth = clamp(rel * 0.12, -this.drift, this.drift)
+      const extra = it.speed === 'fixed' ? -x : it.speed === 'slower' ? -depth : it.speed === 'faster' ? depth : 0
       it.el.style.transform = extra ? `translate3d(${extra.toFixed(1)}px,0,0)` : ''
     }
   }

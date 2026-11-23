@@ -1,10 +1,18 @@
 <template>
   <div
-      v-if="contactMethods.length"
+      v-if="contactMethods.length && place"
+      ref="wrapEl"
       class="qwoo-contact-btn-wrap"
+      :class="{ 'dock-movable': movable }"
+      :style="place"
+      data-dock
+      @pointerdown="drag.down($event, wrapEl)"
+      @click.capture="drag.click"
+      @contextmenu="movable && $event.preventDefault()"
   >
-    <!-- Multiple methods: expanding stack of options above the toggle -->
-    <div v-if="contactMethods.length > 1" class="qwoo-contact-options">
+    <!-- Multiple methods: the options open above the toggle when it's the top button of its corner,
+         else sideways toward the middle of the screen, so no other floating button covers them. -->
+    <div v-if="contactMethods.length > 1" class="qwoo-contact-options" :style="optionsStyle">
       <a
           v-for="method in contactMethods"
           v-show="expanded"
@@ -63,17 +71,32 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { contactMethods, loadContactOptions } from 'src/composables/useContactOptions.js'
 import { useI18n } from 'src/i18n/index.js'
+import { dock, dockDrag, dockShow, dockStyle } from 'src/utils/floating-dock.js'
 
 const { t } = useI18n()
 
 const expanded = ref(false)
+const wrapEl = ref(null)
+// Its place comes from the floating buttons layout (Store builder → Floating buttons).
+const place = computed(() => dockStyle('contact'))
+const movable = computed(() => !!dock.cfg.buttons.contact?.move)
+const drag = dockDrag('contact')
+const optionsStyle = computed(() => {
+  const p = dock.pos.contact
+  if (!p) return {}
+  const gap = `${dock.cfg.gap}px`
+  if (p.moved || p.idx === p.count - 1) return { flexDirection: 'column-reverse', bottom: `calc(100% + ${gap})`, [p.side]: '4px' }
+  return { flexDirection: p.side === 'left' ? 'row' : 'row-reverse', [p.side]: `calc(100% + ${gap})`, bottom: '4px' }
+})
 
+watch(() => contactMethods.value.length, (n) => dockShow('contact', n > 0), { immediate: true })
 onMounted(() => {
   loadContactOptions()
 })
+onBeforeUnmount(() => dockShow('contact', false))
 
 const labels = {
   whatsapp: t('WhatsApp'),
@@ -101,27 +124,15 @@ const icons = {
 </script>
 
 <style scoped>
+/* Placed by the floating buttons layout (floating-dock.js: fixed, its corner, above bars). */
 .qwoo-contact-btn-wrap {
-  position: fixed;
-  left: 16px;
-  /* Above the product page's floating Add To Cart bar while it shows (ProductStickyCartBlock sets it). */
-  bottom: calc(16px + var(--qwoo-bottom-bar, 0px));
-  z-index: 999;
-  transition: transform .2s ease, bottom .25s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-
-/* Shift up while the (full-width) cookie banner is showing so they don't overlap */
-.qwoo-contact-btn-wrap--raised {
-  transform: translateY(-90px);
+  width: var(--dock-size, 52px);
+  height: var(--dock-size, 52px);
 }
 
 .qwoo-contact-fab {
-  width: 56px;
-  height: 56px;
+  width: var(--dock-size, 52px);
+  height: var(--dock-size, 52px);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -140,14 +151,15 @@ const icons = {
 .qwoo-contact-fab--telegram { background: #229ED9; }
 
 .qwoo-contact-options {
+  position: absolute;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 10px;
 }
 
 .qwoo-contact-option {
-  width: 48px;
-  height: 48px;
+  width: calc(var(--dock-size, 52px) - 8px);
+  height: calc(var(--dock-size, 52px) - 8px);
   border-radius: 50%;
   display: flex;
   align-items: center;

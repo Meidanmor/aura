@@ -158,6 +158,35 @@ function build(data, p) {
   }
 }
 
+const A11Y_FEATURES = ['size', 'spacing', 'font', 'align', 'contrast', 'gray', 'links', 'headings', 'motion', 'cursor', 'reading', 'map', 'profiles']
+/** Settings → Accessibility, cleaned (on by default: a store that never saved it has the tool). */
+function a11yOf(v) {
+  if (!v || typeof v !== 'object') return { on: true }
+  const c = v.contact && typeof v.contact === 'object' ? v.contact : {}
+  const str = (x, n) => (typeof x === 'string' ? x.slice(0, n) : '')
+  return {
+    on: v.on !== false,
+    place: ['start', 'end'].includes(v.place) ? v.place : 'auto',
+    color: /^#[0-9a-f]{6}$/i.test(v.color || '') ? v.color : '',
+    size: v.size === 's' ? 's' : 'm',
+    phone: v.phone === 'hide' ? 'hide' : 'show',
+    off: Array.isArray(v.off) ? v.off.filter((f) => A11Y_FEATURES.includes(f)) : [],
+    contact: { name: str(c.name, 100), phone: str(c.phone, 40), email: str(c.email, 190) },
+  }
+}
+
+/** Store builder → Floating buttons (src/utils/floating-dock.js checks each value again); null: the defaults. */
+function floatingOf(v) {
+  if (!v || typeof v !== 'object') return null
+  const n = (x) => (Number.isFinite(+x) ? Math.round(+x) : undefined)
+  const buttons = {}
+  for (const id of ['contact', 'cookie', 'a11y', 'help']) {
+    const b = v.buttons?.[id]
+    if (b && typeof b === 'object') buttons[id] = { place: ['start', 'end', 'own'].includes(b.place) ? b.place : undefined, order: n(b.order), move: b.move === true, phone: b.phone !== false }
+  }
+  return { size: n(v.size), edge: n(v.edge), gap: n(v.gap), reset: n(v.reset) || 0, buttons }
+}
+
 /** The store's shop switches, cleaned (only while one of them is off). */
 function shopOf(v) {
   if (!v || typeof v !== 'object') return null
@@ -196,6 +225,10 @@ const asPointer = (data, file = '') => ({
   shop: shopOf(data?.shop),
   // Products → Product settings → Product options ('none' | 'first').
   product_start: ['none', 'first'].includes(data?.product_start) ? data.product_start : null,
+  // Settings → Accessibility: the accessibility tool (A11yButton.vue).
+  a11y: a11yOf(data?.a11y),
+  // Store builder → Floating buttons: one layout for Contact, cookie, Accessibility and Help.
+  floating: floatingOf(data?.floating),
   // Notifications → Settings → Home screen off: the app file offers no install (webManifest).
   app: data?.app !== false,
   // Suspended by the platform: "This store is unavailable" for everyone (coming-soon.js).
@@ -356,7 +389,7 @@ export function siteVisibility() {
 
 /** The page's view of the live version, for the browser (window.__QWOO_SITE__). */
 export function clientSite(s) {
-  return s ? { version: s.version, languages: s.languages, name: s.name, description: s.description, badge: !!pointer?.free, shop: pointer?.shop || null, product_start: pointer?.product_start || null, app_icon: hasAppIcon(s) } : null
+  return s ? { version: s.version, languages: s.languages, name: s.name, description: s.description, badge: !!pointer?.free, shop: pointer?.shop || null, product_start: pointer?.product_start || null, a11y: pointer?.a11y || { on: true }, floating: pointer?.floating || null, app_icon: hasAppIcon(s) } : null
 }
 
 /**

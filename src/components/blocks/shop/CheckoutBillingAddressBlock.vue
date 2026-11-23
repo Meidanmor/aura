@@ -3,10 +3,10 @@
     <CheckoutPart :data="{ ...d, show_title: c.differentBillingAddress && d.show_title !== false }" :default-title="t('Billing Address')">
       <q-checkbox v-model="c.differentBillingAddress" :label="d.checkbox_label || t('Different billing address?')" color="secondary" :class="{ 'q-mb-sm': c.differentBillingAddress }" @update:model-value="c.handleCheckboxBlur" />
       <template v-if="c.differentBillingAddress">
-        <q-input :for="fid('f1')" v-model="c.form.billing.address_1" v-bind="look" :label="t('Billing Address *')" class="q-mb-sm" @blur="c.handleInputBlur" />
-        <q-input :for="fid('f2')" v-model="c.form.billing.city" v-bind="look" :label="t('City *')" class="q-mb-sm" @blur="c.handleInputBlur" />
-        <q-input :for="fid('f3')" v-model="c.form.billing.postcode" v-bind="look" :label="t('Postcode')" class="q-mb-sm" @blur="c.handleInputBlur" />
-        <q-input :for="fid('f4')" v-model="c.form.billing.country" v-bind="look" :label="t('Country')" @blur="c.handleInputBlur" />
+        <q-input autocomplete="billing address-line1" aria-required="true" :for="fid('f1')" v-model="c.form.billing.address_1" v-bind="look" :label="t('Billing Address *')" class="q-mb-sm" @blur="c.handleInputBlur" />
+        <q-input autocomplete="billing address-level2" aria-required="true" :for="fid('f2')" v-model="c.form.billing.city" v-bind="look" :label="t('City *')" class="q-mb-sm" @blur="c.handleInputBlur" />
+        <q-input autocomplete="billing postal-code" :for="fid('f3')" v-model="c.form.billing.postcode" v-bind="look" :label="t('Postcode')" class="q-mb-sm" @blur="c.handleInputBlur" />
+        <q-input autocomplete="billing country-name" :for="fid('f4')" v-model="c.form.billing.country" v-bind="look" :label="t('Country')" @blur="c.handleInputBlur" />
       </template>
     </CheckoutPart>
   </q-form>

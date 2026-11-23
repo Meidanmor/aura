@@ -31,7 +31,7 @@ const TRUSTED_ADMIN_ORIGINS = [process.env.WP_BACKEND_ORIGIN, process.env.QWOO_E
   })
   .filter(Boolean)
 
-function getTrustedAdminOrigin() {
+export function getTrustedAdminOrigin() {
   if (import.meta.env.SSR || !TRUSTED_ADMIN_ORIGINS.length) return null
   const raw = new URLSearchParams(window.location.search).get(EDITOR_ORIGIN_PARAM)
   try {

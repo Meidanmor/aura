@@ -42,6 +42,8 @@ const pages = (suffix = '') => {
     { path: 'blog/:slug', name: named('blog-post'), component: () => import('pages/BlogPostPage.vue') },
     // Search results (?q=…&in=products,categories,posts), from the Search block.
     { path: 'search', name: named('search'), component: () => import('pages/SearchPage.vue') },
+    // The accessibility statement, written live by the store (dashboard: Settings → Accessibility).
+    { path: 'accessibility-statement', name: named('accessibility-statement'), component: () => import('pages/AccessibilityStatementPage.vue') },
 
     // The store owner's own pages (/about, /shipping…, built in the dashboard).
     // The app's own routes above are static, so they always win over this one.

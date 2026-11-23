@@ -1,7 +1,19 @@
 <template>
   <template v-if="cfg">
     <!-- The button: zero-wide anchor on the chosen edge, the button centred on it (no left/right, so it flips with the language). -->
-    <div v-show="!help.open" class="help-fab-at" :class="[EDGE[cfg.edge], STYLE[cfg.style], { 'help-fab-at--lift': lifted }]" :style="fabStyle">
+    <!-- Store builder → Floating buttons may put it in a bottom corner's stack (floating-dock.js): then it's placed there. -->
+    <div
+        v-if="!docked || dockPlace"
+        v-show="!help.open"
+        ref="fabAt"
+        class="help-fab-at"
+        :class="docked ? ['help-fab-at--dock', cfg.style === 'round' ? 'help-fab-at--round' : 'help-fab-at--pill', { 'dock-movable': movable }] : [EDGE[cfg.edge], STYLE[cfg.style], { 'help-fab-at--lift': lifted }]"
+        :style="docked ? { ...dockPlace, ...colours } : fabStyle"
+        :data-dock="docked ? '' : undefined"
+        @pointerdown="docked && drag.down($event, fabAt)"
+        @click.capture="drag.click"
+        @contextmenu="docked && movable && $event.preventDefault()"
+    >
       <button type="button" class="help-fab" :aria-label="label" @click="openHelp()">
         <span v-if="cfg.style === 'round'" aria-hidden="true">?</span>
         <span v-else><template v-if="cfg.style === 'pill'">? </template>{{ label }}</span>
@@ -9,7 +21,7 @@
     </div>
 
     <div v-if="help.open" class="help-backdrop" @click="closeHelp()" />
-    <div v-if="help.open" ref="panelEl" class="help-panel" role="dialog" aria-modal="false" :aria-label="title" tabindex="-1" :style="panelStyle" data-clarity-mask="True" @keydown.esc="closeHelp()">
+    <div v-if="help.open" ref="panelEl" class="help-panel" role="dialog" aria-modal="true" :aria-label="title" tabindex="-1" :style="panelStyle" data-clarity-mask="True" @keydown.esc="closeHelp()">
       <div class="help-panel__head">
         <button v-if="help.view !== 'home'" type="button" class="help-link" @click="back">‹ {{ t('Back') }}</button>
         <div v-else>
@@ -111,9 +123,11 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import HelpThread from 'src/components/help/HelpThread.vue'
+import { trapFocus } from 'src/utils/focus-trap.js'
 import { closeHelp, help, helpConfig, keptThreads, loadMine, lookupOrder, openHelp, writeToStore } from 'src/composables/useHelp.js'
 import { useAccount } from 'src/composables/useAccount.js'
 import { useI18n } from 'src/i18n/index.js'
+import { dock, dockDrag, dockShow, dockStyle } from 'src/utils/floating-dock.js'
 
 /**
  * The storefront's Help button and its panel (the owner sets it up in the
@@ -132,6 +146,12 @@ const STYLE = { pill: 'help-fab-at--pill', round: 'help-fab-at--round', tab: 'he
 
 const cfg = ref(null)
 const panelEl = ref(null)
+const fabAt = ref(null)
+const docked = computed(() => !!cfg.value && dock.cfg.buttons.help?.place !== 'own')
+const dockPlace = computed(() => dockStyle('help'))
+const movable = computed(() => !!dock.cfg.buttons.help?.move)
+const drag = dockDrag('help')
+watch(() => !!cfg.value, (on) => dockShow('help', on), { immediate: true })
 const lifted = ref(false)
 const signedInNow = computed(() => !!user.value?.id && !user.value?.sample)
 const label = computed(() => cfg.value?.label || t('Help'))
@@ -249,13 +269,22 @@ async function send() {
 }
 
 /* ---------------- opening ---------------- */
+// Keyboard: Tab stays in the panel while it covers the page, Escape closes it, focus goes back
+// to whatever opened it (src/utils/focus-trap.js).
+let releasePanel = null
 watch(() => help.open, (open) => {
+  releasePanel?.()
+  releasePanel = null
   if (!open) return
+  const opener = document.activeElement
   found.value = null
   orderError.value = ''
   refreshMine()
   if (help.view === 'write') startWrite(help.order)
-  nextTick(() => panelEl.value?.focus({ preventScroll: true }))
+  nextTick(() => {
+    panelEl.value?.focus({ preventScroll: true })
+    if (panelEl.value) releasePanel = trapFocus(panelEl.value, { label: title.value, returnTo: opener, onEscape: closeHelp })
+  })
 })
 
 /** On the cart's corner, Help sits above the store's other floating buttons. */
@@ -280,6 +309,8 @@ onMounted(() => {
 })
 watch(() => route.path, () => setTimeout(checkLift, 600))
 onBeforeUnmount(() => {
+  dockShow('help', false)
+  releasePanel?.({ restore: false })
   document.removeEventListener('click', onClick, true)
   window.removeEventListener('qwoo:help', onOpenEvent)
 })
@@ -294,6 +325,9 @@ onBeforeUnmount(() => {
 .help-fab-at--end { inset-inline-end: var(--help-off); }
 .help-fab-at--bottom { bottom: var(--help-off); inset-inline-start: var(--help-pos, 50%); width: 0; justify-content: center; align-items: flex-end; }
 .help-fab-at--bottom.help-fab-at--lift { bottom: 78px; }
+/* In a corner's stack (floating-dock.js places it): the same height as the other floating buttons. */
+.help-fab-at--dock .help-fab { height: var(--dock-size, 52px); padding: 0 18px; display: inline-flex; align-items: center; }
+.help-fab-at--dock.help-fab-at--round .help-fab { width: var(--dock-size, 52px); padding: 0; justify-content: center; }
 .help-fab { flex: none; border: 0; cursor: pointer; white-space: nowrap; font: inherit; font-weight: 600; font-size: 15px; line-height: 1.2; padding: 10px 16px; border-radius: 999px; background: var(--help-accent, #1d1b2e); color: var(--help-accent-text, #fff); box-shadow: 0 4px 14px rgba(0, 0, 0, .18); }
 .help-fab:focus-visible { outline: 2px solid var(--help-accent, #1d1b2e); outline-offset: 3px; }
 .help-fab-at--round .help-fab { width: 46px; height: 46px; padding: 0; font-size: 19px; }

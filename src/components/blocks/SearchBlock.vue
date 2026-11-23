@@ -2,10 +2,10 @@
   <div class="search-block" :class="`search-block--${display}`" :style="vars">
     <!-- An icon that opens a search box over the page. -->
     <template v-if="display === 'icon'">
-      <WidgetButton :d="d" :icons="searchIcons" :default-icon="searchIcons.search" :aria-label="t('Search')" @click="openBox" />
+      <WidgetButton :d="d" :icons="searchIcons" :default-icon="searchIcons.search" :aria-label="t('Search')" :expanded="open" @click="openBox" />
       <Teleport v-if="open" to="body">
         <div class="search-overlay" @click.self="close" @keydown.esc="close">
-          <div class="search-box" role="dialog" aria-modal="true" :aria-label="t('Search')" :style="panelVars">
+          <div ref="boxEl" class="search-box" role="dialog" aria-modal="true" :aria-label="t('Search')" :style="panelVars">
             <form class="search-form" role="search" @submit.prevent="goAll">
               <q-icon :name="searchIcons.search" class="search-form__icon" />
               <input ref="input" v-model="q" v-bind="inputAttrs" @keydown="onKey">
@@ -39,6 +39,7 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import WidgetButton from './WidgetButton.vue'
+import { trapFocus } from 'src/utils/focus-trap.js'
 import SearchResults from './SearchResults.vue'
 import { search, productPath } from 'src/api/search.js'
 import { searchIcons } from 'src/utils/builder-icons.js'
@@ -167,12 +168,20 @@ function goAll() {
   close()
 }
 
+// The box over the page: Tab stays inside, focus goes back to the icon on close.
+const boxEl = ref(null)
+let release = null
 async function openBox() {
+  const opener = document.activeElement
   open.value = true
   await nextTick()
   input.value?.focus()
+  release?.({ restore: false })
+  release = boxEl.value ? trapFocus(boxEl.value, { returnTo: opener, onEscape: close }) : null
 }
 function close() {
+  release?.()
+  release = null
   open.value = false
   active.value = -1
   if (display.value === 'field') input.value?.blur()
@@ -199,6 +208,7 @@ watch(open, (v) => {
   document.documentElement.style.overflow = v ? 'hidden' : ''
 })
 onBeforeUnmount(() => {
+  release?.({ restore: false })
   clearTimeout(timer)
   controller?.abort()
   if (typeof document !== 'undefined' && display.value === 'icon' && open.value) document.documentElement.style.overflow = ''

@@ -13,6 +13,7 @@ import { SHARED_KEYS, sharedScriptPath, sharedState, stateJson } from '../shared
 import { cacheablePath, cachedAnswer } from '../api-cache.js'
 import { brandFontPreloads, brandFontsCss } from '../../src/utils/brand-fonts.js'
 import { contentSecurityPolicy, pageCode } from '../custom-code.js'
+import { A11Y_HEAD_SCRIPT } from '../../src/utils/a11y-prefs.js'
 
 /*
  * The language of each page being rendered (an extra language lives under
@@ -499,6 +500,7 @@ export default defineSsrMiddleware(({ app, resolve, render, /*folders*/ }) => {
             >` : ''}
           ${priorityPreloads}
           <script nonce="${nonce}">addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__qwooInstallPrompt=e})</script>
+          ${clientSite(site)?.a11y?.on !== false ? `<script nonce="${nonce}">${A11Y_HEAD_SCRIPT}</script>` : ''}
           <style>
             .hero-section-sec, .lcp-wrapper, .hero-img, .q-layout, .q-page-container, #q-app {
               opacity: 1 !important;

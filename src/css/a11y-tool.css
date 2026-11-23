@@ -1,0 +1,90 @@
+/*
+ * The accessibility tool's looks: classes the visitor's choices put on <html>
+ * (src/utils/a11y-prefs.js). Only active while chosen; nothing here touches a store that
+ * nobody changed. Logical properties only (right-to-left and left-to-right).
+ */
+
+/* Text size: the page is scaled like the browser's own zoom, so px-sized text grows too and
+   nothing overlaps (widths follow: a wide row gets narrower, never wider than the screen). */
+html.a11y-s1 #q-app { zoom: 1.12; }
+html.a11y-s2 #q-app { zoom: 1.25; }
+html.a11y-s3 #q-app { zoom: 1.4; }
+@media (max-width: 599px) {
+  html.a11y-s3 #q-app { zoom: 1.3; }
+}
+
+/* Text spacing (the WCAG 1.4.12 values). */
+html.a11y-sp #q-app :is(p, li, dd, dt, td, th, blockquote, label, h1, h2, h3, h4, h5, h6, a, span, figcaption) {
+  line-height: 1.5 !important;
+  letter-spacing: .12em !important;
+  word-spacing: .16em !important;
+}
+html.a11y-sp #q-app p { margin-block-end: 1.5em !important; }
+
+/* A plain, readable font (the device's own sans). Icons keep theirs. */
+html.a11y-rf #q-app *:not(.q-icon):not(.material-icons):not([class*="material-symbols"]) {
+  font-family: Arial, "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif !important;
+}
+
+/* Text aligned to the start of the line (no centred or justified paragraphs). */
+html.a11y-al #q-app :is(p, li, h1, h2, h3, h4, h5, h6, blockquote, dd, figcaption) { text-align: start !important; }
+
+/* High contrast: light (black on white) and dark (white and yellow on black). Pictures stay. */
+html.a11y-cl, html.a11y-cl body { background: #fff !important; }
+html.a11y-cl #q-app *:not(img):not(video):not(picture):not(svg):not(svg *):not(.a11y-ui):not(.a11y-ui *) {
+  background-color: #fff !important;
+  color: #000 !important;
+  border-color: #000 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+html.a11y-cl #q-app a:not(.a11y-ui *) { color: #0000c8 !important; text-decoration: underline !important; }
+html.a11y-cl #q-app :is(button, .q-btn):not(.a11y-ui *) { border: 2px solid #000 !important; }
+
+html.a11y-cd, html.a11y-cd body { background: #000 !important; }
+html.a11y-cd #q-app *:not(img):not(video):not(picture):not(svg):not(svg *):not(.a11y-ui):not(.a11y-ui *) {
+  background-color: #000 !important;
+  color: #fff !important;
+  border-color: #fff !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+html.a11y-cd #q-app :is(h1, h2, h3, h4, h5, h6):not(.a11y-ui *) { color: #ffe34d !important; }
+html.a11y-cd #q-app a:not(.a11y-ui *) { color: #7fd8ff !important; text-decoration: underline !important; }
+html.a11y-cd #q-app :is(button, .q-btn):not(.a11y-ui *) { border: 2px solid #fff !important; }
+/* Background pictures, gradients and tinted overlays go (text over them is unreadable in these modes); real pictures (img, video) stay. */
+html.a11y-cl #q-app *:not(.a11y-ui):not(.a11y-ui *), html.a11y-cd #q-app *:not(.a11y-ui):not(.a11y-ui *) { background-image: none !important; }
+html.a11y-cl #q-app *:not(.a11y-ui *)::before, html.a11y-cl #q-app *:not(.a11y-ui *)::after,
+html.a11y-cd #q-app *:not(.a11y-ui *)::before, html.a11y-cd #q-app *:not(.a11y-ui *)::after { background-color: transparent !important; background-image: none !important; }
+
+/* Grayscale: on the root element a filter keeps fixed headers and drawers in place. */
+html.a11y-gr { filter: grayscale(1); }
+
+/* Links: underlined and framed. Headings: framed. */
+html.a11y-ln #q-app a:not(.a11y-ui *) {
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+  outline: 2px solid #f0b000 !important;
+  outline-offset: 2px;
+}
+html.a11y-hd #q-app :is(h1, h2, h3, h4, h5, h6):not(.a11y-ui *) {
+  outline: 2px dashed #0a6cff !important;
+  outline-offset: 3px;
+}
+
+/* Stop animations: everything ends at once at its final state (entrances show their content). */
+html.a11y-st *, html.a11y-st *::before, html.a11y-st *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+/* A big cursor (black with a white edge, so it shows on any background). */
+html.a11y-cu, html.a11y-cu * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24'%3E%3Cpath d='M4 2l15 11h-7l4 8-3 1.5-4-8-5 5z' fill='%23000' stroke='%23fff' stroke-width='1.3'/%3E%3C/svg%3E") 6 3, auto !important;
+}
+html.a11y-cu :is(a, button, [role="button"], label, select, summary), html.a11y-cu :is(a, button, [role="button"]) * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24'%3E%3Cpath d='M9 2.5a1.5 1.5 0 0 1 3 0V10l1-.3a1.5 1.5 0 0 1 1.9 1l.1.3 1-.2a1.5 1.5 0 0 1 1.8 1.1l.1.3.9-.1a1.5 1.5 0 0 1 1.7 1.3l.3 3.3a6 6 0 0 1-1.5 4.5L18 22H9l-4.3-6.2a1.5 1.5 0 0 1 2.3-1.9L9 15.6z' fill='%23000' stroke='%23fff' stroke-width='1.2'/%3E%3C/svg%3E") 18 3, pointer !important;
+}

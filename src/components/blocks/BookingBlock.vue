@@ -10,7 +10,7 @@
 
     <template v-else>
       <ol class="qbk__steps" :aria-label="t('Steps')">
-        <li v-for="(s, n) in stepNames" :key="s.key" :class="{ on: step === s.key, done: n < stepIndex }">{{ s.label }}</li>
+        <li v-for="(s, n) in stepNames" :key="s.key" :class="{ on: step === s.key, done: n < stepIndex }" :aria-current="step === s.key ? 'step' : null" :tabindex="step === s.key ? -1 : null">{{ s.label }}</li>
       </ol>
 
       <!-- 1. The service -->
@@ -52,8 +52,8 @@
             <button type="button" class="qbk__arrow" :aria-label="t('Next month')" @click="shiftMonth(1)"><span class="qbk__flip">›</span></button>
           </div>
           <div class="qbk__mon">
-            <div class="qbk__days" role="grid" :aria-label="monthLabel">
-              <span v-for="w in weekdays" :key="w" class="qbk__wd" role="columnheader">{{ w }}</span>
+            <div class="qbk__days" role="group" :aria-label="monthLabel">
+              <span v-for="w in weekdays" :key="w" class="qbk__wd" aria-hidden="true">{{ w }}</span>
               <span v-for="n in lead" :key="`l${n}`" />
               <button
                 v-for="c in cells" :key="c.ymd" type="button" class="qbk__day"
@@ -220,6 +220,18 @@ const list = computed(() => {
 })
 const svc = ref(null)
 const step = ref('service')
+// Keyboard and screen readers: the button pressed goes away with its step, so focus moves to
+// the new step's name in the steps row (only after the visitor did something in the block).
+let acted = false
+const markActed = () => { acted = true }
+watch(step, () => {
+  if (!acted || step.value === 'done') return
+  nextTick(() => root.value?.querySelector('.qbk__steps li.on')?.focus({ preventScroll: true }))
+})
+onMounted(() => {
+  root.value?.addEventListener('pointerdown', markActed)
+  root.value?.addEventListener('keydown', markActed)
+})
 // A new step starts at the block's top (it can be taller or shorter than the last one),
 // unless it's already there (just below a header that stays on screen).
 const root = ref(null)

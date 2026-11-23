@@ -61,6 +61,7 @@ const hidden = computed(() => !!d.value.hide_when_empty && count.value === 0)
       :count="count"
       :aria-label="t('Wishlist')"
       action="wishlist"
+      :expanded="drawer.isOpen()"
       @click="drawer.toggle()"
   />
 </template>

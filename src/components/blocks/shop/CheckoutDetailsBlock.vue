@@ -5,9 +5,9 @@
       <q-card class="q-mb-md">
         <q-card-section class="q-pa-md">
           <div class="text-h6">{{ t('Personal Details') }}</div>
-          <q-input :for="fid('f1')" v-model="c.form.first_name" :label="t('First Name *')" filled class="q-mb-sm" :rules="[val => !!val || t('First Name is required')]" @blur="c.handleInputBlur" />
-          <q-input :for="fid('f2')" v-model="c.form.last_name" :label="t('Last Name *')" filled class="q-mb-sm" :rules="[val => !!val || t('Last Name is required')]" @blur="c.handleInputBlur" />
-          <q-input :for="fid('f3')"
+          <q-input autocomplete="given-name" aria-required="true" :for="fid('f1')" v-model="c.form.first_name" :label="t('First Name *')" filled class="q-mb-sm" :rules="[val => !!val || t('First Name is required')]" @blur="c.handleInputBlur" />
+          <q-input autocomplete="family-name" aria-required="true" :for="fid('f2')" v-model="c.form.last_name" :label="t('Last Name *')" filled class="q-mb-sm" :rules="[val => !!val || t('Last Name is required')]" @blur="c.handleInputBlur" />
+          <q-input autocomplete="email" aria-required="true" :for="fid('f3')"
               v-model="c.form.email"
               :label="t('Email *')"
               filled
@@ -16,7 +16,7 @@
               :rules="[val => !!val || t('Email is required'), val => /^\S+@\S+\.\S+$/.test(val) || t('Please enter a valid email')]"
               @blur="c.handleInputBlur"
           />
-          <q-input :for="fid('f4')" v-model="c.form.phone" :label="t('Phone *')" filled :rules="[val => !!val || t('Phone is required')]" @blur="c.handleInputBlur" />
+          <q-input autocomplete="tel" type="tel" aria-required="true" :for="fid('f4')" v-model="c.form.phone" :label="t('Phone *')" filled :rules="[val => !!val || t('Phone is required')]" @blur="c.handleInputBlur" />
         </q-card-section>
       </q-card>
 
@@ -24,10 +24,10 @@
       <q-card class="q-mb-md">
         <q-card-section class="q-pa-md">
           <div class="text-h6">{{ t('Shipping Address') }}</div>
-          <q-input :for="fid('f5')" v-model="c.form.shipping.address_1" :label="t('Address *')" filled class="q-mb-sm" :rules="[val => !!val || t('Address is required')]" @blur="c.handleInputBlur" />
-          <q-input :for="fid('f6')" v-model="c.form.shipping.city" :label="t('City *')" filled class="q-mb-sm" :rules="[val => !!val || t('City is required')]" @blur="c.handleInputBlur" />
-          <q-input :for="fid('f7')" v-model="c.form.shipping.postcode" :label="t('Postcode')" filled class="q-mb-sm" :rules="[val => !!val || t('Postcode is required')]" @blur="c.handleInputBlur" />
-          <q-input :for="fid('f8')" v-model="c.form.shipping.country" readonly :label="t('Country')" filled @blur="c.handleInputBlur" />
+          <q-input autocomplete="shipping address-line1" aria-required="true" :for="fid('f5')" v-model="c.form.shipping.address_1" :label="t('Address *')" filled class="q-mb-sm" :rules="[val => !!val || t('Address is required')]" @blur="c.handleInputBlur" />
+          <q-input autocomplete="shipping address-level2" aria-required="true" :for="fid('f6')" v-model="c.form.shipping.city" :label="t('City *')" filled class="q-mb-sm" :rules="[val => !!val || t('City is required')]" @blur="c.handleInputBlur" />
+          <q-input autocomplete="shipping postal-code" aria-required="true" :for="fid('f7')" v-model="c.form.shipping.postcode" :label="t('Postcode')" filled class="q-mb-sm" :rules="[val => !!val || t('Postcode is required')]" @blur="c.handleInputBlur" />
+          <q-input autocomplete="shipping country-name" :for="fid('f8')" v-model="c.form.shipping.country" readonly :label="t('Country')" filled @blur="c.handleInputBlur" />
         </q-card-section>
         <q-card-section>
           <q-checkbox v-model="c.differentBillingAddress" :label="t('Different billing address?')" color="secondary" @update:model-value="c.handleCheckboxBlur" />
@@ -38,10 +38,10 @@
       <q-card v-if="c.differentBillingAddress" class="q-mb-md">
         <q-card-section class="q-pa-md">
           <div class="text-h6">{{ t('Billing Address') }}</div>
-          <q-input :for="fid('f9')" v-model="c.form.billing.address_1" :label="t('Billing Address *')" filled class="q-mb-sm" @blur="c.handleInputBlur" />
-          <q-input :for="fid('f10')" v-model="c.form.billing.city" :label="t('City *')" filled class="q-mb-sm" @blur="c.handleInputBlur" />
-          <q-input :for="fid('f11')" v-model="c.form.billing.postcode" :label="t('Postcode')" filled class="q-mb-sm" @blur="c.handleInputBlur" />
-          <q-input :for="fid('f12')" v-model="c.form.billing.country" :label="t('Country')" filled @blur="c.handleInputBlur" />
+          <q-input autocomplete="billing address-line1" aria-required="true" :for="fid('f9')" v-model="c.form.billing.address_1" :label="t('Billing Address *')" filled class="q-mb-sm" @blur="c.handleInputBlur" />
+          <q-input autocomplete="billing address-level2" aria-required="true" :for="fid('f10')" v-model="c.form.billing.city" :label="t('City *')" filled class="q-mb-sm" @blur="c.handleInputBlur" />
+          <q-input autocomplete="billing postal-code" :for="fid('f11')" v-model="c.form.billing.postcode" :label="t('Postcode')" filled class="q-mb-sm" @blur="c.handleInputBlur" />
+          <q-input autocomplete="billing country-name" :for="fid('f12')" v-model="c.form.billing.country" :label="t('Country')" filled @blur="c.handleInputBlur" />
         </q-card-section>
       </q-card>
 

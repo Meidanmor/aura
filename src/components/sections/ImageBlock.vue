@@ -75,6 +75,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { t } from 'src/i18n/index.js'
 import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { RouterLink } from 'vue-router'
 import ProductTags from './ProductTags.vue'
@@ -168,7 +169,8 @@ function linkTag(url) {
 
 function linkAttrs(img) {
   // The image's Screen Reader Label, else the link is named by the image's alt text.
-  const label = img.aria_label ? { 'aria-label': img.aria_label } : {}
+  // A link with no words at all (no label, no alt): a home link still gets a name (WCAG 2.4.4).
+  const label = img.aria_label ? { 'aria-label': img.aria_label } : (!img.alt && img.link_url === '/' ? { 'aria-label': t('Go to home page') } : {})
   if (isInternal(img.link_url)) {
     return { ...(img.new_tab ? { to: img.link_url, target: '_blank', rel: 'noopener' } : { to: img.link_url }), ...label }
   }

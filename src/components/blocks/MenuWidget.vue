@@ -262,7 +262,7 @@ const css = computed(() => {
 </script>
 
 <template>
-  <div :class="scope" class="menu-widget-wrap">
+  <div :class="scope" class="menu-widget-wrap" role="navigation" :aria-label="t('Menu')">
     <component :is="'style'" v-if="css">{{ css }}</component>
     <!-- Vertical Layout (Lists, Footers, Sidebars) -->
     <ul v-if="showsVertical && Array.isArray(menuItems) && menuItems.length" class="menu-vertical" role="list">
@@ -323,7 +323,7 @@ const css = computed(() => {
         </div>
       </q-toolbar>
       <div v-if="mobileMenuEnabled" ref="toggleEl" class="hm-toggle">
-        <WidgetButton :d="d" :icons="menuIcons" :default-icon="menuIcons.menu" :aria-label="t('Open menu')" action="menu" @click="drawer.toggle()" />
+        <WidgetButton :d="d" :icons="menuIcons" :default-icon="menuIcons.menu" :aria-label="t('Open menu')" :expanded="drawer.isOpen()" action="menu" @click="drawer.toggle()" />
       </div>
     </div>
   </div>

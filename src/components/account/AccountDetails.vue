@@ -14,21 +14,21 @@
     <!-- Account form -->
     <div v-else>
       <q-form @submit.prevent="updateDetails">
-        <q-input
+        <q-input autocomplete="given-name"
           v-model="account.first_name"
           :label="t('First Name')"
           v-bind="look"
           class="q-mb-sm"
           :disable="saving"
         />
-        <q-input
+        <q-input autocomplete="family-name"
           v-model="account.last_name"
           :label="t('Last Name')"
           v-bind="look"
           class="q-mb-sm"
           :disable="saving"
         />
-        <q-input
+        <q-input autocomplete="email"
           v-model="account.email"
           :label="t('Email')"
           type="email"

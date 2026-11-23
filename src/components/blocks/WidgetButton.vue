@@ -8,6 +8,8 @@
       :style="vars"
       :to="to || undefined"
       :aria-label="ariaLabel"
+      :aria-expanded="expanded === null ? undefined : String(expanded)"
+      :aria-haspopup="expanded === null ? undefined : 'dialog'"
       :data-action="action || undefined"
       @click="onClick"
   >
@@ -54,6 +56,8 @@ const props = defineProps({
   action: { type: String, default: '' },
   count: { type: Number, default: 0 },
   to: { type: String, default: '' },
+  // Opens a drawer: whether it's open now (screen readers hear "expanded"); null: no drawer.
+  expanded: { type: Boolean, default: null },
 })
 const emit = defineEmits(['click'])
 
