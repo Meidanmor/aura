@@ -99,7 +99,7 @@
             <input :id="ids.phone" v-model="report.phone" type="tel" autocomplete="tel" maxlength="40">
           </label>
           <input v-model="report.website" class="a11y-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <p class="a11y-small">{{ t('The address of this page is sent with your report.') }}<template v-if="contactLine"> {{ contactLine }}</template></p>
+          <p class="a11y-small">{{ t('The address of this page is sent with your report.') }}<template v-if="contactLine">{{ ' ' + contactLine }}</template></p>
           <p v-if="error" class="a11y-error" role="alert">{{ error }}</p>
           <button type="submit" class="a11y-go" :disabled="busy">{{ busy ? t('Sending…') : t('Send') }}</button>
         </template>
