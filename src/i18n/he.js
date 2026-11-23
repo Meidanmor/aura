@@ -573,6 +573,8 @@ export default {
   "This store doesn't use Google sign-in.": "החנות לא משתמשת בהתחברות עם Google.",
   "Follow us": "עקבו אחרינו",
   "Watch on TikTok": "צפייה בטיקטוק",
+  "Paste your code in this block's settings.": "הדביקו את הקוד בהגדרות של הבלוק הזה.",
+  "Embedded content": "תוכן מוטמע",
   "See on Instagram": "צפייה באינסטגרם",
   "Secure payment": "תשלום מאובטח",
   "Remove {name} from the wishlist": "הסרת {name} מהמועדפים",

@@ -237,9 +237,10 @@ export function contentSecurityPolicy({ nonce, backend, dev, frameAncestors, cod
     // the WP backend or files on this site — the plugin only accepts
     // "video file URL"s on those hosts. YouTube/Vimeo play in iframes.
     `media-src 'self' ${backend || ''}${add('media')}${any('https: blob:')}; ` +
+    // The HTML block's sealed frame (src/utils/html-frame.js) lives on frames.myopenly.com.
     // Video embeds: only the two exact player hosts the frontend
     // builds URLs for (privacy-enhanced YouTube + Vimeo), plus the owner's trackers.
-    `frame-src https://accounts.google.com https://js.stripe.com https://hooks.stripe.com https://secure.cardcom.solutions https://hcaptcha.com https://*.hcaptcha.com https://www.youtube-nocookie.com https://player.vimeo.com https://www.instagram.com https://www.tiktok.com${add('frame')}${any('https:')}; ` +
+    `frame-src https://accounts.google.com https://js.stripe.com https://hooks.stripe.com https://secure.cardcom.solutions https://hcaptcha.com https://*.hcaptcha.com https://www.youtube-nocookie.com https://player.vimeo.com https://www.instagram.com https://www.tiktok.com https://frames.myopenly.com${add('frame')}${any('https:')}; ` +
     // No plugins (<object>/<embed>), no <base> hijacking, and forms
     // may only submit to this site (the app posts via fetch; Google
     // sign-in and Stripe use redirects / their own iframes).

@@ -126,6 +126,7 @@ import SocialLinksBlock from '../blocks/SocialLinksBlock.vue'
 import SocialFeedBlock from '../blocks/SocialFeedBlock.vue'
 import SocialEmbedBlock from '../blocks/SocialEmbedBlock.vue'
 import SocialProfileBlock from '../blocks/SocialProfileBlock.vue'
+import HtmlBlock from '../blocks/HtmlBlock.vue'
 import SectionBgVideo from './SectionBgVideo.vue'
 import SectionBgSlides from './SectionBgSlides.vue'
 import ProductTags from './ProductTags.vue'
@@ -300,6 +301,7 @@ const blockComponents = {
   social_feed: SocialFeedBlock,
   social_embed: SocialEmbedBlock,
   social_profile: SocialProfileBlock,
+  html_block: HtmlBlock,
   menu_widget: MenuWidget,
   language_switcher: LanguageSwitcherBlock,
   mini_cart: MiniCartBlock,
