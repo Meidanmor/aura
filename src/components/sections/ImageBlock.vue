@@ -24,12 +24,12 @@
         />
         <picture v-else class="pic">
         <!-- Faster pictures: the store's WebP copy, the original for browsers without WebP (src/utils/webp.js). -->
-        <source v-if="img.webp" type="image/webp" :srcset="img.webp" :sizes="img.srcset || /\s\d+w/.test(img.webp) ? firstSizes(idx) : undefined" />
+        <source v-if="img.webp" type="image/webp" :srcset="img.webp" :sizes="img.srcset || /\s\d+w/.test(img.webp) ? firstSizes(idx, img) : undefined" />
         <img
             class="image-block__img"
             :src="img.src"
             :srcset="img.srcset"
-            :sizes="img.srcset ? firstSizes(idx) : undefined"
+            :sizes="img.srcset ? firstSizes(idx, img) : undefined"
             v-fit-sizes
             :alt="img.alt || ''"
             :width="img.width || undefined"
@@ -86,7 +86,7 @@ import { RouterLink } from 'vue-router'
 import ProductTags from './ProductTags.vue'
 import BuilderSvg from '../blocks/BuilderSvg.vue'
 import { safeSvg } from 'src/utils/inline-svg.js'
-import { srcsetOf, LAZY_SIZES, vFitSizes, blockImageSizes } from 'src/utils/responsive-image.js'
+import { srcsetOf, LAZY_SIZES, AUTO_SIZES, vFitSizes, blockImageSizes } from 'src/utils/responsive-image.js'
 import { webpSrcsetOf } from 'src/utils/webp.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
@@ -112,7 +112,28 @@ const captionText = computed(() => textStyle(d.value, tsKeys('caption')))
 const picked = usePriorityBlock(props.blockId)
 // The first picture of the page loads before it can be measured: `sizes` from the block's
 // width settings (the same in its <head> preload, priority-image.js); the others are measured.
-const firstSizes = (idx) => (picked.value && idx === 0 ? blockImageSizes(d.value, props.data.style) : LAZY_SIZES)
+const firstSizes = (idx, img) => (picked.value && idx === 0 ? blockImageSizes(d.value, props.data.style) : (drawnInBox(img) ? AUTO_SIZES : LAZY_SIZES))
+
+/**
+ * True when the picture is never drawn wider than its box on any screen size, so the box's
+ * own width is enough for a sharp file (AUTO_SIZES). Not with Fit "cover" in a fixed height /
+ * row height, a wider photo cropped into a narrower ratio, Fit "none", or the zoom on hover.
+ */
+function drawnInBox(img) {
+  const fit = FITS.has(d.value.object_fit) ? d.value.object_fit : 'cover'
+  if (fit === 'none' || hover.value === 'zoom') return false
+  if (fit !== 'cover') return true
+  const h = asResponsive(d.value.image_height)
+  const fill = asResponsive(d.value.fill_height)
+  const r = asResponsive(d.value.aspect_ratio)
+  const own = img?.width > 0 && img?.height > 0 ? img.width / img.height : 0
+  return DEVICES.every((dev) => {
+    if (fill[dev] === 'yes' || h[dev]) return false
+    if (!RATIOS.has(r[dev])) return true
+    const [a, b] = r[dev].split('/').map(Number)
+    return own > 0 && own <= (a / b) * 1.01
+  })
+}
 
 const images = computed(() => (d.value.images || [])
     .map((img) => {

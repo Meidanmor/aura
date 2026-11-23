@@ -37,6 +37,15 @@ export function srcsetOf(img) {
  */
 export const LAZY_SIZES = '(max-width: 767px) 100vw, 50vw'
 
+/**
+ * `sizes` for a lazy picture that is never drawn wider than its own box: "auto" lets the
+ * browser use the box's real width (times the screen's pixel density, so the file stays
+ * sharp) even when the picture starts loading before v-fit-sizes runs. Browsers without
+ * "auto" skip it and use LAZY_SIZES. Only for pictures that aren't cropped wider than the
+ * box (see LAZY_SIZES): the caller checks that.
+ */
+export const AUTO_SIZES = `auto, ${LAZY_SIZES}`
+
 /** width / height from a WordPress file name in a srcset ("…-600x327.jpg 600w"), else 0. */
 export function ratioFromSrcset(srcset) {
   const m = /-(\d+)x(\d+)\.\w+\s/.exec(String(srcset || ''))
