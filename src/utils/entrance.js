@@ -18,6 +18,46 @@ import { isEditorMode } from './config-loader.js'
 
 const NAMES = new Set(['fade_up', 'fade', 'zoom_in', 'reveal', 'slide_start', 'slide_end', 'blur_in', 'flip', 'words'])
 const observers = {}
+let nearIo = null
+
+// Pictures the animation shows (not the hidden hover / solid-header copies), at most a few.
+const PICS = 'img:not([aria-hidden="true"]):not(.image-block__img--solid)'
+const pics = (el) => Array.from(el.querySelectorAll(PICS)).slice(0, 8)
+const WAIT_MAX = 2500
+
+/**
+ * Lazy pictures only start downloading when they're almost on screen, so on a
+ * first visit the animation would play over an empty box and the picture would
+ * pop in after it. A block waiting to animate starts its pictures a screen and
+ * a half early instead.
+ */
+function nearObserver() {
+  if (nearIo || typeof IntersectionObserver === 'undefined') return nearIo
+  nearIo = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue
+      for (const img of pics(entry.target)) if (img.loading === 'lazy') img.loading = 'eager'
+      nearIo.unobserve(entry.target)
+    }
+  }, { rootMargin: '0px 0px 150% 0px' })
+  return nearIo
+}
+
+/** Plays once the pictures inside have arrived (at most WAIT_MAX later, so a slow picture never keeps a block hidden). */
+function play(el) {
+  const waiting = pics(el).filter((img) => !img.complete)
+  if (!waiting.length) { el.dataset.anim = 'play'; return }
+  for (const img of waiting) if (img.loading === 'lazy') img.loading = 'eager'
+  let done = false
+  const go = () => { if (done) return; done = true; if (el.dataset.anim === 'wait') el.dataset.anim = 'play' }
+  const timer = setTimeout(go, WAIT_MAX)
+  let left = waiting.length
+  const one = () => { if (--left <= 0) { clearTimeout(timer); go() } }
+  for (const img of waiting) {
+    img.addEventListener('load', one, { once: true })
+    img.addEventListener('error', one, { once: true })
+  }
+}
 
 const nameOf = (value) => String(value || '').split(':')[0]
 
@@ -29,14 +69,15 @@ function getObserver(tall) {
   const io = new IntersectionObserver((entries) => {
     for (const entry of entries) {
       if (!entry.isIntersecting) continue
-      entry.target.dataset.anim = 'play'
       io.unobserve(entry.target)
+      play(entry.target)
     }
   }, tall ? { rootMargin: '0px 0px -15% 0px', threshold: 0 } : { rootMargin: '0px 0px -8% 0px', threshold: 0.12 })
   return (observers[key] = io)
 }
 
 function unobserve(el) {
+  nearIo?.unobserve(el)
   observers.normal?.unobserve(el)
   observers.tall?.unobserve(el)
 }
@@ -60,6 +101,13 @@ function start(el, name) {
   el.dataset.anim = 'wait'
   el.dataset.animName = name
   io.observe(el)
+  if (el.querySelector(PICS)) whenLoaded(() => { if (el.dataset.anim === 'wait') nearObserver()?.observe(el) })
+}
+
+/** Early downloads start only after the page has finished loading, so they never compete with the first screen's pictures. */
+function whenLoaded(fn) {
+  if (document.readyState === 'complete') fn()
+  else window.addEventListener('load', fn, { once: true })
 }
 
 function clear(el) {
