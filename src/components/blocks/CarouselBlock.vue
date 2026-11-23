@@ -796,9 +796,10 @@ const cssVars = computed(() => {
   /* "Run to the screen edge on phones": the row reaches both edges, its first item stays in line. */
   .cb-bleed-m .cb-row__viewport { padding-inline: 0; }
   .cb-bleed-m .cb-row__track {
-    margin-inline: calc(50cqw - 50vw);
-    padding-inline: calc(50vw - 50cqw + var(--cb-pad));
-    scroll-padding-inline: calc(50vw - 50cqw + var(--cb-pad));
+    /* 100vw / --a11y-z: the accessibility tool's bigger text zooms the page, and vw with it. */
+    margin-inline: calc(50cqw - 50vw / var(--a11y-z, 1));
+    padding-inline: calc(50vw / var(--a11y-z, 1) - 50cqw + var(--cb-pad));
+    scroll-padding-inline: calc(50vw / var(--a11y-z, 1) - 50cqw + var(--cb-pad));
   }
   .cb-img img { height: var(--cb-img-h-m, var(--cb-img-h-t, var(--cb-img-h, auto))); }
   .cb-row--logos .cb-img img { height: var(--cb-img-h-m, var(--cb-img-h-t, var(--cb-img-h, 48px))); }

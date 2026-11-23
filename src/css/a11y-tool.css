@@ -12,6 +12,16 @@ html.a11y-s3 #q-app { zoom: 1.4; }
 @media (max-width: 599px) {
   html.a11y-s3 #q-app { zoom: 1.3; }
 }
+/* The zoom also makes vw units bigger (100vw would be wider than the screen): rules that reach the
+   screen edges divide by --a11y-z (CarouselBlock, RunningTextBlock, SearchBlock). Anything else that
+   still runs past the edge is cut there instead of making the page scroll sideways. */
+html.a11y-s1 { --a11y-z: 1.12; }
+html.a11y-s2 { --a11y-z: 1.25; }
+html.a11y-s3 { --a11y-z: 1.4; }
+@media (max-width: 599px) {
+  html.a11y-s3 { --a11y-z: 1.3; }
+}
+html:is(.a11y-s1, .a11y-s2, .a11y-s3) #q-app { overflow-x: clip; }
 /* The tool's own menu and the floating buttons keep their size (the opposite zoom): a bigger
    menu would push its close button off a phone screen, and the buttons' places are worked out in
    screen pixels (floating-dock.js). */
@@ -78,6 +88,11 @@ html.a11y-cd #q-app :is(button, .q-btn):not(.a11y-ui *) { border: 2px solid #fff
 html.a11y-cl #q-app *:not(.a11y-ui):not(.a11y-ui *), html.a11y-cd #q-app *:not(.a11y-ui):not(.a11y-ui *) { background-image: none !important; }
 html.a11y-cl #q-app *:not(.a11y-ui *)::before, html.a11y-cl #q-app *:not(.a11y-ui *)::after,
 html.a11y-cd #q-app *:not(.a11y-ui *)::before, html.a11y-cd #q-app *:not(.a11y-ui *)::after { background-color: transparent !important; background-image: none !important; }
+
+/* Section background slideshows and videos go like other background pictures (text on them would
+   be unreadable), with their counter, arrows and product tags (a whole-section layer that the white
+   above would paint over the section's text and buttons). */
+html:is(.a11y-cl, .a11y-cd) #q-app :is(.sb-bg-slides, .sb-bg-video, .sb-bg-counter, .sb-bg-arrows, .ptags-layer) { display: none !important; }
 
 /* Grayscale: on the root element a filter keeps fixed headers and drawers in place. */
 html.a11y-gr { filter: grayscale(1); }

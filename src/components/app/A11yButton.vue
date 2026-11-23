@@ -19,12 +19,24 @@
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="4.2" r="2.2" /><path d="M4.5 7.6c2.3.7 4.8 1 7.5 1s5.2-.3 7.5-1l.5 1.9c-1.9.6-3.9.9-6 1.1v3.5l2.6 7.2-1.9.7L12 15.3 9.3 22l-1.9-.7L10 14.1v-3.5c-2.1-.2-4.1-.5-6-1.1z" /></svg>
     </button>
     <A11yPanel v-if="loaded" v-show="open" :open="open" :cfg="cfg" :prefs="prefs" :side="side" :color="color" @close="close" @change="onChange" />
-    <!-- Reading guide (a line under the pointer) and reading mask (only a band stays clear). -->
-    <div v-if="prefs.guide" class="a11y-guide" :style="{ top: `${pointerY + 18}px` }" aria-hidden="true" />
+    <!-- Reading guide (a line) and reading mask (only a band stays clear). With a mouse they follow
+         it; on touch screens they stay where they are while the page scrolls under them, and the
+         round handle drags them (a finger on the page would cover the line). -->
+    <div v-if="prefs.guide" class="a11y-guide" :style="{ top: `${lineY - 3}px` }" aria-hidden="true" />
     <template v-if="prefs.mask">
-      <div class="a11y-mask a11y-mask--top" :style="{ height: `${Math.max(0, pointerY - 50)}px` }" aria-hidden="true" />
-      <div class="a11y-mask a11y-mask--bottom" :style="{ top: `${pointerY + 50}px` }" aria-hidden="true" />
+      <div class="a11y-mask a11y-mask--top" :style="{ height: `${Math.max(0, lineY - 50)}px` }" aria-hidden="true" />
+      <div class="a11y-mask a11y-mask--bottom" :style="{ top: `${lineY + 50}px` }" aria-hidden="true" />
     </template>
+    <button
+        v-if="touch && (prefs.guide || prefs.mask)"
+        type="button"
+        class="a11y-grip"
+        :style="{ top: `${lineY - 22}px` }"
+        :aria-label="t('Move the reading guide')"
+        @pointerdown="gripDown"
+    >
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l4 4h-3v5h-2V6H8zm0 20l-4-4h3v-5h2v5h3z" /></svg>
+    </button>
   </div>
 </template>
 
@@ -81,9 +93,41 @@ function onChange(next) {
 }
 
 /* ---------- reading guide / mask ---------- */
+// The line: just under a mouse pointer (the text being read stays above it); on touch screens
+// where it was left (pointerY), kept inside the screen.
+const touch = ref(false)
+const lineY = computed(() => {
+  const h = typeof window !== 'undefined' ? window.innerHeight : 800
+  const y = touch.value ? pointerY.value : pointerY.value + 18
+  return Math.min(h - 30, Math.max(30, y))
+})
 function onPointer(e) {
-  const y = e.touches ? e.touches[0]?.clientY : e.clientY
-  if (typeof y === 'number') pointerY.value = y
+  if (e.pointerType && e.pointerType !== 'mouse') return
+  if (gripping) return
+  if (touch.value) touch.value = false
+  pointerY.value = e.clientY
+}
+function onPointerDown(e) {
+  // A finger or pen on the page: the guide stays put and gets its handle.
+  if (e.pointerType && e.pointerType !== 'mouse') touch.value = true
+}
+let gripping = false
+function gripDown(e) {
+  e.preventDefault()
+  gripping = true
+  touch.value = true
+  const el = e.currentTarget
+  try { el.setPointerCapture(e.pointerId) } catch { /* old browsers */ }
+  const move = (ev) => { pointerY.value = ev.clientY }
+  const up = () => {
+    gripping = false
+    el.removeEventListener('pointermove', move)
+    el.removeEventListener('pointerup', up)
+    el.removeEventListener('pointercancel', up)
+  }
+  el.addEventListener('pointermove', move)
+  el.addEventListener('pointerup', up)
+  el.addEventListener('pointercancel', up)
 }
 
 /* ---------- "#accessibility" links ---------- */
@@ -97,8 +141,9 @@ function onLink(e) {
 
 onMounted(() => {
   pointerY.value = Math.round(window.innerHeight / 2)
+  touch.value = !!window.matchMedia?.('(hover: none)').matches
   window.addEventListener('pointermove', onPointer, { passive: true })
-  window.addEventListener('touchmove', onPointer, { passive: true })
+  window.addEventListener('pointerdown', onPointerDown, { passive: true })
   document.addEventListener('click', onLink)
   // Videos that started before the choices were read (background videos) stop too.
   if (prefs.motion) applyPrefs({ ...prefs })
@@ -106,7 +151,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   dockShow('a11y', false)
   window.removeEventListener('pointermove', onPointer)
-  window.removeEventListener('touchmove', onPointer)
+  window.removeEventListener('pointerdown', onPointerDown)
   document.removeEventListener('click', onLink)
 })
 </script>
@@ -144,6 +189,25 @@ onBeforeUnmount(() => {
   background: rgba(0, 0, 0, .55);
   pointer-events: none;
 }
+.a11y-grip {
+  position: fixed;
+  inset-inline-end: 6px;
+  z-index: 2391;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: #0a6cff;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .3);
+  touch-action: none;
+  cursor: grab;
+}
+.a11y-grip svg { width: 60%; height: 60%; }
+.a11y-grip:focus-visible { outline: 3px solid #000; outline-offset: 2px; }
 .a11y-mask--top { top: 0; }
 .a11y-mask--bottom { bottom: 0; }
 @media print { .a11y-ui { display: none; } }

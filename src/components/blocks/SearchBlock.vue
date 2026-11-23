@@ -252,7 +252,7 @@ onBeforeUnmount(() => {
   top: calc(100% + 8px);
   z-index: 3000;
   width: max(100%, 340px);
-  max-width: calc(100vw - 24px);
+  max-width: calc(100vw / var(--a11y-z, 1) - 24px);
   background: var(--sb-panel-bg, var(--q-bg, #fff));
   color: var(--sb-panel-text, var(--q-text, #1a1a1a));
   border-radius: 12px;

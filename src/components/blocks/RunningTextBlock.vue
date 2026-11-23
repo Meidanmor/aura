@@ -180,7 +180,7 @@ watch([direction, seconds], start)
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  min-width: 100vw;
+  min-width: calc(100vw / var(--a11y-z, 1));
   justify-content: space-around;
   gap: var(--rt-gap, 32px);
   padding-inline-end: var(--rt-gap, 32px);

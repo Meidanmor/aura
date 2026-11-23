@@ -30,6 +30,7 @@ export default {
   "Stop animations": "עצירת אנימציות",
   "Big cursor": "סמן גדול",
   "Reading guide": "סרגל קריאה",
+  "Move the reading guide": "הזזת סרגל הקריאה",
   "Reading mask": "מסכת קריאה",
   "Page map: headings and areas": "מפת העמוד: כותרות ואזורים",
   "Page map": "מפת העמוד",
