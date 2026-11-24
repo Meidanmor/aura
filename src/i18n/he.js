@@ -703,6 +703,7 @@ export default {
   "Photo {n}": "תמונה {n}",
   "Design this email": "עיצוב המייל הזה",
   "Add": "הוספה",
+  "Added": "נוסף",
   "Help": "עזרה",
   "How can we help?": "איך אפשר לעזור?",
   "Search answers": "חיפוש תשובות",

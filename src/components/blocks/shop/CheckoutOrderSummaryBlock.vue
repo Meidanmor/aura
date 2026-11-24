@@ -2,7 +2,7 @@
   <div
       v-if="c?.ready"
       class="co-sum relative-position"
-      :class="[`co-sum--${state}`, { 'co-sum--d-closed': d.open_desktop === false, 'co-sum--m-open': d.open_mobile === true }]"
+      :class="[`co-sum--${state}`, { 'co-sum--d-closed': d.open_desktop === false, 'co-sum--m-open': d.open_mobile === true, 'co-sum--pulse': pulse }]"
   >
     <div v-if="c.cart.state.loading.cart === true" class="blockUi"></div>
     <button type="button" class="co-sum__head" :aria-expanded="state === 'auto' ? undefined : String(state === 'open')" :aria-controls="bodyId" @click="toggle">
@@ -99,11 +99,15 @@ watch(() => (c?.cartItems || []).map((i) => `${i.key}:${i.quantity}`).join('|'),
   const added = [...now].filter(([key, qty]) => qty > (seen.get(key) || 0)).map(([key]) => key)
   seen = now
   if (!grew || !added.length) return
-  state.value = 'open'
   fresh.value = new Set(added)
+  // Phones: the summary stays as it is (open, it can cover much of the screen mid-form); its
+  // header glows and the new total shows. Bigger screens: it opens with the new line glowing.
+  if (window.matchMedia(PHONE).matches) pulse.value = true
+  else state.value = 'open'
   clearTimeout(glow)
-  glow = setTimeout(() => { fresh.value = new Set() }, 1600)
+  glow = setTimeout(() => { fresh.value = new Set(); pulse.value = false }, 1600)
 })
+const pulse = ref(false)
 onBeforeUnmount(() => clearTimeout(glow))
 
 const lines = computed(() => {
@@ -154,9 +158,21 @@ const lines = computed(() => {
   25% { opacity: 1; transform: none; }
   100% { background: transparent; }
 }
+/* Phones, something added: the header glows and the new total grows a little for a moment. */
+.co-sum--pulse .co-sum__head { animation: co-sum-head 1.6s ease; border-radius: 8px; }
+.co-sum--pulse .co-sum__head-total { animation: co-sum-total 1.6s ease; display: inline-block; }
+@keyframes co-sum-head {
+  0%, 60% { background: color-mix(in srgb, currentColor 10%, transparent); }
+  100% { background: transparent; }
+}
+@keyframes co-sum-total {
+  0% { transform: scale(1); }
+  20% { transform: scale(1.15); }
+  45%, 100% { transform: scale(1); }
+}
 @media (prefers-reduced-motion: reduce) {
   .co-sum__body, .co-sum__arrow { transition: none; }
-  .co-sum__item.is-new { animation: none; }
+  .co-sum__item.is-new, .co-sum--pulse .co-sum__head-total { animation: none; }
 }
 
 .co-sum__items { display: flex; flex-direction: column; gap: 12px; }

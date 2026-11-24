@@ -24,9 +24,10 @@
                 dense unelevated no-caps size="sm"
                 class="cart-sugg__add cart-sugg__add--text"
                 :style="buttonStyle"
-                :label="d.add_text || t('Add')"
-                :aria-label="t('Add {name} to the cart', { name: plain(p.name) })"
+                :label="added.has(p.id) ? t('Added') : d.add_text || t('Add')"
+                :aria-label="added.has(p.id) ? t('Added') : t('Add {name} to the cart', { name: plain(p.name) })"
                 :loading="adding === p.id"
+                :disable="added.has(p.id)"
                 @click="add(p)"
             />
             <q-btn
@@ -34,9 +35,10 @@
                 round dense unelevated size="sm"
                 class="cart-sugg__add"
                 :style="buttonStyle"
-                :icon="matAdd"
-                :aria-label="t('Add {name} to the cart', { name: plain(p.name) })"
+                :icon="added.has(p.id) ? matCheck : matAdd"
+                :aria-label="added.has(p.id) ? t('Added') : t('Add {name} to the cart', { name: plain(p.name) })"
                 :loading="adding === p.id"
+                :disable="added.has(p.id)"
                 @click="add(p)"
             />
           </template>
@@ -50,7 +52,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { matAdd } from '@quasar/extras/material-icons'
+import { matAdd, matCheck } from '@quasar/extras/material-icons'
 import cart from 'src/stores/cart.js'
 import productsStore from 'src/stores/products'
 import { useBlockQuery } from 'src/composables/useBlockQuery.js'
@@ -101,9 +103,14 @@ const { data: products } = useBlockQuery(keyWithProduct(props.blockId, excludeId
 // The Store builder preview with nothing to show: sample products.
 // Only what can go in the cart: no "contact us" products (no price / price 0) or ones the store won't sell.
 const buyable = (p) => p?.sample || (p?.is_purchasable !== false && !zeroPriceButton(p))
+// Products just added (their button says "Added" for a moment before they leave the list).
+const added = ref(new Set())
 const shown = useSampleFallback(() => {
   const list = notInCart(products.value, suggestions.value)
-  return Array.isArray(list) ? list.filter(buyable) : list
+  if (!Array.isArray(list)) return list
+  const left = new Set(list.map((p) => p.id))
+  const all = Array.isArray(products.value) ? products.value.filter((p) => left.has(p.id) || added.value.has(p.id)) : list
+  return all.filter(buyable)
 }, 'product', 4)
 const empty = computed(() => ['recent', 'for_you'].includes(d.value.query_type) && recent.value.ready && Array.isArray(shown.value) && !shown.value.length)
 
@@ -132,6 +139,8 @@ async function add(p) {
   adding.value = p.id
   try {
     await cart.add(p.id, 1, null, {}, null, p, false)
+    added.value = new Set([...added.value, p.id])
+    setTimeout(() => { const next = new Set(added.value); next.delete(p.id); added.value = next }, 1800)
   } finally {
     adding.value = 0
   }
