@@ -9,8 +9,8 @@
  *      section, or back to where a Back / Forward page was);
  *   3. the new page arrives (data-page-move="in").
  * So the scroll is never seen and never fights the animation. The layout's <main> and the
- * footer are marked (and the header when it has scrolled out of view, so it doesn't pop in)
- * with data-page-move="out" | "in" and data-page-anim: attributes, not classes, because Vue
+ * footer are marked with data-page-move="out" | "in" and data-page-anim: attributes, not
+ * classes, because Vue
  * rewrites an element's classes when the page changes. CSS: the end of src/css/app.css.
  * Browser only.
  */
@@ -39,8 +39,10 @@ export function pageScrollTarget() {
   return motion.scroll === 'jump' || motion.animation !== 'none' ? { left: 0, top: 0 } : { left: 0, top: 0, behavior: 'smooth' }
 }
 
-// What moves: the layout's <main> and the footer; the header parts only when they are out of view
-// (a header that stays on screen stays put). Never .q-page-container, .q-layout or #q-app: the
+// What moves: the layout's <main> and the footer. The header, the bar above it and the
+// announcement bar never move: they are the same on every page, so they are simply there when
+// the new page comes in (owner, 2026-11-24: a bar above the header fading in looked odd).
+// Never .q-page-container, .q-layout or #q-app: the
 // storefront turns animations off there (animation: none !important), so a class there never plays.
 function movers() {
   const list = []
@@ -48,9 +50,6 @@ function movers() {
   if (main) list.push(main)
   const footer = document.querySelector('.q-layout > footer')
   if (footer) list.push(footer)
-  for (const el of document.querySelectorAll('.q-layout > .q-header, .q-layout > .above-header, .q-layout > .announcement-bar')) {
-    if (el.getBoundingClientRect().bottom <= 0) list.push(el)
-  }
   return list
 }
 

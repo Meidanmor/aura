@@ -382,6 +382,10 @@ export function useProductArchive(mode) {
         async (filters, prev) => {
             const fromAddress = filtersFromAddress
             filtersFromAddress = false
+            // Nothing that picks the products changed: the getter ran again only because something it
+            // reads did (Load more replaces the address, so the grid's computed runs again). Going on
+            // would cancel the page being added and load the whole list again, with skeletons.
+            if (prev && !fromAddress && JSON.stringify(filters) === JSON.stringify(prev)) return
             if (isInitialising.value || !isReady.value || priceRange.value.min === null || priceRange.value.max === null) return
 
             const currentRequest = ++requestId
