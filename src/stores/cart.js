@@ -1055,13 +1055,19 @@ async function fetchCart(force = false, ssrContext = null, { authoritative = fal
 /* -------------------------
    add() sub-functions
    ------------------------- */
+// The cart or checkout page is open (a language prefix like /en/ may come first). Browser only.
+function onCartOrCheckoutPage() {
+  if (typeof window === 'undefined') return false
+  return /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?(?:cart|checkout)(?:\/|$)/i.test(window.location.pathname || '')
+}
 function _finishAdd($q, openDrawer = true) {
   persistLocalCart()
   rebuildMergedView()
   scheduleSyncLocalToServer()
   notifyUser($q, 'positive', t('Added to cart'), matShoppingCart)
   state.loading.cart = false
-  if (openDrawer) state.drawerOpen = true
+  // On the cart and checkout pages the page itself shows the cart: no drawer over it (owner, 2026-11-24).
+  if (openDrawer && !onCartOrCheckoutPage()) state.drawerOpen = true
 }
 
 function _addToExistingLocalItem(localItem, quantity, $q, openDrawer = true) {

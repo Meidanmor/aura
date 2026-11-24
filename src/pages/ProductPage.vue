@@ -194,14 +194,14 @@ function openLightbox(index) {
 }
 
 
-const openDrawer = ref(false);
-function addToCart() {
-  return handleAddToCart()
+const openDrawer = ref(true);
+function addToCart(e) {
+  return handleAddToCart(e)
 }
-// On the product page the cart drawer stays closed after adding (owner, 2026-11-24): the
-// "Added to cart" message is enough and the shopper stays on the product.
-function handleAddToCart() {
-  openDrawer.value = false
+// `checkout`: going to the checkout next, so the cart drawer stays closed.
+// (On the cart and checkout pages the drawer never opens: cart.js _finishAdd.)
+function handleAddToCart(e, { checkout = false } = {}) {
+  openDrawer.value = !checkout && !e?.target?.closest?.('[data-quick-checkout]')
   const chosen = chosenForCart()
   // A product with options never goes in the cart without all of them chosen.
   if (!chosen && isVariable.value) {
@@ -216,14 +216,13 @@ function handleAddToCart() {
 // The Button block ("Use this page's product") and Floating Add To Cart: this
 // product with the options chosen on the page. False while options are missing
 // (the page then scrolls to them).
-// (Callers may still pass { checkout }: the drawer stays closed either way now.)
-async function addCurrentToCart() {
+async function addCurrentToCart({ checkout = false } = {}) {
   if (isVariable.value && !selectedVariation.value) {
     variationError.value = t('Please choose an option.')
     showChoices()
     return false
   }
-  await handleAddToCart()
+  await handleAddToCart(null, { checkout })
   return true
 }
 function showChoices() {

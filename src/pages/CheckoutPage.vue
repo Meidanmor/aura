@@ -169,6 +169,22 @@ const wantsMarketing = ref(false)
 const allowSignup = computed(() => !!pageConfig.value && pageConfig.value.allow_signup !== false)
 const agreeTerms = ref(false)
 const createAccount = ref(false)
+// Contact Details → Show "Create an account" here / Show the offers by email checkbox here: those
+// boxes sit under the contact fields instead of by Place Order.
+function contactShows(field) {
+  let on = false
+  const walk = (list) => {
+    for (const b of Array.isArray(list) ? list : []) {
+      if (on || !b || b.enabled === false) continue
+      if (b.type === 'checkout_contact' && b.data?.[field] === true) on = true
+      else if (Array.isArray(b.blocks)) walk(b.blocks)
+    }
+  }
+  walk(sections.value)
+  return on
+}
+const signupInContact = computed(() => contactShows('show_signup'))
+const marketingInContact = computed(() => contactShows('show_marketing'))
 // The Order Note block: the customer's note, sent with the order (WooCommerce's customer note).
 const orderNote = ref('')
 
@@ -900,7 +916,7 @@ provide('checkoutPage', reactive({
   isLoggedIn, checkoutReady, onLogin, googleLoginEnabled,
   form, handleInputBlur, handleCheckboxBlur, differentBillingAddress,
   paymentMethod, paymentMethods, paymentNote, paymentComponent, onCardReady,
-  termsRequired, allowSignup, agreeTerms, createAccount, legal, marketingOptin, wantsMarketing, orderNote,
+  termsRequired, allowSignup, signupInContact, marketingInContact, agreeTerms, createAccount, legal, marketingOptin, wantsMarketing, orderNote,
   submitOrder: previewSubmitOrder, placeOrder: previewPlaceOrder, registerForm,
   pickerAt, claimPicker, saveNewAddress, addressIsNew,
   needsShipping, addressNeeded, pickupOffered, deliveryMode, deliveryOptions, setDeliveryMode, registerModeBlock,

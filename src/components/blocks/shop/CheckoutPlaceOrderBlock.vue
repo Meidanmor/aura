@@ -4,9 +4,9 @@
       <div v-if="c.couponApplied">{{ t('Total discount: {amount}', { amount: formatCurrency(c.cartTotalDiscount) }) }}</div>
       <div class="text-h6">{{ t('Total:') }} <span v-if="c.couponApplied"><del>{{ formatCurrency(Number(c.cartTotalDiscount) + Number(c.cartTotal)) }}</del></span> {{ formatCurrency(c.cartTotal) }}</div>
     </div>
-    <div v-if="c.lastStep && ((c.allowSignup && c.isLoggedIn === false) || (c.termsRequired && !asLine) || c.marketingOptin?.on)" class="checkout-agree">
-      <q-checkbox v-if="c.allowSignup && c.isLoggedIn === false" v-model="c.createAccount" color="secondary" :label="t('Create an account (we\'ll email you a link to set your password)')" />
-      <q-checkbox v-if="c.marketingOptin?.on" v-model="c.wantsMarketing" color="secondary" :label="c.marketingOptin.text" />
+    <div v-if="c.lastStep && ((c.allowSignup && c.isLoggedIn === false && !c.signupInContact) || (c.termsRequired && !asLine) || (c.marketingOptin?.on && !c.marketingInContact))" class="checkout-agree">
+      <q-checkbox v-if="c.allowSignup && c.isLoggedIn === false && !c.signupInContact" v-model="c.createAccount" color="secondary" :label="t('Create an account (we\'ll email you a link to set your password)')" />
+      <q-checkbox v-if="c.marketingOptin?.on && !c.marketingInContact" v-model="c.wantsMarketing" color="secondary" :label="c.marketingOptin.text" />
       <q-checkbox v-if="c.termsRequired && !asLine" v-model="c.agreeTerms" color="secondary">
         <!-- Parts on one line: their spaces are data, so Vue can't drop them (it trims spaces at the
              edges of <template> blocks and between tags on separate lines: "תנאי השימושואתמדיניות"). -->

@@ -169,6 +169,7 @@ import { getPushConfig } from 'src/services/push/shared.js'
 import NotificationSoftAskModal from 'src/components/app/NotificationSoftAskModal.vue'
 import PopupHost from 'src/components/popups/PopupHost.vue'
 import InstallHost from 'src/components/app/InstallHost.vue'
+import { isQuietPage } from 'src/utils/quiet-page.js'
 import QuickOptions from 'src/components/shop/QuickOptions.vue'
 import CardPreviewHost from 'src/components/loops/CardPreviewHost.vue'
 import UpdatingOverlay from 'src/components/app/UpdatingOverlay.vue'
@@ -323,8 +324,10 @@ const _responsiveClasses = 'gt-sm lt-md gt-md lt-sm'
 
 const permission = ref('default')
 const supported = ref(false)
+// Never over the checkout (src/utils/quiet-page.js): it waits for the next page.
 const notificationSoftAskVisible = computed(() =>
     pushKeyReady.value && supported.value && permission.value === 'default' && showNotificationSoftAsk.value
+    && !isQuietPage(route.path)
 )
 // The owner's test link (dashboard → Notifications): /?qwoo_push_owner={code} offers to connect this device.
 const ownerCode = ref('')

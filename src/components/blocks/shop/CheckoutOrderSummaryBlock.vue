@@ -12,8 +12,9 @@
     </button>
 
     <div :id="bodyId" class="co-sum__body">
+     <div class="co-sum__inner">
       <div v-if="d.show_items !== false" class="co-sum__items">
-        <div v-for="item in c.cartItems" :key="item.key" class="co-sum__item" :class="itemText.class" :style="itemText.style">
+        <div v-for="item in c.cartItems" :key="item.key" class="co-sum__item" :class="[itemText.class, { 'is-new': fresh.has(item.key) }]" :style="itemText.style">
           <div class="co-sum__photo" :style="{ width: size, height: size }">
             <q-img v-if="item?.images?.length" :src="item.images[0].src" :alt="item.name" :width="size" :height="size" class="rounded-borders" />
             <span class="co-sum__qty">{{ item.quantity }}</span>
@@ -40,13 +41,14 @@
           <span>{{ t('Total') }}</span><span dir="ltr">{{ formatCurrency(c.cartTotal) }}</span>
         </div>
       </div>
+     </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { optionLabel } from 'src/utils/option-label'
-import { computed, inject, onMounted, ref, toRaw, useId } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, ref, toRaw, useId, watch } from 'vue'
 import { matExpandMore } from '@quasar/extras/material-icons'
 import { formatCurrency } from 'src/utils/formatters.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
@@ -81,6 +83,29 @@ function toggle() {
   state.value = open ? 'closed' : 'open'
 }
 
+// Something added on the checkout (a suggestion, the options popup): the summary opens by
+// itself and the new line glows for a moment, so the shopper sees it went in (owner, 2026-11-24).
+const fresh = ref(new Set())
+let seen = null
+let glow = 0
+const counts = () => new Map((c?.cartItems || []).map((i) => [i.key, Number(i.quantity) || 0]))
+onMounted(() => { seen = counts() })
+watch(() => (c?.cartItems || []).map((i) => `${i.key}:${i.quantity}`).join('|'), () => {
+  if (!seen) return
+  const now = counts()
+  const total = (m) => [...m.values()].reduce((a, b) => a + b, 0)
+  // Only when the cart really grew: the store's answer can swap a line's key for the same product.
+  const grew = total(now) > total(seen)
+  const added = [...now].filter(([key, qty]) => qty > (seen.get(key) || 0)).map(([key]) => key)
+  seen = now
+  if (!grew || !added.length) return
+  state.value = 'open'
+  fresh.value = new Set(added)
+  clearTimeout(glow)
+  glow = setTimeout(() => { fresh.value = new Set() }, 1600)
+})
+onBeforeUnmount(() => clearTimeout(glow))
+
 const lines = computed(() => {
   const totals = c?.displayCart?.totals || {}
   const out = [{ key: 'sub', label: t('Subtotal'), amount: formatCurrency(totals.total_items || '0') }]
@@ -101,18 +126,37 @@ const lines = computed(() => {
 .co-sum__title { margin: 0; }
 .co-sum__arrow { transition: transform .2s ease; }
 .co-sum__head-total { margin-inline-start: auto; font-weight: 600; }
-.co-sum__body { margin-top: 12px; }
+/* Opens and closes smoothly: the body's one row grows from 0 to its content's height. */
+.co-sum__body {
+  display: grid; grid-template-rows: 1fr; opacity: 1; visibility: visible;
+  transition: grid-template-rows .35s ease, opacity .25s ease .05s, visibility 0s;
+}
+.co-sum__inner { min-height: 0; overflow: hidden; padding-top: 12px; }
 
 /* Closed: by a click, or until then by the owner's choice for this screen size. */
 .co-sum--closed .co-sum__body,
-.co-sum--auto.co-sum--d-closed .co-sum__body { display: none; }
+.co-sum--auto.co-sum--d-closed .co-sum__body {
+  grid-template-rows: 0fr; opacity: 0; visibility: hidden;
+  transition: grid-template-rows .35s ease, opacity .2s ease, visibility 0s linear .35s;
+}
 .co-sum--open .co-sum__arrow,
 .co-sum--auto:not(.co-sum--d-closed) .co-sum__arrow { transform: rotate(180deg); }
 @media (max-width: 599.98px) {
-  .co-sum--auto .co-sum__body { display: none; }
+  .co-sum--auto .co-sum__body { grid-template-rows: 0fr; opacity: 0; visibility: hidden; }
   .co-sum--auto .co-sum__arrow { transform: none; }
-  .co-sum--auto.co-sum--m-open .co-sum__body { display: block; }
+  .co-sum--auto.co-sum--m-open .co-sum__body { grid-template-rows: 1fr; opacity: 1; visibility: visible; }
   .co-sum--auto.co-sum--m-open .co-sum__arrow { transform: rotate(180deg); }
+}
+/* The line just added comes in softly and glows for a moment. */
+.co-sum__item.is-new { animation: co-sum-new 1.6s ease; border-radius: 8px; }
+@keyframes co-sum-new {
+  0% { opacity: 0; transform: translateY(-6px); background: color-mix(in srgb, currentColor 10%, transparent); }
+  25% { opacity: 1; transform: none; }
+  100% { background: transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .co-sum__body, .co-sum__arrow { transition: none; }
+  .co-sum__item.is-new { animation: none; }
 }
 
 .co-sum__items { display: flex; flex-direction: column; gap: 12px; }

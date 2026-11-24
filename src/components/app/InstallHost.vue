@@ -2,7 +2,7 @@
   <InstallGuide />
   <InstallAsk v-if="repeatHere" place="repeat" />
   <Teleport to="body">
-    <div v-if="gift" class="ig-gift" role="dialog" aria-modal="false" aria-labelledby="ig-gift-title">
+    <div v-if="gift && !isQuietPage(route.path)" class="ig-gift" role="dialog" aria-modal="false" aria-labelledby="ig-gift-title">
       <button type="button" class="ig-gift__x" :aria-label="t('Close')" @click="closeGift">×</button>
       <div id="ig-gift-title" class="ig-gift__title">{{ gift.kind === 'push' ? t('Thanks for turning on alerts!') : t('Thanks for adding us!') }}</div>
       <div class="ig-gift__body">{{ t('Here\'s a thank-you gift. Use this code at checkout:') }}</div>
@@ -21,6 +21,8 @@ import InstallGuide from 'src/components/app/InstallGuide.vue'
 import InstallAsk from 'src/components/app/InstallAsk.vue'
 import { giftSeen, initInstall, install, installSettings } from 'src/services/install.js'
 import { t } from 'src/i18n/index.js'
+// The gift card waits until the shopper leaves the checkout (src/utils/quiet-page.js).
+import { isQuietPage } from 'src/utils/quiet-page.js'
 
 /**
  * Everything about adding the store to the home screen that isn't tied to one page: the

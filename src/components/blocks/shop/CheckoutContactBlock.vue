@@ -15,6 +15,9 @@
             @blur="c.handleInputBlur"
         />
         <q-input autocomplete="tel" type="tel" aria-required="true" :for="fid('f4')" v-model="c.form.phone" v-bind="look" :label="t('Phone *')" :rules="[val => !!val || t('Phone is required')]" @blur="c.handleInputBlur" />
+        <!-- "Show 'Create an account' here" / "Show the offers by email checkbox here": under the fields (they then leave Place Order). -->
+        <q-checkbox v-if="d.show_signup && c.allowSignup && c.isLoggedIn === false" v-model="c.createAccount" color="secondary" class="checkout-contact__signup" :label="t('Create an account (we\'ll email you a link to set your password)')" />
+        <q-checkbox v-if="d.show_marketing && c.marketingOptin?.on" v-model="c.wantsMarketing" color="secondary" class="checkout-contact__offers" :label="c.marketingOptin.text" />
       </CheckoutPart>
     </q-form>
 

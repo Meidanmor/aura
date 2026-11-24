@@ -600,6 +600,8 @@ export function sectionLink(s = {}) {
 const CARD_BLOCKS = new Set([
   'checkout_contact', 'checkout_shipping_address', 'checkout_billing_address', 'checkout_coupon',
   'checkout_items', 'checkout_shipping', 'checkout_payment', 'checkout_totals', 'checkout_place_order',
+  // Order Summary's "In a card" did nothing before (2026-11-24): no padding, contents on its border.
+  'checkout_order_summary',
   'login_form', 'signup_form', 'account_orders', 'account_details', 'cart_items', 'cart_totals',
   'cart_coupon', 'cart_shipping', 'cart_summary',
 ])
