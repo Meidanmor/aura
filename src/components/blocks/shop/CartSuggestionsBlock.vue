@@ -6,7 +6,9 @@
       <div v-if="title" class="cart-sugg__title" :class="titleText.class" :style="titleText.style">{{ title }}</div>
       <div ref="row" class="cart-sugg__row" data-keep-swipe>
         <div v-for="p in shown" :key="p.id" class="cart-sugg__card">
-          <router-link :to="pathOf(p)" class="cart-sugg__link">
+          <!-- On the checkout a card never leaves the page: a tap adds it, like its + button
+               (products with options open the options popup, which links to their page). -->
+          <component :is="onCheckout ? 'button' : 'router-link'" v-bind="cardLink(p)" class="cart-sugg__link">
             <template v-if="d.show_image !== false">
               <img v-if="p.images?.[0]?.src" :src="(cardLayout === 'stack' ? p.images[0].src : p.images[0].thumbnail) || p.images[0].src" :alt="p.images[0].alt || p.name" class="cart-sugg__img" loading="lazy" />
               <span v-else class="cart-sugg__img cart-sugg__img--none" />
@@ -15,7 +17,7 @@
               <span class="cart-sugg__name" :class="nameText.class" :style="nameText.style" v-html="sanitizeSectionText(p.name)" />
               <span v-if="d.show_price !== false" class="cart-sugg__price" :class="priceText.class" :style="priceText.style" v-html="priceOf(p)" />
             </span>
-          </router-link>
+          </component>
           <template v-if="d.show_add !== false">
             <q-btn
                 v-if="d.add_style === 'text'"
@@ -47,7 +49,7 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { matAdd } from '@quasar/extras/material-icons'
 import cart from 'src/stores/cart.js'
 import productsStore from 'src/stores/products'
@@ -59,7 +61,7 @@ import { useRecentlyViewed } from 'src/utils/recently-viewed.js'
 import { useSampleFallback } from 'src/utils/sample-items.js'
 import { zeroPriceButton } from 'src/utils/zero-price.js'
 import { canQuickChoose, openQuickOptions } from 'src/composables/useQuickOptions.js'
-import { formatCurrency } from 'src/utils/formatters.js'
+import { productPriceHtml } from 'src/utils/product-price.js'
 import { sanitizeSectionText } from 'src/utils/sanitizeSectionText.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
@@ -69,6 +71,12 @@ import { t } from 'src/i18n/index.js'
 
 const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
 const router = useRouter()
+const route = useRoute()
+// The checkout page (a language prefix like /en/ may come first).
+const onCheckout = computed(() => props.page === 'checkout' || /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?checkout(?:\/|$)/i.test(route.path || ''))
+const cardLink = (p) => (onCheckout.value
+  ? { type: 'button', 'aria-label': t('Add {name} to the cart', { name: plain(p.name) }), onClick: () => add(p) }
+  : { to: pathOf(p) })
 // Show: "cart" (bought together with the cart's products) or "recent" (recently viewed).
 const d = computed(() => {
   const data = props.data.data || {}
@@ -107,7 +115,8 @@ const pathOf = (p) => {
   return slug ? `/product/${slug}` : '/products'
 }
 const plain = (html) => String(html || '').replace(/<[^>]*>/g, '')
-const priceOf = (p) => (p.price_html ? sanitizeSectionText(p.price_html) : p.prices?.price ? formatCurrency(p.prices.price) : '')
+// From the numbers (src/utils/product-price.js); products with options: "From ₪159".
+const priceOf = (p) => productPriceHtml(p, { mode: 'from' })
 
 // Content → Arrange As (a row that scrolls sideways, or a list) and Card Layout (image beside the text, or on top).
 const arrange = computed(() => (d.value.arrange === 'list' ? 'list' : 'row'))
@@ -193,6 +202,7 @@ const cssVars = computed(() => {
 .cart-sugg--card-stack.cart-sugg--list .cart-sugg__img { width: var(--cs-img, 100%); }
 .cart-sugg--card-stack .cart-sugg__add { align-self: flex-start; }
 .cart-sugg--card-stack .cart-sugg__add--text { align-self: stretch; }
+button.cart-sugg__link { background: none; border: 0; padding: 0; font: inherit; text-align: start; cursor: pointer; }
 .cart-sugg__link {
   display: flex;
   align-items: center;

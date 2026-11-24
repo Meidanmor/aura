@@ -36,11 +36,11 @@
         <div class="quick-options__side">
           <div>
             <div class="quick-options__name">{{ product.name }}</div>
-            <!-- eslint-disable-next-line vue/no-v-html -- the store's price, sanitized -->
+            <!-- eslint-disable-next-line vue/no-v-html -- the price, built from numbers (escaped) -->
             <div class="quick-options__price" v-html="o.selectedVariation.value && !o.variationLoading.value ? variationPrice : price" />
           </div>
 
-          <div v-for="attribute in o.availableAttributes.value" :key="attribute.name">
+          <div v-for="attribute in o.availableAttributes.value" :key="attribute.name" class="quick-options__group" :class="{ 'is-missing': tried && !o.selectedVariations.value[attribute.name] }" :data-option="attribute.name">
             <div class="quick-options__label">{{ attribute.name }}<template v-if="o.selectedVariations.value[attribute.name]">: {{ o.selectedVariations.value[attribute.name] }}</template></div>
             <div class="quick-options__choices" role="radiogroup" :aria-label="attribute.name">
               <button
@@ -56,7 +56,7 @@
               >{{ opt.label }}</button>
             </div>
           </div>
-          <div v-if="tried && o.shouldDisableCartButtons.value" class="text-negative text-caption" role="alert">{{ t('Please select all variation options.') }}</div>
+          <div v-if="tried && o.shouldDisableCartButtons.value" class="text-negative text-caption" role="alert">{{ t('Please choose an option.') }}</div>
           <div v-else-if="outOfStock" class="text-negative text-caption" role="alert">{{ t('Out of stock') }}</div>
 
           <button type="button" class="quick-options__more" @click="fullDetails">{{ t('Full details') }}</button>
@@ -71,6 +71,8 @@
         </div>
         <q-btn
             class="quick-options__add"
+            :class="{ 'is-waiting': o.shouldDisableCartButtons.value }"
+            :aria-disabled="o.shouldDisableCartButtons.value ? 'true' : undefined"
             color="secondary"
             unelevated
             no-caps
@@ -92,7 +94,7 @@ import { matClose } from '@quasar/extras/material-icons'
 import cart from 'src/stores/cart.js'
 import { closeQuickOptions, quickOptions } from 'src/composables/useQuickOptions.js'
 import { useProductOptions } from 'src/composables/useProductOptions.js'
-import { useSanitizedPrice } from 'src/composables/useSanitizedHtml'
+import { productPriceHtml } from 'src/utils/product-price.js'
 import { useSheetDrag } from 'src/composables/useSheetDrag.js'
 import { loopItemUrl } from 'src/components/loops/loop-item.js'
 import { t } from 'src/i18n/index.js'
@@ -130,8 +132,8 @@ watch(product, (p) => {
 // Moving to another page closes it.
 watch(() => router.currentRoute.value.fullPath, close)
 
-const price = useSanitizedPrice(() => product.value?.price_html)
-const variationPrice = useSanitizedPrice(() => o.selectedVariation.value?.price_html)
+const price = computed(() => productPriceHtml(product.value))
+const variationPrice = computed(() => productPriceHtml(o.selectedVariation.value))
 // The chosen variation's own photo first, then the product's.
 const photos = computed(() => {
   const own = product.value?.images || []
@@ -156,9 +158,21 @@ function choose(name, value) {
   o.onVariationChange()
 }
 
+// Add to cart looks off until every option is chosen, but still answers a tap: it shows
+// the first option still missing (scrolled into view, its first choice focused).
+function showMissing() {
+  tried.value = true
+  const missing = o.availableAttributes.value.find((a) => !o.selectedVariations.value[a.name])
+  if (!missing) return
+  const group = [...document.querySelectorAll('.quick-options__group')].find((el) => el.dataset.option === missing.name)
+  if (!group) return
+  group.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  group.querySelector('.quick-options__choice:not(:disabled)')?.focus({ preventScroll: true })
+}
+
 async function add() {
   if (o.shouldDisableCartButtons.value) {
-    tried.value = true
+    showMissing()
     return
   }
   const chosen = o.chosenForCart()
@@ -215,6 +229,8 @@ function fullDetails() {
 .quick-options__price { margin-top: 2px; opacity: .85; }
 .quick-options__label { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
 .quick-options__choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.quick-options__group.is-missing .quick-options__label { color: var(--q-negative); }
+.quick-options__add.is-waiting { opacity: .45; }
 .quick-options__choice { border: 1.5px solid rgba(0, 0, 0, .18); background: transparent; color: inherit; border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 .quick-options__choice:hover { border-color: currentColor; }
 .quick-options__choice.is-on { background: var(--q-secondary); border-color: var(--q-secondary); color: var(--q-primary, #fff); }

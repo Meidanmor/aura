@@ -7,6 +7,7 @@ import { fetchProductById } from 'src/api/woocommerce.js'
 import { getApiOrigin } from 'src/utils/server/get-api-origin'
 import { ecommerceOf, eventItem, track } from 'src/utils/custom-code.js'
 import { sendPersonalizationEvent } from 'src/utils/personalization.js'
+import { hasMoney, storeMoney } from 'src/utils/store-money.js'
 /* -------------------------
    Constants
    ------------------------- */
@@ -367,19 +368,22 @@ function rebuildMergedView() {
       return s + unitPrice * (it.quantity || 1)
     }, 0)
 
-    const currencyCode = state.items[0]?.prices?.currency_code ?? 'USD'
-    const currencyMinorUnit = state.items[0]?.prices?.currency_minor_unit ?? 2
-    const currencySymbol = state.items[0]?.prices?.currency_symbol ?? '$'
-    const currencyPrefix = state.items[0]?.prices?.currency_prefix ?? currencySymbol
+    // The items' currency, else the store's currency seen in any price (never a "$" guess first).
+    const firstPrices = state.items[0]?.prices
+    const m = hasMoney(firstPrices) ? firstPrices : (storeMoney() || firstPrices || {})
+    const currencyCode = m.currency_code ?? 'USD'
+    const currencyMinorUnit = m.currency_minor_unit ?? 2
+    const currencySymbol = m.currency_symbol ?? '$'
+    const currencyPrefix = m.currency_prefix ?? currencySymbol
 
     state.totals = {
       currency_code: currencyCode,
       currency_minor_unit: currencyMinorUnit,
       currency_symbol: currencySymbol,
       currency_prefix: currencyPrefix,
-      currency_suffix: state.items[0]?.prices?.currency_suffix ?? '',
-      currency_decimal_separator: state.items[0]?.prices?.currency_decimal_separator ?? '.',
-      currency_thousand_separator: state.items[0]?.prices?.currency_thousand_separator ?? ',',
+      currency_suffix: m.currency_suffix ?? '',
+      currency_decimal_separator: m.currency_decimal_separator ?? '.',
+      currency_thousand_separator: m.currency_thousand_separator ?? ',',
       total_items: String(totalItems),
       total_items_tax: '0',
       total_fees: '0',

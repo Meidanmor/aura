@@ -17,6 +17,7 @@ import { ref, onMounted, onUnmounted, computed, useSSRContext, watch, provide, r
 import { shopGate } from 'src/utils/shop-mode.js'
 import { sendPersonalizationEvent } from 'src/utils/personalization.js'
 import { rememberViewed } from 'src/utils/recently-viewed.js'
+import { productPriceHtml } from 'src/utils/product-price.js'
 import { ecommerceOf, eventItem, track } from 'src/utils/custom-code.js'
 import { useRoute, useRouter, onBeforeRouteUpdate } from 'vue-router'
 import { fetchProductById } from 'src/api/woocommerce.js'
@@ -28,7 +29,7 @@ import { useQuasar } from 'quasar'
 import { fetchSeoForPath } from 'src/composables/useSeo'
 import productsStore from 'src/stores/products'
 import { matError } from '@quasar/extras/material-icons'
-import { useSanitizedDescription, useSanitizedPrice, useSanitizedText } from 'src/composables/useSanitizedHtml'
+import { useSanitizedDescription, useSanitizedText } from 'src/composables/useSanitizedHtml'
 import LightboxGallery from 'src/components/LightboxGallery.vue'
 import {useCarousel} from '/src/composables/useCrousel.js'
 import {useSeoMeta} from "src/composables/useSeo.js";
@@ -193,17 +194,18 @@ function openLightbox(index) {
 }
 
 
-const openDrawer = ref(true);
-function addToCart(e) {
-  return handleAddToCart(e)
+const openDrawer = ref(false);
+function addToCart() {
+  return handleAddToCart()
 }
-// `checkout`: going to the checkout next, so the cart drawer stays closed.
-function handleAddToCart(e, { checkout = false } = {}) {
-  openDrawer.value = !checkout && !e?.target?.closest?.('[data-quick-checkout]')
+// On the product page the cart drawer stays closed after adding (owner, 2026-11-24): the
+// "Added to cart" message is enough and the shopper stays on the product.
+function handleAddToCart() {
+  openDrawer.value = false
   const chosen = chosenForCart()
   // A product with options never goes in the cart without all of them chosen.
   if (!chosen && isVariable.value) {
-    variationError.value = t('Please select all variation options.')
+    variationError.value = t('Please choose an option.')
     return
   }
   if (!chosen) {
@@ -214,13 +216,14 @@ function handleAddToCart(e, { checkout = false } = {}) {
 // The Button block ("Use this page's product") and Floating Add To Cart: this
 // product with the options chosen on the page. False while options are missing
 // (the page then scrolls to them).
-async function addCurrentToCart({ checkout = false } = {}) {
+// (Callers may still pass { checkout }: the drawer stays closed either way now.)
+async function addCurrentToCart() {
   if (isVariable.value && !selectedVariation.value) {
-    variationError.value = t('Please select all variation options.')
+    variationError.value = t('Please choose an option.')
     showChoices()
     return false
   }
-  await handleAddToCart(null, { checkout })
+  await handleAddToCart()
   return true
 }
 function showChoices() {
@@ -316,7 +319,7 @@ async function fetchWishlistData() {
 function addToCartHandler(e) {
   if (isVariable.value) {
     if (!selectedVariation.value) {
-      variationError.value = t('Please select all variation options.')
+      variationError.value = t('Please choose an option.')
       return
     }
     addToCart(e)
@@ -345,8 +348,9 @@ const reviewsOn = computed(() => product.value?.extensions?.qwoo?.reviews === tr
 function scrollToReviews() {
   document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
-const safePrice = useSanitizedPrice(() => product.value?.price_html)
-const safeVariationPrice = useSanitizedPrice(() => selectedVariation.value?.price_html)
+// Prices from the numbers, never the store's ready-made price text (src/utils/product-price.js).
+const safePrice = computed(() => productPriceHtml(product.value))
+const safeVariationPrice = computed(() => productPriceHtml(selectedVariation.value))
 const safeCategoryName = useSanitizedText(() => product.value?.categories?.[0]?.name)
 
 // The owner's trackers (Settings → Tracking & code).

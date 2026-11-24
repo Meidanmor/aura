@@ -32,8 +32,8 @@
           <img v-if="p.images?.[0]?.thumbnail || p.images?.[0]?.src" :src="p.images[0].thumbnail || p.images[0].src" alt="" class="sr-thumb" loading="lazy" decoding="async" width="44" height="44" />
           <span v-else class="sr-thumb" aria-hidden="true" />
           <span class="sr-name">{{ decode(p.name) }}</span>
-          <!-- eslint-disable-next-line vue/no-v-html -- cleaned by sanitizePriceHtml -->
-          <small class="sr-sub sr-price" v-html="sanitizePriceHtml(p.price_html)" />
+          <!-- eslint-disable-next-line vue/no-v-html -- the price, built from numbers (escaped) -->
+          <small class="sr-sub sr-price" v-html="productPriceHtml(p)" />
         </router-link>
       </div>
       <div v-if="results.posts.length" class="sr-group">
@@ -63,7 +63,7 @@
  */
 import { computed } from 'vue'
 import { productPath } from 'src/api/search.js'
-import { sanitizePriceHtml } from 'src/utils/sanitizeHtml'
+import { productPriceHtml } from 'src/utils/product-price.js'
 import { useI18n } from 'src/i18n/index.js'
 
 const props = defineProps({

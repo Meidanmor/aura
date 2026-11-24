@@ -1,6 +1,7 @@
 // src/utils/formatters.js
 import cart from 'src/stores/cart'
 import { currentLocale } from 'src/i18n/index.js'
+import { hasMoney, rememberMoney, storeMoney } from 'src/utils/store-money.js'
 
 const escHtml = (s) => String(s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
 
@@ -11,6 +12,7 @@ const escHtml = (s) => String(s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;'
  * the amount isn't a number.
  */
 export function formatStoreAmount(prices, minor) {
+  rememberMoney(prices)
   const unit = Number(prices?.currency_minor_unit) || 0
   const n = Number(minor) / 10 ** unit
   if (minor === '' || minor == null || !Number.isFinite(n)) return ''
@@ -26,7 +28,11 @@ export function formatCurrency(amountStr, {
   prefix,
   suffix
 } = {}) {
-  const totals = cart.state.cart_array?.totals
+  // The cart's own currency; until the cart has one, the store's currency seen in any price
+  // (src/utils/store-money.js); only then a guess.
+  const cartTotals = cart.state.cart_array?.totals
+  if (hasMoney(cartTotals)) rememberMoney(cartTotals)
+  const totals = hasMoney(cartTotals) ? cartTotals : (storeMoney() || cartTotals)
 
   const resolvedMinorUnit = minorUnit ?? totals?.currency_minor_unit ?? 2
   const resolvedDecimalSeparator = decimalSeparator ?? totals?.currency_decimal_separator ?? '.'

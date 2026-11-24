@@ -78,7 +78,7 @@ import { isSampleProduct } from 'src/utils/sample-product.js'
 import { canQuickChoose, openQuickOptions } from 'src/composables/useQuickOptions.js'
 import { useRouter } from 'vue-router'
 import wishlist from 'src/stores/wishlist.js'
-import { useSanitizedPrice } from 'src/composables/useSanitizedHtml.js'
+import { productPriceHtml } from 'src/utils/product-price.js'
 import { useQuasar } from 'quasar'
 import { computed } from 'vue'
 import { vFitSizes, croppedSizes, ratioFromSrcset } from 'src/utils/responsive-image.js'
@@ -103,7 +103,7 @@ const props = defineProps({
 // Faster pictures: the store's WebP copy (src/utils/webp.js).
 const cardWebp = computed(() => (props.product.images?.[0]?.src ? webpOfImage(props.product.images[0]) : undefined))
 const cardSizes = computed(() => croppedSizes(CARD_COLS, BOX, ratioFromSrcset(props.product.images?.[0]?.srcset)))
-const sanitizedPrice = useSanitizedPrice(() => props.product.price_html)
+const sanitizedPrice = computed(() => productPriceHtml(props.product))
 
 /*const isWishlisted = computed(() => {
   const items = cart.state.wishlist_items || {}

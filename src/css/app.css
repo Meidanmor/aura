@@ -27,6 +27,14 @@ html, body {
     touch-action: pan-y;
 }
 /*
+ * A focused form field (checkout, sign-in, forms) takes its colour from the field
+ * control. Quasar uses the store's primary colour there, and stores keep primary light
+ * (the page colour), so a focused field's label and line turned invisible on a light page.
+ * Fields use the secondary (action) colour instead; a field with its own color prop or an
+ * error keeps Quasar's text-* class, which wins (!important).
+ */
+.q-field .q-field__control { color: var(--q-secondary); }
+/*
  * Brand fonts (Store builder → Branding): the store's <style id="qwoo-fonts">
  * sets the ones the owner chose (src/utils/brand-fonts.js). Headings and
  * buttons follow the text font unless they have their own.

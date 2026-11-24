@@ -1,5 +1,5 @@
 <template>
-  <!-- eslint-disable-next-line vue/no-v-html -- the store's price HTML, sanitized -->
+  <!-- eslint-disable-next-line vue/no-v-html -- the price, built from numbers (escaped) -->
   <div v-if="price" class="lt-price lt-align" :class="[priceBind.class, { 'lt-price--no-old': d.show_old === false }]" :style="[priceBind.style, vars]" v-html="price" />
 </template>
 
@@ -11,36 +11,24 @@
  * Styles: LoopCard.vue.
  */
 import { computed } from 'vue'
-import { t } from 'src/i18n/index.js'
 import { useLoopItem } from './loop-item.js'
-import { useSanitizedPrice } from 'src/composables/useSanitizedHtml.js'
+import { productPriceHtml } from 'src/utils/product-price.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { alignToText, setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
 import { brandFontVar } from 'src/utils/brand-fonts.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
-import { formatStoreAmount } from 'src/utils/formatters.js'
 
 const props = defineProps({
   data: { type: Object, required: true },
 })
 const loop = useLoopItem()
 const d = computed(() => props.data.data || {})
-const storePrice = useSanitizedPrice(() => (loop?.value?.type === 'product' ? loop.value.item?.price_html || '' : ''))
-
-// The lowest price as the store writes prices.
-function formatAmount(prices, minor) {
-  const amount = formatStoreAmount(prices, minor)
-  return amount ? `<span class="lt-price__amount">${amount}</span>` : ''
-}
+// Built from the price numbers (src/utils/product-price.js), never the store's ready-made text.
 const price = computed(() => {
   const item = loop?.value?.type === 'product' ? loop.value.item : null
-  const mode = d.value.variable_price
-  const prices = item?.prices
-  const range = prices?.price_range
-  if (!item || !prices || !range || !['from', 'lowest'].includes(mode) || range.min_amount === range.max_amount) return storePrice.value
-  const low = formatAmount(prices, range.min_amount)
-  if (!low) return storePrice.value
-  return mode === 'from' ? t('From {price}', { price: low }) : low
+  if (!item) return ''
+  const mode = ['from', 'lowest'].includes(d.value.variable_price) ? d.value.variable_price : 'range'
+  return productPriceHtml(item, { mode, amountClass: 'lt-price__amount' })
 })
 const priceBind = computed(() => textStyle(d.value, tsKeys('price')))
 const vars = computed(() => {

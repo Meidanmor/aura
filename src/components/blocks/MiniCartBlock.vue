@@ -2,10 +2,11 @@
 /**
  * Mini Cart (header widget): the cart button. It opens the cart drawer (which
  * exists only while this widget is on the page, see useDrawers.js) or goes
- * to the cart page, and can show the cart's total and hide while empty.
+ * to the cart page, and can show the cart's total and hide while empty, or on the
+ * cart and checkout pages (button and drawer both: the page itself shows the cart).
  */
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import cart from 'stores/cart.js'
 import WidgetButton from './WidgetButton.vue'
 import { cartIcons } from 'src/utils/builder-icons.js'
@@ -22,14 +23,17 @@ const props = defineProps({
 
 const { t } = useI18n()
 const router = useRouter()
+const route = useRoute()
 const d = computed(() => props.data?.data || {})
 const toPage = computed(() => d.value.click_action === 'page')
+// "Hide on the cart and checkout pages" (a language prefix like /en/ may come first).
+const onCartPages = computed(() => !!d.value.hide_on_cart_pages && /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?(?:cart|checkout)(?:\/|$)/i.test(route.path || ''))
 
 const source = useDrawerSource(props)
 // Its button: the drawer counts only while that button is shown (for swipes).
 const openerEl = ref(null)
 const drawer = useDrawer(
-  () => (toPage.value ? '' : 'cart'),
+  () => (toPage.value || onCartPages.value ? '' : 'cart'),
   () => {
     // Its own drawer, or with "Same as another widget" that widget's.
     const node = source.value.node
@@ -54,7 +58,7 @@ const drawer = useDrawer(
 const ready = ref(false)
 onMounted(() => { ready.value = true })
 const count = computed(() => (ready.value ? cart.state.items_count || 0 : 0))
-const hidden = computed(() => !!d.value.hide_when_empty && count.value === 0)
+const hidden = computed(() => onCartPages.value || (!!d.value.hide_when_empty && count.value === 0))
 const total = computed(() => {
   const totals = cart.state.totals || {}
   return formatCurrency(totals.total_price ?? totals.total_items ?? '0')

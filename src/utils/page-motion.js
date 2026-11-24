@@ -40,8 +40,8 @@ export function pageScrollTarget() {
 }
 
 // What moves: the layout's <main> and the footer. The header, the bar above it and the
-// announcement bar never move: they are the same on every page, so they are simply there when
-// the new page comes in (owner, 2026-11-24: a bar above the header fading in looked odd).
+// announcement bar don't take part (owner, 2026-11-24: a bar above the header fading in with the
+// page looked odd); a top bar that had scrolled out of view slides down instead (topBars / slideIn).
 // Never .q-page-container, .q-layout or #q-app: the
 // storefront turns animations off there (animation: none !important), so a class there never plays.
 function movers() {
@@ -51,6 +51,33 @@ function movers() {
   const footer = document.querySelector('.q-layout > footer')
   if (footer) list.push(footer)
   return list
+}
+
+// The bars above the header that had scrolled out of view: the new page starts at the top, so they
+// come back. They slide down from the top edge (the header and the page come down with them)
+// instead of popping in.
+const TOP_BARS = '.q-layout > .announcement-bar, .q-layout > .above-header'
+function topBars() {
+  // A bar still waiting above the edge from a move that a newer one cut short: back in its place first.
+  untuck([...document.querySelectorAll(TOP_BARS)])
+  return [...document.querySelectorAll(TOP_BARS)].filter((el) => el.getBoundingClientRect().bottom <= 0)
+}
+// Before the window scrolls up (still out of view): each bar waits above the top edge, so it never
+// shows for a moment at its place before sliding.
+function tuckBars(bars) {
+  for (const el of bars) {
+    const h = el.isConnected && typeof el.animate === 'function' ? el.offsetHeight : 0
+    if (h) el.style.marginTop = `-${h}px`
+  }
+}
+const untuck = (bars) => bars.forEach((el) => el.style.removeProperty('margin-top'))
+function slideIn(bars, ms) {
+  for (const el of bars) {
+    const from = el.style.marginTop
+    if (!from || !el.isConnected) continue
+    el.animate([{ marginTop: from }, { marginTop: '0px' }], { duration: ms, easing: 'cubic-bezier(.22,.8,.3,1)' })
+    el.style.removeProperty('margin-top')
+  }
 }
 
 const clear = (el) => {
@@ -76,6 +103,7 @@ function leave() {
   if (run) return run
   clearTimeout(inTimer)
   const els = movers()
+  const bars = topBars()
   const ms = Math.round(SPEED[motion.speed] * OUT_PART)
   for (const el of els) {
     clear(el)
@@ -83,7 +111,7 @@ function leave() {
   }
   let open
   const gap = new Promise((resolve) => { open = resolve })
-  run = { els, out: wait(ms), gap, open, animation: motion.animation }
+  run = { els, bars, out: wait(ms), gap, open, animation: motion.animation }
   // A move that never ends (a page that fails to load) must not leave the screen empty.
   clearTimeout(stuckTimer)
   stuckTimer = setTimeout(restore, 8000)
@@ -95,6 +123,7 @@ function restore() {
   clearTimeout(stuckTimer)
   if (!run) return
   run.els.forEach(clear)
+  untuck(run.bars)
   run.open()
   run = null
 }
@@ -105,6 +134,7 @@ function arrive() {
   const current = run
   if (!current) return
   run = null
+  tuckBars(current.bars)
   current.open()
   // One beat for the router's scroll (it waits for `gap`), then the page comes in.
   inTimer = setTimeout(() => {
@@ -115,6 +145,7 @@ function arrive() {
       void el.offsetWidth
       if (el.isConnected) mark(el, 'in', current.animation, ms)
     }
+    slideIn(current.bars, ms)
     inTimer = setTimeout(() => current.els.forEach(clear), ms + 60)
   }, 20)
 }
