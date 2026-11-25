@@ -128,6 +128,7 @@ import { closeHelp, help, helpConfig, keptThreads, loadMine, lookupOrder, openHe
 import { useAccount } from 'src/composables/useAccount.js'
 import { useI18n } from 'src/i18n/index.js'
 import { dock, dockDrag, dockShow, dockStyle } from 'src/utils/floating-dock.js'
+import { onColor } from 'src/utils/on-color.js'
 
 /**
  * The storefront's Help button and its panel (the owner sets it up in the
@@ -158,7 +159,8 @@ const label = computed(() => cfg.value?.label || t('Help'))
 const title = computed(() => cfg.value?.title || t('How can we help?'))
 const colours = computed(() => ({
   ...(cfg.value?.bg ? { '--help-accent': cfg.value.bg } : {}),
-  ...(cfg.value?.color ? { '--help-accent-text': cfg.value.color } : {}),
+  // No text colour picked: the one that reads on the picked background.
+  ...(cfg.value?.color ? { '--help-accent-text': cfg.value.color } : cfg.value?.bg && onColor(cfg.value.bg) ? { '--help-accent-text': onColor(cfg.value.bg) } : {}),
 }))
 const fabStyle = computed(() => ({ '--help-pos': `${cfg.value.edge === 'end' ? Math.min(cfg.value.position, 76) : cfg.value.position}%`, ...colours.value }))
 const panelStyle = computed(() => colours.value)

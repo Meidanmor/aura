@@ -18,7 +18,7 @@
     >
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="4.2" r="2.2" /><path d="M4.5 7.6c2.3.7 4.8 1 7.5 1s5.2-.3 7.5-1l.5 1.9c-1.9.6-3.9.9-6 1.1v3.5l2.6 7.2-1.9.7L12 15.3 9.3 22l-1.9-.7L10 14.1v-3.5c-2.1-.2-4.1-.5-6-1.1z" /></svg>
     </button>
-    <A11yPanel v-if="loaded" v-show="open" :open="open" :cfg="cfg" :prefs="prefs" :side="side" :color="color" @close="close" @change="onChange" />
+    <A11yPanel v-if="loaded" v-show="open" :open="open" :cfg="cfg" :prefs="prefs" :side="side" :color="panelColor" @close="close" @change="onChange" />
     <!-- Reading guide (a line) and reading mask (only a band stays clear). With a mouse they follow
          it; on touch screens they stay where they are while the page scrolls under them, and the
          round handle drags them (a finger on the page would cover the line). -->
@@ -53,6 +53,7 @@ import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, reactive, r
 import { useI18n } from 'src/i18n/index.js'
 import { applyPrefs, readPrefs } from 'src/utils/a11y-prefs.js'
 import { dock, dockDrag, dockShow, dockStyle } from 'src/utils/floating-dock.js'
+import { contrast, onColor } from 'src/utils/on-color.js'
 
 const A11yPanel = defineAsyncComponent(() => import('./A11yPanel.vue'))
 const { t } = useI18n()
@@ -61,7 +62,13 @@ const cfg = computed(() => {
   const c = (typeof window !== 'undefined' && window.__QWOO_SITE__?.a11y) || { on: true }
   return { on: c.on !== false, place: c.place || 'auto', color: c.color || '', size: c.size || 'm', phone: c.phone || 'show', off: c.off || [], contact: c.contact || {} }
 })
-const color = computed(() => cfg.value.color || 'var(--q-secondary, #1f5a43)')
+// The button's colour (the owner's, else the store's secondary) as a real colour, read once the page's
+// colours are set, so its icon and the panel's buttons can pick a text colour that reads on it.
+const storeSecondary = ref('')
+const color = computed(() => cfg.value.color || storeSecondary.value || '#1f5a43')
+const ink = computed(() => onColor(color.value) || '#fff')
+// The panel is white: a light colour (cream, lime) would vanish there, so it uses near-black instead.
+const panelColor = computed(() => (contrast(color.value, '#ffffff') >= 3 ? color.value : '#17201c'))
 
 const prefs = reactive(readPrefs())
 const open = ref(false)
@@ -75,7 +82,7 @@ const place = computed(() => dockStyle('a11y'))
 const side = computed(() => dock.pos.a11y?.side || (typeof document !== 'undefined' && document.documentElement.dir === 'rtl' ? 'left' : 'right'))
 const movable = computed(() => !!dock.cfg.buttons.a11y?.move)
 const drag = dockDrag('a11y')
-const fabStyle = computed(() => ({ ...place.value, '--a11y-color': color.value }))
+const fabStyle = computed(() => ({ ...place.value, '--a11y-color': color.value, '--a11y-ink': ink.value }))
 watch(showButton, (on) => dockShow('a11y', on), { immediate: true })
 
 function toggle() {
@@ -140,6 +147,7 @@ function onLink(e) {
 }
 
 onMounted(() => {
+  storeSecondary.value = getComputedStyle(document.documentElement).getPropertyValue('--q-secondary').trim()
   pointerY.value = Math.round(window.innerHeight / 2)
   touch.value = !!window.matchMedia?.('(hover: none)').matches
   window.addEventListener('pointermove', onPointer, { passive: true })
@@ -161,10 +169,10 @@ onBeforeUnmount(() => {
 .a11y-fab {
   width: var(--dock-size, 52px);
   height: var(--dock-size, 52px);
-  border: 2px solid #fff;
+  border: 2px solid var(--a11y-ink, #fff);
   border-radius: 50%;
   background: var(--a11y-color);
-  color: #fff;
+  color: var(--a11y-ink, #fff);
   display: grid;
   place-items: center;
   padding: 0;

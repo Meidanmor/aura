@@ -137,7 +137,7 @@ const icons = {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--q-on-secondary, #fff);
   background: var(--q-secondary, #333);
   box-shadow: 0 4px 14px rgba(0, 0, 0, .25);
   text-decoration: none;
@@ -145,10 +145,10 @@ const icons = {
   cursor: pointer;
 }
 
-.qwoo-contact-fab--whatsapp { background: #25D366; }
-.qwoo-contact-fab--phone    { background: #2563eb; }
-.qwoo-contact-fab--email    { background: #6b7280; }
-.qwoo-contact-fab--telegram { background: #229ED9; }
+.qwoo-contact-fab--whatsapp { background: #25D366; color: #fff; }
+.qwoo-contact-fab--phone    { background: #2563eb; color: #fff; }
+.qwoo-contact-fab--email    { background: #6b7280; color: #fff; }
+.qwoo-contact-fab--telegram { background: #229ED9; color: #fff; }
 
 .qwoo-contact-options {
   position: absolute;
@@ -164,16 +164,16 @@ const icons = {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--q-on-secondary, #fff);
   box-shadow: 0 4px 14px rgba(0, 0, 0, .2);
   text-decoration: none;
   background: var(--q-secondary, #333);
 }
 
-.qwoo-contact-option--whatsapp { background: #25D366; }
-.qwoo-contact-option--phone    { background: #2563eb; }
-.qwoo-contact-option--email    { background: #6b7280; }
-.qwoo-contact-option--telegram { background: #229ED9; }
+.qwoo-contact-option--whatsapp { background: #25D366; color: #fff; }
+.qwoo-contact-option--phone    { background: #2563eb; color: #fff; }
+.qwoo-contact-option--email    { background: #6b7280; color: #fff; }
+.qwoo-contact-option--telegram { background: #229ED9; color: #fff; }
 
 .qwoo-contact-icon {
   width: 24px;

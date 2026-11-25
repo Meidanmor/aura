@@ -34,5 +34,14 @@ export function onColor(value) {
   return withDark > withWhite ? DARK_INK : LIGHT_INK
 }
 
+/** The contrast ratio of two colours (1 to 21); 21 when either can't be read, so callers keep the colour. */
+export function contrast(a, b) {
+  const x = rgbOf(a)
+  const y = rgbOf(b)
+  if (!x || !y) return 21
+  const [hi, lo] = [luminance(x), luminance(y)].sort((m, n) => n - m)
+  return (hi + 0.05) / (lo + 0.05)
+}
+
 /** The store colours that get an --q-on-<name> variable. */
 export const ON_COLORS = ['primary', 'secondary', 'accent']

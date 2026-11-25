@@ -132,6 +132,7 @@ import { trapFocus } from 'src/utils/focus-trap.js'
 import { emptyPrefs } from 'src/utils/a11y-prefs.js'
 import { dockHasMoved, dockReset } from 'src/utils/floating-dock.js'
 import { fetchWithToken } from 'src/composables/useApiFetch.js'
+import { onColor } from 'src/utils/on-color.js'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -239,9 +240,10 @@ async function send() {
 }
 
 /* ---------- place and focus ---------- */
+const ink = computed(() => onColor(props.color) || '#fff')
 const panelStyle = computed(() => (sheet.value
-  ? { '--a11y-color': props.color }
-  : { '--a11y-color': props.color, [props.side]: 'calc(16px + env(safe-area-inset-' + props.side + ', 0px))' }))
+  ? { '--a11y-color': props.color, '--a11y-ink': ink.value }
+  : { '--a11y-color': props.color, '--a11y-ink': ink.value, [props.side]: 'calc(16px + env(safe-area-inset-' + props.side + ', 0px))' }))
 
 let release = null
 watch(() => props.open, (isOpen) => {
@@ -301,7 +303,7 @@ onBeforeUnmount(() => release?.({ restore: false }))
 .a11y-group h3 { margin: 0 0 6px; font-size: 13px; font-weight: 700; color: #4d5a54; letter-spacing: 0; line-height: 1.3; }
 .a11y-profiles { display: flex; flex-wrap: wrap; gap: 8px; }
 .a11y-prof { min-height: 44px; padding: 8px 14px; border: 1.5px solid #c9d2cd; border-radius: 99px; background: #fff; color: #17201c; font: inherit; font-size: 14px; cursor: pointer; }
-.a11y-prof[aria-pressed="true"] { background: var(--a11y-color); border-color: var(--a11y-color); color: #fff; }
+.a11y-prof[aria-pressed="true"] { background: var(--a11y-color); border-color: var(--a11y-color); color: var(--a11y-ink, #fff); }
 .a11y-size { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border: 1.5px solid #dfe5e2; border-radius: 12px; background: #f6f8f7; }
 .a11y-size button { width: 44px; height: 44px; border: 0; border-radius: 10px; background: #fff; color: #17201c; box-shadow: 0 1px 3px rgba(0, 0, 0, .15); font: inherit; font-weight: 700; cursor: pointer; }
 .a11y-size button:disabled { opacity: .4; cursor: default; }
@@ -329,7 +331,7 @@ onBeforeUnmount(() => release?.({ restore: false }))
 .a11y-field { display: grid; gap: 4px; font-size: 14px; font-weight: 700; }
 .a11y-field textarea, .a11y-field input { padding: 10px; border: 1.5px solid #b9c4be; border-radius: 10px; background: #fff; color: #17201c; font: inherit; font-weight: 400; }
 .a11y-hp { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-.a11y-go { min-height: 48px; border: 0; border-radius: 10px; background: var(--a11y-color); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.a11y-go { min-height: 48px; border: 0; border-radius: 10px; background: var(--a11y-color); color: var(--a11y-ink, #fff); font: inherit; font-weight: 700; cursor: pointer; }
 .a11y-go:disabled { opacity: .6; }
 .a11y-error { margin: 0; color: #b3261e; font-size: 14px; }
 .a11y-done { margin: 8px 0; font-size: 16px; }
