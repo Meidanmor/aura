@@ -25,3 +25,9 @@
 defineProps({ modelValue: Object, min: Number, max: Number })
 defineEmits(['update:modelValue', 'change'])
 </script>
+
+<style scoped>
+/* The price labels sit on the store's second colour: their text follows its readable colour. */
+.price-range-wrap :deep(.q-slider__text-container),
+.price-range-wrap :deep(.q-slider__text) { color: var(--q-on-secondary, #fff) !important; }
+</style>

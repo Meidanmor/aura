@@ -919,10 +919,12 @@ div#q-portal--dialog--1 {
 }
 .q-item.q-item--clickable[role="option"]:hover {
     background: #e9e9e9;
+    background: color-mix(in srgb, currentColor 10%, transparent);
     cursor: pointer;
 }
 .q-item--active.q-item.q-item--clickable[role="option"] {
     background: #e9e9e9;
+    background: color-mix(in srgb, currentColor 10%, transparent);
     font-weight: 600;
 }
 

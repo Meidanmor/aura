@@ -370,13 +370,14 @@ const filtersStyle = computed(() => ({ '--so-fbg': color('filters_bg') || undefi
 <style>
 /* The open list (drawn at the end of the page, so not scoped). Quasar marks the chosen option with
    text-secondary (!important). */
-.qwoo-sort-menu.so-hover .q-item:hover { background: var(--so-list-hover); }
+.qwoo-sort-menu.so-hover .q-item:hover,
+.qwoo-sort-menu.so-hover .q-item.q-item--active { background: var(--so-list-hover); }
 .qwoo-sort-menu.so-hover .q-item .q-focus-helper { display: none; }
 .qwoo-sort-menu.so-active .q-item.q-item--active { color: var(--so-list-active) !important; }
 /* The one button's sheet (phones), above the cookie banner (z-index 9999). */
 .sort-sheet-dialog { z-index: 10000; }
-.sort-sheet { background: #fff; color: inherit; width: 100%; max-width: 100vw; border-radius: 16px 16px 0 0; padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); }
+.sort-sheet { background: var(--q-primary, #fff); color: var(--q-secondary, #1d1b2e); width: 100%; max-width: 100vw; border-radius: 16px 16px 0 0; padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); }
 .sort-sheet__title { font-weight: 700; padding: 6px 16px 8px; touch-action: none; }
 .sort-sheet__grip { display: flex; justify-content: center; padding: 4px 0 6px; touch-action: none; cursor: grab; }
-.sort-sheet__grip span { width: 40px; height: 4px; border-radius: 4px; background: rgba(0, 0, 0, .2); }
+.sort-sheet__grip span { width: 40px; height: 4px; border-radius: 4px; background: rgba(0, 0, 0, .2); background: color-mix(in srgb, currentColor 25%, transparent); }
 </style>
