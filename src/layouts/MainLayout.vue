@@ -31,7 +31,7 @@
           no-swipe-open
           :width="widthOf(dr)"
           :class="['widget-drawer', `widget-drawer--${dr.kind}`, dr.scope || '', { 'cart-drawer': dr.kind === 'cart', 'widget-drawer--blocks': !!dr.sections, 'widget-drawer--pad': !!dr.look?.pad }]"
-          :style="{ background: dr.bg || undefined, color: dr.color || undefined, ...(dr.look?.pad || {}) }"
+          :style="{ background: dr.bg || undefined, '--dr-bg': dr.bg || undefined, color: dr.color || undefined, ...(dr.look?.pad || {}) }"
           @update:model-value="(v) => (v ? drawers.open(dr.key) : drawers.close(dr.key))"
       >
         <!-- The standard menu drawer's own link look (MenuWidget: Style → Drawer Links). -->
@@ -118,6 +118,7 @@
 <script setup>
 import {ref, computed, watch, onMounted, onUnmounted, useSSRContext, provide, nextTick} from 'vue'
 import { trapFocus, installRadioKeys } from 'src/utils/focus-trap.js'
+import { playDrawer } from 'src/utils/entrance.js'
 import { isEditorMode, loadPageConfig, subscribeToLiveConfig } from 'src/utils/config-loader'
 import { resolveHeroImageSrc } from 'src/utils/resolve-hero-image'
 import { applyBrandFonts } from 'src/utils/brand-fonts.js'
@@ -295,6 +296,7 @@ watch(() => drawers.state.open, (key) => {
   const opener = document.activeElement
   nextTick(() => {
     const aside = getAside(getEl(key))
+    playDrawer(aside)
     if (aside && drawers.state.open === key) {
       releaseDrawer = trapFocus(aside, { label: (dr?.title || fallback), returnTo: opener, onEscape: () => drawers.close(key) })
     }
@@ -609,6 +611,9 @@ async function handleSubscribe() {
     permission.value = Notification.permission
   }
 }
+
+// The Push Notifications block (PushNotificationsBlock.vue): whether it can ask, and asking.
+provide('pushOffer', { keyReady: pushKeyReady, supported, permission, subscribe: handleSubscribe })
 
 async function handleSoftAskEnable() {
   await handleSubscribe()

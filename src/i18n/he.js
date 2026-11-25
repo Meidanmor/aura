@@ -569,6 +569,8 @@ export default {
   "Test notifications": "התראות בדיקה",
   "Turn on notifications on this device to get the tests you send from your dashboard.": "הפעילו התראות במכשיר הזה כדי לקבל את הבדיקות שאתם שולחים מלוח הבקרה.",
   "Turn on": "להפעיל",
+  "Get notifications": "קבלו התראות",
+  "New products, offers and updates on your orders.": "מוצרים חדשים, מבצעים ועדכונים על ההזמנות שלך.",
   "This device gets your test notifications now.": "המכשיר הזה מקבל עכשיו את התראות הבדיקה שלכם.",
   "Clear": "ניקוי",
   "Show products": "הצגת המוצרים",

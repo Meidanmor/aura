@@ -34,6 +34,12 @@ html, body {
 .bg-primary.text-white { color: var(--q-on-primary, #fff) !important; }
 .bg-secondary.text-white { color: var(--q-on-secondary, #fff) !important; }
 .bg-accent.text-white { color: var(--q-on-accent, #fff) !important; }
+/*
+ * Never a fake bold: a store font with one weight (Bebas Neue, Anton…) asked for bold was
+ * smeared by the browser. Store fonts declare their real weights (@font-face weight ranges),
+ * so fonts that have a bold keep it; single-weight display fonts show as they're drawn.
+ */
+html { font-synthesis-weight: none; }
 /* Unticked radios and checkboxes: Quasar's see-through black ring vanished on dark stores. */
 .q-radio .q-radio__inner--falsy, .q-checkbox .q-checkbox__inner--falsy { color: color-mix(in srgb, currentColor 60%, transparent); }
 /* Softer secondary text that follows the colour around it (Quasar's text-grey-* stay dark on dark stores). */
@@ -1144,7 +1150,8 @@ header.header-solid-text .header-inner :not(.q-badge) {
 }
 .q-drawer .sticky {
     z-index: 9;
-    background-color: #fff;
+    /* The drawer's own colour (Store builder: the widget's drawer background), else white as before. */
+    background-color: var(--dr-bg, #fff);
     box-shadow: 0px 0px 15px #00000011;
 }
 
@@ -1510,6 +1517,21 @@ html.qa-editor .sb-aud-customers { outline: 1px dashed rgba(127, 127, 127, .6); 
 [data-anim="play"][data-anim-name="words"] .sb-w { animation: sb-anim-word .6s cubic-bezier(.2, .7, .2, 1) calc(var(--sb-anim-delay, 0ms) + var(--wi, 0) * 70ms) both; }
 [data-anim="play"][data-anim-name="words"]:not(:has(.sb-w)) { animation: sb-anim-fade .8s ease var(--sb-anim-delay, 0ms) both; }
 .sb-w { display: inline-block; }
+/*
+ * In a drawer (entrance.js playDrawer): quicker, since they play while it slides in. A block holding
+ * a vertical menu stays still and its links come in one by one with its animation instead.
+ */
+.q-drawer [data-anim="play"] { animation-duration: .55s; }
+.q-drawer [data-anim]:has(.menu-vertical) { opacity: 1 !important; transform: none !important; translate: none !important; filter: none !important; animation: none !important; }
+.q-drawer [data-anim]:has(.menu-vertical) { --dr-link-anim: sb-anim-rise; }
+.q-drawer [data-anim-name="fade"]:has(.menu-vertical) { --dr-link-anim: sb-anim-fade; }
+.q-drawer [data-anim-name="zoom_in"]:has(.menu-vertical) { --dr-link-anim: sb-anim-grow; }
+.q-drawer [data-anim-name="slide_start"]:has(.menu-vertical) { --dr-link-anim: sb-anim-slide-s; }
+.q-drawer [data-anim-name="slide_end"]:has(.menu-vertical) { --dr-link-anim: sb-anim-slide-e; }
+.q-drawer [data-anim-name="blur_in"]:has(.menu-vertical) { --dr-link-anim: sb-anim-blur; }
+.q-drawer [data-anim-name="flip"]:has(.menu-vertical) { --dr-link-anim: sb-anim-flip; }
+.q-drawer [data-anim="wait"] .menu-vertical > .menu-v-item { opacity: 0; }
+.q-drawer [data-anim="play"] .menu-vertical > .menu-v-item { animation: var(--dr-link-anim) .5s cubic-bezier(.2, .7, .2, 1) calc(var(--sb-anim-delay, 0ms) + var(--mi, 0) * 55ms) both; }
 @keyframes sb-anim-slide-s { from { opacity: 0; translate: calc(-56px * var(--sb-dirx, 1)) 0; } to { opacity: 1; translate: 0 0; } }
 @keyframes sb-anim-slide-e { from { opacity: 0; translate: calc(56px * var(--sb-dirx, 1)) 0; } to { opacity: 1; translate: 0 0; } }
 @keyframes sb-anim-blur { from { opacity: 0; filter: blur(12px); } to { opacity: 1; filter: none; } }

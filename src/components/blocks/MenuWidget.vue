@@ -266,7 +266,7 @@ const css = computed(() => {
     <component :is="'style'" v-if="css">{{ css }}</component>
     <!-- Vertical Layout (Lists, Footers, Sidebars) -->
     <ul v-if="showsVertical && Array.isArray(menuItems) && menuItems.length" class="menu-vertical" role="list">
-      <li v-for="(item, i) in menuItems" :key="item.id || i" class="menu-v-item">
+      <li v-for="(item, i) in menuItems" :key="item.id || i" class="menu-v-item" :style="{ '--mi': i }">
         <a
           v-if="item.external"
           :href="item.url"

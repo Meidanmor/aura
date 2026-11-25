@@ -24,7 +24,7 @@
     </div>
     <SectionRenderer :sections="scrolling" page="drawer" no-priority />
     <q-banner
-        v-if="entry.kind === 'menu' && entry.showNotifications !== false && vapidConfigured && supported && permission !== 'granted' && permission !== 'denied'"
+        v-if="entry.kind === 'menu' && entry.showNotifications !== false && !hasPushBlock && vapidConfigured && supported && permission !== 'granted' && permission !== 'denied'"
         class="bg-secondary text-white q-ma-md rounded-borders shadow-2"
         inline-actions
     >
@@ -63,6 +63,8 @@ const look = computed(() => props.entry.look || { pad: null, headPad: null, titl
 // "Keep at the bottom of the drawer" (a section's Advanced → Position).
 const pinned = computed(() => (props.entry.sections || []).filter((s) => s?.style?.drawer_pin))
 const scrolling = computed(() => (props.entry.sections || []).filter((s) => !s?.style?.drawer_pin))
+// A Push Notifications block anywhere inside takes the place of the ready-made box below.
+const hasPushBlock = computed(() => JSON.stringify(props.entry.sections || []).includes('"type":"push_notifications"'))
 
 const TITLES = { menu: 'Menu', cart: 'Cart', wishlist: 'Wishlist' }
 const CLOSE = { menu: 'Close menu', cart: 'Close cart drawer', wishlist: 'Close wishlist drawer' }

@@ -136,7 +136,9 @@ const qSize = computed(() => ({ sm: 'sm', md: 'md', lg: 'lg' }[size.value]))
 // Custom colors win over the variant's theme color.
 const qColor = computed(() => {
   if (d.value.bg_color && (variant.value === 'primary' || variant.value === 'secondary')) return undefined
-  return variant.value === 'secondary' ? 'secondary' : 'primary'
+  // Outline, text-only and underlined buttons draw their text and line in the action colour: the
+  // store's primary colour is the page's background, so they vanished in it (View cart in a drawer).
+  return variant.value === 'primary' ? 'primary' : 'secondary'
 })
 
 // "Go to checkout" / "Go to the cart page": hidden while the cart is empty (known in the

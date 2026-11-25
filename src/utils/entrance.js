@@ -93,6 +93,15 @@ function skip(el) {
 
 function start(el, name) {
   if (!NAMES.has(name) || skip(el)) return
+  // Inside a drawer: waits hidden and plays each time the drawer opens (playDrawer, MainLayout).
+  if (el.closest('.q-drawer')) {
+    // The Store builder preview shows the drawer as it is (a change of animation plays it: replay()).
+    if (isEditorMode()) return
+    el.dataset.animName = name
+    el.dataset.animDrawer = '1'
+    el.dataset.anim = 'wait'
+    return
+  }
   const r = el.getBoundingClientRect()
   // Already on screen (or above it): stays as it is.
   if (r.top < window.innerHeight * 0.92) return
@@ -124,6 +133,19 @@ function replay(el, name) {
   el.dataset.anim = 'wait'
   el.getBoundingClientRect() // a layout in between restarts the animation, even when it's the same one
   el.dataset.anim = 'play'
+}
+
+/**
+ * A drawer opened: its blocks with an entrance animation play again from the start, so they
+ * come in every time (a menu block's links one by one, app.css). Called by MainLayout.
+ */
+export function playDrawer(root) {
+  if (!root || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+  const els = root.querySelectorAll('[data-anim-drawer]')
+  if (!els.length) return
+  for (const el of els) el.dataset.anim = 'wait'
+  root.getBoundingClientRect() // a layout in between restarts the animations
+  for (const el of els) el.dataset.anim = 'play'
 }
 
 export const vEntrance = {

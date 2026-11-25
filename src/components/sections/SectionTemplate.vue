@@ -132,6 +132,7 @@ import SectionBgSlides from './SectionBgSlides.vue'
 import ProductTags from './ProductTags.vue'
 import MenuWidget from '../blocks/MenuWidget.vue'
 import LanguageSwitcherBlock from '../blocks/LanguageSwitcherBlock.vue'
+import PushNotificationsBlock from '../blocks/PushNotificationsBlock.vue'
 import { buildContainerStyle, buildBlockWrapperStyle, entranceOf } from 'src/composables/useSectionStyle.js'
 import LoopImage from '../loops/LoopImage.vue'
 import LoopText from '../loops/LoopText.vue'
@@ -304,6 +305,7 @@ const blockComponents = {
   html_block: HtmlBlock,
   menu_widget: MenuWidget,
   language_switcher: LanguageSwitcherBlock,
+  push_notifications: PushNotificationsBlock,
   mini_cart: MiniCartBlock,
   mini_wishlist: MiniWishlistBlock,
   search: SearchBlock,
