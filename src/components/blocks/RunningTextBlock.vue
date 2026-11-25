@@ -160,7 +160,7 @@ watch([direction, seconds], start)
   letter-spacing: var(--rt-ls, normal);
 }
 .rt--lines {
-  border-block: 1px solid var(--rt-line, rgba(0, 0, 0, 0.12));
+  border-block: 1px solid var(--rt-line, rgba(0, 0, 0, 0.12)); border-block: 1px solid var(--rt-line, color-mix(in srgb, currentColor 12%, transparent));
 }
 .rt--upper { text-transform: uppercase; }
 

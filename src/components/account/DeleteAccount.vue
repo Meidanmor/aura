@@ -47,5 +47,5 @@ async function request() {
 </script>
 
 <style scoped>
-.delete-account { border-top: 1px solid rgba(0, 0, 0, .12); padding-top: 24px; max-width: 640px; }
+.delete-account { border-top: 1px solid rgba(0, 0, 0, .12); border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent); padding-top: 24px; max-width: 640px; }
 </style>

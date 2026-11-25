@@ -28,6 +28,6 @@ const current = computed(() => list.value?.category?.slug || '')
 
 <style scoped>
 .blog-cats { display: flex; flex-wrap: wrap; gap: 8px; }
-.blog-cat { padding: 6px 14px; border-radius: 99px; border: 1px solid rgba(0, 0, 0, .15); color: inherit; text-decoration: none; font-size: 14px; }
+.blog-cat { padding: 6px 14px; border-radius: 99px; border: 1px solid rgba(0, 0, 0, .15); border: 1px solid color-mix(in srgb, currentColor 15%, transparent); color: inherit; text-decoration: none; font-size: 14px; }
 .blog-cat.on, .blog-cat:hover { border-color: currentColor; font-weight: 600; }
 </style>

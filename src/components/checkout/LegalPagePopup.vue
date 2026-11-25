@@ -58,7 +58,7 @@ watch(() => props.path, async (path) => {
 .legal-popup.is-sheet { width: 100%; max-width: 100vw; max-height: 88vh; border-radius: 16px 16px 0 0; padding-bottom: env(safe-area-inset-bottom); }
 .legal-popup__grip { display: flex; justify-content: center; padding: 8px 0 2px; touch-action: none; cursor: grab; }
 .legal-popup__grip span { width: 40px; height: 4px; border-radius: 4px; background: rgba(0, 0, 0, .2); }
-.legal-popup__head { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 16px; border-bottom: 1px solid rgba(0, 0, 0, .08); }
+.legal-popup__head { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 16px; border-bottom: 1px solid rgba(0, 0, 0, .08); border-bottom: 1px solid color-mix(in srgb, currentColor 8%, transparent); }
 .legal-popup.is-sheet .legal-popup__head { touch-action: none; }
 .legal-popup__title { flex: 1; font-weight: 700; font-size: 17px; }
 .legal-popup__body { overflow-y: auto; overscroll-behavior: contain; flex: 1; }

@@ -412,11 +412,11 @@ async function add() {
 .gc-label { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
 .gc-label small { font-weight: 400; opacity: .65; }
 .gc-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.gc-chip { border: 1.5px solid rgba(0, 0, 0, .18); background: transparent; color: inherit; padding: 9px 16px; border-radius: 999px; font: inherit; font-weight: 600; cursor: pointer; font-variant-numeric: tabular-nums; }
+.gc-chip { border: 1.5px solid rgba(0, 0, 0, .18); border: 1.5px solid color-mix(in srgb, currentColor 18%, transparent); background: transparent; color: inherit; padding: 9px 16px; border-radius: 999px; font: inherit; font-weight: 600; cursor: pointer; font-variant-numeric: tabular-nums; }
 .gc-chip.is-on { border-color: currentColor; box-shadow: inset 0 0 0 1px currentColor; }
 .gc-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
 @media (max-width: 520px) { .gc-two { grid-template-columns: minmax(0, 1fr); gap: 0; } }
-.gc-acc { border: 1.5px solid rgba(0, 0, 0, .14); border-radius: 12px; margin-bottom: 6px; }
+.gc-acc { border: 1.5px solid rgba(0, 0, 0, .14); border: 1.5px solid color-mix(in srgb, currentColor 14%, transparent); border-radius: 12px; margin-bottom: 6px; }
 .gc-acc summary { list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer; }
 .gc-acc summary::-webkit-details-marker { display: none; }
 .gc-acc summary span { display: grid; }
@@ -425,14 +425,14 @@ async function add() {
 .gc-acc[open] summary i { transform: rotate(-135deg); margin-top: 4px; }
 .gc-acc__body { padding: 4px 14px 2px; }
 .gc-designs { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; }
-.gc-design { display: grid; gap: 6px; padding: 6px; border: 1.5px solid rgba(0, 0, 0, .14); border-radius: 12px; background: transparent; color: inherit; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; text-align: center; }
+.gc-design { display: grid; gap: 6px; padding: 6px; border: 1.5px solid rgba(0, 0, 0, .14); border: 1.5px solid color-mix(in srgb, currentColor 14%, transparent); border-radius: 12px; background: transparent; color: inherit; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; text-align: center; }
 .gc-design.is-on { border-color: currentColor; box-shadow: inset 0 0 0 1px currentColor; }
 .gc-design__band { display: grid; place-items: center; height: 44px; border-radius: 8px; font-size: 22px; }
 .gc-swatches { display: flex; flex-wrap: wrap; gap: 10px; }
 .gc-sw { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1.5px rgba(0, 0, 0, .18); cursor: pointer; padding: 0; }
 .gc-sw.is-on { box-shadow: 0 0 0 2.5px currentColor; }
 .gc-images { display: flex; flex-wrap: wrap; gap: 8px; }
-.gc-img { position: relative; width: 64px; height: 64px; border-radius: 10px; border: 1.5px solid rgba(0, 0, 0, .14); background: transparent center / cover; color: inherit; font: inherit; font-size: 12px; font-weight: 600; line-height: 1.2; display: grid; place-items: center; text-align: center; cursor: pointer; overflow: hidden; padding: 2px; }
+.gc-img { position: relative; width: 64px; height: 64px; border-radius: 10px; border: 1.5px solid rgba(0, 0, 0, .14); border: 1.5px solid color-mix(in srgb, currentColor 14%, transparent); background: transparent center / cover; color: inherit; font: inherit; font-size: 12px; font-weight: 600; line-height: 1.2; display: grid; place-items: center; text-align: center; cursor: pointer; overflow: hidden; padding: 2px; }
 .gc-img.is-on { border-color: currentColor; box-shadow: inset 0 0 0 1px currentColor; }
 .gc-img--own input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .gc-see { justify-self: start; margin: 2px 0 8px; text-decoration: underline; }
@@ -440,7 +440,7 @@ async function add() {
 .gc-dialog { width: 600px; max-width: 94vw; }
 .gc-desk-only, .gc-desk-block { display: none; }
 .gc-buyrow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 8px; align-items: stretch; }
-.gc-design-btn { display: grid; align-content: center; gap: 0; padding: 6px 12px; border: 1.5px solid rgba(0, 0, 0, .18); border-radius: 12px; background: transparent; color: inherit; font: inherit; text-align: start; cursor: pointer; min-width: 0; }
+.gc-design-btn { display: grid; align-content: center; gap: 0; padding: 6px 12px; border: 1.5px solid rgba(0, 0, 0, .18); border: 1.5px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 12px; background: transparent; color: inherit; font: inherit; text-align: start; cursor: pointer; min-width: 0; }
 .gc-design-btn b { font-size: 14px; }
 .gc-design-btn small { font-size: 12px; opacity: .65; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (min-width: 1024px) {
@@ -452,7 +452,7 @@ async function add() {
 /* "Design this email" (phones and tablets): the choices stay on top, the email scrolls under them. */
 .gc-sheet { position: relative; display: flex; flex-direction: column; height: 100%; background: var(--q-primary, #fff); color: var(--q-text, inherit); }
 .gc-sheet__head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 10px 6px 16px; }
-.gc-sheet__top { flex: none; padding: 0 16px 10px; border-bottom: 1px solid rgba(0, 0, 0, .1); }
+.gc-sheet__top { flex: none; padding: 0 16px 10px; border-bottom: 1px solid rgba(0, 0, 0, .1); border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent); }
 .gc-sheet__tabs { display: flex; gap: 4px; margin-bottom: 8px; }
 .gc-sheet__tabs button { border: 0; background: none; color: inherit; font: inherit; font-size: 14px; font-weight: 600; padding: 6px 12px; border-radius: 999px; opacity: .6; cursor: pointer; }
 .gc-sheet__tabs button.is-on { opacity: 1; background: rgba(0, 0, 0, .07); }

@@ -176,9 +176,9 @@ const shownAttributes = computed(() => {
 .filters-backdrop { display: none; }
 :deep(.q-checkbox[aria-checked="true"] .q-checkbox__label) { font-weight: 600; }
 .filters-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.filters-chip { border: 1.5px solid rgba(0, 0, 0, .18); background: transparent; color: inherit; border-radius: 999px; padding: 4px 14px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.filters-chip { border: 1.5px solid rgba(0, 0, 0, .18); border: 1.5px solid color-mix(in srgb, currentColor 18%, transparent); background: transparent; color: inherit; border-radius: 999px; padding: 4px 14px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 .filters-chip:hover { border-color: currentColor; }
-.filters-chip:disabled { opacity: .4; cursor: default; border-color: rgba(0, 0, 0, .18); }
+.filters-chip:disabled { opacity: .4; cursor: default; border-color: rgba(0, 0, 0, .18); border-color: color-mix(in srgb, currentColor 18%, transparent); }
 .filters-chip.is-on { background: var(--q-secondary); border-color: var(--q-secondary); color: var(--q-primary); }
 
 /* Computers: the box is as tall as its filters (a fixed height cut them off
@@ -236,7 +236,7 @@ const shownAttributes = computed(() => {
     display: flex;
     gap: 8px;
     padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
-    border-top: 1px solid rgba(0, 0, 0, .08);
+    border-top: 1px solid rgba(0, 0, 0, .08); border-top: 1px solid color-mix(in srgb, currentColor 8%, transparent);
   }
   .filters-actions__show { flex: 1 1 auto; min-height: 44px; border-radius: 8px; }
   .filters-actions__clear { min-height: 44px; }

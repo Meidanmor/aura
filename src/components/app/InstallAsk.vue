@@ -68,7 +68,7 @@ function close() {
 </script>
 
 <style scoped>
-.ia { display: flex; gap: 12px; align-items: center; background: #fff; color: #16181d; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 16px; padding: 12px 14px; }
+.ia { display: flex; gap: 12px; align-items: center; background: #fff; color: #16181d; border: 1px solid rgba(0, 0, 0, 0.08); border: 1px solid color-mix(in srgb, currentColor 8%, transparent); border-radius: 16px; padding: 12px 14px; }
 .ia__icon { width: 44px; height: 44px; border-radius: 11px; flex: none; object-fit: cover; }
 .ia__text { flex: 1; min-width: 0; }
 .ia__title { font-weight: 700; }

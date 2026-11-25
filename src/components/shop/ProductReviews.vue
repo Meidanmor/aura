@@ -114,7 +114,7 @@ onMounted(() => load(1))
 .reviews-bar i { display: block; height: 100%; background: #f2b01e; }
 .reviews-note { margin: 0; }
 .reviews-list { list-style: none; margin: 0; padding: 0; }
-.review { padding: 16px 0; border-top: 1px solid rgba(0, 0, 0, .1); }
+.review { padding: 16px 0; border-top: 1px solid rgba(0, 0, 0, .1); border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent); }
 .review-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
 .review-text { margin: 6px 0 0; white-space: pre-line; overflow-wrap: anywhere; }
 .review-meta { margin: 6px 0 0; opacity: .75; }

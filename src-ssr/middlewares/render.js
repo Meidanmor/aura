@@ -6,6 +6,7 @@ import { AsyncLocalStorage } from 'node:async_hooks'
 //import { readFileSync } from 'node:fs'
 //import { join } from 'node:path'
 import branding from '../../public/config/branding.json' // adjust path as needed
+import { onColor, ON_COLORS } from '../../src/utils/on-color.js'
 import { allLangs, isExtraLang, langFromPath, mainLang, stripLang, withLang } from '../../src/i18n/lang.js'
 import { LANGUAGES } from '../../src/i18n/index.js'
 import { clientSite, originOf } from '../site-content.js'
@@ -246,6 +247,10 @@ function siteHead(site) {
     const vars = Object.entries(BRAND_VARS)
         .filter(([key]) => typeof colors[key] === 'string' && CSS_COLOR.test(colors[key].trim()))
         .map(([key, name]) => `--q-${name}:${colors[key].trim()};`)
+        .join('') + ON_COLORS
+        .map((key) => [key, typeof colors[key] === 'string' ? onColor(colors[key]) : ''])
+        .filter(([, ink]) => ink)
+        .map(([key, ink]) => `--q-on-${key}:${ink};`)
         .join('')
     const has = (file) => !!site.files[file]
     const icons = [

@@ -174,13 +174,13 @@ const cssVars = computed(() => {
 .tabs-block__tab:focus-visible { outline: 2px solid var(--tb-active, currentColor); outline-offset: -2px; }
 
 /* Styles */
-.tabs-block--underline .tabs-block__list { border-bottom: 1px solid rgba(0, 0, 0, 0.12); }
+.tabs-block--underline .tabs-block__list { border-bottom: 1px solid rgba(0, 0, 0, 0.12); border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
 .tabs-block--underline .tabs-block__tab { border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .tabs-block--underline .tabs-block__tab.is-active { border-bottom-color: var(--tb-active, currentColor); color: var(--tb-active, inherit); }
 .tabs-block--pills .tabs-block__tab { border-radius: 999px; }
 .tabs-block--pills .tabs-block__tab.is-active { background: var(--tb-active, #333); color: #fff; }
 .tabs-block--boxed .tabs-block__list { gap: 0; }
-.tabs-block--boxed .tabs-block__tab { border: 1px solid rgba(0, 0, 0, 0.12); margin-right: -1px; }
+.tabs-block--boxed .tabs-block__tab { border: 1px solid rgba(0, 0, 0, 0.12); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); margin-right: -1px; }
 .tabs-block--boxed .tabs-block__tab.is-active { background: var(--tb-active, #333); border-color: var(--tb-active, #333); color: #fff; }
 
 .tabs-block__panel {
@@ -221,7 +221,7 @@ const cssVars = computed(() => {
     gap: 12px;
     padding: 16px 0;
     border: 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12); border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
     background: none;
     font: inherit;
     font-weight: 600;

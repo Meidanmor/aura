@@ -68,7 +68,7 @@ const vars = computed(() => {
 .product-attrs { margin: 0; display: grid; }
 .product-attrs__row { display: grid; grid-template-columns: minmax(80px, max-content) 1fr; gap: 4px 18px; padding: var(--pa-gap, 10px) 0; }
 .product-attrs--stacked .product-attrs__row { grid-template-columns: 1fr; }
-.has-lines .product-attrs__row + .product-attrs__row { border-top: 1px solid var(--pa-line, rgba(0, 0, 0, .12)); }
+.has-lines .product-attrs__row + .product-attrs__row { border-top: 1px solid var(--pa-line, rgba(0, 0, 0, .12)); border-top: 1px solid var(--pa-line, color-mix(in srgb, currentColor 12%, transparent)); }
 .product-attrs dt, .product-attrs th { opacity: .7; }
 .product-attrs dd { margin: 0; font-weight: 600; }
 @media (max-width: 1023px) { .product-attrs__row { padding: var(--pa-gap-t, var(--pa-gap, 10px)) 0; } }
@@ -91,11 +91,11 @@ const vars = computed(() => {
 }
 
 /* A table: a border around, rows striped. */
-.product-attrs--table { display: table; width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--pa-border, rgba(0, 0, 0, .12)); border-radius: var(--pa-radius, 12px); overflow: hidden; background: var(--pa-bg, transparent); }
+.product-attrs--table { display: table; width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--pa-border, rgba(0, 0, 0, .12)); border: 1px solid var(--pa-border, color-mix(in srgb, currentColor 12%, transparent)); border-radius: var(--pa-radius, 12px); overflow: hidden; background: var(--pa-bg, transparent); }
 .product-attrs--table .product-attrs__row { display: table-row; padding: 0; }
 .product-attrs--table th, .product-attrs--table td { padding: 12px 16px; text-align: start; vertical-align: top; }
 .product-attrs--table th { font-weight: 400; width: 40%; }
 .product-attrs--table td { font-weight: 600; }
 .product-attrs--table .product-attrs__row:nth-child(even) { background: var(--pa-stripe, rgba(0, 0, 0, .035)); }
-.product-attrs--table .product-attrs__row + .product-attrs__row > * { border-top: 1px solid var(--pa-line, rgba(0, 0, 0, .08)); }
+.product-attrs--table .product-attrs__row + .product-attrs__row > * { border-top: 1px solid var(--pa-line, rgba(0, 0, 0, .08)); border-top: 1px solid var(--pa-line, color-mix(in srgb, currentColor 8%, transparent)); }
 </style>

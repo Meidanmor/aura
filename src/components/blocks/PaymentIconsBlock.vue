@@ -33,7 +33,7 @@ const vars = computed(() => {
 
 <style scoped>
 .pay-icons { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--pi-gap, 8px); justify-content: var(--pi-align, flex-start); }
-.pay-icons__item { display: flex; height: var(--pi-h, 26px); aspect-ratio: 48 / 30; background: #fff; border: 1px solid rgba(0, 0, 0, .1); border-radius: 4px; }
+.pay-icons__item { display: flex; height: var(--pi-h, 26px); aspect-ratio: 48 / 30; background: #fff; border: 1px solid rgba(0, 0, 0, .1); border: 1px solid color-mix(in srgb, currentColor 10%, transparent); border-radius: 4px; }
 .pay-icons--mono .pay-icons__item { background: transparent; border-color: currentColor; opacity: .85; }
 .pay-icons__item svg { width: 100%; height: 100%; }
 @media (max-width: 1023px) {

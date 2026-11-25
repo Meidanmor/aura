@@ -933,7 +933,7 @@ provide('checkoutPage', reactive({
 /* Cardcom's card form in a window over the checkout. */
 .pay-frame { display: flex; flex-direction: column; width: min(560px, 100vw); height: min(760px, 92vh); background: #fff; color: #111; border-radius: 12px; overflow: hidden; }
 .q-dialog__inner--maximized .pay-frame { width: 100vw; height: 100%; border-radius: 0; }
-.pay-frame__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 8px 8px 16px; border-bottom: 1px solid rgba(0, 0, 0, .1); }
+.pay-frame__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 8px 8px 16px; border-bottom: 1px solid rgba(0, 0, 0, .1); border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent); }
 .pay-frame__body { flex: 1; width: 100%; border: 0; }
 /* Shared by the checkout blocks (not scoped: they're in child components). */
 /* purgecss start ignore */

@@ -58,7 +58,7 @@ const stateLabel = (s) => ({ active: t('Active'), used: t('Used up'), expired: t
 .my-gc__wait { display: grid; place-items: center; min-height: 120px; }
 .my-gc__h { font-size: 1.05rem; font-weight: 600; margin: 0 0 10px; }
 .my-gc__list { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-.my-gc__card { border: 1px solid rgba(0, 0, 0, .12); border-radius: 12px; padding: 14px; display: grid; gap: 6px; }
+.my-gc__card { border: 1px solid rgba(0, 0, 0, .12); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); border-radius: 12px; padding: 14px; display: grid; gap: 6px; }
 .my-gc__top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .my-gc__code { font-family: ui-monospace, Menlo, Consolas, monospace; letter-spacing: .08em; }
 .my-gc__state { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: rgba(0, 0, 0, .06); }

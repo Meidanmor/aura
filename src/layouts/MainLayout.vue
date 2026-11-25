@@ -121,6 +121,7 @@ import { trapFocus, installRadioKeys } from 'src/utils/focus-trap.js'
 import { isEditorMode, loadPageConfig, subscribeToLiveConfig } from 'src/utils/config-loader'
 import { resolveHeroImageSrc } from 'src/utils/resolve-hero-image'
 import { applyBrandFonts } from 'src/utils/brand-fonts.js'
+import { onColor, ON_COLORS } from 'src/utils/on-color.js'
 import { provideDrawers, provideWidgetFinder } from 'src/composables/useDrawers.js'
 import { isNativeApp, liveUrl } from 'src/utils/native-app'
 import { useQuasar } from 'quasar'
@@ -198,6 +199,11 @@ function applyGlobalColors(colors) {
   if (colors.info)      setCssVar('info', colors.info)
   if (colors.warning)   setCssVar('warning', colors.warning)
   if (colors.text)      setCssVar('text', colors.text)
+  // Readable text on the store's colours (src/utils/on-color.js).
+  for (const key of ON_COLORS) {
+    const ink = colors[key] && onColor(colors[key])
+    if (ink) setCssVar('on-' + key, ink)
+  }
 }
 // Inside your Page or Layout
 defineOptions({

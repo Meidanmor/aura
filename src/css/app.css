@@ -27,6 +27,14 @@ html, body {
     touch-action: pan-y;
 }
 /*
+ * Quasar writes white text on its colour classes (q-btn / q-chip color="secondary" = bg-secondary
+ * text-white). A store whose colour is light (the ink colour of a dark store) got white on cream:
+ * the text follows --q-on-<colour> (src/utils/on-color.js) instead, white where the colour is dark.
+ */
+.bg-primary.text-white { color: var(--q-on-primary, #fff) !important; }
+.bg-secondary.text-white { color: var(--q-on-secondary, #fff) !important; }
+.bg-accent.text-white { color: var(--q-on-accent, #fff) !important; }
+/*
  * A focused form field (checkout, sign-in, forms) takes its colour from the field
  * control. Quasar uses the store's primary colour there, and stores keep primary light
  * (the page colour), so a focused field's label and line turned invisible on a light page.
@@ -34,6 +42,18 @@ html, body {
  * error keeps Quasar's text-* class, which wins (!important).
  */
 .q-field .q-field__control { color: var(--q-secondary); }
+/*
+ * Quasar draws fields in light-mode greys (black see-through background, line, label and text),
+ * which vanished on dark stores. They follow the store's text colour instead; on light stores
+ * (dark text) they look the same as before. Browsers without color-mix() keep Quasar's look.
+ */
+.q-field__native, .q-field__input, .q-field__prefix, .q-field__suffix { color: var(--q-text, rgba(0, 0, 0, .87)); }
+.q-field:not(.q-field--focused):not(.q-field--error) .q-field__label,
+.q-field:not(.q-field--error) .q-field__marginal { color: color-mix(in srgb, var(--q-text, #000) 62%, transparent); }
+.q-field--filled .q-field__control { background: color-mix(in srgb, var(--q-text, #000) 6%, transparent); }
+.q-field--filled .q-field__control:before, .q-field--standard .q-field__control:before { border-bottom-color: color-mix(in srgb, var(--q-text, #000) 42%, transparent); }
+.q-field--outlined .q-field__control:before { border-color: color-mix(in srgb, var(--q-text, #000) 24%, transparent); }
+.q-field--outlined:hover .q-field__control:before { border-color: color-mix(in srgb, var(--q-text, #000) 60%, transparent); }
 /*
  * Brand fonts (Store builder → Branding): the store's <style id="qwoo-fonts">
  * sets the ones the owner chose (src/utils/brand-fonts.js). Headings and

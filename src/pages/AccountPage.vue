@@ -121,6 +121,6 @@ function cancelDelete() {
 </script>
 
 <style>
-.delete-confirm { border: 1px solid rgba(0, 0, 0, .15); border-radius: 12px; max-width: 640px; }
+.delete-confirm { border: 1px solid rgba(0, 0, 0, .15); border: 1px solid color-mix(in srgb, currentColor 15%, transparent); border-radius: 12px; max-width: 640px; }
 .account-page__checking { display: flex; justify-content: center; padding: 40px 0; }
 </style>

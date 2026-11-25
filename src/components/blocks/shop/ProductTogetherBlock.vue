@@ -164,7 +164,7 @@ const vars = computed(() => {
 .together__title { margin: 0 0 6px; font-size: 1.5em; line-height: 1.25; }
 .together__text { margin: 0 0 16px; opacity: .75; }
 .together__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.together__item { display: flex; align-items: center; gap: 14px; padding: 12px 14px; background: var(--tg-bg, #fff); border: 1px solid var(--tg-border, rgba(0, 0, 0, .1)); border-radius: var(--tg-radius, 12px); transition: opacity .2s; }
+.together__item { display: flex; align-items: center; gap: 14px; padding: 12px 14px; background: var(--tg-bg, #fff); border: 1px solid var(--tg-border, rgba(0, 0, 0, .1)); border: 1px solid var(--tg-border, color-mix(in srgb, currentColor 10%, transparent)); border-radius: var(--tg-radius, 12px); transition: opacity .2s; }
 .together__item.is-off { opacity: .55; }
 .together__check input { width: 20px; height: 20px; accent-color: var(--tg-check, var(--q-secondary)); cursor: pointer; }
 .together__check input:disabled { cursor: default; }

@@ -85,13 +85,13 @@ const cssVars = computed(() => {
 
 <style scoped>
 .faq-block { display: flex; flex-direction: column; }
-.faq-block--lines .faq-block__item { border-bottom: 1px solid var(--faq-accent, rgba(0, 0, 0, 0.15)); }
-.faq-block--lines .faq-block__item:first-child { border-top: 1px solid var(--faq-accent, rgba(0, 0, 0, 0.15)); }
+.faq-block--lines .faq-block__item { border-bottom: 1px solid var(--faq-accent, rgba(0, 0, 0, 0.15)); border-bottom: 1px solid var(--faq-accent, color-mix(in srgb, currentColor 15%, transparent)); }
+.faq-block--lines .faq-block__item:first-child { border-top: 1px solid var(--faq-accent, rgba(0, 0, 0, 0.15)); border-top: 1px solid var(--faq-accent, color-mix(in srgb, currentColor 15%, transparent)); }
 .faq-block--boxed { gap: 12px; }
 .faq-block--boxed .faq-block__item {
   background: var(--faq-bg, #fff);
   border-radius: var(--faq-radius, 10px);
-  border: 1px solid var(--faq-border, rgba(0, 0, 0, 0.08));
+  border: 1px solid var(--faq-border, rgba(0, 0, 0, 0.08)); border: 1px solid var(--faq-border, color-mix(in srgb, currentColor 8%, transparent));
   padding: 0 18px;
 }
 

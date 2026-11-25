@@ -2,7 +2,7 @@
   <div v-if="p?.product" class="product-wishlist">
     <q-btn
         class="q-pa-none text-caption"
-        :class="[text.class, hasColor ? '' : 'text-black']"
+        :class="[text.class, hasColor ? '' : 'product-wishlist__ink']"
         :style="text.style"
         flat
         :loading="p.wishlist.isLoading(p.product.id)"
@@ -33,3 +33,8 @@ const saved = computed(() => {
   return Object.values(items).some((obj) => obj.id === id)
 })
 </script>
+
+<style scoped>
+/* No colour set: the store text colour (was black, invisible on dark stores). */
+.product-wishlist__ink { color: var(--q-text, #000); }
+</style>

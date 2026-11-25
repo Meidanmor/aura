@@ -73,6 +73,7 @@ import { dock, dockDrag, dockShow, dockStyle } from 'src/utils/floating-dock.js'
 import { loadPageConfig } from 'src/utils/config-loader.js'
 import { allowedNow, codeConfig, consentChoice, logConsent, saveConsent } from 'src/utils/custom-code.js'
 import { currentLang } from 'src/i18n/lang.js'
+import { onColor } from 'src/utils/on-color.js'
 import { useI18n } from 'src/i18n/index.js'
 
 /**
@@ -119,7 +120,10 @@ const vars = computed(() => {
   }
   if (d.bg) v['--ckb-bg'] = d.bg
   if (d.ink) v['--ckb-ink'] = d.ink
-  if (d.accent) v['--ckb-accent'] = d.accent
+  if (d.accent) {
+    v['--ckb-accent'] = d.accent
+    v['--ckb-accent-ink'] = onColor(d.accent) || '#fff'
+  }
   if (d.fab_bg) v['--ckb-fab-bg'] = d.fab_bg
   if (d.fab_ink) v['--ckb-fab-ink'] = d.fab_ink
   return v
@@ -235,7 +239,7 @@ onUnmounted(() => {
 .ckb-acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .ckb--box .ckb-acts, .ckb--center .ckb-acts, .ckb-prefs .ckb-acts { justify-content: flex-end; }
 .ckb-btn { font: inherit; font-weight: 600; cursor: pointer; padding: 9px 16px; border-radius: var(--ckb-btn-r, 10px); border: 1.5px solid var(--ckb-accent-now); line-height: 1.2; }
-.ckb-yes { background: var(--ckb-accent-now); color: #fff; }
+.ckb-yes { background: var(--ckb-accent-now); color: var(--ckb-accent-ink, var(--q-on-secondary, #fff)); }
 .ckb-no { background: transparent; color: var(--ckb-ink-now); }
 .ckb-pick { background: transparent; color: var(--ckb-ink-now); border-color: transparent; text-decoration: underline; padding-inline: 6px; }
 .ckb-btn:focus-visible, .ckb-fab:focus-visible { outline: 2px solid var(--ckb-accent-now); outline-offset: 2px; }

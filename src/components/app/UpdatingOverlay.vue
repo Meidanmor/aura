@@ -55,7 +55,7 @@ onUnmounted(() => clearTimeout(timer))
 .qwoo-updating__text { margin: 0; opacity: .75; }
 .qwoo-updating__spin {
   display: inline-block; width: 28px; height: 28px; border-radius: 50%;
-  border: 3px solid rgba(0, 0, 0, .12); border-top-color: var(--q-secondary, #333);
+  border: 3px solid rgba(0, 0, 0, .12); border: 3px solid color-mix(in srgb, currentColor 12%, transparent); border-top-color: var(--q-secondary, #333);
   animation: qwoo-updating-spin 1s linear infinite;
 }
 @keyframes qwoo-updating-spin { to { transform: rotate(360deg); } }

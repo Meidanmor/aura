@@ -291,12 +291,12 @@ function choose(name, value) {
 }
 .pb-choices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .pb-choices--cards { flex-direction: column; gap: 10px; }
-.pb-choice { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 18px; border: 1.5px solid rgba(0, 0, 0, .16); border-radius: var(--pb-radius, 12px); background: transparent; color: inherit; font: inherit; font-weight: 600; cursor: pointer; text-align: start; }
+.pb-choice { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 18px; border: 1.5px solid rgba(0, 0, 0, .16); border: 1.5px solid color-mix(in srgb, currentColor 16%, transparent); border-radius: var(--pb-radius, 12px); background: transparent; color: inherit; font: inherit; font-weight: 600; cursor: pointer; text-align: start; }
 .pb-choices--cards .pb-choice { width: 100%; padding: 14px 16px; }
 .pb-choice:hover:not(:disabled) { border-color: var(--pb-on, var(--q-secondary)); }
 .pb-choice.is-on { border-color: var(--pb-on, var(--q-secondary)); box-shadow: inset 0 0 0 1px var(--pb-on, var(--q-secondary)); }
 .pb-choice:disabled { opacity: .45; cursor: not-allowed; text-decoration: line-through; }
-.pb-choice__dot { width: 18px; height: 18px; flex: none; border-radius: 50%; border: 2px solid rgba(0, 0, 0, .3); }
+.pb-choice__dot { width: 18px; height: 18px; flex: none; border-radius: 50%; border: 2px solid rgba(0, 0, 0, .3); border: 2px solid color-mix(in srgb, currentColor 30%, transparent); }
 .pb-choice.is-on .pb-choice__dot { border-color: var(--pb-on, var(--q-secondary)); background: radial-gradient(circle, var(--pb-on, var(--q-secondary)) 0 45%, transparent 50%); }
 .pb-choice__price { margin-inline-start: auto; font-weight: 700; }
 .pb-choices--buttons .pb-choice { flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; }

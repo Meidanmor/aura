@@ -94,7 +94,7 @@ const shape = computed(() => {
   overflow: hidden;
   width: 100%;
   border-radius: var(--lt-radius, 0);
-  border: var(--lt-bw, 0) solid var(--lt-bc, rgba(0, 0, 0, .1));
+  border: var(--lt-bw, 0) solid var(--lt-bc, rgba(0, 0, 0, .1)); border: var(--lt-bw, 0) solid var(--lt-bc, color-mix(in srgb, currentColor 10%, transparent));
   background: rgba(0, 0, 0, .04);
 }
 .lt-img__img { display: block; width: 100%; height: 100%; object-fit: var(--lt-fit, cover); transition: transform .6s ease, opacity .4s ease; }

@@ -22,7 +22,7 @@ const items = computed(() => (post.value?.more || []).slice(0, Math.max(1, Math.
 </script>
 
 <style scoped>
-.post-more { padding: 24px 0 0; border-top: 1px solid rgba(0, 0, 0, .1); }
+.post-more { padding: 24px 0 0; border-top: 1px solid rgba(0, 0, 0, .1); border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent); }
 .post-more h2 { font-size: 1.4rem; margin: 0 0 20px; }
 .post-more-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
 @media (max-width: 767px) { .post-more-grid { grid-template-columns: 1fr; } }

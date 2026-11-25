@@ -22,5 +22,5 @@ const html = computed(() => sanitizeBlogHtml(post.value?.content || ''))
 .post-content :deep(img) { display: block; max-width: 100%; height: auto; border-radius: 10px; margin: 1.2em auto; }
 .post-content :deep(blockquote) { margin: 1.2em 0; padding: .2em 0 .2em 1em; border-left: 3px solid currentColor; opacity: .85; font-style: italic; }
 .post-content :deep(a) { color: inherit; text-decoration: underline; }
-.post-content :deep(hr) { border: 0; border-top: 1px solid rgba(0, 0, 0, .15); margin: 2em 0; }
+.post-content :deep(hr) { border: 0; border-top: 1px solid rgba(0, 0, 0, .15); border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent); margin: 2em 0; }
 </style>

@@ -113,13 +113,18 @@ function onClick(e) {
   align-self: center;
 }
 
+/* Quasar draws an icon inside a q-btn at 1.715em, so an owner's "24px" came out 41px. With a size
+   set, the icon is exactly that size (1em); without one, the old look (14px x 1.715) stays. */
 @media (min-width: 1024px) {
   .wb-size-d .widget-btn__icon { font-size: var(--wb-icon); }
+  .wb-size-d .widget-btn__icon :deep(.q-icon) { font-size: 1em; }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
   .wb-size-t .widget-btn__icon { font-size: var(--wb-icon-t, var(--wb-icon)); }
+  .wb-size-t .widget-btn__icon :deep(.q-icon) { font-size: 1em; }
 }
 @media (max-width: 767px) {
   .wb-size-m .widget-btn__icon { font-size: var(--wb-icon-m, var(--wb-icon-t, var(--wb-icon))); }
+  .wb-size-m .widget-btn__icon :deep(.q-icon) { font-size: 1em; }
 }
 </style>

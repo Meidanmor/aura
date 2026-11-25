@@ -231,13 +231,13 @@ function fullDetails() {
 .quick-options__choices { display: flex; flex-wrap: wrap; gap: 8px; }
 .quick-options__group.is-missing .quick-options__label { color: var(--q-negative); }
 .quick-options__add.is-waiting { opacity: .45; }
-.quick-options__choice { border: 1.5px solid rgba(0, 0, 0, .18); background: transparent; color: inherit; border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.quick-options__choice { border: 1.5px solid rgba(0, 0, 0, .18); border: 1.5px solid color-mix(in srgb, currentColor 18%, transparent); background: transparent; color: inherit; border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 .quick-options__choice:hover { border-color: currentColor; }
 .quick-options__choice.is-on { background: var(--q-secondary); border-color: var(--q-secondary); color: var(--q-primary, #fff); }
-.quick-options__choice:disabled { opacity: .4; text-decoration: line-through; cursor: default; border-color: rgba(0, 0, 0, .18); }
+.quick-options__choice:disabled { opacity: .4; text-decoration: line-through; cursor: default; border-color: rgba(0, 0, 0, .18); border-color: color-mix(in srgb, currentColor 18%, transparent); }
 .quick-options__more { align-self: flex-start; padding: 4px 0; border: 0; background: none; color: inherit; font: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-.quick-options__foot { display: flex; align-items: center; gap: 12px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid rgba(0, 0, 0, .1); }
-.quick-options__qty { display: inline-flex; align-items: center; border: 1.5px solid rgba(0, 0, 0, .18); border-radius: 999px; }
+.quick-options__foot { display: flex; align-items: center; gap: 12px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid rgba(0, 0, 0, .1); border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent); }
+.quick-options__qty { display: inline-flex; align-items: center; border: 1.5px solid rgba(0, 0, 0, .18); border: 1.5px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 999px; }
 .quick-options__qty button { width: 38px; height: 40px; border: 0; background: none; color: inherit; font-size: 18px; cursor: pointer; }
 .quick-options__qty button:disabled { opacity: .35; cursor: default; }
 .quick-options__qty span { min-width: 24px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
