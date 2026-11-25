@@ -4,13 +4,14 @@
       class="text-block sb-text-align"
       :class="[typographyClasses, spacingCase.class]"
       :style="[cssVars, spacingCase.style]"
-      v-html="sanitizeBuilderHtml(d.text)"
+      v-html="localizeLinks(sanitizeBuilderHtml(d.text))"
   />
 </template>
 
 <script setup>
 import { computed } from 'vue'
 import { sanitizeBuilderHtml } from 'src/utils/sanitizeHtml.js'
+import { localizeLinks } from 'src/i18n/lang.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
 import { brandFontVar } from 'src/utils/brand-fonts.js'
 import { asResponsive, setResponsiveVar, toCssLength, alignToText } from 'src/composables/useSectionStyle.js'

@@ -69,3 +69,15 @@ export function currentLang() {
 
 /** The current page's address in the current language (adds its prefix to a main-language path). */
 export const localPath = (path) => withLang(path, currentLang())
+
+/**
+ * Owner HTML (a Text block) on a page of an extra language: its own links (href="/products") get the language's
+ * prefix, like buttons and menus do through the router, so a shopper on /he/ stays in Hebrew. Links that
+ * already name a language, other sites, files and /auth/ stay as they are.
+ */
+export function localizeLinks(html) {
+  const lang = currentLang()
+  if (!html || !isExtraLang(lang)) return html
+  return String(html).replace(/(\shref=)(["'])(\/(?!\/)[^"']*)\2/g, (all, attr, q, path) =>
+    langFromPath(path) !== lang && !path.startsWith('/auth/') && !path.startsWith('/wp-') ? `${attr}${q}${withLang(path, lang)}${q}` : all)
+}

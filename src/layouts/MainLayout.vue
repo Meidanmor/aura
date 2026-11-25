@@ -298,7 +298,7 @@ watch(() => drawers.state.open, (key) => {
     const aside = getAside(getEl(key))
     playDrawer(aside)
     if (aside && drawers.state.open === key) {
-      releaseDrawer = trapFocus(aside, { label: (dr?.title || fallback), returnTo: opener, onEscape: () => drawers.close(key) })
+      releaseDrawer = trapFocus(aside, { label: (dr?.title || fallback), returnTo: opener, skipFields: true, onEscape: () => drawers.close(key) })
     }
   })
 })

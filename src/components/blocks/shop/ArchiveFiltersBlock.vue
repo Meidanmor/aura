@@ -99,7 +99,7 @@ watch(() => a?.filtersOpen, (isOpen) => {
   nextTick(() => {
     const el = wrapEl.value
     if (el && a.filtersOpen && getComputedStyle(el).position === 'fixed') {
-      release = trapFocus(el, { label: d.value.title || t('Filters'), returnTo: opener, onEscape: () => { a.filtersOpen = false } })
+      release = trapFocus(el, { label: d.value.title || t('Filters'), returnTo: opener, skipFields: true, onEscape: () => { a.filtersOpen = false } })
     }
   })
 })
@@ -166,7 +166,7 @@ const shownAttributes = computed(() => {
 .sticky.filters-drawer-header {
   position: sticky;
   top: 0;
-  background: #ffffff;
+  background: var(--q-primary, #fff);
   z-index: 1;
   width: 100%;
   box-shadow: 0 0 15px #00000011;
@@ -211,7 +211,8 @@ const shownAttributes = computed(() => {
     max-height: 88dvh;
     padding: 0 16px;
     row-gap: 0;
-    background: #fff;
+    background: var(--q-primary, #fff);
+    color: var(--q-secondary, #1d1b2e);
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -10px 40px #00000030;
     opacity: 0;
@@ -227,7 +228,7 @@ const shownAttributes = computed(() => {
     pointer-events: auto;
   }
   .filters-grip { display: flex; justify-content: center; padding: 10px 0 2px; touch-action: none; cursor: grab; }
-  .filters-grip span { width: 40px; height: 4px; border-radius: 4px; background: rgba(0, 0, 0, .2); }
+  .filters-grip span { width: 40px; height: 4px; border-radius: 4px; background: rgba(0, 0, 0, .2); background: color-mix(in srgb, currentColor 25%, transparent); }
   .filters-drawer-header { touch-action: none; padding: 6px 0; box-shadow: none !important; }
   /* The list scrolls between the title and the buttons. */
   .filters-scroll { flex: 1 1 auto; height: 60dvh !important; }
@@ -239,6 +240,7 @@ const shownAttributes = computed(() => {
     border-top: 1px solid rgba(0, 0, 0, .08); border-top: 1px solid color-mix(in srgb, currentColor 8%, transparent);
   }
   .filters-actions__show { flex: 1 1 auto; min-height: 44px; border-radius: 8px; }
+  .filters-actions__clear { color: inherit; }
   .filters-actions__clear { min-height: 44px; }
   .filters-backdrop {
     display: block;

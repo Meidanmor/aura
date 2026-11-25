@@ -6,6 +6,9 @@
  *
  *   const release = trapFocus(asideEl, { label: 'Menu', onEscape: close })
  *   release()   // on close: back to the opener
+ *
+ * skipFields: the first focus never goes to a text field (on phones it would open the keyboard over a panel the
+ * shopper only wanted to look at: the filters sheet's search box, a drawer's coupon field).
  */
 
 const FOCUSABLE = [
@@ -25,7 +28,9 @@ export function focusables(root) {
   return root ? [...root.querySelectorAll(FOCUSABLE)].filter(shown) : []
 }
 
-export function trapFocus(root, { label = '', onEscape = null, returnTo = null } = {}) {
+const TYPING = 'input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]), textarea, select, [contenteditable]:not([contenteditable="false"])'
+
+export function trapFocus(root, { label = '', onEscape = null, returnTo = null, skipFields = false } = {}) {
   if (!root || typeof document === 'undefined') return () => {}
   const opener = returnTo || (document.activeElement instanceof HTMLElement ? document.activeElement : null)
   const had = {
@@ -41,7 +46,7 @@ export function trapFocus(root, { label = '', onEscape = null, returnTo = null }
 
   // The first thing to use inside (not the Close button when there's more), else the panel itself.
   const first = () => {
-    const list = focusables(root)
+    const list = focusables(root).filter((el) => !skipFields || !el.matches(TYPING))
     const pick = list.find((el) => !/close|סגיר/i.test(el.getAttribute('aria-label') || '')) || list[0]
     ;(pick || root).focus({ preventScroll: true })
   }
