@@ -74,7 +74,7 @@ function close() {
 .ia__title { font-weight: 700; }
 .ia__body { font-size: 0.92em; color: #5f6570; }
 .ia__actions { display: flex; align-items: center; gap: 6px; flex: none; }
-.ia__btn { border-radius: 10px; }
+.ia__btn { border-radius: 10px; box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 22%, transparent); }
 .ia__later { border: 0; background: none; color: #5f6570; cursor: pointer; font: inherit; font-size: 0.92em; padding: 6px; text-decoration: underline; }
 .ia--thanks, .ia--account { max-width: 640px; margin: 16px auto; flex-wrap: wrap; }
 .ia--account { width: calc(100% - 32px); }

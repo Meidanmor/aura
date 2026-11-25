@@ -139,7 +139,7 @@ watch(() => install.guide, async (open) => {
 .ig-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 6px; }
 .ig-step { background: #f4f5f7; border-radius: 12px; padding: 8px 4px; display: grid; gap: 4px; justify-items: center; text-align: center; font-size: 12px; line-height: 1.25; }
 .ig-num { font-size: 11px; color: #8a8f99; font-weight: 600; }
-.ig-ico { width: 22px; height: 22px; color: var(--q-secondary, #2f5bd8); display: block; }
+.ig-ico { width: 22px; height: 22px; color: color-mix(in srgb, var(--q-secondary, #2f5bd8) 55%, #16181d); display: block; }
 .ig-ico :deep(svg) { width: 22px; height: 22px; display: block; }
 .ig-after { text-align: center; color: #5f6570; font-size: 13px; }
 .ig-arrow { position: fixed; z-index: 9001; color: #fff; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5)); animation: ig-bob 1.1s ease-in-out infinite; pointer-events: none; }

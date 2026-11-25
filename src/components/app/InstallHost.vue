@@ -77,5 +77,5 @@ onUnmounted(() => window.removeEventListener('qwoo:push-on', onPushOn))
 .ig-gift__title { font-weight: 700; font-size: 16px; padding-inline-end: 34px; }
 .ig-gift__body { color: #5f6570; font-size: 14px; }
 .ig-gift__code { display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px dashed #c9ccd3; border-radius: 12px; padding: 10px 12px; font-weight: 700; font-size: 18px; letter-spacing: 0.04em; }
-.ig-gift__copy { border: 0; background: var(--q-secondary, #2f5bd8); color: #fff; border-radius: 9px; padding: 7px 14px; font: inherit; font-size: 14px; letter-spacing: 0; cursor: pointer; }
+.ig-gift__copy { border: 0; background: var(--q-secondary, #2f5bd8); color: var(--q-on-secondary, #fff); box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 22%, transparent); border-radius: 9px; padding: 7px 14px; font: inherit; font-size: 14px; letter-spacing: 0; cursor: pointer; }
 </style>
