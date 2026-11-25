@@ -16,7 +16,7 @@
         expand-separator
       >
         <div class="q-mt-sm q-pa-md">
-          <div class="text-body2 text-grey-7 q-mb-sm">
+          <div class="text-body2 ink-soft q-mb-sm">
             {{ t('Total: {total} {currency}', { total: order.total, currency: order.currency }) }}
           </div>
           <!-- The courier's tracking and the HFD pickup point (Qwoo_Couriers on the store). -->

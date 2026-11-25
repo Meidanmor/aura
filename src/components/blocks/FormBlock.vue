@@ -318,7 +318,10 @@ const cssVars = computed(() => {
   // background tone (e.g. #fafafa).
   // Forms saved before this option existed fall back to Secondary.
   const accent = resolveGlobalColor('accent_color' in d.value ? d.value.accent_color : 'global:secondary')
-  if (accent) vars['--q-primary'] = accent
+  if (accent) {
+    vars['--q-primary'] = accent
+    vars['--qf-focus'] = accent // focused field line + label (app.css)
+  }
   return vars
 })
 </script>

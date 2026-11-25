@@ -35,7 +35,7 @@
       <q-card-section class="q-pa-md">
         <div class="text-h6">{{ t('Payment Method') }}</div>
         <q-option-group v-model="c.paymentMethod" :options="c.paymentMethods" type="radio" color="secondary" />
-        <div v-if="c.paymentNote" class="text-caption text-grey-8 q-my-sm" style="white-space: pre-line">{{ c.paymentNote }}</div>
+        <div v-if="c.paymentNote" class="text-caption ink-soft q-my-sm" style="white-space: pre-line">{{ c.paymentNote }}</div>
         <component
             :is="c.paymentComponent"
             v-if="c.paymentComponent"

@@ -22,7 +22,7 @@
             v-if="!productsHidden()"
             flat
             color="transparent"
-            text-color="black"
+            text-color="secondary"
             class="btn-styled"
             to="/products"
             :label="t('Browse Products')"

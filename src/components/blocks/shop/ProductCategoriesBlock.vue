@@ -1,7 +1,7 @@
 <template>
   <div v-if="cats.length" class="product-cats" :class="`is-${display}`">
     <router-link v-for="cat in cats" :key="cat.id" :to="`/product-category/${cat.slug}`" class="no-decoration product-cat" :class="text.class" :style="text.style">
-      <q-chip v-if="display === 'chips'" :color="chipBg ? undefined : 'secondary'" :style="chipBg ? { background: chipBg } : null" text-color="white" class="category-chip" dense clickable>
+      <q-chip v-if="display === 'chips'" :color="chipBg ? undefined : 'secondary'" :style="chipStyle" :text-color="chipInk ? undefined : 'white'" class="category-chip" dense clickable>
         <span>{{ decodeEntities(cat.name) }}</span>
       </q-chip>
       <span v-else>{{ decodeEntities(cat.name) }}</span>
@@ -14,6 +14,7 @@ import { computed, inject } from 'vue'
 import { decodeEntities } from 'src/utils/entities.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
+import { onColor } from 'src/utils/on-color.js'
 
 /** "Product Categories" (product page template): labels or links to the product's categories. */
 const props = defineProps({ data: { type: Object, required: true }, blockId: { type: String, default: '' }, page: { type: String, default: '' } })
@@ -24,6 +25,21 @@ const cats = computed(() => (p?.product?.categories || []).filter((c) => c?.id &
 const display = computed(() => (d.value.display === 'links' ? 'links' : 'chips'))
 const chipBg = computed(() => resolveGlobalColor(d.value.chip_bg))
 const text = computed(() => textStyle(d.value, tsKeys('text')))
+// Chip text: the block's own text colour, else whatever reads on the chip colour (was always white:
+// invisible on a light chip). Store colours use their --q-on-<name> variable (on-color.js).
+const chipInk = computed(() => {
+  if (text.value.style?.color) return text.value.style.color
+  const bg = chipBg.value
+  if (!bg) return ''
+  const g = String(bg).match(/^var\(--q-(primary|secondary|accent)\)$/)
+  return g ? `var(--q-on-${g[1]}, #fff)` : onColor(bg)
+})
+const chipStyle = computed(() => {
+  const s = {}
+  if (chipBg.value) s.background = chipBg.value
+  if (chipInk.value) s.color = chipInk.value
+  return Object.keys(s).length ? s : null
+})
 </script>
 
 <style scoped>

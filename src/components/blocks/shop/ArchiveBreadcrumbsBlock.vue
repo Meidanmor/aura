@@ -1,5 +1,5 @@
 <template>
-  <q-breadcrumbs v-if="a" class="shop-crumbs" :class="linkText.class" :style="linkText.style">
+  <q-breadcrumbs v-if="a" class="shop-crumbs" :class="[linkText.class, { 'has-ink': !!linkText.style?.color }]" :style="linkText.style">
     <q-breadcrumbs-el :label="t('Home')" to="/" />
     <template v-if="a.mode === 'category'">
       <q-breadcrumbs-el :label="t('Products')" to="/products" />
@@ -22,4 +22,6 @@ const linkText = computed(() => textStyle(props.data.data || {}, tsKeys('link'))
 <style scoped>
 /* No outer spacing of its own (the block's Margin is the owner's). */
 .shop-crumbs { margin: 0; }
+/* The owner chose a colour: the links take it too (app.css paints breadcrumb links in the secondary colour). */
+.has-ink :deep(a.q-breadcrumbs__el.q-link) { color: inherit; }
 </style>

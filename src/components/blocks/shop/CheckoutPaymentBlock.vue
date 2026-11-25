@@ -10,7 +10,7 @@
           :style="optionText.style"
       />
       <div v-if="!c.paymentMethods.length" class="text-negative q-my-sm">{{ t("This store can't take payments yet, so orders can't be placed. Please contact the store.") }}</div>
-      <div v-if="c.paymentNote" class="text-caption text-grey-8 q-my-sm" style="white-space: pre-line">{{ c.paymentNote }}</div>
+      <div v-if="c.paymentNote" class="text-caption ink-soft q-my-sm" style="white-space: pre-line">{{ c.paymentNote }}</div>
       <component
           :is="c.paymentComponent"
           v-if="c.paymentComponent"

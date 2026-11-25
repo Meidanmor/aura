@@ -34,6 +34,10 @@ html, body {
 .bg-primary.text-white { color: var(--q-on-primary, #fff) !important; }
 .bg-secondary.text-white { color: var(--q-on-secondary, #fff) !important; }
 .bg-accent.text-white { color: var(--q-on-accent, #fff) !important; }
+/* Unticked radios and checkboxes: Quasar's see-through black ring vanished on dark stores. */
+.q-radio .q-radio__inner--falsy, .q-checkbox .q-checkbox__inner--falsy { color: color-mix(in srgb, currentColor 60%, transparent); }
+/* Softer secondary text that follows the colour around it (Quasar's text-grey-* stay dark on dark stores). */
+.ink-soft { color: rgba(0, 0, 0, .6); color: color-mix(in srgb, currentColor 72%, transparent); }
 /*
  * A focused form field (checkout, sign-in, forms) takes its colour from the field
  * control. Quasar uses the store's primary colour there, and stores keep primary light
@@ -41,19 +45,25 @@ html, body {
  * Fields use the secondary (action) colour instead; a field with its own color prop or an
  * error keeps Quasar's text-* class, which wins (!important).
  */
-.q-field .q-field__control { color: var(--q-secondary); }
+.q-field:not(.q-field--error) .q-field__control { color: inherit; }
+.q-field--highlighted:not(.q-field--error) .q-field__control:after,
+.q-field--highlighted:not(.q-field--error) .q-field__label { color: var(--qf-focus, var(--q-secondary)); }
 /*
  * Quasar draws fields in light-mode greys (black see-through background, line, label and text),
- * which vanished on dark stores. They follow the store's text colour instead; on light stores
- * (dark text) they look the same as before. Browsers without color-mix() keep Quasar's look.
+ * which vanished on dark stores. They follow the text colour around the field instead (the
+ * store's text, or a section's own text colour, e.g. a newsletter strip on a bright colour); on
+ * light stores (dark text) they look the same as before. Browsers without color-mix() keep
+ * Quasar's look. A focused field's line and label use --qf-focus (a Form block's accent colour)
+ * or the store's secondary colour.
  */
-.q-field__native, .q-field__input, .q-field__prefix, .q-field__suffix { color: var(--q-text, rgba(0, 0, 0, .87)); }
-.q-field:not(.q-field--focused):not(.q-field--error) .q-field__label,
-.q-field:not(.q-field--error) .q-field__marginal { color: color-mix(in srgb, var(--q-text, #000) 62%, transparent); }
-.q-field--filled .q-field__control { background: color-mix(in srgb, var(--q-text, #000) 6%, transparent); }
-.q-field--filled .q-field__control:before, .q-field--standard .q-field__control:before { border-bottom-color: color-mix(in srgb, var(--q-text, #000) 42%, transparent); }
-.q-field--outlined .q-field__control:before { border-color: color-mix(in srgb, var(--q-text, #000) 24%, transparent); }
-.q-field--outlined:hover .q-field__control:before { border-color: color-mix(in srgb, var(--q-text, #000) 60%, transparent); }
+.q-field__native, .q-field__input, .q-field__prefix, .q-field__suffix { color: inherit; }
+.q-field:not(.q-field--highlighted):not(.q-field--error) .q-field__label,
+.q-field:not(.q-field--error) .q-field__marginal,
+.q-field:not(.q-field--error) .q-field__bottom { color: color-mix(in srgb, currentColor 62%, transparent); }
+.q-field--filled .q-field__control { background: color-mix(in srgb, currentColor 6%, transparent); }
+.q-field--filled .q-field__control:before, .q-field--standard .q-field__control:before { border-bottom-color: color-mix(in srgb, currentColor 42%, transparent); }
+.q-field--outlined .q-field__control:before { border-color: color-mix(in srgb, currentColor 24%, transparent); }
+.q-field--outlined:hover .q-field__control:before { border-color: color-mix(in srgb, currentColor 60%, transparent); }
 /*
  * Brand fonts (Store builder → Branding): the store's <style id="qwoo-fonts">
  * sets the ones the owner chose (src/utils/brand-fonts.js). Headings and

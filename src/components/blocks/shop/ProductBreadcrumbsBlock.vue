@@ -1,5 +1,5 @@
 <template>
-  <q-breadcrumbs v-if="p?.product" class="shop-crumbs" :class="linkText.class" :style="linkText.style">
+  <q-breadcrumbs v-if="p?.product" class="shop-crumbs" :class="[linkText.class, { 'has-ink': !!linkText.style?.color }]" :style="linkText.style">
     <q-breadcrumbs-el :label="t('Home')" to="/" />
     <q-breadcrumbs-el v-if="p.product.categories?.[0]?.slug" :to="`/product-category/${p.product.categories[0].slug}`"><span v-html="p.safeCategoryName"></span></q-breadcrumbs-el>
     <q-breadcrumbs-el :label="p.product.name" />
@@ -15,3 +15,8 @@ const props = defineProps({ data: { type: Object, required: true }, blockId: { t
 const p = inject('productPage', null)
 const linkText = computed(() => textStyle(props.data.data || {}, tsKeys('link')))
 </script>
+
+<style scoped>
+/* The owner chose a colour: the links take it too (app.css paints breadcrumb links in the secondary colour). */
+.has-ink :deep(a.q-breadcrumbs__el.q-link) { color: inherit; }
+</style>
