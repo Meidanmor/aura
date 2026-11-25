@@ -148,6 +148,61 @@ export function subscribeToLiveConfig(page, callback, options = {}) {
  * qwoo_view=1 (the preview of an AI app's change, only to look at): no outline
  * and no picks; links still don't leave the page.
  */
+/**
+ * The preview of an AI app's change (qwoo_view=1): { type: 'changes', ids, show, go } outlines the sections and blocks
+ * the change added or changed (amber, with a light tint) and scrolls to number `go` of the ones on this page (-1: stay).
+ * Answers { type: 'changes_found', count, at }. show: false takes the marks off, to see the page exactly as it will be
+ * (owner, 2026-11-25). The marks are a style rule, so they survive re-renders.
+ */
+function installChangeMarks(trustedOrigin) {
+  const style = document.createElement('style')
+  style.id = 'qwoo-view-changes'
+  document.head.appendChild(style)
+  let ids = []
+  let timer = 0
+  const sel = (id) => `[data-section-id="${id}"], [data-block-id="${id}"]`
+  // The marked boxes on this page, in page order, without those inside another marked one.
+  const found = () => {
+    if (!ids.length) return []
+    const all = Array.from(document.querySelectorAll(ids.map(sel).join(', ')))
+    return all.filter((el) => !all.some((other) => other !== el && other.contains(el)))
+  }
+  const scrollTo = (el) => {
+    const r = el.getBoundingClientRect()
+    const header = document.querySelector('header')
+    const top = header && getComputedStyle(header).position !== 'static' ? Math.max(0, header.getBoundingClientRect().bottom) : 0
+    const room = window.innerHeight - top
+    const y = window.scrollY + r.top - top - (r.height < room ? (room - r.height) / 2 : 24)
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' })
+  }
+  const tell = (count, at) => window.parent.postMessage({ source: 'qwoo-frontend', type: 'changes_found', count, at }, trustedOrigin)
+  window.addEventListener('message', (event) => {
+    if (event.origin !== trustedOrigin || event.source !== window.parent) return
+    const data = event.data
+    if (!data || data.source !== 'qwoo-admin' || data.type !== 'changes') return
+    ids = (Array.isArray(data.ids) ? data.ids : []).filter((x) => typeof x === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(x)).slice(0, 200)
+    const show = data.show !== false
+    style.textContent = show && ids.length
+      ? `${ids.map(sel).join(', ')} { outline: 3px solid #f59e0b !important; outline-offset: -3px; box-shadow: inset 0 0 0 100vmax rgba(245, 158, 11, .10) !important; }`
+      : ''
+    const go = Number.isInteger(data.go) ? data.go : -1
+    clearTimeout(timer)
+    // New sections show up with the next state: look again for a few seconds.
+    let tries = 0
+    const look = () => {
+      const list = found()
+      if (!list.length && ++tries < 20) {
+        timer = setTimeout(look, 150)
+        return
+      }
+      const at = list.length && go >= 0 ? go % list.length : 0
+      if (show && list.length && go >= 0) scrollTo(list[at])
+      tell(list.length, at)
+    }
+    look()
+  })
+}
+
 let focusInstalled = false
 function installEditorFocus(trustedOrigin) {
   if (focusInstalled) return
@@ -159,6 +214,7 @@ function installEditorFocus(trustedOrigin) {
     document.addEventListener('click', (e) => {
       if (e.target.closest?.('a[href]')) e.preventDefault()
     }, true)
+    installChangeMarks(trustedOrigin)
     return
   }
   // Hovering marks only the innermost thing a click would pick (a block's part, a block, a
