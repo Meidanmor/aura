@@ -1,5 +1,5 @@
 <template>
-  <q-breadcrumbs v-if="p?.product" class="shop-crumbs" :class="[linkText.class, { 'has-ink': !!linkText.style?.color }]" :style="linkText.style">
+  <q-breadcrumbs v-if="p?.product" class="shop-crumbs" :class="[linkText.class, { 'has-ink': !!linkText.style?.color }]" :style="linkText.style" :active-color="linkText.style?.color ? 'inherit' : 'primary'">
     <q-breadcrumbs-el :label="t('Home')" to="/" />
     <q-breadcrumbs-el v-if="p.product.categories?.[0]?.slug" :to="`/product-category/${p.product.categories[0].slug}`"><span v-html="p.safeCategoryName"></span></q-breadcrumbs-el>
     <q-breadcrumbs-el :label="p.product.name" />
@@ -17,6 +17,7 @@ const linkText = computed(() => textStyle(props.data.data || {}, tsKeys('link'))
 </script>
 
 <style scoped>
-/* The owner chose a colour: the links take it too (app.css paints breadcrumb links in the secondary colour). */
+/* The owner chose a colour: the links take it too (app.css paints breadcrumb links in the secondary colour; active-color
+   "inherit" stops Quasar wrapping them in text-primary, which is the page colour on some stores). */
 .has-ink :deep(a.q-breadcrumbs__el.q-link) { color: inherit; }
 </style>

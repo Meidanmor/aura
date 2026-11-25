@@ -11,6 +11,7 @@
       <q-btn v-if="d.apply !== false" dense no-caps unelevated class="qco__btn qco__btn--apply" :loading="applying" :label="applied ? t('Applied to your cart') : (d.apply_label || t('Apply to my cart'))" :disable="applied" @click="applyCode" />
     </div>
     <div v-if="problem" class="qco__problem" role="alert">{{ problem }}</div>
+    <div v-if="previewNote" class="qco__note" role="status">{{ previewNote }}</div>
   </div>
 </template>
 
@@ -22,6 +23,7 @@ import { alignToFlex } from 'src/composables/useSectionStyle.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { formatCurrency } from 'src/utils/formatters.js'
 import cart from 'src/stores/cart.js'
+import { isEditorMode } from 'src/utils/config-loader.js'
 
 /**
  * "Coupon" (Store builder; type personalized_offer): a discount code from Marketing →
@@ -40,7 +42,9 @@ const layout = computed(() => (d.value.layout === 'row' ? 'row' : 'stack'))
 
 // The end date is checked in the browser only (the server's day may differ): own mounted flag.
 const mounted = ref(false)
-onMounted(() => { mounted.value = true })
+// The Store builder / AI preview: a code that isn't live yet (an AI's code waiting for the owner's OK) can't go in a cart.
+const editor = ref(false)
+onMounted(() => { mounted.value = true; editor.value = isEditorMode() })
 const ended = computed(() => {
   if (!mounted.value || !info.value.ends) return false
   const now = new Date()
@@ -103,8 +107,14 @@ async function copyCode() {
 const applying = ref(false)
 const applied = ref(false)
 const problem = ref('')
+const previewNote = ref('')
 async function applyCode() {
   if (!code.value || applying.value) return
+  // In the preview, a code the store doesn't know yet: say so calmly instead of the store's "doesn't exist" (owner, 2026-11-25).
+  if (editor.value && !info.value.ok) {
+    previewNote.value = t('Preview: this code works once it is approved and published.')
+    return
+  }
   applying.value = true
   problem.value = ''
   try {
@@ -129,5 +139,6 @@ async function applyCode() {
 .qco__code { padding: 8px 14px; border: 2px dashed var(--qco-border, currentColor); border-radius: 8px; font-size: 1.1em; font-weight: 700; letter-spacing: .08em; }
 .qco__btn { color: var(--qco-btn, inherit); }
 .qco__btn--apply { background: var(--qco-btn, var(--q-secondary)); color: #fff; }
+.qco__note { font-size: .9em; opacity: .8; }
 .qco__problem { font-size: .9em; color: var(--q-negative, #c10015); }
 </style>

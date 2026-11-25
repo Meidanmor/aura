@@ -700,6 +700,7 @@ export default {
   "Ends {date}": "בתוקף עד {date}",
   "On orders over {amount}": "בהזמנה מעל {amount}",
   "This code can't be used right now.": "אי אפשר להשתמש בקוד הזה כרגע.",
+  "Preview: this code works once it is approved and published.": "תצוגה מקדימה: הקוד יעבוד אחרי שיאושר ויפורסם.",
   "Step {n}": "שלב {n}",
   "Full details": "לכל הפרטים",
   "Photo {n}": "תמונה {n}",
