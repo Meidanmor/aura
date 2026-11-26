@@ -142,7 +142,7 @@ const shape = computed(() => {
   font-size: 11px;
   line-height: 1.3;
   letter-spacing: .04em;
-  background: var(--q-bg, #fff);
+  background: var(--q-bg, var(--q-primary, #fff));
   color: var(--q-text, #222);
 }
 .lt-img__badge--top-start { top: 0; inset-inline-start: 0; }

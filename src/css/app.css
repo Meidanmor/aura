@@ -1593,3 +1593,10 @@ picture.pic { display: contents; }
 /* The ready-made "Enable push notifications?" box in drawers: readable text and a visible button on the brand colour (2026-11-26). */
 .q-banner.push-ask-banner { color: var(--q-on-secondary, #fff); }
 .push-ask-banner .push-ask-btn { color: var(--q-on-secondary, #fff); }
+
+/* Every dropdown list (q-select options: product options, pickup points, form selects): the store's page and
+   text colours, not Quasar's white (2026-11-26). */
+.q-menu {
+  background: var(--q-primary, #fff);
+  color: var(--q-secondary, inherit);
+}

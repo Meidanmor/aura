@@ -981,7 +981,10 @@ provide('checkoutPage', reactive({
 .processing-overlay {
   position: fixed;
   inset: 0;
+  /* The store's page colour (was white on dark stores, 2026-11-26). */
   background: rgba(255, 255, 255, 0.9);
+  background: color-mix(in srgb, var(--q-primary, #fff) 92%, transparent);
+  color: var(--q-secondary, inherit);
   z-index: 9999;
   display: flex;
   flex-direction: column;

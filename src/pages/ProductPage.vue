@@ -231,7 +231,7 @@ function showChoices() {
 }
 function increaseQty(maxQty) {
   if(quantity.value === maxQty){
-    cart.notifyUser($q, 'negative', t('There are only {n} in stock', { n: 9 }), matError)
+    cart.notifyUser($q, 'negative', t('There are only {n} in stock', { n: maxQty }), matError)
     return;
   }
   quantity.value++

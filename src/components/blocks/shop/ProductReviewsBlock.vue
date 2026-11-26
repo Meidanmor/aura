@@ -1,5 +1,5 @@
 <template>
-  <ProductReviews v-if="p?.product && p.reviewsOn" :key="p.product.id" :product-id="p.product.id" />
+  <ProductReviews v-if="p?.product && p.reviewsOn" :key="p.product.id" :product-id="p.product.id" :look="data?.data || {}" />
 </template>
 
 <script setup>

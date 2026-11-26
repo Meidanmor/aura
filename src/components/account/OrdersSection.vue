@@ -7,7 +7,7 @@
         v-for="order in orders"
         :key="order.id"
         :label="t('Order #{number}', { number: order.number })"
-        :caption="`${order.date_created} | Status: ${order.status}`"
+        :caption="`${order.date_created} | ${t('Status:')} ${statusLabel(order.status)}`"
         :icon="matShoppingBag"
         :expand-icon="matKeyboardArrowDown"
         header-class="text-primary text-bold"
@@ -52,6 +52,8 @@
     </q-card>
 
     </div>
+    <!-- The list couldn't load (2026-11-26): not "No orders yet". -->
+    <div v-else-if="loadFailed" role="alert">{{ t('We couldn\'t load your orders. Please try again.') }} <q-btn flat dense no-caps color="secondary" :label="t('Try again')" @click="load" /></div>
     <div v-else-if="orders && orders.length === 0 && emptyText">{{ emptyText }}</div>
     <div v-else-if="orders && orders.length === 0">{{ t('No orders yet.') }} <router-link to="/products/">{{ t('explore our products') }}</router-link> {{ t('to start your first order!') }}</div>
     <div v-else> <q-spinner color="secondary" size="2em" /> </div>
@@ -103,11 +105,24 @@ const columns = [
   }
 ]
 
-onMounted(async () => {
-  const res = await fetchWithToken('/wp-json/qwoo/v1/my-orders');
-  const list = await res.json().catch(() => [])
-  orders.value = Array.isArray(list) ? list : []
-})
+// WooCommerce's order states in words (was the raw slug, "processing").
+const STATUS = { pending: 'Pending payment', processing: 'Processing', 'on-hold': 'On hold', completed: 'Completed', cancelled: 'Cancelled', refunded: 'Refunded', failed: 'Failed', 'checkout-draft': 'Draft' }
+function statusLabel(s) {
+  return STATUS[s] ? t(STATUS[s]) : String(s || '')
+}
+const loadFailed = ref(false)
+async function load() {
+  loadFailed.value = false
+  try {
+    const res = await fetchWithToken('/wp-json/qwoo/v1/my-orders')
+    if (!res.ok) throw new Error(String(res.status))
+    const list = await res.json()
+    orders.value = Array.isArray(list) ? list : []
+  } catch {
+    loadFailed.value = true
+  }
+}
+onMounted(load)
 </script>
 <style>
 .q-expansion-item__container.relative-position .q-icon,

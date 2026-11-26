@@ -82,6 +82,16 @@
             </q-table>
           </q-card-section>
         </q-card>
+        <div class="text-center q-mt-lg"><q-btn to="/products" unelevated no-caps color="secondary" :label="t('Continue shopping')" /></div>
+      </div>
+
+      <div v-else-if="failed" class="text-center q-my-xl">
+        <div class="text-h5">{{ t('Thank you!') }}</div>
+        <p class="q-mt-md">{{ t('Your order was received. We couldn\'t show its details here, but they are in the email we sent you.') }}</p>
+        <div class="row justify-center q-gutter-sm q-mt-md">
+          <q-btn outline no-caps color="secondary" :label="t('Try again')" @click="reloadPage" />
+          <q-btn to="/products" unelevated no-caps color="secondary" :label="t('Continue shopping')" />
+        </div>
       </div>
 
       <div v-else class="text-center q-my-xl">
@@ -110,6 +120,8 @@ const { t } = useI18n()
 const route = useRoute()
 useSeoMeta({ noindex: true })
 const order = ref(null)
+// The order couldn't be read (2026-11-26): no endless spinner; the order itself went through.
+const failed = ref(false)
 // Grow payments: '' (not Grow) | 'checking' | 'paid' | 'waiting' (not confirmed after ~30s).
 const growState = ref('')
 // Bank details for orders paid by transfer (the owner's details from the store).
@@ -163,7 +175,7 @@ onMounted(async () => {
 
   try {
     const res = await fetchWithToken(
-      `/wp-json/wc/store/v1/order/${orderID}?key=${order_key}&billing_email=${email}`,
+      `/wp-json/wc/store/v1/order/${encodeURIComponent(orderID || '')}?key=${encodeURIComponent(order_key || '')}&billing_email=${encodeURIComponent(email || '')}`,
       {credentials: 'include'}
     )
     if (!res.ok) {
@@ -175,8 +187,13 @@ onMounted(async () => {
     if (!paidLater || await paidLater) trackPurchase(data)
   } catch (err) {
     console.error(err)
+    failed.value = true
   }
 })
+
+function reloadPage() {
+  window.location.reload()
+}
 
 function trackPurchase(data) {
   if (!data?.id) return

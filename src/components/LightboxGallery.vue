@@ -300,7 +300,9 @@ function onTouchEnd(e) {
     const dx = e.changedTouches[0].clientX - touch.startX
     const dy = e.changedTouches[0].clientY - touch.startY
     if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
-      navigate(dx < 0 ? 1 : -1)
+      // Right-to-left: the next picture comes from the left (2026-11-26).
+      const rtl = document.documentElement.dir === 'rtl'
+      navigate((dx < 0) !== rtl ? 1 : -1)
     }
   }
 }

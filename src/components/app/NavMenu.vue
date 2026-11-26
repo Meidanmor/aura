@@ -39,7 +39,7 @@ defineProps({
 .has-sub > .nav-link::after { content: ' ▾'; font-size: .7em; opacity: .6; }
 .nav-sub {
   position: absolute; top: 100%; left: 0; z-index: 30; min-width: 200px; padding: 6px 0;
-  background: var(--q-bg, #fff); border-radius: 10px; box-shadow: 0 10px 30px rgba(0, 0, 0, .12);
+  background: var(--q-bg, var(--q-primary, #fff)); border-radius: 10px; box-shadow: 0 10px 30px rgba(0, 0, 0, .12);
   opacity: 0; visibility: hidden; transform: translateY(4px); transition: opacity .15s, transform .15s, visibility .15s;
 }
 .nav-sub .nav-link { padding: 8px 16px; font-size: 15px; }

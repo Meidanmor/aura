@@ -275,7 +275,7 @@ html.q-document--prevent-scroll:has(.qwoo-popup) body { position: fixed !importa
   position: relative;
   width: var(--qp-w-now, 560px);
   max-width: var(--qp-maxw-now, 100%);
-  background: var(--qp-bg, var(--q-bg, #fff));
+  background: var(--qp-bg, var(--q-bg, var(--q-primary, #fff)));
   border-radius: var(--qp-radius, 16px);
   box-shadow: 0 24px 60px rgba(0, 0, 0, .25);
   overflow: auto;

@@ -253,7 +253,7 @@ onBeforeUnmount(() => {
   z-index: 3000;
   width: max(100%, 340px);
   max-width: calc(100vw / var(--a11y-z, 1) - 24px);
-  background: var(--sb-panel-bg, var(--q-bg, #fff));
+  background: var(--sb-panel-bg, var(--q-bg, var(--q-primary, #fff)));
   color: var(--sb-panel-text, var(--q-text, #1a1a1a));
   border-radius: 12px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, .16);
@@ -275,7 +275,7 @@ onBeforeUnmount(() => {
 }
 .search-box {
   width: min(640px, 100%);
-  background: var(--sb-panel-bg, var(--q-bg, #fff));
+  background: var(--sb-panel-bg, var(--q-bg, var(--q-primary, #fff)));
   color: var(--sb-panel-text, var(--q-text, #1a1a1a));
   border-radius: 14px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, .25);

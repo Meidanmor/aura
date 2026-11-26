@@ -10,6 +10,8 @@
           :style="optionText.style"
           @update:model-value="c.onShippingMethodChange"
       />
+      <!-- No way to send it here (2026-11-26): say so, instead of an empty list. -->
+      <p v-if="!c.deliveryOptions?.length && (c.form?.shipping?.city || c.form?.shipping?.postcode)" class="co-no-rates" role="status">{{ t('We don\'t deliver to this address yet. Check the address, or contact us.') }}</p>
       <p v-if="pickupAddress" class="co-pickup"><b>{{ t('Pickup address') }}:</b> <span>{{ pickupAddress }}</span></p>
       <!-- "Pickup point (HFD)": a point in the shopper's city, required before paying. Drawn after this block mounts. -->
       <PickupPointSelect v-if="mounted && c.pointNeeded" v-model="c.pickupPoint" :city="c.form?.shipping?.city || ''" />
@@ -40,4 +42,5 @@ const pickupAddress = computed(() => (c?.deliveryOptions || []).find((o) => o.va
 <style scoped>
 .co-pickup { margin: 8px 0 0; white-space: pre-line; }
 .co-choice :deep(.q-radio__inner--truthy) { color: var(--co-choice); }
+.co-no-rates { margin: 8px 0 0; opacity: .85; }
 </style>

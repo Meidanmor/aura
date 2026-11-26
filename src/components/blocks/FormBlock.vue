@@ -27,7 +27,7 @@
               v-model="values[field.key]"
               borderless
               dense
-              :rules="field.required ? [(v) => v === true || `Please check “${field.label}”.`] : []"
+              :rules="field.required ? [(v) => v === true || t('Please check “{name}”.', { name: field.label })] : []"
               :error="!!serverErrors[field.key]"
               :error-message="serverErrors[field.key]"
           >
@@ -64,7 +64,7 @@
               :options="optionValues(field)"
               :label="labelFor(field)"
               v-bind="inputStyleProps"
-              :rules="field.required ? [(v) => !!v || `“${field.label}” is required.`] : []"
+              :rules="field.required ? [(v) => !!v || t('“{name}” is required.', { name: field.label })] : []"
               :error="!!serverErrors[field.key]"
               :error-message="serverErrors[field.key]"
               lazy-rules
@@ -233,7 +233,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function textRules(f) {
   const rules = []
-  if (f.required) rules.push((v) => (v !== '' && v != null) || `“${f.label}” is required.`)
+  if (f.required) rules.push((v) => (v !== '' && v != null) || t('“{name}” is required.', { name: f.label }))
   if (f.field_type === 'email') rules.push((v) => !v || EMAIL_RE.test(v) || t('Please enter a valid email address.'))
   if (f.field_type === 'url') rules.push((v) => !v || /^https?:\/\/\S+$/i.test(v) || t('Please enter a full URL (https://…).'))
   return rules

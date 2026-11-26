@@ -116,7 +116,7 @@
             class="buy-btn quick-checkout-btn"
             :class="[buttonText.class, paddingVars.cls]"
             :style="[buttonText.style, quickColors]"
-            :color="quickBg ? undefined : 'black'"
+            :color="quickBg ? undefined : 'accent'"
             to="/checkout"
             :disable="p.shouldDisableCartButtons"
             :loading="p.cart.state.loading.quickbuy"

@@ -272,9 +272,10 @@ const paddingVars = computed(() => {
 .is-full .bis__btn { width: 100%; }
 .bis__done { display: flex; align-items: center; gap: 8px; color: var(--q-positive, #21ba45); }
 .bis__error { color: var(--bis-error, var(--q-negative, #c10015)); font-size: 0.92em; }
-.bis__ways { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: rgba(0, 0, 0, 0.06); }
+.bis__ways { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: rgba(0, 0, 0, 0.06); background: color-mix(in srgb, currentColor 8%, transparent); }
 .bis__way { flex: 1; border: 0; background: none; font: inherit; padding: 7px 8px; border-radius: 8px; cursor: pointer; color: inherit; }
-.bis__way.is-on { background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); font-weight: 600; }
+/* The chosen way: the page colour on the tinted track (was white on dark stores, 2026-11-26). */
+.bis__way.is-on { background: var(--q-primary, #fff); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); font-weight: 600; }
 .bis__install { border: 0; background: none; padding: 4px 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; text-align: start; }
 .bis__hp { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; inset-inline-start: -9999px; }
 @media (min-width: 1024px) {
