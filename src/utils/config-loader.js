@@ -164,7 +164,16 @@ function installChangeMarks(trustedOrigin) {
   // The marked boxes on this page, in page order, without those inside another marked one.
   const found = () => {
     if (!ids.length) return []
-    const all = Array.from(document.querySelectorAll(ids.map(sel).join(', ')))
+    // Only what shows on this page now: not in a closed drawer or popup, not hidden on this screen size (owner,
+    // 2026-11-26: a mark nobody could see was counted, and "Next change" scrolled to nothing).
+    const seen = (el) => {
+      const r = el.getBoundingClientRect()
+      if (r.width < 2 || r.height < 2 || r.right <= 0 || r.left >= window.innerWidth) return false
+      if (el.closest('[aria-hidden="true"], [inert], [hidden]')) return false
+      // (No opacity check: sections with an entrance animation wait at opacity 0 until they scroll into view.)
+      return getComputedStyle(el).visibility !== 'hidden'
+    }
+    const all = Array.from(document.querySelectorAll(ids.map(sel).join(', '))).filter(seen)
     return all.filter((el) => !all.some((other) => other !== el && other.contains(el)))
   }
   const scrollTo = (el) => {
