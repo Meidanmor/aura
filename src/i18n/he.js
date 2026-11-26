@@ -883,4 +883,8 @@ export default {
   "Please choose a pickup point.": "נא לבחור נקודת איסוף.",
   "Shipment number": "מספר משלוח",
   "Track your shipment": "מעקב אחרי המשלוח",
+  // Codes to copy (2026-11-26)
+  "Copy the code {code}": "להעתיק את הקוד {code}",
+  "This code has ended": "הקוד הזה כבר לא בתוקף",
+  "Select and copy the code": "סמנו את הקוד והעתיקו",
 }

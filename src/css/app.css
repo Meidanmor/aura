@@ -1555,3 +1555,17 @@ html.qa-editor .sb-aud-customers { outline: 1px dashed rgba(127, 127, 127, .6); 
 /* Faster pictures (src/utils/webp.js): the <picture> around an <img> takes no box of its own,
    so the picture's layout and styles stay as they were. */
 picture.pic { display: contents; }
+
+/* purgecss start ignore */
+/* Codes to copy inside any heading or text (src/boot/copy-codes.js). The code reads left to right in any language;
+   the looks use the text's own colour, so they work on light and dark sections. */
+[data-copy] { /*rtl:ignore*/ direction: ltr; unicode-bidi: isolate; cursor: pointer; letter-spacing: .04em; white-space: nowrap; }
+[data-copy][data-look="underline"] { font-weight: 700; text-decoration: underline dashed 2px; text-underline-offset: .22em; }
+[data-copy][data-look="tag"] { font-weight: 700; display: inline-block; padding: .02em .5em; border: 1.5px dashed currentColor; border-radius: .4em; line-height: 1.35; }
+[data-copy][data-look="bold"] { font-weight: 800; }
+[data-copy]:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+[data-copy][data-ok="0"] { cursor: auto; text-decoration: none; border-color: transparent; font-weight: inherit; padding: 0; }
+[data-copy][data-ok="0"][data-end="hide"] { display: none; }
+.copy-code-bubble { position: fixed; z-index: 9999; transform: translate(-50%, -100%); padding: 4px 10px; border-radius: 8px; background: #111; color: #fff; font-size: 13px; line-height: 1.4; pointer-events: none; opacity: 0; transition: opacity .15s ease; }
+.copy-code-bubble.is-on { opacity: 1; }
+/* purgecss end ignore */
