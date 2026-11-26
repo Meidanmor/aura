@@ -183,7 +183,9 @@ function installChangeMarks(trustedOrigin) {
     ids = (Array.isArray(data.ids) ? data.ids : []).filter((x) => typeof x === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(x)).slice(0, 200)
     const show = data.show !== false
     style.textContent = show && ids.length
-      ? `${ids.map(sel).join(', ')} { outline: 3px solid #f59e0b !important; outline-offset: -3px; box-shadow: inset 0 0 0 100vmax rgba(245, 158, 11, .10) !important; }`
+      // A light editor mark (a thin dashed blue line, a faint tint), never a colour that looks like the design (owner,
+      // 2026-11-26: the heavy orange frame read as an ugly restyle).
+      ? `${ids.map(sel).join(', ')} { outline: 2px dashed rgba(37, 99, 235, .75) !important; outline-offset: -2px; box-shadow: inset 0 0 0 100vmax rgba(37, 99, 235, .04) !important; }`
       : ''
     const go = Number.isInteger(data.go) ? data.go : -1
     clearTimeout(timer)
