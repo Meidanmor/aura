@@ -24,29 +24,13 @@
         </div>
       </template>
       <template v-else>
+      <!-- A store with no footer of its own: only links that always exist (2026-11-26; the old list
+           pointed at pages most stores don't have). -->
       <div class="footer-column">
         <h2 class="links-title">{{ t('Shop') }}</h2>
         <nav>
           <router-link to="/products">{{ t('Shop All') }}</router-link>
-          <router-link to="/product-category/best-sellers">{{ t('Best Sellers') }}</router-link>
-          <router-link to="/product-category/new-arrival">{{ t('New Arrival') }}</router-link>
-          <router-link to="/gift-card">{{ t('Gift Card') }}</router-link>
-        </nav>
-      </div>
-      <div class="footer-column">
-        <h2 class="links-title">{{ t('Experience') }}</h2>
-        <nav>
-          <router-link to="/sustainability">{{ t('Sustainability') }}</router-link>
-          <router-link to="/our-story">{{ t('Our Story') }}</router-link>
-        </nav>
-      </div>
-      <div class="footer-column">
-        <h2 class="links-title">{{ t('Support') }}</h2>
-        <nav>
-          <router-link to="/shipping-and-returns">{{ t('Shipping & Returns') }}</router-link>
-          <router-link to="/privacy-policy">{{ t('Privacy Policy') }}</router-link>
-          <router-link to="/terms-of-service">{{ t('Terms of Service') }}</router-link>
-          <router-link to="/contact-us">{{ t('Contact Us') }}</router-link>
+          <router-link to="/my-account">{{ t('My account') }}</router-link>
         </nav>
       </div>
       </template>

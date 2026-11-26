@@ -233,6 +233,8 @@ const asPointer = (data, file = '') => ({
   floating: floatingOf(data?.floating),
   // Notifications → Settings → Home screen off: the app file offers no install (webManifest).
   app: data?.app !== false,
+  // A template's demo store (qwoo-core Qwoo_Gallery_Demo): the platform's dashboard origin that may frame it.
+  gallery: galleryOf(data?.gallery),
   // Suspended by the platform: "This store is unavailable" for everyone (coming-soon.js).
   ...(data?.suspended === true
     ? { suspended: true, name: String(data.name || '').slice(0, 120), lang: data.lang === 'he' ? 'he' : 'en' }
@@ -382,6 +384,20 @@ export function contentTag() {
 /** Whether product answers are the same for every shopper (see asPointer). */
 export function sharedAnswers() {
   return pointer?.shared !== false
+}
+
+/** An https origin from the store's pointer, else ''. */
+function galleryOf(value) {
+  if (typeof value !== 'string' || !/^https:\/\/[a-z0-9.-]+(:\d{1,5})?$/i.test(value)) return ''
+  try { return new URL(value).origin } catch { return '' }
+}
+
+/**
+ * The dashboard origin that may show this store in a frame because it is a template's demo (set live by
+ * the platform, owner 2026-11-26: no build to turn it on or off), or '' (before the first check too).
+ */
+export function siteGallery() {
+  return pointer?.gallery || ''
 }
 
 /** Whether the store is hidden or suspended, from the last check (null before the first one). */

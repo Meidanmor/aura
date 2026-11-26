@@ -52,6 +52,15 @@ export function drawerLook(sd = {}) {
     close: sd.drawer_close !== false,
     closeSize: toCssLength(sd.drawer_close_size) || '',
     closeColor: resolveGlobalColor(sd.drawer_close_color) || '',
+    // owner, 2026-11-26: the close button's icon, place and box; the title row's background, line and shadow.
+    closeIcon: ['close_thin', 'close_circle', 'back'].includes(sd.drawer_close_icon) ? sd.drawer_close_icon : 'close',
+    closeStart: sd.drawer_close_side === 'start',
+    closeBg: resolveGlobalColor(sd.drawer_close_bg) || '',
+    closePad: toCssLength(sd.drawer_close_pad) || '',
+    closeRadius: toCssLength(sd.drawer_close_radius) || '',
+    headBg: resolveGlobalColor(sd.drawer_head_bg) || '',
+    headLine: resolveGlobalColor(sd.drawer_head_line) || '',
+    headShadow: ['none', 'strong'].includes(sd.drawer_head_shadow) ? sd.drawer_head_shadow : 'soft',
   }
 }
 

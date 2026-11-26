@@ -32,6 +32,8 @@ const state = reactive({
   error: null,
   offline: typeof window !== 'undefined' ? !navigator.onLine : false,
   drawerOpen: false,
+  // The page has a cart drawer (MainLayout sets it): then the drawer itself confirms an add, no toast.
+  hasCartDrawer: false,
   synced: false,
   rejected_items: [],
 })
@@ -1064,10 +1066,12 @@ function _finishAdd($q, openDrawer = true) {
   persistLocalCart()
   rebuildMergedView()
   scheduleSyncLocalToServer()
-  notifyUser($q, 'positive', t('Added to cart'), matShoppingCart)
   state.loading.cart = false
   // On the cart and checkout pages the page itself shows the cart: no drawer over it (owner, 2026-11-24).
-  if (openDrawer && !onCartOrCheckoutPage()) state.drawerOpen = true
+  const drawer = openDrawer && !onCartOrCheckoutPage() && state.hasCartDrawer
+  // One confirmation, not two (2026-11-26): the drawer when it opens, else a toast in the store's colours.
+  if (drawer) state.drawerOpen = true
+  else if ($q?.notify) $q.notify({ message: t('Added to cart'), icon: matShoppingCart, classes: 'qwoo-toast', position: 'bottom' })
 }
 
 function _addToExistingLocalItem(localItem, quantity, $q, openDrawer = true) {

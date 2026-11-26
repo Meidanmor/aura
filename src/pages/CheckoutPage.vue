@@ -960,7 +960,7 @@ provide('checkoutPage', reactive({
     content: '';
     width: 30px;
     height: 30px;
-    border: 5px solid #000;
+    border: 5px solid var(--q-secondary, #000);
     background: transparent;
     border-radius: 50%;
     display: block;

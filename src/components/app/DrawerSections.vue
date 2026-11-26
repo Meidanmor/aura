@@ -9,28 +9,30 @@
     <div
         v-if="entry.title !== '' || look.close"
         class="drawer-sections__head sticky flex justify-between items-center no-wrap"
-        :class="{ 'drawer-sections__head--pad': !!look.headPad }"
-        :style="{ ...(entry.bg ? { background: entry.bg } : {}), ...(look.headPad || {}) }"
+        :class="{ 'drawer-sections__head--pad': !!look.headPad, 'drawer-sections__head--start': look.closeStart, [`drawer-sections__head--shadow-${look.headShadow || 'soft'}`]: true }"
+        :style="headStyle"
     >
       <div v-if="entry.title !== ''" class="text-h6 drawer-sections__title" v-bind="look.title">{{ entry.title ?? t(TITLES[entry.kind] || 'Menu') }}</div><span v-else />
       <q-btn
           v-if="look.close"
           flat dense padding="none"
+          class="drawer-sections__close"
+          :class="{ 'drawer-sections__close--back': look.closeIcon === 'back' }"
           :aria-label="t(CLOSE[entry.kind] || 'Close')"
-          :icon="matClose"
-          :style="{ fontSize: look.closeSize || undefined, color: look.closeColor || undefined }"
+          :icon="closeIcon"
+          :style="closeStyle"
           @click="emit('close')"
       />
     </div>
     <SectionRenderer :sections="scrolling" page="drawer" no-priority />
     <q-banner
         v-if="entry.kind === 'menu' && entry.showNotifications !== false && !hasPushBlock && vapidConfigured && supported && permission !== 'granted' && permission !== 'denied'"
-        class="bg-secondary text-white q-ma-md rounded-borders shadow-2"
+        class="bg-secondary push-ask-banner q-ma-md rounded-borders shadow-2"
         inline-actions
     >
       <div class="text-subtitle1">{{ t('Enable push notifications?') }}</div>
       <template #action>
-        <q-btn style="line-height: 1;" outline padding="sm" color="secondary" text-color="white" :label="t('Enable')" @click="emit('subscribe')" />
+        <q-btn style="line-height: 1;" outline padding="sm" class="push-ask-btn" :label="t('Enable')" @click="emit('subscribe')" />
       </template>
     </q-banner>
   </q-scroll-area>
@@ -42,7 +44,7 @@
 
 <script setup>
 import { computed, provide } from 'vue'
-import { matClose } from '@quasar/extras/material-icons'
+import { matClose, matHighlightOff, matArrowBack } from '@quasar/extras/material-icons'
 import SectionRenderer from 'components/sections/SectionRenderer.vue'
 import { provideCartPage } from 'src/composables/useCartPage.js'
 import { pushKeyReady as vapidConfigured } from 'src/composables/useNotificationSoftAsk.js'
@@ -59,6 +61,24 @@ const { t } = useI18n()
 
 // The widget's Style → Drawer choices (useDrawers.js drawerLook()); a drawer without them looks as before.
 const look = computed(() => props.entry.look || { pad: null, headPad: null, title: {}, close: true, closeSize: '', closeColor: '' })
+
+// A thin X, drawn as two thin bars.
+const CLOSE_THIN = 'M5.7 4.6 19.4 18.3 18.3 19.4 4.6 5.7Z&&M18.3 4.6 19.4 5.7 5.7 19.4 4.6 18.3Z|0 0 24 24'
+const closeIcon = computed(() => ({ close_thin: CLOSE_THIN, close_circle: matHighlightOff, back: matArrowBack }[look.value.closeIcon] || matClose))
+const closeStyle = computed(() => {
+  const l = look.value
+  const st = { fontSize: l.closeSize || undefined, color: l.closeColor || undefined }
+  if (l.closeBg) st.background = l.closeBg
+  if (l.closePad) st.padding = l.closePad
+  if (l.closeBg || l.closeRadius) st.borderRadius = l.closeRadius || '50%'
+  return st
+})
+// The title row: the widget's colours (else the drawer's background) and its bottom line.
+const headStyle = computed(() => ({
+  ...(look.value.headBg ? { background: look.value.headBg } : (props.entry.bg ? { background: props.entry.bg } : {})),
+  ...(look.value.headLine ? { borderBottom: `1px solid ${look.value.headLine}` } : {}),
+  ...(look.value.headPad || {}),
+}))
 
 // "Keep at the bottom of the drawer" (a section's Advanced → Position).
 const pinned = computed(() => (props.entry.sections || []).filter((s) => s?.style?.drawer_pin))
@@ -107,6 +127,14 @@ function keepSwipe(e) {
   padding: 12px 16px;
   gap: 12px;
 }
+/* Title Row Shadow (owner, 2026-11-26): soft is the old look (app.css .q-drawer .sticky). */
+.q-drawer .drawer-sections__head--shadow-none { box-shadow: none; }
+.q-drawer .drawer-sections__head--shadow-strong { box-shadow: 0 4px 18px rgba(0, 0, 0, .18); }
+/* Close button before the title. */
+.drawer-sections__head--start .drawer-sections__close { order: -1; }
+.drawer-sections__head--start { justify-content: flex-start; }
+/* The back arrow points toward the side the drawer closes to (mirrored in right-to-left). */
+[dir="rtl"] .drawer-sections__close--back :deep(.q-icon) { transform: scaleX(-1); }
 /* The owner's Title Row Padding: sides left empty are 0. */
 .drawer-sections__head--pad {
   padding: var(--dh-pt, 0) var(--dh-pr, 0) var(--dh-pb, 0) var(--dh-pl, 0);

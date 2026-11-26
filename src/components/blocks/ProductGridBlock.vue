@@ -13,9 +13,13 @@
           :href="isInternal(d.view_all_url) ? undefined : d.view_all_url"
           :label="d.view_all_text || t('View all')"
           :aria-label="d.aria_label || undefined"
-          outline
+          :outline="viewAllStyle === 'outline'"
+          :flat="viewAllStyle === 'text'"
+          :unelevated="viewAllStyle === 'filled'"
           no-caps
           class="product-grid-block__view-all"
+          :class="[`product-grid-block__view-all--${viewAllStyle}`, viewAllText.class]"
+          :style="{ ...viewAllText.style, ...viewAllVars }"
       />
     </div>
   </div>
@@ -30,6 +34,9 @@ import { useBlockQuery } from 'src/composables/useBlockQuery.js'
 import { keyWithProduct, useExcludedProduct, useRelatedProduct } from 'src/utils/current-product.js'
 import { usePriorityBlock } from 'src/composables/usePriorityBlock.js'
 import { setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
+import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
+import { inkOn } from 'src/utils/on-color.js'
+import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { useSampleFallback } from 'src/utils/sample-items.js'
 import { useCartSuggestions } from 'src/utils/cart-suggestions.js'
 import { useRecentlyViewed } from 'src/utils/recently-viewed.js'
@@ -75,6 +82,21 @@ const empty = computed(() => ['recent', 'for_you'].includes(d.value.query_type) 
 // at their usual width (Store builder: "Fewer Products Than Columns").
 const shortRow = computed(() => (['center', 'end'].includes(d.value.short_row) ? `short-${d.value.short_row}` : ''))
 
+// The "View all" button's look (Style → View all button, 2026-11-26).
+const viewAllStyle = computed(() => (['filled', 'text'].includes(d.value.view_all_style) ? d.value.view_all_style : 'outline'))
+const viewAllText = computed(() => textStyle(d.value, tsKeys('view_all'), 'buttons'))
+const viewAllVars = computed(() => {
+  const v = {}
+  const c = resolveGlobalColor(d.value.view_all_bg)
+  const ink = resolveGlobalColor(d.value.view_all_color)
+  const r = toCssLength(d.value.view_all_radius)
+  if (c) v['--pg-va'] = c
+  if (ink) v['--pg-va-ink'] = ink
+  else if (inkOn(d.value.view_all_bg || 'global:secondary')) v['--pg-va-ink'] = inkOn(d.value.view_all_bg || 'global:secondary')
+  if (r) v['--pg-va-r'] = r
+  return v
+})
+
 const cssVars = computed(() => {
   const vars = {}
   setResponsiveVar(vars, '--pg-cols', d.value.columns || { desktop: 4, tablet: 3, mobile: 2 }, (v) => (v ? Math.max(1, Math.min(6, Number(v))) : null))
@@ -91,6 +113,9 @@ const cssVars = computed(() => {
 }
 .product-grid-block__cell { min-width: 0; }
 .product-grid-block__footer { display: flex; justify-content: center; margin-top: 24px; }
+.product-grid-block__view-all { border-radius: var(--pg-va-r, 4px); }
+.product-grid-block__view-all--outline, .product-grid-block__view-all--text { color: var(--pg-va, inherit); }
+.product-grid-block__view-all--filled { background: var(--pg-va, var(--q-secondary)); color: var(--pg-va-ink, var(--q-on-secondary, #fff)); }
 
 @media (max-width: 1023px) {
   .product-grid-block__grid { grid-template-columns: repeat(var(--pg-cols-t, var(--pg-cols, 3)), minmax(0, 1fr)); gap: var(--pg-gap-t, var(--pg-gap, 16px)); }

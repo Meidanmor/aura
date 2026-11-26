@@ -91,7 +91,7 @@ function remove(a) {
   if (props.user?.sample) return
   $q.dialog({
     message: t('Delete this address?'),
-    cancel: { label: t('Cancel'), flat: true, noCaps: true },
+    cancel: { label: t('Cancel'), flat: true, noCaps: true, color: 'secondary' },
     ok: { label: t('Delete'), flat: true, noCaps: true, color: 'negative' },
   }).onOk(async () => {
     removing.value = a.id

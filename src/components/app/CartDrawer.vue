@@ -6,7 +6,7 @@
   </div>
 
   <div v-if="itemsCount && Number(itemsCount) !== 0">
-    <div v-for="item in cart.state.items" :key="item.id" class="q-pa-sm row items-center" :class="[item.key.includes('offline') ? 'offline-item' : '']">
+    <div v-for="item in cart.state.items" :key="item.id" class="q-pa-sm row items-center" :class="[item.key.includes('offline') ? 'offline-item' : '']" :data-offline="item.key.includes('offline') ? t('Offline item - will be added automatically when back online') : null">
       <div class="q-ml-sm flex">
         <img
             width="70"

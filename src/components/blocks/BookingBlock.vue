@@ -1,5 +1,5 @@
 <template>
-  <div ref="root" class="qbk" :class="[`qbk--${layout}`]" :style="vars">
+  <div ref="root" class="qbk" :class="[`qbk--${layout}`, `qbk--days-${daysLook}`]" :style="vars">
     <div v-if="title" class="qbk__title" :class="titleText.class" :style="titleText.style">{{ title }}</div>
 
     <!-- The server draws the frame only: free times load in the browser (they change every minute). -->
@@ -65,13 +65,20 @@
           <!-- Phones: a row of days that scrolls sideways. -->
           <div class="qbk__strip">
             <template v-if="loadingTimes && !openCells.length"><span v-for="n in 6" :key="`k${n}`" class="qbk__sday qbk__skel" aria-hidden="true" /></template>
-            <button
-              v-for="c in stripCells" :key="`s${c.ymd}`" type="button" class="qbk__sday" :class="{ on: c.ymd === date, shut: !c.open }" :disabled="!c.open" :aria-pressed="c.ymd === date" :aria-label="c.label"
-              @click="date = c.ymd"
-            ><small>{{ c.wd }}</small><b>{{ c.n }}</b></button>
+            <template v-for="c in stripCells" :key="`s${c.ymd}`">
+              <span v-if="c.mark" class="qbk__smark" aria-hidden="true">{{ c.mark }}</span>
+              <button
+                type="button" class="qbk__sday" :class="{ on: c.ymd === date, shut: !c.open }" :disabled="!c.open" :aria-pressed="c.ymd === date" :aria-label="c.label"
+                @click="date = c.ymd"
+              ><small>{{ c.wd }}</small><b>{{ c.n }}</b></button>
+            </template>
+            <!-- More days: the row never just ends (owner, 2026-11-26: one or two days left looked like nothing to book). -->
+            <button v-if="!loadingTimes" type="button" class="qbk__sday qbk__snext" @click="shiftMonth(nextMonthLoaded ? 2 : 1)">
+              <small>{{ t('Next month') }}</small><b><span class="qbk__flip">›</span></b>
+            </button>
           </div>
           <p v-if="loadingTimes" class="qbk__sr" role="status">{{ t('Looking for free times…') }}</p>
-          <p v-else-if="!openCells.length" class="qbk__note">{{ t('No free times this month.') }} <button type="button" class="qbk__link" @click="shiftMonth(1)">{{ t('Next month') }}</button></p>
+          <p v-else-if="!openCells.length && !(daysLook === 'row' && stripCells.length)" class="qbk__note">{{ t('No free times this month.') }} <button type="button" class="qbk__link" @click="shiftMonth(1)">{{ t('Next month') }}</button></p>
           <p v-if="zoneNote" class="qbk__note">{{ zoneNote }}</p>
         </div>
 
@@ -167,6 +174,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 import { useRouter } from 'vue-router'
 import { useI18n, currentLocale } from 'src/i18n/index.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
+import { inkOn } from 'src/utils/on-color.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { useFieldIds } from 'src/utils/field-id.js'
 import { fetchProductById } from 'src/api/woocommerce.js'
@@ -189,12 +197,17 @@ const d = computed(() => props.data?.data || {})
 const title = computed(() => String(d.value.title ?? '').trim())
 const pick = (v) => (v && typeof v === 'object' ? (v.desktop || 'side') : (v || 'side'))
 const layout = computed(() => (pick(d.value.layout) === 'stack' ? 'stack' : 'side'))
+// Days: "auto" (a month calendar on computers, a row of days on phones), "calendar" or "row" everywhere.
+const daysLook = computed(() => (['calendar', 'row'].includes(d.value.days_look) ? d.value.days_look : 'auto'))
 const titleText = computed(() => textStyle(d.value, tsKeys('title')))
 const bodyText = computed(() => textStyle(d.value, tsKeys('text')))
 const vars = computed(() => {
   const v = {}
   const accent = resolveGlobalColor(d.value.accent || 'global:secondary')
   if (accent) v['--qbk-accent'] = accent
+  // Text on the chosen day / time / button: readable on the owner's colour (was always white).
+  const onAccent = inkOn(d.value.accent || 'global:secondary')
+  if (onAccent) v['--qbk-on'] = onAccent
   const bg = resolveGlobalColor(d.value.card_bg)
   if (bg) v['--qbk-card'] = bg
   const line = resolveGlobalColor(d.value.border_color)
@@ -297,6 +310,9 @@ onMounted(async () => {
 const pad = (n) => String(n).padStart(2, '0')
 const month = ref('') // 'Y-m'
 const days = ref({})
+// The row of days: the next month's free days too when this month has few left (nextMonthLoaded = 'Y-m' or '').
+const nextMonthLoaded = ref('')
+const FEW_DAYS = 7
 const loadingTimes = ref(false)
 const date = ref('')
 const slot = ref(null)
@@ -339,7 +355,20 @@ async function loadMonth() {
   const res = await bookingApi.times(svc.value.id, from, `${month.value}-${pad(last)}`, seats.value, who.value, grey.value)
   if (ask !== asked) return
   days.value = res.ok ? (res.data?.days || {}) : {}
+  nextMonthLoaded.value = ''
   if (!res.ok) problem.value = failText(res, t('We couldn\'t load the free times. Please try again.'))
+  // Few free days left this month (and a row of days on some screen): next month's join the row.
+  if (res.ok && daysLook.value !== 'calendar' && Object.keys(days.value).filter((k) => freeOn(k)).length < FEW_DAYS) {
+    const at = new Date(y, m, 1)
+    const next = `${at.getFullYear()}-${pad(at.getMonth() + 1)}`
+    const nlast = new Date(at.getFullYear(), at.getMonth() + 1, 0).getDate()
+    const more = await bookingApi.times(svc.value.id, `${next}-01`, `${next}-${pad(nlast)}`, seats.value, who.value, grey.value)
+    if (ask !== asked) return
+    if (more.ok) {
+      days.value = { ...days.value, ...(more.data?.days || {}) }
+      nextMonthLoaded.value = next
+    }
+  }
   loadingTimes.value = false
   if (!date.value) date.value = Object.keys(days.value).find((k) => freeOn(k)) || ''
 }
@@ -347,20 +376,32 @@ const weekStart = computed(() => Number(info.value?.week_start || 0))
 const weekdays = computed(() => Array.from({ length: 7 }, (_, i) => new Date(2026, 10, 15 + ((i + weekStart.value) % 7)).toLocaleDateString(currentLocale(), { weekday: 'narrow' })))
 const firstDow = computed(() => { const [y, m] = month.value.split('-').map(Number); return new Date(y, m - 1, 1).getDay() })
 const lead = computed(() => (firstDow.value - weekStart.value + 7) % 7)
-const cells = computed(() => {
-  if (!month.value) return []
-  const [y, m] = month.value.split('-').map(Number)
+function cellsOf(ym) {
+  if (!ym) return []
+  const [y, m] = ym.split('-').map(Number)
   const n = new Date(y, m, 0).getDate()
   return Array.from({ length: n }, (_, i) => {
-    const ymd = `${month.value}-${pad(i + 1)}`
+    const ymd = `${ym}-${pad(i + 1)}`
     const at = new Date(y, m - 1, i + 1, 12)
     return { ymd, n: i + 1, open: freeOn(ymd), past: ymd < todayYmd.value, wd: at.toLocaleDateString(currentLocale(), { weekday: 'short' }), label: at.toLocaleDateString(currentLocale(), { weekday: 'long', day: 'numeric', month: 'long' }) }
   })
-})
+}
+const cells = computed(() => cellsOf(month.value))
 const freeOn = (ymd) => !!days.value[ymd]?.some((s) => !s.taken)
 const openCells = computed(() => cells.value.filter((c) => c.open))
 // Phones: free days only, or (grey) every day from today with closed ones greyed.
-const stripCells = computed(() => (grey.value ? cells.value.filter((c) => !c.past) : openCells.value))
+// The next month's days follow (when loaded), with a small month name where it starts.
+const stripCells = computed(() => {
+  const keep = (list) => (grey.value ? list.filter((c) => !c.past) : list.filter((c) => c.open))
+  const out = keep(cells.value)
+  if (!nextMonthLoaded.value) return out
+  const more = keep(cellsOf(nextMonthLoaded.value))
+  if (more.length) {
+    const [y, m] = nextMonthLoaded.value.split('-').map(Number)
+    more[0] = { ...more[0], mark: new Date(y, m - 1, 1).toLocaleDateString(currentLocale(), { month: 'short' }) }
+  }
+  return out.concat(more)
+})
 const monthLabel = computed(() => { if (!month.value) return ''; const [y, m] = month.value.split('-').map(Number); return new Date(y, m - 1, 1).toLocaleDateString(currentLocale(), { month: 'long', year: 'numeric' }) })
 const dateLabel = computed(() => (date.value ? new Date(`${date.value}T12:00:00`).toLocaleDateString(currentLocale(), { weekday: 'long', day: 'numeric', month: 'long' }) : t('Choose a day')))
 const daySlots = computed(() => days.value[date.value] || [])
@@ -490,7 +531,7 @@ function again() {
 .qbk__steps { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; font-size: .85em; }
 .qbk__steps li { border: 1px solid var(--qbk-line); border-radius: 99px; padding: 3px 12px; opacity: .65; }
 .qbk__steps li.done { opacity: 1; }
-.qbk__steps li.on { background: var(--qbk-accent); border-color: var(--qbk-accent); color: #fff; opacity: 1; }
+.qbk__steps li.on { background: var(--qbk-accent); border-color: var(--qbk-accent); color: var(--qbk-on, #fff); opacity: 1; }
 .qbk__services { display: grid; gap: 10px; }
 .qbk__svc { display: flex; align-items: center; gap: 14px; width: 100%; text-align: start; cursor: pointer; font: inherit; color: inherit; }
 .qbk__svc:hover { border-color: var(--qbk-accent); }
@@ -511,12 +552,12 @@ function again() {
 .qbk__wd { font-size: .75em; opacity: .6; padding: 4px 0; }
 .qbk__day { aspect-ratio: 1; max-width: 100%; border: 0; border-radius: 10px; background: transparent; color: inherit; font: inherit; font-variant-numeric: tabular-nums; opacity: .35; }
 .qbk__day.open { opacity: 1; font-weight: 600; background: color-mix(in srgb, var(--qbk-accent) 12%, transparent); cursor: pointer; }
-.qbk__day.on { background: var(--qbk-accent); color: #fff; }
+.qbk__day.on { background: var(--qbk-accent); color: var(--qbk-on, #fff); }
 .qbk__strip { display: none; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
 .qbk__sday { flex: none; width: 54px; border: 1px solid var(--qbk-line); background: transparent; color: inherit; border-radius: 12px; padding: 6px 0; display: grid; font: inherit; cursor: pointer; }
 .qbk__sday b { font-size: 1.15em; font-variant-numeric: tabular-nums; }
 .qbk__sday small { font-size: .7em; opacity: .7; }
-.qbk__sday.on { background: var(--qbk-accent); border-color: var(--qbk-accent); color: #fff; }
+.qbk__sday.on { background: var(--qbk-accent); border-color: var(--qbk-accent); color: var(--qbk-on, #fff); }
 .qbk__day.shut, .qbk__sday.shut, .qbk__time.shut { background: var(--qbk-shut, color-mix(in srgb, currentColor 9%, transparent)); border-color: transparent; opacity: .5; cursor: not-allowed; }
 .qbk__time.shut { text-decoration: line-through; }
 .qbk__note { font-size: .85em; opacity: .75; margin: 10px 0 0; }
@@ -525,7 +566,7 @@ function again() {
 .qbk__times { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 6px; }
 .qbk__time { border: 1px solid var(--qbk-line); background: transparent; color: inherit; border-radius: 10px; padding: 8px 4px; font: inherit; font-variant-numeric: tabular-nums; cursor: pointer; display: grid; }
 .qbk__time small { font-size: .68em; opacity: .7; }
-.qbk__time.on { background: var(--qbk-accent); border-color: var(--qbk-accent); color: #fff; }
+.qbk__time.on { background: var(--qbk-accent); border-color: var(--qbk-accent); color: var(--qbk-on, #fff); }
 .qbk__time.on small { opacity: 1; }
 .qbk__seats { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
 .qbk__staff { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
@@ -535,7 +576,7 @@ function again() {
 .qbk__face { width: 28px; height: 28px; border-radius: 50%; background: var(--qbk-line) center / cover no-repeat; display: grid; place-items: center; font-style: normal; font-size: .8em; font-weight: 700; }
 .qbk__with { margin: 0 0 12px; }
 .qbk__select { border: 1px solid var(--qbk-line); border-radius: 8px; padding: 6px 10px; background: transparent; color: inherit; font: inherit; }
-.qbk__cta { margin-top: 14px; width: 100%; border: 0; border-radius: 12px; padding: 12px 18px; background: var(--qbk-accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+.qbk__cta { margin-top: 14px; width: 100%; border: 0; border-radius: 12px; padding: 12px 18px; background: var(--qbk-accent); color: var(--qbk-on, #fff); font: inherit; font-weight: 600; cursor: pointer; }
 .qbk__cta:disabled { opacity: .5; cursor: default; }
 .qbk__problem { color: var(--q-negative, #c10015); margin: 10px 0 0; font-size: .9em; }
 .qbk__form { display: grid; gap: 12px; max-width: 560px; }
@@ -549,7 +590,7 @@ function again() {
 .qbk__total { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; border-top: 1px solid var(--qbk-line); padding-top: 12px; }
 .qbk__done { text-align: center; display: grid; gap: 8px; justify-items: center; max-width: 560px; }
 .qbk__done p { margin: 0; }
-.qbk__tick { width: 52px; height: 52px; border-radius: 50%; background: var(--qbk-accent); color: #fff; display: grid; place-items: center; font-size: 1.6em; }
+.qbk__tick { width: 52px; height: 52px; border-radius: 50%; background: var(--qbk-accent); color: var(--qbk-on, #fff); display: grid; place-items: center; font-size: 1.6em; }
 .qbk__done-h { font-size: 1.3em; }
 .qbk__adds { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; font-size: .9em; }
 .qbk__adds a { border: 1px solid var(--qbk-line); border-radius: 8px; padding: 6px 12px; color: inherit; text-decoration: none; font-weight: 600; }
@@ -561,9 +602,15 @@ function again() {
 @keyframes qbk-pulse { to { opacity: .2; } }
 @media (prefers-reduced-motion: reduce) { .qbk__skel { animation: none; } }
 .qbk__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: -1px; }
+.qbk__smark { flex: none; align-self: center; font-size: .72em; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; opacity: .7; padding: 0 2px; }
+.qbk__snext { border-style: dashed; }
+.qbk__snext b { font-size: 1.3em; line-height: 1; }
 @media (max-width: 700px) {
   .qbk__grid { grid-template-columns: minmax(0, 1fr); }
-  .qbk__mon { display: none; }
-  .qbk__strip { display: flex; }
+  .qbk--days-auto .qbk__mon { display: none; }
+  .qbk--days-auto .qbk__strip { display: flex; }
 }
+/* "Days": always a month calendar, or always a row of days (owner, 2026-11-26). */
+.qbk--days-row .qbk__mon { display: none; }
+.qbk--days-row .qbk__strip { display: flex; }
 </style>

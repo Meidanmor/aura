@@ -45,11 +45,12 @@ onUnmounted(() => clearTimeout(timer))
 .qwoo-updating {
   position: fixed; inset: 0; z-index: 20000;
   display: flex; align-items: center; justify-content: center; padding: 16px;
-  background: rgba(255, 255, 255, .72); backdrop-filter: blur(3px);
+  background: color-mix(in srgb, var(--q-primary, #fff) 72%, transparent); backdrop-filter: blur(3px);
 }
 .qwoo-updating__card {
   max-width: 360px; padding: 28px 24px; border-radius: 16px; text-align: center;
-  background: #fff; color: #222; box-shadow: 0 12px 40px rgba(0, 0, 0, .15);
+  /* The store's page and text colours (2026-11-26). */
+  background: var(--q-primary, #fff); color: var(--q-secondary, #222); box-shadow: 0 12px 40px rgba(0, 0, 0, .15);
 }
 .qwoo-updating__title { margin: 12px 0 4px; font-size: 1.2rem; font-weight: 700; }
 .qwoo-updating__text { margin: 0; opacity: .75; }

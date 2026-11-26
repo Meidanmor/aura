@@ -1,6 +1,8 @@
 // Hebrew: English text → Hebrew (see i18n/index.js). Arrays are [one, many].
 export default {
   "Put the button back in its place": "להחזיר את הכפתור למקום",
+  "Offline item - will be added automatically when back online": "נשמר בלי חיבור: יתווסף לעגלה מעצמו כשהחיבור יחזור",
+  "Browse all products": "לכל המוצרים",
   "Back to place": "חזרה למקום",
   "Put the floating buttons back": "להחזיר את הכפתורים הצפים למקום",
   "Accessibility options": "התאמות נגישות",

@@ -68,14 +68,14 @@ function close() {
 </script>
 
 <style scoped>
-.ia { display: flex; gap: 12px; align-items: center; background: #fff; color: #16181d; border: 1px solid rgba(0, 0, 0, 0.08); border: 1px solid color-mix(in srgb, currentColor 8%, transparent); border-radius: 16px; padding: 12px 14px; }
+.ia { display: flex; gap: 12px; align-items: center; background: var(--q-primary, #fff); color: var(--q-secondary, #16181d); border: 1px solid rgba(0, 0, 0, 0.08); border: 1px solid color-mix(in srgb, currentColor 8%, transparent); border-radius: 16px; padding: 12px 14px; }
 .ia__icon { width: 44px; height: 44px; border-radius: 11px; flex: none; object-fit: cover; }
 .ia__text { flex: 1; min-width: 0; }
 .ia__title { font-weight: 700; }
-.ia__body { font-size: 0.92em; color: #5f6570; }
+.ia__body { font-size: 0.92em; color: color-mix(in srgb, var(--q-secondary, #16181d) 72%, var(--q-primary, #fff)); }
 .ia__actions { display: flex; align-items: center; gap: 6px; flex: none; }
 .ia__btn { border-radius: 10px; box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 22%, transparent); }
-.ia__later { border: 0; background: none; color: #5f6570; cursor: pointer; font: inherit; font-size: 0.92em; padding: 6px; text-decoration: underline; }
+.ia__later { border: 0; background: none; color: color-mix(in srgb, var(--q-secondary, #16181d) 72%, var(--q-primary, #fff)); cursor: pointer; font: inherit; font-size: 0.92em; padding: 6px; text-decoration: underline; }
 .ia--thanks, .ia--account { max-width: 640px; margin: 16px auto; flex-wrap: wrap; }
 .ia--account { width: calc(100% - 32px); }
 .ia--thanks .ia__actions, .ia--account .ia__actions { width: 100%; justify-content: flex-start; }

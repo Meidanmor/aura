@@ -70,12 +70,12 @@ onUnmounted(() => window.removeEventListener('qwoo:push-on', onPushOn))
 <style scoped>
 .ig-gift {
   position: fixed; z-index: 9002; inset-inline: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
-  max-width: 420px; margin-inline: auto; background: #fff; color: #16181d; border-radius: 18px; padding: 16px;
+  max-width: 420px; margin-inline: auto; background: var(--q-primary, #fff); color: var(--q-secondary, #16181d); border-radius: 18px; padding: 16px;
   box-shadow: 0 10px 34px rgba(0, 0, 0, 0.25); display: grid; gap: 8px;
 }
-.ig-gift__x { position: absolute; top: 8px; inset-inline-end: 8px; width: 30px; height: 30px; border-radius: 50%; border: 0; background: #f0f1f3; color: #444; font-size: 18px; cursor: pointer; }
+.ig-gift__x { position: absolute; top: 8px; inset-inline-end: 8px; width: 30px; height: 30px; border-radius: 50%; border: 0; background: color-mix(in srgb, currentColor 10%, transparent); color: inherit; font-size: 18px; cursor: pointer; }
 .ig-gift__title { font-weight: 700; font-size: 16px; padding-inline-end: 34px; }
-.ig-gift__body { color: #5f6570; font-size: 14px; }
+.ig-gift__body { color: color-mix(in srgb, var(--q-secondary, #16181d) 72%, var(--q-primary, #fff)); font-size: 14px; }
 .ig-gift__code { display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px dashed #c9ccd3; border-radius: 12px; padding: 10px 12px; font-weight: 700; font-size: 18px; letter-spacing: 0.04em; }
 .ig-gift__copy { border: 0; background: var(--q-secondary, #2f5bd8); color: var(--q-on-secondary, #fff); box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 22%, transparent); border-radius: 9px; padding: 7px 14px; font: inherit; font-size: 14px; letter-spacing: 0; cursor: pointer; }
 </style>

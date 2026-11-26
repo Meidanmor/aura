@@ -52,6 +52,7 @@
 <script setup>
 import { computed, inject } from 'vue'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
+import { onColor } from 'src/utils/on-color.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 import { setResponsiveVar, toCssLength } from 'src/composables/useSectionStyle.js'
 import { t } from 'src/i18n/index.js'
@@ -79,6 +80,8 @@ const label = (n) => {
 const active = computed(() => resolveGlobalColor(d.value.active_color))
 const vars = computed(() => {
   const v = active.value ? { '--co-step': active.value } : {}
+  // The step number on the owner's colour: readable text (was always white).
+  if (active.value && onColor(active.value)) v['--co-step-on'] = onColor(active.value)
   setResponsiveVar(v, '--co-bar-gap', d.value.bar_gap, toCssLength)
   return v
 })
@@ -101,6 +104,6 @@ button.checkout-steps__btn { cursor: pointer; text-decoration: underline; text-u
   width: 26px; height: 26px; border-radius: 50%;
   border: 1px solid currentColor; font-size: .85em; line-height: 1;
 }
-.is-now .checkout-steps__num, .is-done .checkout-steps__num { background: var(--co-step, var(--q-secondary)); border-color: var(--co-step, var(--q-secondary)); color: #fff; }
+.is-now .checkout-steps__num, .is-done .checkout-steps__num { background: var(--co-step, var(--q-secondary)); border-color: var(--co-step, var(--q-secondary)); color: var(--co-step-on, var(--q-on-secondary, #fff)); }
 .is-now .checkout-steps__btn { font-weight: 600; }
 </style>

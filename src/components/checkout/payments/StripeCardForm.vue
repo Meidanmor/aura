@@ -7,7 +7,7 @@
     <div v-show="!loading">
       <div ref="expressEl" class="q-mb-md"></div>
       <div v-if="showDivider" class="text-center text-grey q-mb-md">{{ t('— or pay with card —') }}</div>
-      <div ref="cardEl" class="stripe-card-element q-pa-md" style="border:1px solid #ccc; border-radius:4px; background:#fff;"></div>
+      <div ref="cardEl" class="stripe-card-element q-pa-md" style="border: 1px solid color-mix(in srgb, currentColor 25%, transparent); border-radius: 4px; background: transparent;"></div>
     </div>
     <div v-if="cardError" class="text-negative q-mt-sm">{{ cardError }}</div>
   </div>
@@ -85,7 +85,8 @@ onMounted(async () => {
 
   // --- Manual card entry (unchanged) ---
   card = elements.create('card', {
-    style: { base: { fontSize: '16px', color: '#000' } },
+    // The card numbers in the store's text colour (Stripe's frame needs a real colour value), 2026-11-26.
+    style: { base: { fontSize: '16px', color: (getComputedStyle(document.documentElement).getPropertyValue('--q-secondary') || '').trim() || '#000' } },
     hidePostalCode: true,
   })
   card.mount(cardEl.value)

@@ -6,7 +6,7 @@
       {{ d.empty_text || t('Your cart is empty.') }} <router-link to="/products/">{{ d.link_text || t('Go to shop') }}</router-link>
     </div>
     <div v-else-if="c.cart.hasItems.value && ready" class="cart-items-wrap">
-      <div v-for="item in c.cart.state.items" :key="item.id" class="q-pa-sm row items-center" :class="[item.key.includes('offline') ? 'offline-item' : '']">
+      <div v-for="item in c.cart.state.items" :key="item.id" class="q-pa-sm row items-center" :class="[item.key.includes('offline') ? 'offline-item' : '']" :data-offline="item.key.includes('offline') ? t('Offline item - will be added automatically when back online') : null">
         <div class="flex">
           <img v-if="item.images" :src="c.cart.state.offline === true ? item?.images[0]?.src : item.images[0]?.thumbnail" alt="" style="width: 70px; height: 70px; object-fit: cover" />
           <div class="product-meta">

@@ -9,7 +9,7 @@ import branding from '../../public/config/branding.json' // adjust path as neede
 import { onColor, ON_COLORS } from '../../src/utils/on-color.js'
 import { allLangs, isExtraLang, langFromPath, mainLang, stripLang, withLang } from '../../src/i18n/lang.js'
 import { LANGUAGES } from '../../src/i18n/index.js'
-import { clientSite, originOf } from '../site-content.js'
+import { clientSite, originOf, siteGallery } from '../site-content.js'
 import { SHARED_KEYS, sharedScriptPath, sharedState, stateJson } from '../shared-state.js'
 import { cacheablePath, cachedAnswer } from '../api-cache.js'
 import { brandFontPreloads, brandFontsCss } from '../../src/utils/brand-fonts.js'
@@ -367,7 +367,9 @@ export default defineSsrMiddleware(({ app, resolve, render, /*folders*/ }) => {
         // A template's demo store (QWOO_GALLERY=1, set by the platform on those stores only): the dashboard's
         // "Start from a template" preview shows it in a frame. Only the dashboard (QWOO_EDITOR_ORIGIN), and never
         // the pages that hold one shopper's data.
-        const galleryOrigin = GALLERY_DEMO && !PERSONAL_PAGE_RE.test(req.path || '') ? GALLERY_ORIGIN : ''
+        // The platform turns it on and off live through the store's pointer (siteGallery, no build); the older
+        // QWOO_GALLERY build setting still works.
+        const galleryOrigin = !PERSONAL_PAGE_RE.test(stripLang(req.path || '/')) ? ((GALLERY_DEMO && GALLERY_ORIGIN) || siteGallery()) : ''
         const frameAncestors = isEditorRequest
             ? `'self' ${editorOrigin}${req.query?.qwoo_view === '1' ? ' ' + AI_APP_FRAME_HOSTS.join(' ') : ''}`
             : galleryOrigin ? `'self' ${galleryOrigin}` : "'self'"

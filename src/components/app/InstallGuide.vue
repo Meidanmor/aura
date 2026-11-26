@@ -125,7 +125,7 @@ watch(() => install.guide, async (open) => {
 .ig-shade { position: fixed; inset: 0; z-index: 9000; background: rgba(0, 0, 0, 0.28); }
 .ig-card {
   position: absolute; inset-inline: 12px; max-width: 460px; margin-inline: auto;
-  background: #fff; color: #16181d; border-radius: 18px; padding: 14px;
+  background: var(--q-primary, #fff); color: var(--q-secondary, #16181d); border-radius: 18px; padding: 14px;
   box-shadow: 0 10px 34px rgba(0, 0, 0, 0.25); display: grid; gap: 10px; font-size: 14px; line-height: 1.4;
 }
 .ig-card.is-top { top: calc(env(safe-area-inset-top, 0px) + 12px); }
@@ -134,14 +134,14 @@ watch(() => install.guide, async (open) => {
 .ig-icon { width: 40px; height: 40px; border-radius: 10px; flex: none; object-fit: cover; }
 .ig-head-text { flex: 1; min-width: 0; }
 .ig-title { font-weight: 700; font-size: 15px; }
-.ig-sub { color: #5f6570; font-size: 13px; }
-.ig-x { flex: none; width: 30px; height: 30px; border-radius: 50%; border: 0; background: #f0f1f3; color: #444; font-size: 18px; cursor: pointer; }
+.ig-sub { color: color-mix(in srgb, var(--q-secondary, #16181d) 72%, var(--q-primary, #fff)); font-size: 13px; }
+.ig-x { flex: none; width: 30px; height: 30px; border-radius: 50%; border: 0; background: color-mix(in srgb, currentColor 10%, transparent); color: inherit; font-size: 18px; cursor: pointer; }
 .ig-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 6px; }
-.ig-step { background: #f4f5f7; border-radius: 12px; padding: 8px 4px; display: grid; gap: 4px; justify-items: center; text-align: center; font-size: 12px; line-height: 1.25; }
+.ig-step { background: color-mix(in srgb, currentColor 7%, transparent); border-radius: 12px; padding: 8px 4px; display: grid; gap: 4px; justify-items: center; text-align: center; font-size: 12px; line-height: 1.25; }
 .ig-num { font-size: 11px; color: #8a8f99; font-weight: 600; }
-.ig-ico { width: 22px; height: 22px; color: color-mix(in srgb, var(--q-secondary, #2f5bd8) 55%, #16181d); display: block; }
+.ig-ico { width: 22px; height: 22px; color: var(--q-secondary, #2f5bd8); display: block; }
 .ig-ico :deep(svg) { width: 22px; height: 22px; display: block; }
-.ig-after { text-align: center; color: #5f6570; font-size: 13px; }
+.ig-after { text-align: center; color: color-mix(in srgb, var(--q-secondary, #16181d) 72%, var(--q-primary, #fff)); font-size: 13px; }
 .ig-arrow { position: fixed; z-index: 9001; color: #fff; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5)); animation: ig-bob 1.1s ease-in-out infinite; pointer-events: none; }
 .ig-arrow.up { transform: rotate(180deg); animation-name: ig-bob-up; }
 @keyframes ig-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(7px); } }

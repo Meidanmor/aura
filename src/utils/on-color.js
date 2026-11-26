@@ -45,3 +45,13 @@ export function contrast(a, b) {
 
 /** The store colours that get an --q-on-<name> variable. */
 export const ON_COLORS = ['primary', 'secondary', 'accent']
+
+/**
+ * Readable text on a colour as the Store builder saves it: "global:secondary" → var(--q-on-secondary),
+ * a hex → onColor(); '' when unknown (callers keep their old fallback). 2026-11-26.
+ */
+export function inkOn(value) {
+  const m = typeof value === 'string' && value.match(/^global:([a-z]+)$/)
+  if (m) return ON_COLORS.includes(m[1]) ? `var(--q-on-${m[1]})` : ''
+  return onColor(value)
+}

@@ -52,7 +52,7 @@
 
     <q-banner
         v-if="showNotifications && vapidConfigured && supported && permission !== 'granted' && permission !== 'denied'"
-        class="bg-secondary text-white q-ma-md rounded-borders shadow-2"
+        class="bg-secondary push-ask-banner q-ma-md rounded-borders shadow-2"
         inline-actions
     >
       <div class="text-subtitle1">
@@ -64,8 +64,7 @@
             style="line-height: 1;"
             outline
             padding="sm"
-            color="secondary"
-            text-color="white"
+            class="push-ask-btn"
             :label="t('Enable')"
             @click="emit('subscribe')"
         />

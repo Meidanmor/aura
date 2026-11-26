@@ -8,6 +8,8 @@
       </div>
       <div v-if="wishlist.state.items && wishlist.state.items.length === 0" class="text-center text-grey">
       {{ t('Your wishlist is empty.') }}
+      <!-- A way on, like the empty cart drawer (2026-11-26). -->
+      <div class="q-mt-md"><q-btn to="/products/" color="secondary" unelevated no-caps :label="t('Shop now!')" @click="emit('toggle-wishlist')" /></div>
       </div>
       <div v-else-if="wishlist.state.items && wishlist.state.items.length > 0" v-for="product in wishlist.state.items" :key="product.id" class="relative-position q-pa-sm row full-width">
         <router-link :to="`/product/${product.slug}/`" class="flex no-wrap q-pr-lg no-decoration text-secondary full-width">

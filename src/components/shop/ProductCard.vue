@@ -1,17 +1,16 @@
 <template>
   <router-link class="relative-position" :to="`/product/${getSlugFromPermalink(product.permalink)}`">
           <div class="item-loop-wl absolute">
-              <q-btn :aria-label="t('Remove from wishlist')" class="text-black q-pa-none text-caption q-mt-sm" flat :loading="wishlist.isLoading(product.id)" v-if="wishlist.state.items && Object.values(wishlist.state.items).find(obj => product.id === obj.id)" @click.prevent="addToWishlist(product.id)" color="accent" :icon="matFavorite" />
-              <q-btn :aria-label="t('Add to wishlist')" class="text-black q-pa-none text-caption q-mt-sm" flat :loading="wishlist.isLoading(product.id)" v-else @click.prevent="addToWishlist(product.id)" color="accent" :icon="matFavoriteBorder" />
+              <q-btn :aria-label="t('Remove from wishlist')" class="q-pa-none text-caption q-mt-sm" flat :loading="wishlist.isLoading(product.id)" v-if="wishlist.state.items && Object.values(wishlist.state.items).find(obj => product.id === obj.id)" @click.prevent="addToWishlist(product.id)" color="accent" :icon="matFavorite" />
+              <q-btn :aria-label="t('Add to wishlist')" class="q-pa-none text-caption q-mt-sm" flat :loading="wishlist.isLoading(product.id)" v-else @click.prevent="addToWishlist(product.id)" color="accent" :icon="matFavoriteBorder" />
           </div>
       <div
     v-if="!product.is_in_stock"
     class="absolute q-ma-sm card-badge"
   >
     <q-badge
-      color="grey-8"
       :label="t('Sold out')"
-      class="text-caption text-black text-weight-medium q-px-sm q-py-xs"
+      class="text-caption text-weight-medium q-px-sm q-py-xs card-badge__b"
     />
   </div>
           <div
@@ -19,9 +18,8 @@
     class="absolute q-ma-sm card-badge"
   >
     <q-badge
-      color="grey-8"
       :label="t('Sample')"
-      class="text-caption text-black text-weight-medium q-px-sm q-py-xs"
+      class="text-caption text-weight-medium q-px-sm q-py-xs card-badge__b"
     />
   </div>
           <div
@@ -29,9 +27,8 @@
     class="absolute q-ma-sm card-badge"
   >
     <q-badge
-      color="grey-8"
       :label="t('Sale!')"
-      class="text-caption text-black text-weight-medium q-px-sm q-py-xs"
+      class="text-caption text-weight-medium q-px-sm q-py-xs card-badge__b"
     />
   </div>
 

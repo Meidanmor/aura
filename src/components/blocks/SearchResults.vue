@@ -1,7 +1,7 @@
 <template>
   <div class="sr" :id="listId">
     <p v-if="loading && !count" class="sr-note">{{ t('Searching…') }}</p>
-    <p v-else-if="!count" class="sr-note">{{ t('No results for “{q}”', { q }) }}</p>
+    <p v-else-if="!count" class="sr-note">{{ t('No results for “{q}”', { q }) }} <router-link to="/products" class="sr-browse" @click="emit('pick')">{{ t('Browse all products') }} →</router-link></p>
     <template v-else>
       <div v-if="results.categories.length" class="sr-group">
         <h3 class="sr-title">{{ t('Categories') }}</h3>
@@ -51,7 +51,8 @@
         </router-link>
       </div>
     </template>
-    <router-link v-if="q.length >= 2" :to="allTo" class="sr-all" @click="emit('pick')">{{ t('See all results') }} →</router-link>
+    <!-- Not at 0 results: it would open the same empty list (2026-11-26). -->
+    <router-link v-if="q.length >= 2 && (count || loading)" :to="allTo" class="sr-all" @click="emit('pick')">{{ t('See all results') }} →</router-link>
   </div>
 </template>
 

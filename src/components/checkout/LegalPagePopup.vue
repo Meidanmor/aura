@@ -54,7 +54,8 @@ watch(() => props.path, async (path) => {
 
 <style>
 .legal-popup-dialog { z-index: 10000; }
-.legal-popup { background: #fff; color: inherit; width: 760px; max-width: calc(100vw - 32px); max-height: 85vh; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; }
+/* The store's page and text colours (2026-11-26; was white on dark stores). */
+.legal-popup { background: var(--q-primary, #fff); color: var(--q-secondary, inherit); width: 760px; max-width: calc(100vw - 32px); max-height: 85vh; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; }
 .legal-popup.is-sheet { width: 100%; max-width: 100vw; max-height: 88vh; border-radius: 16px 16px 0 0; padding-bottom: env(safe-area-inset-bottom); }
 .legal-popup__grip { display: flex; justify-content: center; padding: 8px 0 2px; touch-action: none; cursor: grab; }
 .legal-popup__grip span { width: 40px; height: 4px; border-radius: 4px; background: rgba(0, 0, 0, .2); }

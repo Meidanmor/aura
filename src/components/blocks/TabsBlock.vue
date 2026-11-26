@@ -72,6 +72,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { sanitizeBuilderHtml } from 'src/utils/sanitizeHtml.js'
 import { resolveGlobalColor } from 'src/utils/resolve-global-color.js'
+import { inkOn } from 'src/utils/on-color.js'
 import { asResponsive, alignToFlex } from 'src/composables/useSectionStyle.js'
 import { textStyle, tsKeys } from 'src/utils/text-style.js'
 // Tabs built from blocks draw their sections like any section (it renders this block too:
@@ -139,6 +140,9 @@ const cssVars = computed(() => {
   vars['--tb-justify-m'] = alignToFlex(a.mobile) || 'flex-start'
   const activeColor = resolveGlobalColor(d.value.active_color)
   if (activeColor) vars['--tb-active'] = activeColor
+  // Text on the active pill / box: readable on the owner's colour (was always white).
+  const onActive = inkOn(d.value.active_color)
+  if (onActive) vars['--tb-on'] = onActive
   const text = resolveGlobalColor(d.value.text_color)
   if (text) vars['--tb-text'] = text
   const content = resolveGlobalColor(d.value.content_color)
@@ -178,10 +182,10 @@ const cssVars = computed(() => {
 .tabs-block--underline .tabs-block__tab { border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .tabs-block--underline .tabs-block__tab.is-active { border-bottom-color: var(--tb-active, currentColor); color: var(--tb-active, inherit); }
 .tabs-block--pills .tabs-block__tab { border-radius: 999px; }
-.tabs-block--pills .tabs-block__tab.is-active { background: var(--tb-active, #333); color: #fff; }
+.tabs-block--pills .tabs-block__tab.is-active { background: var(--tb-active, #333); color: var(--tb-on, #fff); }
 .tabs-block--boxed .tabs-block__list { gap: 0; }
 .tabs-block--boxed .tabs-block__tab { border: 1px solid rgba(0, 0, 0, 0.12); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); margin-right: -1px; }
-.tabs-block--boxed .tabs-block__tab.is-active { background: var(--tb-active, #333); border-color: var(--tb-active, #333); color: #fff; }
+.tabs-block--boxed .tabs-block__tab.is-active { background: var(--tb-active, #333); border-color: var(--tb-active, #333); color: var(--tb-on, #fff); }
 
 .tabs-block__panel {
   display: none;

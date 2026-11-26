@@ -55,7 +55,7 @@
               :aria-label="slide.aria_label || undefined"
               class="cb-slide__btn"
               :class="[`cb-slide__btn--${d.button_style || 'light'}`, buttonText.class]"
-              :style="buttonText.style"
+              :style="{ ...buttonText.style, ...slideButtonVars }"
               :outline="d.button_style === 'outline'"
               unelevated
               no-caps
@@ -244,6 +244,17 @@ const d = computed(() => props.data.data || {})
 // Slide texts: the color is each slide's own; the title size is this block's --cb-title.
 const titleText = computed(() => textStyle(d.value, tsKeys('title', { size: null, color: null }), 'headings'))
 const slideText = computed(() => textStyle(d.value, tsKeys('text', { color: null })))
+// Slide Button Background / Text / Corners (2026-11-26): CSS variables the style's look falls back from.
+const slideButtonVars = computed(() => {
+  const v = {}
+  const bg = resolveGlobalColor(d.value.button_bg)
+  const c = resolveGlobalColor(d.value.button_text_color)
+  const r = toCssLength(d.value.button_radius)
+  if (bg) v['--cb-btn-bg'] = bg
+  if (c) v['--cb-btn-c'] = c
+  if (r) v['--cb-btn-r'] = r
+  return v
+})
 const buttonText = computed(() => textStyle(d.value, tsKeys('button', { size: 'button_text_size', color: null }), 'buttons'))
 const source = computed(() => (props.products ? 'products' : d.value.source || 'slides'))
 const loop = computed(() => d.value.loop !== false)
@@ -550,9 +561,11 @@ const cssVars = computed(() => {
 .cb-slide__content--right { align-items: flex-end; text-align: right; }
 .cb-slide__title { margin: 0; font-size: var(--cb-title, 3rem); line-height: 1.1; font-weight: 700; color: inherit; }
 .cb-slide__text { margin: 0; max-width: 640px; font-size: 1.15rem; opacity: 0.95; }
-.cb-slide__btn--light { background: #fff !important; color: #111 !important; }
-.cb-slide__btn--secondary { background: var(--q-secondary) !important; color: #fff !important; }
-.cb-slide__btn--outline { color: #fff !important; }
+/* The slide button: the style's look, or the owner's colours and corners (Slide Button Background / Text / Corners). */
+.cb-slide__btn { border-radius: var(--cb-btn-r, 4px); }
+.cb-slide__btn--light { background: var(--cb-btn-bg, #fff) !important; color: var(--cb-btn-c, #111) !important; }
+.cb-slide__btn--secondary { background: var(--cb-btn-bg, var(--q-secondary)) !important; color: var(--cb-btn-c, var(--q-on-secondary, #fff)) !important; }
+.cb-slide__btn--outline { color: var(--cb-btn-c, #fff) !important; background: var(--cb-btn-bg, transparent) !important; }
 .cb-hero :deep(.q-carousel__navigation .q-btn) { color: var(--cb-control, #fff); }
 .cb-hero :deep(.q-carousel__arrow .q-btn) { color: var(--cb-arrow-c, var(--cb-control, #fff)); }
 /* "Arrows to Show", per screen size: one of them. */

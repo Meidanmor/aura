@@ -11,6 +11,8 @@
     <div v-else-if="loading" class="q-pa-xl flex justify-center"><q-spinner color="secondary" size="3em" /></div>
     <template v-else-if="term">
       <p v-if="!count" class="search-page__note">{{ t('No results for “{q}”', { q: term }) }}</p>
+      <!-- No dead end (2026-11-26): a way on to the products. -->
+      <q-btn v-if="!count" to="/products" unelevated no-caps color="secondary" class="q-mt-md" :label="t('Browse all products')" />
 
       <div v-if="results.categories.length" class="search-page__group">
         <h2 class="search-page__h2 text-h6">{{ t('Categories') }}</h2>

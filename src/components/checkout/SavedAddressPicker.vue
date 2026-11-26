@@ -91,7 +91,7 @@ function choose(a) {
 .saved-picker__name { font-weight: 600; }
 .saved-picker__label { font-weight: 400; opacity: .7; }
 .saved-picker-dialog { z-index: 10000; }
-.saved-picker-sheet { background: #fff; color: inherit; width: 100%; max-width: 100vw; max-height: 75vh; display: flex; flex-direction: column; border-radius: 16px 16px 0 0; padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); }
+.saved-picker-sheet { background: var(--q-primary, #fff); color: var(--q-secondary, inherit); width: 100%; max-width: 100vw; max-height: 75vh; display: flex; flex-direction: column; border-radius: 16px 16px 0 0; padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); }
 .saved-picker-sheet__title { font-weight: 700; padding: 6px 16px 8px; touch-action: none; }
 .saved-picker-sheet__grip { display: flex; justify-content: center; padding: 4px 0 6px; touch-action: none; cursor: grab; }
 .saved-picker-sheet__grip span { width: 40px; height: 4px; border-radius: 4px; background: rgba(0, 0, 0, .2); }

@@ -890,6 +890,8 @@ onUnmounted(() => {
   liveConfigUnsubscribers.forEach(fn => fn())
   liveConfigUnsubscribers = []
 })
+// Whether this page has a cart drawer (an add then opens it instead of a toast).
+watch(() => !!drawers.state.entries?.cart, (has) => { cart.state.hasCartDrawer = has }, { immediate: true })
 watch(() => cart.state.drawerOpen, val => {
   if(val === true) {
     drawers.open('cart')
